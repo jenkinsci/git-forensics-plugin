@@ -127,7 +127,6 @@ class GitBlamer implements Serializable {
          */
         // FIXME: @VisibleForTesting
         void run(final BlameRequest request, final BlameRunner blameRunner) {
-            // FIXME: FilteredLog log = new FilteredLog(report, "Git blame errors:");
             String fileName = request.getFileName();
             try {
                 BlameResult blame = blameRunner.run(fileName);

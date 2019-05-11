@@ -26,7 +26,7 @@ public class Blames implements Serializable {
 
     private final Map<String, BlameRequest> blamesPerFile = new HashMap<>();
     private final Set<String> skippedFiles = new HashSet<>();
-    private final FilteredLog log = new FilteredLog("Extracting author and commit information from Git: ");
+    private final FilteredLog log = new FilteredLog("Errors while extracting author and commit information from Git: ");
 
     private final String workspace;
 
