@@ -168,12 +168,6 @@
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${maven-surefire.plugin}</version>
-        <configuration>
-          <excludes>
-            <exclude>**/*ITest.*</exclude>
-            <exclude>**/InjectedTest.*</exclude>
-          </excludes>
-        </configuration>
         <dependencies>
           <dependency>
             <groupId>com.tngtech.archunit</groupId>

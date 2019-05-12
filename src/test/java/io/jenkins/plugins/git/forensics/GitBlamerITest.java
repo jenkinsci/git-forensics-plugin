@@ -27,48 +27,54 @@ public class GitBlamerITest {
     private static final String BAR_NAME = "Bar";
     private static final String BAR_EMAIL = "bar@jenkins.io";
 
+    /** Git repository in a temporary folder. */
     @Rule
     public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
 
+    /**
+     * Initializes the Git repository.
+     *
+     * @throws Exception
+     *         if the initialization fails
+     */
     @Before
+    @SuppressWarnings("IllegalCatch")
     public void init() throws Exception {
         sampleRepo.init();
-
-        sampleRepo.write(FILE_NAME, "OLD\nOLD\nOLD\nOLD\nOLD\nOLD\n");
-        sampleRepo.git("add", FILE_NAME);
-        sampleRepo.git("config", "user.name", FOO_NAME);
-        sampleRepo.git("config", "user.email", FOO_EMAIL);
-        sampleRepo.git("commit", "--message=Init");
-        sampleRepo.git("rev-parse", "HEAD");
-        System.out.println(sampleRepo.head());
-
-        sampleRepo.write(FILE_NAME, "OLD\nOLD\nNEW\nNEW\nOLD\nOLD\n");
-        sampleRepo.git("add", FILE_NAME);
-        sampleRepo.git("config", "user.name", BAR_NAME);
-        sampleRepo.git("config", "user.email", BAR_EMAIL);
-        sampleRepo.git("commit", "--message=Change");
-        sampleRepo.git("rev-parse", "HEAD");
-        System.out.println(sampleRepo.head());
     }
 
+    /**
+     * Verifies that the blames are empty if there are no requests defined.
+     *
+     * @throws InterruptedException
+     *         if the blaming has been canceled
+     */
     @Test
-    public void shouldCreateEmptyBlamesIfRequestIsEmpty() throws Exception {
-        BlameCallback blameCallback = new BlameCallback(new Blames(), ObjectId.fromString(sampleRepo.head()));
+    public void shouldCreateEmptyBlamesIfRequestIsEmpty() throws InterruptedException {
+        BlameCallback blameCallback = new BlameCallback(new Blames(), getHeadCommit());
 
         Blames blames = blameCallback.invoke(createRepository(), null);
 
         assertThat(blames).isEmpty();
     }
 
+    /**
+     * Verifies that the blames are empty if there are no requests defined.
+     *
+     * @throws InterruptedException
+     *         if the blaming has been canceled
+     */
     @Test
-    public void shouldCreateBlamesIfRequestIsExistingFile() throws Exception {
+    public void shouldCreateBlamesIfRequestIsExistingFile() throws InterruptedException {
+        create2RevisionsWithDifferentAuthors();
+
         Blames blames = new Blames();
         blames.addLine(FILE_NAME, 2);
         blames.addLine(FILE_NAME, 3);
         blames.addLine(FILE_NAME, 4);
         blames.addLine(FILE_NAME, 5);
 
-        BlameCallback blameCallback = new BlameCallback(blames, ObjectId.fromString(sampleRepo.head()));
+        BlameCallback blameCallback = new BlameCallback(blames, getHeadCommit());
 
         assertThat(blameCallback.invoke(createRepository(), null)).isSameAs(blames);
 
@@ -89,25 +95,72 @@ public class GitBlamerITest {
 
     }
 
-    private void assertThatBlameIsHeadWith(final BlameRequest request, final int line) throws Exception {
+    @SuppressWarnings("IllegalCatch")
+    private void create2RevisionsWithDifferentAuthors() {
+        try {
+            sampleRepo.write(FILE_NAME, "OLD\nOLD\nOLD\nOLD\nOLD\nOLD\n");
+            sampleRepo.git("add", FILE_NAME);
+            sampleRepo.git("config", "user.name", FOO_NAME);
+            sampleRepo.git("config", "user.email", FOO_EMAIL);
+            sampleRepo.git("commit", "--message=Init");
+            sampleRepo.git("rev-parse", "HEAD");
+
+            sampleRepo.write(FILE_NAME, "OLD\nOLD\nNEW\nNEW\nOLD\nOLD\n");
+            sampleRepo.git("add", FILE_NAME);
+            sampleRepo.git("config", "user.name", BAR_NAME);
+            sampleRepo.git("config", "user.email", BAR_EMAIL);
+            sampleRepo.git("commit", "--message=Change");
+            sampleRepo.git("rev-parse", "HEAD");
+        }
+        catch (Exception exception) {
+            throw new AssertionError(exception);
+        }
+    }
+
+    private void assertThatBlameIsHeadWith(final BlameRequest request, final int line) {
         assertThat(request.getName(line)).isEqualTo(BAR_NAME);
         assertThat(request.getEmail(line)).isEqualTo(BAR_EMAIL);
-        assertThat(request.getCommit(line)).isEqualTo(sampleRepo.head());
+        assertThat(request.getCommit(line)).isEqualTo(getHead());
     }
 
-    private void assertThatBlameIs(final BlameRequest request, final int line) throws Exception {
+    private void assertThatBlameIs(final BlameRequest request, final int line) {
         assertThat(request.getName(line)).isEqualTo(FOO_NAME);
         assertThat(request.getEmail(line)).isEqualTo(FOO_EMAIL);
-        assertThat(request.getCommit(line)).isNotEqualTo(sampleRepo.head());
+        assertThat(request.getCommit(line)).isNotEqualTo(getHead());
     }
 
-    private void assertThatBlameIsEmpty(final BlameRequest request, final int line) throws Exception {
+    private void assertThatBlameIsEmpty(final BlameRequest request, final int line) {
         assertThat(request.getName(line)).isEqualTo("-");
         assertThat(request.getEmail(line)).isEqualTo("-");
-        assertThat(request.getCommit(line)).isNotEqualTo(sampleRepo.head());
+        assertThat(request.getCommit(line)).isNotEqualTo(getHead());
     }
 
-    private Repository createRepository() throws IOException {
-        return new RepositoryBuilder().setWorkTree(sampleRepo.getRoot()).build();
+    @SuppressWarnings("IllegalCatch")
+    private ObjectId getHeadCommit() {
+        try {
+            return ObjectId.fromString(getHead());
+        }
+        catch (Exception exception) {
+            throw new AssertionError(exception);
+        }
+    }
+
+    @SuppressWarnings("IllegalCatch")
+    private String getHead() {
+        try {
+            return sampleRepo.head();
+        }
+        catch (Exception exception) {
+            throw new AssertionError(exception);
+        }
+    }
+
+    private Repository createRepository() {
+        try {
+            return new RepositoryBuilder().setWorkTree(sampleRepo.getRoot()).build();
+        }
+        catch (IOException exception) {
+            throw new AssertionError(exception);
+        }
     }
 }
