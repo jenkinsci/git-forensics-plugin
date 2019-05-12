@@ -465,13 +465,8 @@
           <version>${jacoco-maven-plugin.version}</version>
           <configuration>
             <includes>
-              <include>io/jenkins/plugins/analysis/**/*</include>
+              <include>io/jenkins/plugins/git/forensics/**/*</include>
             </includes>
-            <excludes>
-              <exclude>**/JenkinsFacade.*</exclude>
-              <exclude>**/*BlameRunner.*</exclude>
-              <exclude>**/NullAnalysisHistory.*</exclude>
-            </excludes>
           </configuration>
           <executions>
             <execution>
