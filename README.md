@@ -12,3 +12,7 @@ by the [Jenkins Warning Next Generation Plugin](https://github.com/jenkinsci/war
 
 The following services are provided by this plugin:
 - Git blames: Shows what revision and author last modified a specified set of lines of a file.
+
+[![Travis](https://img.shields.io/travis/uhafner/git-forensics-plugin.svg?logo=travis&label=travis%20build&logoColor=white)](https://travis-ci.org/uhafner/git-forensics-plugin)
+[![Codecov](https://img.shields.io/codecov/c/github/uhafner/git-forensics-plugin.svg)](https://codecov.io/gh/uhafner/git-forensics-plugin)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/uhafner/git-forensics-plugin.svg)](https://github.com/uhafner/git-forensics-plugin/pulls)
