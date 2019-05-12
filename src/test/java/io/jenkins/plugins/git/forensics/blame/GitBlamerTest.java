@@ -1,4 +1,4 @@
-package io.jenkins.plugins.git.forensics;
+package io.jenkins.plugins.git.forensics.blame;
 
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
@@ -11,8 +11,8 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 
-import io.jenkins.plugins.git.forensics.GitBlamer.BlameCallback;
-import io.jenkins.plugins.git.forensics.GitBlamer.BlameRunner;
+import io.jenkins.plugins.git.forensics.blame.GitBlamer.BlameCallback;
+import io.jenkins.plugins.git.forensics.blame.GitBlamer.BlameRunner;
 
 import static io.jenkins.plugins.plugins.git.forensics.assertions.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -25,7 +25,6 @@ import static org.mockito.Mockito.*;
 class GitBlamerTest {
     private static final String EMAIL = "email";
     private static final String NAME = "name";
-    private static final String WORKSPACE = "workspace";
 
     @Test
     @Issue("JENKINS-55273")

@@ -1,8 +1,8 @@
-package io.jenkins.plugins.git.forensics;
+package io.jenkins.plugins.git.forensics.blame;
 
 import org.junit.jupiter.api.Test;
 
-import static io.jenkins.plugins.git.forensics.BlameRequest.*;
+import static io.jenkins.plugins.git.forensics.blame.BlameRequest.*;
 import static org.assertj.core.api.Assertions.*;
 
 /**

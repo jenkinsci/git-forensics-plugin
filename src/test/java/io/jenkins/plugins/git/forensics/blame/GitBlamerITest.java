@@ -1,4 +1,4 @@
-package io.jenkins.plugins.git.forensics;
+package io.jenkins.plugins.git.forensics.blame;
 
 import java.io.IOException;
 
@@ -11,7 +11,7 @@ import org.junit.Test;
 
 import jenkins.plugins.git.GitSampleRepoRule;
 
-import io.jenkins.plugins.git.forensics.GitBlamer.BlameCallback;
+import io.jenkins.plugins.git.forensics.blame.GitBlamer.BlameCallback;
 
 import static io.jenkins.plugins.plugins.git.forensics.assertions.Assertions.*;
 

@@ -1,4 +1,4 @@
-package io.jenkins.plugins.git.forensics;
+package io.jenkins.plugins.git.forensics.blame;
 
 import java.util.NoSuchElementException;
 
