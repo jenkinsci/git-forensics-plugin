@@ -106,7 +106,7 @@ class GitBlamer implements Serializable {
             for (BlameRequest request : blames.getRequests()) {
                 run(request, blameRunner);
                 if (Thread.interrupted()) { // Cancel request by user
-                    String message = "Thread was interrupted while computing blame information";
+                    String message = "Blaming has been interrupted while computing blame information";
                     blames.logInfo(message);
                     throw new InterruptedException(message);
                 }
