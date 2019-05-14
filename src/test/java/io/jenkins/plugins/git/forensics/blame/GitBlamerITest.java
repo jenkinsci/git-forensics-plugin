@@ -68,7 +68,6 @@ public class GitBlamerITest extends GitITest {
         assertThatBlameIsHeadWith(request, 4);
         assertThatBlameIs(request, 5);
         assertThatBlameIsEmpty(request, 6);
-
     }
 
     private void create2RevisionsWithDifferentAuthors() {
@@ -77,14 +76,12 @@ public class GitBlamerITest extends GitITest {
         git("config", "user.name", FOO_NAME);
         git("config", "user.email", FOO_EMAIL);
         git("commit", "--message=Init");
-        git("rev-parse", "HEAD");
 
         writeFile(FILE_NAME, "OLD\nOLD\nNEW\nNEW\nOLD\nOLD\n");
         git("add", FILE_NAME);
         git("config", "user.name", BAR_NAME);
         git("config", "user.email", BAR_EMAIL);
         git("commit", "--message=Change");
-        git("rev-parse", "HEAD");
     }
 
     private void assertThatBlameIsHeadWith(final BlameRequest request, final int line) {

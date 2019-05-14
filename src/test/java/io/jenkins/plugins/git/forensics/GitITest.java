@@ -69,7 +69,7 @@ public class GitITest {
      */
     protected Repository createRepository() {
         try {
-            return new RepositoryBuilder().setWorkTree(sampleRepo.getRoot()).build();
+            return new RepositoryBuilder().setWorkTree(sampleRepo.getRoot()).setMustExist(true).build();
         }
         catch (IOException exception) {
             throw new AssertionError(exception);
