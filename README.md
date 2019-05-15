@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub pull requests](https://img.shields.io/github/issues-pr/uhafner/git-forensics-plugin.svg)](https://github.com/uhafner/git-forensics-plugin/pulls)
 
-This Git Forensics Jenkins plug-in mines and analyzes data from a Git repository. Currently, this plugin is only used
+This Git Forensics Jenkins plugin mines and analyzes data from a Git repository. Currently, this plugin is only used
 by [Jenkins´ Warning Next Generation Plugin](https://github.com/jenkinsci/warnings-ng-plugin). 
 
 The following services are provided by this plugin:
