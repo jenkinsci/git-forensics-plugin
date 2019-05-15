@@ -16,6 +16,7 @@ import static io.jenkins.plugins.plugins.git.forensics.assertions.Assertions.*;
  * @author Ullrich Hafner
  */
 public class RepositoryMinerITest extends GitITest {
+    /** Verifies that the single file of the default initialization does have 1 commit and author. */
     @Test
     public void shouldCollectSingleFile() {
         Repository repository = createRepository();
@@ -37,6 +38,7 @@ public class RepositoryMinerITest extends GitITest {
         assertThat(fileStatistics).hasLastModifiedInDays(0);
     }
 
+    /** Verifies that the number of commits is correctly detected. */
     @Test
     public void shouldCountNumberOfCommits() {
         writeFileAsAuthorFoo("First");
@@ -60,6 +62,7 @@ public class RepositoryMinerITest extends GitITest {
         assertThat(fileStatistics).hasLastModifiedInDays(0);
     }
 
+    /** Verifies that the number of distinct authors is correctly detected. */
     @Test
     public void shouldCountNumberOfAuthors() {
         writeFileAsAuthorFoo("First");

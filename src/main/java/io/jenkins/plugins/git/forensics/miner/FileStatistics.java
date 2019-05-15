@@ -17,7 +17,13 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
 /**
- * FIXME: comment class.
+ * Aggregates Git commit statistics for a given file:
+ * <ul>
+ *     <li>total number of commits</li>
+ *     <li>total number of different authors</li>
+ *     <li>creation time</li>
+ *     <li>last modification time</li>
+ * </ul>
  *
  * @author Ullrich Hafner
  */
@@ -30,8 +36,8 @@ public class FileStatistics implements Serializable {
 
     private transient Set<String> authors = new HashSet<>();
 
-    protected Object readResolve() {
-        authors = new HashSet<>(); // restore empty set
+    private Object readResolve() {
+        authors = new HashSet<>(); // restore an empty set since the authors set is used only during aggregation
 
         return this;
     }
@@ -60,7 +66,7 @@ public class FileStatistics implements Serializable {
         return computeDaysSince(lastModificationTime);
     }
 
-    public void add(final RevCommit commit) {
+    void add(final RevCommit commit) {
         if (lastModificationTime == 0) {
             lastModificationTime = commit.getCommitTime();
         }

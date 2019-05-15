@@ -11,14 +11,19 @@ import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.treewalk.TreeWalk;
 
+/**
+ * Collects all files of a Git repository.
+ *
+ * @author Ullrich Hafner
+ */
 public class FilesCollector {
     private final Repository repository;
 
-    public FilesCollector(final Repository repository) {
+    FilesCollector(final Repository repository) {
         this.repository = repository;
     }
 
-    public Set<String> findAllFor(final ObjectId commitId) {
+    Set<String> findAllFor(final ObjectId commitId) {
         try {
             RevWalk revWalk = new RevWalk(repository);
             RevTree tree = revWalk.parseCommit(commitId).getTree();

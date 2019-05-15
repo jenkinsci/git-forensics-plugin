@@ -12,6 +12,7 @@ import static org.assertj.core.api.Assertions.*;
  * @author Ullrich Hafner
  */
 public class FilesCollectorITest extends GitITest {
+    /** Verifies that the single file of the default initialization will be found. */
     @Test
     public void shouldCollectSingleFile() {
         FilesCollector collector = new FilesCollector(createRepository());
@@ -19,6 +20,7 @@ public class FilesCollectorITest extends GitITest {
         assertThat(collector.findAllFor(getHeadCommit())).containsExactly("file");
     }
 
+    /** Verifies that several files in the top level directory will be found. */
     @Test
     public void shouldCollectFlatFiles() {
         for (int i = 1; i < 4; i++) {
@@ -36,6 +38,7 @@ public class FilesCollectorITest extends GitITest {
                 "file1.txt", "file2.txt", "file3.txt");
     }
 
+    /** Verifies that several files in a hierarchy of directories will be found. */
     @Test
     public void shouldCollectHierarchyOfFiles() {
         String path = "";
