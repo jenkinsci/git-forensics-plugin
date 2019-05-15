@@ -16,6 +16,11 @@ import jenkins.plugins.git.GitSampleRepoRule;
  * @author Ullrich Hafner
  */
 public class GitITest {
+    protected static final String FILE_NAME = "source.txt";
+    protected static final String FOO_NAME = "Foo";
+    protected static final String FOO_EMAIL = "foo@jenkins.io";
+    protected static final String BAR_NAME = "Bar";
+    protected static final String BAR_EMAIL = "bar@jenkins.io";
     /** Git repository in a temporary folder. */
     @Rule
     public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
@@ -107,5 +112,21 @@ public class GitITest {
         catch (Exception exception) {
             throw new AssertionError(exception);
         }
+    }
+
+    protected void writeFileAsAuthorBar(final String content) {
+        writeFile(FILE_NAME, content);
+        git("add", FILE_NAME);
+        git("config", "user.name", BAR_NAME);
+        git("config", "user.email", BAR_EMAIL);
+        git("commit", "--message=Bar");
+    }
+
+    protected void writeFileAsAuthorFoo(final String content) {
+        writeFile(FILE_NAME, content);
+        git("add", FILE_NAME);
+        git("config", "user.name", FOO_NAME);
+        git("config", "user.email", FOO_EMAIL);
+        git("commit", "--message=Foo");
     }
 }

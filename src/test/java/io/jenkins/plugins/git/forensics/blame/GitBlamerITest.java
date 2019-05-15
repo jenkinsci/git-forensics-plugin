@@ -13,12 +13,6 @@ import static io.jenkins.plugins.plugins.git.forensics.assertions.Assertions.*;
  * @author Ullrich Hafner
  */
 public class GitBlamerITest extends GitITest {
-    private static final String FILE_NAME = "source.txt";
-    private static final String FOO_NAME = "Foo";
-    private static final String FOO_EMAIL = "foo@jenkins.io";
-    private static final String BAR_NAME = "Bar";
-    private static final String BAR_EMAIL = "bar@jenkins.io";
-
     /**
      * Verifies that the blames are empty if there are no requests defined.
      *
@@ -71,17 +65,9 @@ public class GitBlamerITest extends GitITest {
     }
 
     private void create2RevisionsWithDifferentAuthors() {
-        writeFile(FILE_NAME, "OLD\nOLD\nOLD\nOLD\nOLD\nOLD\n");
-        git("add", FILE_NAME);
-        git("config", "user.name", FOO_NAME);
-        git("config", "user.email", FOO_EMAIL);
-        git("commit", "--message=Init");
+        writeFileAsAuthorFoo("OLD\nOLD\nOLD\nOLD\nOLD\nOLD\n");
 
-        writeFile(FILE_NAME, "OLD\nOLD\nNEW\nNEW\nOLD\nOLD\n");
-        git("add", FILE_NAME);
-        git("config", "user.name", BAR_NAME);
-        git("config", "user.email", BAR_EMAIL);
-        git("commit", "--message=Change");
+        writeFileAsAuthorBar("OLD\nOLD\nNEW\nNEW\nOLD\nOLD\n");
     }
 
     private void assertThatBlameIsHeadWith(final BlameRequest request, final int line) {
