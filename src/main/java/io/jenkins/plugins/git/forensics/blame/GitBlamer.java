@@ -31,7 +31,7 @@ import hudson.remoting.VirtualChannel;
  * @see <a href="http://issues.jenkins-ci.org/browse/JENKINS-6748">Issue 6748</a>
  */
 @SuppressFBWarnings(value = "SE", justification = "GitClient implementation is Serializable")
-class GitBlamer implements Serializable {
+public class GitBlamer implements Serializable {
     private static final long serialVersionUID = -619059996626444900L;
 
     private final GitClient git;
@@ -46,7 +46,7 @@ class GitBlamer implements Serializable {
      * @param gitCommit
      *         content of environment variable GIT_COMMIT
      */
-    GitBlamer(final GitClient git, final String gitCommit) {
+    public GitBlamer(final GitClient git, final String gitCommit) {
         workspace = git.getWorkTree();
         this.git = git;
         this.gitCommit = gitCommit;
