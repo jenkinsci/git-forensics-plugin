@@ -1,8 +1,0 @@
-<?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:t="/lib/hudson">
-
-    <t:summary icon="${it.hasLargeImage() ? it.largeImageName : icon}">
-        <j:out value="${it.summary}" />
-    </t:summary>
-
-</j:jelly>

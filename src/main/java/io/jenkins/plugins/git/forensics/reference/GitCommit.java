@@ -13,6 +13,8 @@ import java.io.Serializable;
  */
 public class GitCommit implements RunAction2, Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private transient Run<?, ?> run;
 
     private final String id;
@@ -22,6 +24,10 @@ public class GitCommit implements RunAction2, Serializable {
         this.run = run;
         this.id = id;
         this.name = name;
+    }
+
+    public String getSummary(){
+        return "Summary";
     }
 
     @Override

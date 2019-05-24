@@ -311,7 +311,7 @@
           <includeTests>true</includeTests>
         </configuration>
       </plugin>
-      <plugin>
+      <!--<plugin>
         <groupId>org.revapi</groupId>
         <artifactId>revapi-maven-plugin</artifactId>
         <version>${revapi-maven-plugin.version}</version>
@@ -370,7 +370,7 @@
             <phase>verify</phase>
           </execution>
         </executions>
-      </plugin>
+      </plugin>-->
       <plugin>
         <groupId>org.assertj</groupId>
         <artifactId>assertj-assertions-generator-maven-plugin</artifactId>

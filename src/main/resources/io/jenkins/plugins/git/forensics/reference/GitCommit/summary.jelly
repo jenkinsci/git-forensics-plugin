@@ -1,0 +1,9 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:t="/lib/hudson">
+
+    <t:summary icon="/plugin/git-forensics/icons/git-commit-48x48.png">
+<!--        <j:out value="${it.summary}" />-->
+        Hello World ${it.summary}
+    </t:summary>
+
+</j:jelly>

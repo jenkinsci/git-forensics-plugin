@@ -1,13 +1,31 @@
 package io.jenkins.plugins.git.forensics.reference;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.Launcher;
+import hudson.init.InitMilestone;
+import hudson.init.Initializer;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.BuildListener;
+import hudson.model.Run;
+import hudson.tasks.BuildStepDescriptor;
+import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
+import hudson.util.ComboBoxModel;
+import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
 import org.apache.commons.lang3.StringUtils;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.QueryParameter;
+
+import java.io.IOException;
 
 /**
  * Recorder for finding reference Jobs and intersection Points in the git history.
+ * PostBuildAction
  *
  * @author Ullrich Hafner
  * @author Arne Schöntag
@@ -27,6 +45,12 @@ public class GitReferenceRecorder extends Recorder {
     @DataBoundConstructor
     public GitReferenceRecorder() {
         super();
+    }
+
+    @Override
+    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+        build.addAction(new GitCommit(build, id, name));
+        return true;
     }
 
     //TODO call reference classes to find intersection/log git commits.
@@ -85,5 +109,29 @@ public class GitReferenceRecorder extends Recorder {
     @DataBoundSetter
     public void setName(String name) {
         this.name = name;
+    }
+
+    /**
+     * Descriptor for this step: defines the context and the UI elements.
+     */
+    @Extension
+    @Symbol("gitForensics")
+    @SuppressWarnings("unused") // most methods are used by the corresponding jelly view
+    public static class Descriptor extends BuildStepDescriptor<Publisher> {
+
+
+
+        @NonNull
+        @Override
+        public String getDisplayName() {
+            return "Git Forensics Recorder";
+        }
+
+        @Override
+        public boolean isApplicable(final Class<? extends AbstractProject> jobType) {
+            return true;
+        }
+
+
     }
 }

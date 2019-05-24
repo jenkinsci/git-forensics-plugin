@@ -13,13 +13,14 @@ import java.util.List;
  */
 public class GitCommitLog implements Serializable {
 
+    private static final long serialVersionUID = 2L;
     // Default value 100
     private final int maxCommits;
 
     /** Holds the hash keys of the commit reversions */
     final List<String> reversions = new ArrayList<>();
 
-    private final Repository repo;
+    private transient final Repository repo;
 
     public GitCommitLog(Repository repo) {
         this(repo, 100);
