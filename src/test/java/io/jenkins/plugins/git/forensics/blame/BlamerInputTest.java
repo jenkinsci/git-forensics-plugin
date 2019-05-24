@@ -19,7 +19,6 @@ class BlamerInputTest {
     private static final String WINDOWS_RELATIVE_PATH = "with/file.txt";
     private static final String WINDOWS_ABSOLUTE_PATH = "C:/absolute/path/to/workspace/" + WINDOWS_RELATIVE_PATH;
     private static final String ANOTHER_FILE = "another-file.txt";
-    private static final String ANOTHER_ABSOLUTE_PATH = WORKSPACE + ANOTHER_FILE;
 
     @Test
     void shouldCreateEmptyInstance() {
@@ -40,7 +39,7 @@ class BlamerInputTest {
         assertThat(blames).hasFiles(RELATIVE_PATH);
         assertThat(blames.contains(RELATIVE_PATH)).isTrue();
 
-        assertThat(blames.getRequests()).containsExactly(1);
+        assertThat(blames.get(RELATIVE_PATH)).containsExactly(1);
         assertThat(blames).hasNoSkippedFiles();
     }
 
@@ -66,7 +65,7 @@ class BlamerInputTest {
         assertThat(blames).hasFiles(RELATIVE_PATH);
         assertThat(blames.contains(RELATIVE_PATH)).isTrue();
 
-        assertThat(blames.getRequests()).containsExactly(1);
+        assertThat(blames.get(RELATIVE_PATH)).containsExactly(1);
     }
 
     @Test
@@ -79,7 +78,6 @@ class BlamerInputTest {
         assertThat(blames.size()).isEqualTo(1);
         assertThat(blames).hasFiles(RELATIVE_PATH);
 
-        assertThat(blames.getRequests()).containsExactly(1, 2);
         assertThat(blames.get(RELATIVE_PATH)).containsExactly(1, 2);
     }
 
@@ -93,7 +91,6 @@ class BlamerInputTest {
         assertThat(blames.size()).isEqualTo(2);
         assertThat(blames).hasFiles(RELATIVE_PATH, ANOTHER_FILE);
 
-        assertThat(blames.getRequests()).containsExactlyInAnyOrder(1, 2);
         assertThat(blames.get(RELATIVE_PATH)).containsExactly(1);
         assertThat(blames.get(ANOTHER_FILE)).containsExactly(2);
 

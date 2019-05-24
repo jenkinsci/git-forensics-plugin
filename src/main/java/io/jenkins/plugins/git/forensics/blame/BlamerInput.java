@@ -12,8 +12,7 @@ import org.eclipse.collections.impl.factory.Multimaps;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
 /**
- * Provides access to the blame information of report. Collects all blames for a set of affected files. Additionally,
- * info and error messages during the SCM processing will be stored.
+ * Defines a request to obtain the blames for a collection of workspace files (and locations inside each file).
  *
  * @author Ullrich Hafner
  */
@@ -111,15 +110,6 @@ public class BlamerInput implements Serializable {
      */
     public Set<String> getFiles() {
         return blamesPerFile.keySet().toSet();
-    }
-
-    /**
-     * Returns all stored requests.
-     *
-     * @return the requests
-     */
-    public Set<Integer> getRequests() {
-        return blamesPerFile.valuesView().toSet();
     }
 
     /**
