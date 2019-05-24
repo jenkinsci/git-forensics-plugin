@@ -26,6 +26,7 @@
     <error-prone.version>2.3.3</error-prone.version>
     <spotbugs.annotations>3.1.12</spotbugs.annotations>
     <commons.lang.version>3.9</commons.lang.version>
+    <eclipse-collections.version>9.2.0</eclipse-collections.version>
 
     <!-- Jenkins Plugin Dependencies Versions -->
     <git-plugin.version>3.9.1</git-plugin.version>
@@ -99,6 +100,16 @@
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
       <version>${commons.lang.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.collections</groupId>
+      <artifactId>eclipse-collections-api</artifactId>
+      <version>${eclipse-collections.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.collections</groupId>
+      <artifactId>eclipse-collections</artifactId>
+      <version>${eclipse-collections.version}</version>
     </dependency>
 
     <!-- Jenkins Plugin Dependencies -->
