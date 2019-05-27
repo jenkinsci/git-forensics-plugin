@@ -33,18 +33,19 @@ public class BlameRequest implements Iterable<Integer>, Serializable {
      *
      * @param fileName
      *         the file name
-     * @param lineNumber
-     *         the line number
      */
-    public BlameRequest(final String fileName, final int lineNumber) {
+    public BlameRequest(final String fileName) {
         this.fileName = fileName;
-
-        add(lineNumber);
     }
 
     private BlameRequest add(final int lineNumber) {
         lines.add(lineNumber);
+
         return this;
+    }
+
+    public Set<Integer> getLines() {
+        return lines;
     }
 
     /**
@@ -153,6 +154,7 @@ public class BlameRequest implements Iterable<Integer>, Serializable {
 
     private void setInternedStringValue(final Map<Integer, String> map, final int lineNumber, final String value) {
         map.put(lineNumber, value.intern());
+        lines.add(lineNumber);
     }
 
     /**

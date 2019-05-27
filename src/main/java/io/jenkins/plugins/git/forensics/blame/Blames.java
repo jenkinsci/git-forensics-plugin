@@ -3,17 +3,12 @@ package io.jenkins.plugins.git.forensics.blame;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
-
 import com.google.errorprone.annotations.FormatMethod;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
 
 import io.jenkins.plugins.git.forensics.FilteredLog;
 
@@ -27,31 +22,7 @@ public class Blames implements Serializable {
     private static final long serialVersionUID = -7884822502506035784L;
 
     private final Map<String, BlameRequest> blamesPerFile = new HashMap<>();
-    private final Set<String> skippedFiles = new HashSet<>();
     private final FilteredLog log = new FilteredLog("Errors while extracting author and commit information from Git: ");
-
-    private final String workspace;
-
-    /**
-     * Creates an empty instance of {@link Blames}.
-     */
-    public Blames() {
-        this(StringUtils.EMPTY);
-    }
-
-    /**
-     * Creates an empty instance of {@link Blames} that will work on the specified workspace.
-     *
-     * @param workspace
-     *         the workspace to get the Git repository from
-     */
-    public Blames(final String workspace) {
-        this.workspace = normalizeFileName(workspace);
-    }
-
-    private String normalizeFileName(@Nullable final String platformFileName) {
-        return StringUtils.replace(StringUtils.strip(platformFileName), "\\", "/");
-    }
 
     /**
      * Returns whether there are files with blames in this instance.
@@ -81,32 +52,6 @@ public class Blames implements Serializable {
      */
     public boolean contains(final String fileName) {
         return blamesPerFile.containsKey(fileName);
-    }
-
-    /**
-     * Adds a blame request for the specified affected file and line number. This file and line will be processed by Git
-     * blame later on.
-     *
-     * @param fileName
-     *         the absolute file name that will be used as a key
-     * @param lineStart
-     *         the line number to find the blame for
-     */
-    public void addLine(final String fileName, final int lineStart) {
-        if (contains(fileName)) {
-            BlameRequest request = blamesPerFile.get(fileName);
-            request.addLineNumber(lineStart);
-        }
-        else {
-            if (fileName.startsWith(workspace)) {
-                String relativeFileName = fileName.substring(workspace.length());
-                String cleanFileName = StringUtils.removeStart(relativeFileName, "/");
-                blamesPerFile.put(fileName, new BlameRequest(cleanFileName, lineStart));
-            }
-            else {
-                skippedFiles.add(fileName);
-            }
-        }
     }
 
     /**
@@ -153,12 +98,16 @@ public class Blames implements Serializable {
     public void addAll(final Blames other) {
         for (String otherFile : other.blamesPerFile.keySet()) {
             BlameRequest otherRequest = other.get(otherFile);
-            if (contains(otherFile)) {
-                get(otherFile).merge(otherRequest);
-            }
-            else {
-                blamesPerFile.put(otherFile, otherRequest);
-            }
+            merge(otherFile, otherRequest);
+        }
+    }
+
+    private void merge(final String otherFile, final BlameRequest otherRequest) {
+        if (contains(otherFile)) {
+            get(otherFile).merge(otherRequest);
+        }
+        else {
+            blamesPerFile.put(otherFile, otherRequest);
         }
     }
 
@@ -223,5 +172,9 @@ public class Blames implements Serializable {
 
     public List<String> getInfoMessages() {
         return log.getInfoMessages();
+    }
+
+    public void add(final BlameRequest request) {
+        merge(request.getFileName(), request);
     }
 }

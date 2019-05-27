@@ -35,12 +35,12 @@ class GitBlamerTest {
 
     private void verifyExceptionHandling(final Class<? extends Exception> exception) throws GitAPIException {
         Blames blames = new Blames();
-        BlameCallback callback = new BlameCallback(blames, mock(ObjectId.class));
+        BlamerInput blamerInput = new BlamerInput();
+        BlameCallback callback = new BlameCallback(blamerInput, blames, mock(ObjectId.class));
 
-        BlameRequest request = new BlameRequest("exception", 1);
         BlameRunner runner = mock(BlameRunner.class);
         when(runner.run("exception")).thenThrow(exception);
-        callback.run(request, runner);
+        callback.run("exception", runner);
 
         assertThat(blames.getErrorMessages()).hasSize(3);
         assertThat(blames.getErrorMessages().get(1)).startsWith(
@@ -50,22 +50,30 @@ class GitBlamerTest {
 
     @Test
     void shouldMapResultToRequestWithOneLine() throws GitAPIException {
-        BlameCallback callback = new BlameCallback(new Blames(), mock(ObjectId.class));
+        BlamerInput input = new BlamerInput();
+        input.addLine("file", 1);
+
+        Blames blames = new Blames();
+        BlameCallback callback = new BlameCallback(input, blames, mock(ObjectId.class));
 
         BlameResult result = createResult(1);
 
         createResultForLine(result, 0);
 
         BlameRunner blameRunner = createBlameRunner(result);
-        BlameRequest request = new BlameRequest("file", 1);
-        callback.run(request, blameRunner);
+        callback.run("file", blameRunner);
 
-        verifyResult(request, 1);
+        verifyResult(blames.get("file"), 1);
     }
 
     @Test
     void shouldMapResultToRequestWithTwoLines() throws GitAPIException {
-        BlameCallback callback = new BlameCallback(new Blames(), mock(ObjectId.class));
+        BlamerInput input = new BlamerInput();
+        input.addLine("file", 1);
+        input.addLine("file", 2);
+
+        Blames blames = new Blames();
+        BlameCallback callback = new BlameCallback(input, blames, mock(ObjectId.class));
 
         BlameResult result = createResult(2);
 
@@ -73,24 +81,25 @@ class GitBlamerTest {
         createResultForLine(result, 1);
 
         BlameRunner blameRunner = createBlameRunner(result);
-        BlameRequest request = new BlameRequest("file", 1).addLineNumber(2);
-        callback.run(request, blameRunner);
+        callback.run("file", blameRunner);
 
-        verifyResult(request, 1);
-        verifyResult(request, 2);
+        verifyResult(blames.get("file"), 1);
+        verifyResult(blames.get("file"), 2);
     }
 
     @Test
     void shouldMapResultToRequestOutOfRange() throws GitAPIException {
-        BlameCallback callback = new BlameCallback(new Blames(), mock(ObjectId.class));
+        BlamerInput input = new BlamerInput();
+        input.addLine("file", 1);
+        BlameCallback callback = new BlameCallback(input, new Blames(), mock(ObjectId.class));
 
         BlameResult result = createResult(2);
 
         createResultForLine(result, 2);
 
         BlameRunner blameRunner = createBlameRunner(result);
-        BlameRequest request = new BlameRequest("file", 3);
-        callback.run(request, blameRunner);
+        BlameRequest request = new BlameRequest("file").addLineNumber(3);
+        callback.run("file", blameRunner);
 
         assertThat(request.getEmail(3)).isEqualTo("-");
         assertThat(request.getName(3)).isEqualTo("-");

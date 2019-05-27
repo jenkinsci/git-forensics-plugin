@@ -52,33 +52,36 @@ public class GitBlamer implements Serializable {
         this.gitCommit = gitCommit;
     }
 
-    public Blames blame(final Blames request) {
+    public Blames blame(final BlamerInput input) {
+        Blames blames = new Blames();
         try {
-            request.logInfo("Invoking Git blamer to create author and commit information for all affected files");
-            request.logInfo("GIT_COMMIT env = '%s'", gitCommit);
-            request.logInfo("Git working tree = '%s'", git.getWorkTree());
+
+            blames.logInfo("Invoking Git blamer to create author and commit information for all affected files");
+            blames.logInfo("GIT_COMMIT env = '%s'", gitCommit);
+            blames.logInfo("Git working tree = '%s'", git.getWorkTree());
 
             ObjectId headCommit = git.revParse(gitCommit);
             if (headCommit == null) {
-                request.logError("Could not retrieve HEAD commit, aborting");
+                blames.logError("Could not retrieve HEAD commit, aborting");
                 return new Blames();
             }
-            request.logInfo("Git commit ID = '%s'", headCommit.getName());
+            blames.logInfo("Git commit ID = '%s'", headCommit.getName());
 
             String workspacePath = getWorkspacePath();
-            request.logInfo("Job workspace = '%s'", workspacePath);
-            return git.withRepository(new BlameCallback(request, headCommit));
+            blames.logInfo("Job workspace = '%s'", workspacePath);
+
+            return git.withRepository(new BlameCallback(input, blames, headCommit));
         }
         catch (IOException exception) {
-            request.logException(exception, "Computing blame information failed with an exception:");
+            blames.logException(exception, "Computing blame information failed with an exception:");
         }
         catch (GitException exception) {
-            request.logException(exception, "Can't determine head commit using 'git rev-parse'. Skipping blame.");
+            blames.logException(exception, "Can't determine head commit using 'git rev-parse'. Skipping blame.");
         }
         catch (InterruptedException e) {
             // nothing to do, already logged
         }
-        return new Blames();
+        return blames;
     }
 
     private String getWorkspacePath() throws IOException {
@@ -92,9 +95,11 @@ public class GitBlamer implements Serializable {
         private static final long serialVersionUID = 8794666938104738260L;
 
         private final ObjectId headCommit;
+        private final BlamerInput input;
         private final Blames blames;
 
-        BlameCallback(final Blames blames, final ObjectId headCommit) {
+        BlameCallback(final BlamerInput input, final Blames blames, final ObjectId headCommit) {
+            this.input = input;
             this.blames = blames;
             this.headCommit = headCommit;
         }
@@ -103,8 +108,9 @@ public class GitBlamer implements Serializable {
         public Blames invoke(final Repository repo, final VirtualChannel channel) throws InterruptedException {
             BlameRunner blameRunner = new BlameRunner(repo, headCommit);
 
-            for (BlameRequest request : blames.getRequests()) {
-                run(request, blameRunner);
+            for (String file : input.getFiles()) {
+                run(file, blameRunner);
+
                 if (Thread.interrupted()) { // Cancel request by user
                     String message = "Blaming has been interrupted while computing blame information";
                     blames.logInfo(message);
@@ -121,21 +127,21 @@ public class GitBlamer implements Serializable {
         /**
          * Runs Git blame for one file.
          *
-         * @param request
-         *         the request that identifies the file
+         * @param fileName
+         *         the file to get the blames for
          * @param blameRunner
          *         the runner to invoke Git
          */
         // FIXME: @VisibleForTesting
-        void run(final BlameRequest request, final BlameRunner blameRunner) {
-            String fileName = request.getFileName();
+        void run(final String fileName, final BlameRunner blameRunner) {
             try {
                 BlameResult blame = blameRunner.run(fileName);
                 if (blame == null) {
-                    blames.logError("- no blame results for request <%s>.%n", request);
+                    blames.logError("- no blame results for file <%s>.%n", fileName);
                 }
                 else {
-                    for (int line : request) {
+                    for (int line : input.get(fileName)) {
+                        BlameRequest request = new BlameRequest(fileName);
                         int lineIndex = line - 1; // first line is index 0
                         if (lineIndex < blame.getResultContents().size()) {
                             PersonIdent who = blame.getSourceAuthor(lineIndex);
@@ -155,6 +161,8 @@ public class GitBlamer implements Serializable {
                                 request.setCommit(line, commit.getName());
                             }
                         }
+                        blames.add(request);
+
                     }
                 }
             }

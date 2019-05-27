@@ -27,7 +27,7 @@ public class GitBlamerITest extends GitITest {
      */
     @Test
     public void shouldCreateEmptyBlamesIfRequestIsEmpty() throws InterruptedException {
-        BlameCallback blameCallback = new BlameCallback(new Blames(), getHeadCommit());
+        BlameCallback blameCallback = new BlameCallback(new BlamerInput(), new Blames(), getHeadCommit());
 
         Blames blames = blameCallback.invoke(createRepository(), null);
 
@@ -44,13 +44,14 @@ public class GitBlamerITest extends GitITest {
     public void shouldCreateBlamesIfRequestIsExistingFile() throws InterruptedException {
         create2RevisionsWithDifferentAuthors();
 
-        Blames blames = new Blames();
-        blames.addLine(FILE_NAME, 2);
-        blames.addLine(FILE_NAME, 3);
-        blames.addLine(FILE_NAME, 4);
-        blames.addLine(FILE_NAME, 5);
+        BlamerInput input = new BlamerInput();
+        input.addLine(FILE_NAME, 2);
+        input.addLine(FILE_NAME, 3);
+        input.addLine(FILE_NAME, 4);
+        input.addLine(FILE_NAME, 5);
 
-        BlameCallback blameCallback = new BlameCallback(blames, getHeadCommit());
+        Blames blames = new Blames();
+        BlameCallback blameCallback = new BlameCallback(input, blames, getHeadCommit());
 
         assertThat(blameCallback.invoke(createRepository(), null)).isSameAs(blames);
 
@@ -68,7 +69,6 @@ public class GitBlamerITest extends GitITest {
         assertThatBlameIsHeadWith(request, 4);
         assertThatBlameIs(request, 5);
         assertThatBlameIsEmpty(request, 6);
-
     }
 
     private void create2RevisionsWithDifferentAuthors() {

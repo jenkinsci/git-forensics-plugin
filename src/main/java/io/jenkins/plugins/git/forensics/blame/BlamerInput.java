@@ -88,18 +88,13 @@ public class BlamerInput implements Serializable {
      *         the line number to find the blame for
      */
     public void addLine(final String fileName, final int lineStart) {
-        if (contains(fileName)) {
-            blamesPerFile.put(fileName, lineStart);
+        if (fileName.startsWith(workspace)) {
+            String relativeFileName = fileName.substring(workspace.length());
+            String cleanFileName = StringUtils.removeStart(relativeFileName, "/");
+            blamesPerFile.put(cleanFileName, lineStart);
         }
         else {
-            if (fileName.startsWith(workspace)) {
-                String relativeFileName = fileName.substring(workspace.length());
-                String cleanFileName = StringUtils.removeStart(relativeFileName, "/");
-                blamesPerFile.put(cleanFileName, lineStart);
-            }
-            else {
-                skippedFiles.add(fileName);
-            }
+            skippedFiles.add(fileName);
         }
     }
 
