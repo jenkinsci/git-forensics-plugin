@@ -146,8 +146,11 @@ public class GitBlamer implements Serializable {
                         if (lineIndex < blame.getResultContents().size()) {
                             PersonIdent who = blame.getSourceAuthor(lineIndex);
                             if (who == null) {
-                                blames.logError("- no author information found for line %d in file %s", lineIndex,
-                                        fileName);
+                                who = blame.getSourceCommitter(lineIndex);
+                            }
+                            if (who == null) {
+                                blames.logError("- no author or committer information found for line %d in file %s",
+                                        lineIndex, fileName);
                             }
                             else {
                                 request.setName(line, who.getName());
@@ -166,8 +169,8 @@ public class GitBlamer implements Serializable {
                 }
             }
             catch (GitAPIException | JGitInternalException exception) {
-                blames.logException(exception, "- error running git blame on '%s' with revision '%s'", fileName,
-                        headCommit);
+                blames.logException(exception, "- error running git blame on '%s' with revision '%s'",
+                        fileName, headCommit);
             }
             blames.logSummary();
         }

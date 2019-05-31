@@ -136,7 +136,7 @@ class GitBlamerTest {
     }
 
     @Test
-    void shouldIgnoreMissingAuthor() throws GitAPIException {
+    void shouldIgnoreMissingAuthorAndCommitter() throws GitAPIException {
         BlamerInput input = new BlamerInput();
         input.addLine("file", 1);
 
@@ -154,6 +154,26 @@ class GitBlamerTest {
         assertThat(blame.getEmail(1)).isEqualTo(EMPTY);
         assertThat(blame.getName(1)).isEqualTo(EMPTY);
         assertThat(blame.getCommit(1)).isNotBlank().isNotEqualTo(EMPTY);
+    }
+
+    @Test
+    void shouldUseCommitterIfAuthorIsMissing() throws GitAPIException {
+        BlamerInput input = new BlamerInput();
+        input.addLine("file", 1);
+
+        Blames blames = new Blames();
+        BlameCallback callback = new BlameCallback(input, blames, mock(ObjectId.class));
+
+        BlameResult result = createResult(1);
+        RevCommit commit = mock(RevCommit.class);
+        when(result.getSourceCommit(0)).thenReturn(commit);
+        when(result.getSourceCommitter(0)).thenReturn(new PersonIdent(NAME + 1, EMAIL + 1));
+
+        BlameRunner blameRunner = createBlameRunner(result);
+        callback.run("file", blameRunner);
+
+        FileBlame blame = blames.get("file");
+        verifyResult(blame, 1);
     }
 
     private BlameResult createResult(final int size) {
