@@ -137,7 +137,7 @@ public class GitBlamer implements Serializable {
             try {
                 BlameResult blame = blameRunner.run(fileName);
                 if (blame == null) {
-                    blames.logError("- no blame results for file <%s>.%n", fileName);
+                    blames.logError("- no blame results for file <%s>", fileName);
                 }
                 else {
                     for (int line : input.get(fileName)) {

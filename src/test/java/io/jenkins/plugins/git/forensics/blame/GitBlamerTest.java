@@ -25,6 +25,7 @@ import static org.mockito.Mockito.*;
 class GitBlamerTest {
     private static final String EMAIL = "email";
     private static final String NAME = "name";
+    private static final String EMPTY = "-";
 
     @Test
     @Issue("JENKINS-55273")
@@ -58,7 +59,7 @@ class GitBlamerTest {
 
         BlameResult result = createResult(1);
 
-        createResultForLine(result, 0);
+        stubResultForIndex(result, 0);
 
         BlameRunner blameRunner = createBlameRunner(result);
         callback.run("file", blameRunner);
@@ -77,33 +78,82 @@ class GitBlamerTest {
 
         BlameResult result = createResult(2);
 
-        createResultForLine(result, 0);
-        createResultForLine(result, 1);
+        stubResultForIndex(result, 0);
+        stubResultForIndex(result, 1);
 
         BlameRunner blameRunner = createBlameRunner(result);
         callback.run("file", blameRunner);
 
-        verifyResult(blames.get("file"), 1);
-        verifyResult(blames.get("file"), 2);
+        FileBlame blame = blames.get("file");
+        verifyResult(blame, 1);
+        verifyResult(blame, 2);
     }
 
     @Test
     void shouldMapResultToRequestOutOfRange() throws GitAPIException {
         BlamerInput input = new BlamerInput();
         input.addLine("file", 1);
-        BlameCallback callback = new BlameCallback(input, new Blames(), mock(ObjectId.class));
+        input.addLine("file", 2);
 
-        BlameResult result = createResult(2);
+        Blames blames = new Blames();
+        BlameCallback callback = new BlameCallback(input, blames, mock(ObjectId.class));
 
-        createResultForLine(result, 2);
+        BlameResult result = createResult(1);
+        stubResultForIndex(result, 0);
 
         BlameRunner blameRunner = createBlameRunner(result);
-        FileBlame request = new FileBlame("file").addLineNumber(3);
         callback.run("file", blameRunner);
 
-        assertThat(request.getEmail(3)).isEqualTo("-");
-        assertThat(request.getName(3)).isEqualTo("-");
-        assertThat(request.getCommit(3)).isEqualTo("-");
+        FileBlame blame = blames.get("file");
+        verifyResult(blame, 1);
+
+        assertThat(blame.getEmail(3)).isEqualTo(EMPTY);
+        assertThat(blame.getName(3)).isEqualTo(EMPTY);
+        assertThat(blame.getCommit(3)).isEqualTo(EMPTY);
+
+        callback.run("otherFile", blameRunner);
+        assertThat(blames).hasErrorMessages("- no blame results for file <otherFile>");
+    }
+
+    @Test
+    void shouldIgnoreMissingCommit() throws GitAPIException {
+        BlamerInput input = new BlamerInput();
+        input.addLine("file", 1);
+
+        Blames blames = new Blames();
+        BlameCallback callback = new BlameCallback(input, blames, mock(ObjectId.class));
+
+        BlameResult result = createResult(1);
+        when(result.getSourceAuthor(0)).thenReturn(new PersonIdent(NAME, EMAIL));
+
+        BlameRunner blameRunner = createBlameRunner(result);
+        callback.run("file", blameRunner);
+
+        FileBlame blame = blames.get("file");
+        assertThat(blame.getEmail(1)).isEqualTo(EMAIL);
+        assertThat(blame.getName(1)).isEqualTo(NAME);
+        assertThat(blame.getCommit(1)).isEqualTo(EMPTY);
+    }
+
+    @Test
+    void shouldIgnoreMissingAuthor() throws GitAPIException {
+        BlamerInput input = new BlamerInput();
+        input.addLine("file", 1);
+
+        Blames blames = new Blames();
+        BlameCallback callback = new BlameCallback(input, blames, mock(ObjectId.class));
+
+        BlameResult result = createResult(1);
+        RevCommit commit = mock(RevCommit.class);
+        when(result.getSourceCommit(0)).thenReturn(commit);
+
+        BlameRunner blameRunner = createBlameRunner(result);
+        callback.run("file", blameRunner);
+
+        FileBlame blame = blames.get("file");
+        assertThat(blame.getEmail(1)).isEqualTo(EMPTY);
+        assertThat(blame.getName(1)).isEqualTo(EMPTY);
+        assertThat(blame.getCommit(1)).isNotBlank().isNotEqualTo(EMPTY);
     }
 
     private BlameResult createResult(final int size) {
@@ -125,7 +175,7 @@ class GitBlamerTest {
         return text;
     }
 
-    private void createResultForLine(final BlameResult result, final int index) {
+    private void stubResultForIndex(final BlameResult result, final int index) {
         int line = index + 1;
         when(result.getSourceAuthor(index)).thenReturn(new PersonIdent(NAME + line, EMAIL + line));
         RevCommit commit = mock(RevCommit.class);
@@ -135,6 +185,6 @@ class GitBlamerTest {
     private void verifyResult(final FileBlame request, final int line) {
         assertThat(request.getEmail(line)).isEqualTo(EMAIL + line);
         assertThat(request.getName(line)).isEqualTo(NAME + line);
-        assertThat(request.getCommit(line)).isNotBlank(); // final getter
+        assertThat(request.getCommit(line)).isNotBlank().isNotEqualTo(EMPTY);// final getter
     }
 }
