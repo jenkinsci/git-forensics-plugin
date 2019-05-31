@@ -141,7 +141,7 @@ public class GitBlamer implements Serializable {
                 }
                 else {
                     for (int line : input.get(fileName)) {
-                        BlameRequest request = new BlameRequest(fileName);
+                        FileBlame request = new FileBlame(fileName);
                         int lineIndex = line - 1; // first line is index 0
                         if (lineIndex < blame.getResultContents().size()) {
                             PersonIdent who = blame.getSourceAuthor(lineIndex);
@@ -162,7 +162,6 @@ public class GitBlamer implements Serializable {
                             }
                         }
                         blames.add(request);
-
                     }
                 }
             }

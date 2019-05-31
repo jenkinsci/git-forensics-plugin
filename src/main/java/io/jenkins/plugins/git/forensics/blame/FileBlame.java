@@ -10,13 +10,11 @@ import java.util.Set;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
- * Master-Slave transfer object for blame information for a single file. This blame request defines all required line
- * numbers that should be queried for the specified file. The result of the request will be stored in this class as well
- * and contains commit ID, name and email of author (for each requested line). Blames
+ * Stores the repository blames for several lines of a single file.
  *
  * @author Ullrich Hafner
  */
-public class BlameRequest implements Iterable<Integer>, Serializable {
+public class FileBlame implements Iterable<Integer>, Serializable {
     private static final long serialVersionUID = -7491390234189584964L;
 
     static final String EMPTY = "-";
@@ -29,16 +27,16 @@ public class BlameRequest implements Iterable<Integer>, Serializable {
     private final Map<Integer, String> emailByLine = new HashMap<>();
 
     /**
-     * Creates a new instance of {@link BlameRequest}.
+     * Creates a new instance of {@link FileBlame}.
      *
      * @param fileName
-     *         the file name
+     *         the name of the file that should be blamed
      */
-    public BlameRequest(final String fileName) {
+    public FileBlame(final String fileName) {
         this.fileName = fileName;
     }
 
-    private BlameRequest add(final int lineNumber) {
+    private FileBlame add(final int lineNumber) {
         lines.add(lineNumber);
 
         return this;
@@ -54,17 +52,12 @@ public class BlameRequest implements Iterable<Integer>, Serializable {
      * @param lineNumber
      *         the line number to add
      */
-    BlameRequest addLineNumber(final int lineNumber) {
+    FileBlame addLineNumber(final int lineNumber) {
         return add(lineNumber);
     }
 
     public String getFileName() {
         return fileName;
-    }
-
-    @Override
-    public String toString() {
-        return fileName + " - " + lines;
     }
 
     @Override
@@ -158,30 +151,35 @@ public class BlameRequest implements Iterable<Integer>, Serializable {
     }
 
     /**
-     * Merges the lines of the other blame request with the lines of this instance.
+     * Merges the additional lines of the other {@link FileBlame} instance with the lines of this instance.
      *
-     * @param otherRequest
-     *         the other request
+     * @param other
+     *         the other blames
      *
      * @throws IllegalArgumentException
-     *         if the file name of the other request does not match
+     *         if the file name of the other instance does not match
      */
-    public void merge(final BlameRequest otherRequest) {
-        if (otherRequest.getFileName().equals(getFileName())) {
-            for (Integer otherLine : otherRequest) {
+    public void merge(final FileBlame other) {
+        if (other.getFileName().equals(getFileName())) {
+            for (Integer otherLine : other) {
                 if (!lines.contains(otherLine)) {
                     lines.add(otherLine);
-                    setInternedStringValue(commitByLine, otherLine, otherRequest.getCommit(otherLine));
-                    setInternedStringValue(nameByLine, otherLine, otherRequest.getName(otherLine));
-                    setInternedStringValue(emailByLine, otherLine, otherRequest.getEmail(otherLine));
+                    setInternedStringValue(commitByLine, otherLine, other.getCommit(otherLine));
+                    setInternedStringValue(nameByLine, otherLine, other.getName(otherLine));
+                    setInternedStringValue(emailByLine, otherLine, other.getEmail(otherLine));
                 }
             }
         }
         else {
             throw new IllegalArgumentException(
-                    String.format("File names of this instance: %s, other file name %s",
-                            getFileName(), otherRequest.getFileName()));
+                    String.format("File names must match! This instance: %s, other instance: %s",
+                            getFileName(), other.getFileName()));
         }
+    }
+
+    @Override
+    public String toString() {
+        return fileName + " - " + lines;
     }
 
     @Override
@@ -193,7 +191,7 @@ public class BlameRequest implements Iterable<Integer>, Serializable {
             return false;
         }
 
-        BlameRequest request = (BlameRequest) o;
+        FileBlame request = (FileBlame) o;
 
         if (!fileName.equals(request.fileName)) {
             return false;

@@ -21,7 +21,7 @@ import io.jenkins.plugins.git.forensics.FilteredLog;
 public class Blames implements Serializable {
     private static final long serialVersionUID = -7884822502506035784L;
 
-    private final Map<String, BlameRequest> blamesPerFile = new HashMap<>();
+    private final Map<String, FileBlame> blamesPerFile = new HashMap<>();
     private final FilteredLog log = new FilteredLog("Errors while extracting author and commit information from Git: ");
 
     /**
@@ -68,7 +68,7 @@ public class Blames implements Serializable {
      *
      * @return the requests
      */
-    public Collection<BlameRequest> getRequests() {
+    public Collection<FileBlame> getFileBlames() {
         return blamesPerFile.values();
     }
 
@@ -82,11 +82,21 @@ public class Blames implements Serializable {
      * @throws NoSuchElementException
      *         if the file name is not registered
      */
-    public BlameRequest get(final String fileName) {
+    public FileBlame get(final String fileName) {
         if (contains(fileName)) {
             return blamesPerFile.get(fileName);
         }
         throw new NoSuchElementException(String.format("No information for file %s stored", fileName));
+    }
+
+    /**
+     * Adds the specified blame to this collection of blames.
+     *
+     * @param additionalBlame
+     *         the blame to add
+     */
+    public void add(final FileBlame additionalBlame) {
+        merge(additionalBlame.getFileName(), additionalBlame);
     }
 
     /**
@@ -97,12 +107,12 @@ public class Blames implements Serializable {
      */
     public void addAll(final Blames other) {
         for (String otherFile : other.blamesPerFile.keySet()) {
-            BlameRequest otherRequest = other.get(otherFile);
+            FileBlame otherRequest = other.get(otherFile);
             merge(otherFile, otherRequest);
         }
     }
 
-    private void merge(final String otherFile, final BlameRequest otherRequest) {
+    private void merge(final String otherFile, final FileBlame otherRequest) {
         if (contains(otherFile)) {
             get(otherFile).merge(otherRequest);
         }
@@ -172,9 +182,5 @@ public class Blames implements Serializable {
 
     public List<String> getInfoMessages() {
         return log.getInfoMessages();
-    }
-
-    public void add(final BlameRequest request) {
-        merge(request.getFileName(), request);
     }
 }

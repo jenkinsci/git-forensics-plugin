@@ -2,31 +2,31 @@ package io.jenkins.plugins.git.forensics.blame;
 
 import org.junit.jupiter.api.Test;
 
-import static io.jenkins.plugins.git.forensics.blame.BlameRequest.*;
+import static io.jenkins.plugins.git.forensics.blame.FileBlame.*;
 import static io.jenkins.plugins.plugins.git.forensics.assertions.Assertions.*;
 
 /**
- * Tests the class {@link BlameRequest}.
+ * Tests the class {@link FileBlame}.
  *
  * @author Ullrich Hafner
  */
-class BlameRequestTest {
+class FileBlameTest {
     private static final String COMMIT = "commit";
     private static final String NAME = "name";
     private static final String EMAIL = "email";
 
     @Test
     void shouldCreateInstance() {
-        BlameRequest request = new BlameRequest("file");
+        FileBlame request = new FileBlame("file");
 
         assertThat(request).hasNoLines();
         assertThat(request.getFileName()).isEqualTo("file");
-        assertThat(request).isEqualTo(new BlameRequest("file"));
+        assertThat(request).isEqualTo(new FileBlame("file"));
 
         setDetails(request, 15);
         verifyDetails(request, 15);
 
-        BlameRequest other = new BlameRequest("file");
+        FileBlame other = new FileBlame("file");
         setDetails(other, 15);
 
         assertThat(request).isEqualTo(other);
@@ -38,13 +38,13 @@ class BlameRequestTest {
         verifyDetails(request, 25);
     }
 
-    private void verifyDetails(final BlameRequest request, final int line) {
+    private void verifyDetails(final FileBlame request, final int line) {
         assertThat(request.getCommit(line)).isEqualTo(COMMIT);
         assertThat(request.getName(line)).isEqualTo(NAME);
         assertThat(request.getEmail(line)).isEqualTo(EMAIL);
     }
 
-    private void setDetails(final BlameRequest request, final int lineNumber) {
+    private void setDetails(final FileBlame request, final int lineNumber) {
         request.setCommit(lineNumber, COMMIT);
         request.setName(lineNumber, NAME);
         request.setEmail(lineNumber, EMAIL);
@@ -52,16 +52,16 @@ class BlameRequestTest {
 
     @Test
     void shouldMergeRequest() {
-        BlameRequest request = new BlameRequest("file");
+        FileBlame request = new FileBlame("file");
         setDetails(request, 1);
         assertThat(request).hasLines(1);
 
-        BlameRequest sameLine = new BlameRequest("file");
+        FileBlame sameLine = new FileBlame("file");
         request.merge(sameLine);
         assertThat(request).hasLines(1);
         verifyDetails(request, 1);
 
-        BlameRequest otherLine = new BlameRequest("file");
+        FileBlame otherLine = new FileBlame("file");
         setDetails(otherLine, 2);
 
         request.merge(otherLine);
@@ -70,14 +70,21 @@ class BlameRequestTest {
         verifyDetails(request, 1);
         verifyDetails(request, 2);
 
-        assertThatThrownBy(() -> request.merge(new BlameRequest("wrong")))
+        otherLine.setCommit(2, EMPTY);
+        otherLine.setName(2, EMPTY);
+        otherLine.setEmail(2, EMPTY);
+        request.merge(otherLine);
+        verifyDetails(request, 1);
+        verifyDetails(request, 2);
+
+        assertThatThrownBy(() -> request.merge(new FileBlame("wrong")))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("wrong").hasMessageContaining("file");
     }
 
     @Test
     void shouldReturnMeaningfulDefaults() {
-        BlameRequest request = new BlameRequest("file");
+        FileBlame request = new FileBlame("file");
 
         assertThat(request.getCommit(2)).isEqualTo(EMPTY);
         assertThat(request.getEmail(2)).isEqualTo(EMPTY);

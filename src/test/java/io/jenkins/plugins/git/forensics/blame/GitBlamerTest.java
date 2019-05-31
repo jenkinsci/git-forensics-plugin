@@ -98,7 +98,7 @@ class GitBlamerTest {
         createResultForLine(result, 2);
 
         BlameRunner blameRunner = createBlameRunner(result);
-        BlameRequest request = new BlameRequest("file").addLineNumber(3);
+        FileBlame request = new FileBlame("file").addLineNumber(3);
         callback.run("file", blameRunner);
 
         assertThat(request.getEmail(3)).isEqualTo("-");
@@ -132,7 +132,7 @@ class GitBlamerTest {
         when(result.getSourceCommit(index)).thenReturn(commit);
     }
 
-    private void verifyResult(final BlameRequest request, final int line) {
+    private void verifyResult(final FileBlame request, final int line) {
         assertThat(request.getEmail(line)).isEqualTo(EMAIL + line);
         assertThat(request.getName(line)).isEqualTo(NAME + line);
         assertThat(request.getCommit(line)).isNotBlank(); // final getter
