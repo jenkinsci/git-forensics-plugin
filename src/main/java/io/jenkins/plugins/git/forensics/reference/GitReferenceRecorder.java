@@ -49,7 +49,7 @@ public class GitReferenceRecorder extends Recorder {
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-        build.addAction(new GitCommit(build, id, name));
+        build.addAction(new GitCommit(build));
         return true;
     }
 

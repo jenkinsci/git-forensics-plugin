@@ -12,24 +12,26 @@ import java.util.List;
  * @author Arne Schöntag
  */
 public class GitCommitLog implements Serializable {
+    private static final long serialVersionUID = 8988806831945499189L;
 
-    private static final long serialVersionUID = 2L;
+//    private static final long serialVersionUID = 2L;
+
     // Default value 100
-    private final int maxCommits;
+//    private final int maxCommits;
 
     /** Holds the hash keys of the commit reversions */
     final List<String> reversions = new ArrayList<>();
 
-    private transient final Repository repo;
-
-    public GitCommitLog(Repository repo) {
-        this(repo, 100);
-    }
-
-    public GitCommitLog(Repository repo, int maxCommits) {
-        this.repo = repo;
-        this.maxCommits = maxCommits;
-    }
+//    private transient final Repository repo;
+//
+//    public GitCommitLog(Repository repo) {
+//        this(repo, 100);
+//    }
+//
+//    public GitCommitLog(Repository repo, int maxCommits) {
+//        this.repo = repo;
+//        this.maxCommits = maxCommits;
+//    }
 
     public List<String> getReversions(){
         return reversions;

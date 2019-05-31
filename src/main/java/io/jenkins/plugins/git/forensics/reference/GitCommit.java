@@ -5,6 +5,7 @@ import jenkins.model.RunAction2;
 
 import javax.annotation.CheckForNull;
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * Action, die Informationen zu den Reversions zusammenfügt und in GitCommitLogs schreibt
@@ -13,21 +14,31 @@ import java.io.Serializable;
  */
 public class GitCommit implements RunAction2, Serializable {
 
-    private static final long serialVersionUID = 1L;
-
+    private static final long serialVersionUID = 8994811233847179343L;
     private transient Run<?, ?> run;
 
-    private final String id;
-    private final String name;
+//    private final String id;
+    private final String NAME = "GitCommit";
 
-    public GitCommit(final Run<?, ?> run, String id, String name) {
+    private final GitCommitLog gitCommitLog;
+
+    public GitCommit(final Run<?, ?> run) {
         this.run = run;
-        this.id = id;
-        this.name = name;
+//        this.id = id;
+//        this.name = name;
+        gitCommitLog = new GitCommitLog();
+    }
+
+    public void addGitCommitLogs(List<String> revisions) {
+        gitCommitLog.getReversions().addAll(revisions);
+    }
+
+    public GitCommitLog getGitCommitLog() {
+        return gitCommitLog;
     }
 
     public String getSummary(){
-        return "Summary";
+        return gitCommitLog.getReversions().toString();
     }
 
     @Override
@@ -49,7 +60,7 @@ public class GitCommit implements RunAction2, Serializable {
     @CheckForNull
     @Override
     public String getDisplayName() {
-        return name;
+        return NAME;
     }
 
     @CheckForNull
