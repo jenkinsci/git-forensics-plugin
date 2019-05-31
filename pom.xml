@@ -339,6 +339,7 @@
           </dependency>
         </dependencies>
         <configuration>
+          <skip>true</skip> <!-- FIXME: enable after 1.0.0 -->
           <analysisConfiguration>
             <revapi.semver.ignore>
               <enabled>true</enabled>
