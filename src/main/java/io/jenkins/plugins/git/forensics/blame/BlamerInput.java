@@ -7,7 +7,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.collections.api.multimap.MutableMultimap;
-import org.eclipse.collections.impl.factory.Multimaps;
+import org.eclipse.collections.impl.multimap.set.UnifiedSetMultimap;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 
@@ -19,7 +19,7 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 public class BlamerInput implements Serializable {
     private static final long serialVersionUID = -7884822502506035784L;
 
-    private final MutableMultimap<String, Integer> blamesPerFile = Multimaps.mutable.set.empty();
+    private final MutableMultimap<String, Integer> blamesPerFile = new UnifiedSetMultimap<>();
     private final Set<String> skippedFiles = new HashSet<>();
     private final String workspace;
 

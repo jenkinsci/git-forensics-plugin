@@ -34,6 +34,9 @@ import hudson.remoting.VirtualChannel;
 public class GitBlamer implements Serializable {
     private static final long serialVersionUID = -619059996626444900L;
 
+    static final String NO_HEAD_ERROR = "Could not retrieve HEAD commit, aborting";
+    static final String BLAME_ERROR = "Computing blame information failed with an exception:";
+
     private final GitClient git;
     private final String gitCommit;
     private final FilePath workspace;
@@ -55,15 +58,14 @@ public class GitBlamer implements Serializable {
     public Blames blame(final BlamerInput input) {
         Blames blames = new Blames();
         try {
-
             blames.logInfo("Invoking Git blamer to create author and commit information for all affected files");
             blames.logInfo("GIT_COMMIT env = '%s'", gitCommit);
             blames.logInfo("Git working tree = '%s'", git.getWorkTree());
 
             ObjectId headCommit = git.revParse(gitCommit);
             if (headCommit == null) {
-                blames.logError("Could not retrieve HEAD commit, aborting");
-                return new Blames();
+                blames.logError(NO_HEAD_ERROR);
+                return blames;
             }
             blames.logInfo("Git commit ID = '%s'", headCommit.getName());
 
@@ -73,10 +75,10 @@ public class GitBlamer implements Serializable {
             return git.withRepository(new BlameCallback(input, blames, headCommit));
         }
         catch (IOException exception) {
-            blames.logException(exception, "Computing blame information failed with an exception:");
+            blames.logException(exception, BLAME_ERROR);
         }
         catch (GitException exception) {
-            blames.logException(exception, "Can't determine head commit using 'git rev-parse'. Skipping blame.");
+            blames.logException(exception, NO_HEAD_ERROR);
         }
         catch (InterruptedException e) {
             // nothing to do, already logged

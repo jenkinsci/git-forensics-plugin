@@ -1,5 +1,8 @@
 package io.jenkins.plugins.git.forensics.blame;
 
+import java.io.File;
+import java.io.IOException;
+
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.eclipse.jgit.api.errors.NoHeadException;
@@ -10,6 +13,10 @@ import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
+
+import org.jenkinsci.plugins.gitclient.GitClient;
+import hudson.FilePath;
+import hudson.plugins.git.GitException;
 
 import io.jenkins.plugins.git.forensics.blame.GitBlamer.BlameCallback;
 import io.jenkins.plugins.git.forensics.blame.GitBlamer.BlameRunner;
@@ -26,6 +33,70 @@ class GitBlamerTest {
     private static final String EMAIL = "email";
     private static final String NAME = "name";
     private static final String EMPTY = "-";
+    private static final String HEAD = "HEAD";
+
+    @Test
+    void shouldAbortIfHeadCommitIsMissing() {
+        GitClient gitClient = mock(GitClient.class);
+        GitBlamer blamer = new GitBlamer(gitClient, HEAD);
+
+        Blames blames = blamer.blame(new BlamerInput());
+
+        assertThat(blames).isEmpty();
+        assertThat(blames).hasErrorMessages(GitBlamer.NO_HEAD_ERROR);
+    }
+
+    @Test
+    void shouldAbortIfRefParseThrowsException() throws InterruptedException {
+        GitClient gitClient = mock(GitClient.class);
+        GitBlamer blamer = new GitBlamer(gitClient, HEAD);
+
+        when(gitClient.revParse(HEAD)).thenThrow(new GitException());
+        Blames blames = blamer.blame(new BlamerInput());
+
+        assertThat(blames).isEmpty();
+        assertThat(blames).hasErrorMessages(GitBlamer.NO_HEAD_ERROR);
+    }
+
+    @Test
+    void shouldAbortIfWithRepositoryThrowsException() throws InterruptedException, IOException {
+        GitClient gitClient = mock(GitClient.class);
+
+        ObjectId id = mock(ObjectId.class);
+        when(gitClient.revParse(HEAD)).thenReturn(id);
+        when(gitClient.withRepository(any())).thenThrow(new IOException());
+        FilePath workTree = createWorkTreeStub();
+        when(gitClient.getWorkTree()).thenReturn(workTree);
+
+        GitBlamer blamer = new GitBlamer(gitClient, HEAD);
+        Blames blames = blamer.blame(new BlamerInput());
+
+        assertThat(blames).isEmpty();
+        assertThat(blames).hasErrorMessages(GitBlamer.BLAME_ERROR);
+    }
+
+    private FilePath createWorkTreeStub() {
+        File mock = mock(File.class);
+        when(mock.getPath()).thenReturn("/");
+        return new FilePath(mock);
+    }
+
+    @Test
+    void shouldFinishWithIntermediateResultIfInterrupted() throws InterruptedException, IOException {
+        GitClient gitClient = mock(GitClient.class);
+
+        ObjectId id = mock(ObjectId.class);
+        when(gitClient.revParse(HEAD)).thenReturn(id);
+        when(gitClient.withRepository(any())).thenThrow(new InterruptedException());
+        FilePath workTree = createWorkTreeStub();
+        when(gitClient.getWorkTree()).thenReturn(workTree);
+
+        GitBlamer blamer = new GitBlamer(gitClient, HEAD);
+        Blames blames = blamer.blame(new BlamerInput());
+
+        assertThat(blames).isEmpty();
+        assertThat(blames).hasNoErrorMessages();
+    }
 
     @Test
     @Issue("JENKINS-55273")
