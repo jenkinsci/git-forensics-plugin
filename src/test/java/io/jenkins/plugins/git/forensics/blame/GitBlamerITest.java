@@ -28,7 +28,7 @@ import static org.mockito.Mockito.*;
  * @author Ullrich Hafner
  */
 public class GitBlamerITest extends GitITest {
-    static final String FILE_NAME = "source.txt";
+    private static final String FILE_NAME = "source.txt";
     private static final String FOO_NAME = "Foo";
     private static final String FOO_EMAIL = "foo@jenkins.io";
     private static final String BAR_NAME = "Bar";
@@ -52,12 +52,9 @@ public class GitBlamerITest extends GitITest {
 
     /**
      * Verifies that the blames are empty if there are no requests defined.
-     *
-     * @throws InterruptedException
-     *         if the blaming has been canceled
      */
     @Test
-    public void shouldCreateBlamesIfRequestIsExistingFile() throws InterruptedException {
+    public void shouldCreateBlamesIfRequestIsExistingFile() {
         create2RevisionsWithDifferentAuthors();
 
         BlamerInput input = new BlamerInput();
@@ -105,7 +102,7 @@ public class GitBlamerITest extends GitITest {
         }
     }
 
-    void create2RevisionsWithDifferentAuthors() {
+    private void create2RevisionsWithDifferentAuthors() {
         writeFile(FILE_NAME, "OLD\nOLD\nOLD\nOLD\nOLD\nOLD\n");
         git("add", FILE_NAME);
         git("config", "user.name", FOO_NAME);
@@ -121,19 +118,19 @@ public class GitBlamerITest extends GitITest {
         git("rev-parse", "HEAD");
     }
 
-    void assertThatBlameIsHeadWith(final FileBlame request, final int line) {
+    private void assertThatBlameIsHeadWith(final FileBlame request, final int line) {
         assertThat(request.getName(line)).isEqualTo(BAR_NAME);
         assertThat(request.getEmail(line)).isEqualTo(BAR_EMAIL);
         assertThat(request.getCommit(line)).isEqualTo(getHead());
     }
 
-    void assertThatBlameIs(final FileBlame request, final int line) {
+    private void assertThatBlameIs(final FileBlame request, final int line) {
         assertThat(request.getName(line)).isEqualTo(FOO_NAME);
         assertThat(request.getEmail(line)).isEqualTo(FOO_EMAIL);
         assertThat(request.getCommit(line)).isNotEqualTo(getHead());
     }
 
-    void assertThatBlameIsEmpty(final FileBlame request, final int line) {
+    private void assertThatBlameIsEmpty(final FileBlame request, final int line) {
         assertThat(request.getName(line)).isEqualTo("-");
         assertThat(request.getEmail(line)).isEqualTo("-");
         assertThat(request.getCommit(line)).isNotEqualTo(getHead());

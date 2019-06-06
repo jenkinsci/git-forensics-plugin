@@ -11,7 +11,6 @@ import static io.jenkins.plugins.plugins.git.forensics.assertions.Assertions.*;
  */
 class FilteredLogTest {
     private static final String TITLE = "Title: ";
-
     @Test
     void shouldLogNothing() {
         FilteredLog filteredLog = new FilteredLog(TITLE, 5);
@@ -66,6 +65,6 @@ class FilteredLogTest {
 
         assertThat(filteredLog.getErrorMessages()).contains(TITLE,
                 "Message", "java.lang.IllegalArgumentException: Cause",
-                "\tat io.jenkins.plugins.git.forensics.FilteredLogTest.shouldLogExceptions(FilteredLogTest.java:64)");
+                "\tat io.jenkins.plugins.git.forensics.FilteredLogTest.shouldLogExceptions(FilteredLogTest.java:63)");
     }
 }
