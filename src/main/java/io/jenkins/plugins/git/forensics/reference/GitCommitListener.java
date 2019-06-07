@@ -13,8 +13,11 @@ import hudson.scm.SCMRevisionState;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.LogCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevWalk;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 
@@ -25,12 +28,17 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+ * Called on Checkout of a Git Repository in Jenkins. This Class determines the Commits since the last Build
+ * and writes them into a GitCommit RunAction to be accessed later.
+ *
+ * @author Arne Schöntag
+ */
 @Extension
 public class GitCommitListener extends SCMListener {
 
     @Override
     public void onCheckout(Run<?,?> build, SCM scm, FilePath workspace, TaskListener listener, @CheckForNull File changelogFile, @CheckForNull SCMRevisionState pollingBaseline) throws Exception {
-        // TODO reduce complexity
         if (!(scm instanceof GitSCM)) {
             return;
         }
@@ -49,32 +57,27 @@ public class GitCommitListener extends SCMListener {
             }
         }
 
-
-
         // Build Repo
         GitSCM gitSCM = (GitSCM) scm;
         EnvVars environment = build.getEnvironment(listener);
         GitClient gitClient = gitSCM.createClient(listener, environment, build, workspace);
 
-//        Repository repo = gitClient.getRepository();
-
         // Save new commits
-        GitCommit gitCommit = gitClient.withRepository(new GitCommitCall(build, gitSCM.getParamLocalBranch(build,listener), latestReversionOfPreviousCommit));
-
-//        gitCommit.getGitCommitLog().getReversions().addAll(newCommits);
+        GitCommit gitCommit = gitClient.withRepository(new GitCommitCall(build, latestReversionOfPreviousCommit));
         build.addAction(gitCommit);
     }
 
+    /**
+     * Writes the Commits since last build into a GitCommit object.
+     */
     static class GitCommitCall implements RepositoryCallback<GitCommit> {
 
         private static final long serialVersionUID = -5980402198857923793L;
         private transient final Run<?,?> build;
-        private final String localBranch;
         private final String latestReversionOfPreviousCommit;
 
-        public GitCommitCall(Run<?, ?> build, String localBranch, String latestReversionOfPreviousCommit) {
+        public GitCommitCall(Run<?, ?> build, String latestReversionOfPreviousCommit) {
             this.build = build;
-            this.localBranch = localBranch;
             this.latestReversionOfPreviousCommit = latestReversionOfPreviousCommit;
         }
 
@@ -86,7 +89,10 @@ public class GitCommitListener extends SCMListener {
 
             try {
                 // Determine new commits to log since last build
-                LogCommand logCommand = git.log().add(repo.resolve(localBranch));
+                RevWalk walk = new RevWalk(repo);
+                ObjectId head = repo.resolve(Constants.HEAD);
+                ObjectId headCommit = walk.parseCommit(head);
+                LogCommand logCommand = git.log().add(headCommit);
                 Iterable<RevCommit> commits = null;
                 commits = logCommand.call();
                 Iterator<RevCommit> iterator = commits.iterator();
