@@ -22,6 +22,10 @@ import hudson.FilePath;
 import hudson.plugins.git.GitException;
 import hudson.remoting.VirtualChannel;
 
+import io.jenkins.plugins.forensics.blame.BlamerInput;
+import io.jenkins.plugins.forensics.blame.Blames;
+import io.jenkins.plugins.forensics.blame.FileBlame;
+
 /**
  * Assigns git blames to warnings. Based on the solution by John Gibson, see JENKINS-6748. This code is intended to run
  * on the agent.

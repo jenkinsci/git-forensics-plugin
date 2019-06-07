@@ -17,9 +17,12 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.SubmoduleConfig;
 import hudson.plugins.git.extensions.GitSCMExtension;
 
+import io.jenkins.plugins.forensics.blame.BlamerInput;
+import io.jenkins.plugins.forensics.blame.Blames;
+import io.jenkins.plugins.forensics.blame.FileBlame;
 import io.jenkins.plugins.git.forensics.GitITest;
 
-import static io.jenkins.plugins.plugins.git.forensics.assertions.Assertions.*;
+import static io.jenkins.plugins.forensics.assertions.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**

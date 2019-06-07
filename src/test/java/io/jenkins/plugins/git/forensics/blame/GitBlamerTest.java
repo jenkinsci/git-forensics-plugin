@@ -18,10 +18,13 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 import hudson.FilePath;
 import hudson.plugins.git.GitException;
 
+import io.jenkins.plugins.forensics.blame.BlamerInput;
+import io.jenkins.plugins.forensics.blame.Blames;
+import io.jenkins.plugins.forensics.blame.FileBlame;
 import io.jenkins.plugins.git.forensics.blame.GitBlamer.BlameCallback;
 import io.jenkins.plugins.git.forensics.blame.GitBlamer.BlameRunner;
 
-import static io.jenkins.plugins.plugins.git.forensics.assertions.Assertions.*;
+import static io.jenkins.plugins.forensics.assertions.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
