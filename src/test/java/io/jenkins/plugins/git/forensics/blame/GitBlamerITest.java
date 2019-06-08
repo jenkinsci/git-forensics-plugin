@@ -17,9 +17,9 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.SubmoduleConfig;
 import hudson.plugins.git.extensions.GitSCMExtension;
 
-import io.jenkins.plugins.forensics.blame.BlamerInput;
 import io.jenkins.plugins.forensics.blame.Blames;
 import io.jenkins.plugins.forensics.blame.FileBlame;
+import io.jenkins.plugins.forensics.blame.FileLocations;
 import io.jenkins.plugins.git.forensics.GitITest;
 
 import static io.jenkins.plugins.forensics.assertions.Assertions.*;
@@ -48,7 +48,7 @@ public class GitBlamerITest extends GitITest {
     public void shouldCreateEmptyBlamesIfRequestIsEmpty() {
         GitBlamer gitBlamer = createBlamer();
 
-        Blames blames = gitBlamer.blame(new BlamerInput());
+        Blames blames = gitBlamer.blame(new FileLocations());
 
         assertThat(blames).isEmpty();
     }
@@ -60,7 +60,7 @@ public class GitBlamerITest extends GitITest {
     public void shouldCreateBlamesIfRequestIsExistingFile() {
         create2RevisionsWithDifferentAuthors();
 
-        BlamerInput input = new BlamerInput();
+        FileLocations input = new FileLocations();
         input.addLine(FILE_NAME, 2);
         input.addLine(FILE_NAME, 3);
         input.addLine(FILE_NAME, 4);

@@ -22,9 +22,9 @@ import hudson.FilePath;
 import hudson.plugins.git.GitException;
 import hudson.remoting.VirtualChannel;
 
-import io.jenkins.plugins.forensics.blame.BlamerInput;
 import io.jenkins.plugins.forensics.blame.Blames;
 import io.jenkins.plugins.forensics.blame.FileBlame;
+import io.jenkins.plugins.forensics.blame.FileLocations;
 
 /**
  * Assigns git blames to warnings. Based on the solution by John Gibson, see JENKINS-6748. This code is intended to run
@@ -59,7 +59,7 @@ public class GitBlamer implements Serializable {
         this.gitCommit = gitCommit;
     }
 
-    public Blames blame(final BlamerInput input) {
+    public Blames blame(final FileLocations input) {
         Blames blames = new Blames();
         try {
             blames.logInfo("Invoking Git blamer to create author and commit information for all affected files");
@@ -101,10 +101,10 @@ public class GitBlamer implements Serializable {
         private static final long serialVersionUID = 8794666938104738260L;
 
         private final ObjectId headCommit;
-        private final BlamerInput input;
+        private final FileLocations input;
         private final Blames blames;
 
-        BlameCallback(final BlamerInput input, final Blames blames, final ObjectId headCommit) {
+        BlameCallback(final FileLocations input, final Blames blames, final ObjectId headCommit) {
             this.input = input;
             this.blames = blames;
             this.headCommit = headCommit;

@@ -18,9 +18,9 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 import hudson.FilePath;
 import hudson.plugins.git.GitException;
 
-import io.jenkins.plugins.forensics.blame.BlamerInput;
 import io.jenkins.plugins.forensics.blame.Blames;
 import io.jenkins.plugins.forensics.blame.FileBlame;
+import io.jenkins.plugins.forensics.blame.FileLocations;
 import io.jenkins.plugins.git.forensics.blame.GitBlamer.BlameCallback;
 import io.jenkins.plugins.git.forensics.blame.GitBlamer.BlameRunner;
 
@@ -43,7 +43,7 @@ class GitBlamerTest {
         GitClient gitClient = mock(GitClient.class);
         GitBlamer blamer = new GitBlamer(gitClient, HEAD);
 
-        Blames blames = blamer.blame(new BlamerInput());
+        Blames blames = blamer.blame(new FileLocations());
 
         assertThat(blames).isEmpty();
         assertThat(blames).hasErrorMessages(GitBlamer.NO_HEAD_ERROR);
@@ -55,7 +55,7 @@ class GitBlamerTest {
         GitBlamer blamer = new GitBlamer(gitClient, HEAD);
 
         when(gitClient.revParse(HEAD)).thenThrow(new GitException());
-        Blames blames = blamer.blame(new BlamerInput());
+        Blames blames = blamer.blame(new FileLocations());
 
         assertThat(blames).isEmpty();
         assertThat(blames).hasErrorMessages(GitBlamer.NO_HEAD_ERROR);
@@ -72,7 +72,7 @@ class GitBlamerTest {
         when(gitClient.getWorkTree()).thenReturn(workTree);
 
         GitBlamer blamer = new GitBlamer(gitClient, HEAD);
-        Blames blames = blamer.blame(new BlamerInput());
+        Blames blames = blamer.blame(new FileLocations());
 
         assertThat(blames).isEmpty();
         assertThat(blames).hasErrorMessages(GitBlamer.BLAME_ERROR);
@@ -95,7 +95,7 @@ class GitBlamerTest {
         when(gitClient.getWorkTree()).thenReturn(workTree);
 
         GitBlamer blamer = new GitBlamer(gitClient, HEAD);
-        Blames blames = blamer.blame(new BlamerInput());
+        Blames blames = blamer.blame(new FileLocations());
 
         assertThat(blames).isEmpty();
         assertThat(blames).hasNoErrorMessages();
@@ -110,7 +110,7 @@ class GitBlamerTest {
 
     private void verifyExceptionHandling(final Class<? extends Exception> exception) throws GitAPIException {
         Blames blames = new Blames();
-        BlamerInput blamerInput = new BlamerInput();
+        FileLocations blamerInput = new FileLocations();
         BlameCallback callback = new BlameCallback(blamerInput, blames, mock(ObjectId.class));
 
         BlameRunner runner = mock(BlameRunner.class);
@@ -125,7 +125,7 @@ class GitBlamerTest {
 
     @Test
     void shouldMapResultToRequestWithOneLine() throws GitAPIException {
-        BlamerInput input = new BlamerInput();
+        FileLocations input = new FileLocations();
         input.addLine("file", 1);
 
         Blames blames = new Blames();
@@ -143,7 +143,7 @@ class GitBlamerTest {
 
     @Test
     void shouldMapResultToRequestWithTwoLines() throws GitAPIException {
-        BlamerInput input = new BlamerInput();
+        FileLocations input = new FileLocations();
         input.addLine("file", 1);
         input.addLine("file", 2);
 
@@ -165,7 +165,7 @@ class GitBlamerTest {
 
     @Test
     void shouldMapResultToRequestOutOfRange() throws GitAPIException {
-        BlamerInput input = new BlamerInput();
+        FileLocations input = new FileLocations();
         input.addLine("file", 1);
         input.addLine("file", 2);
 
@@ -191,7 +191,7 @@ class GitBlamerTest {
 
     @Test
     void shouldIgnoreMissingCommit() throws GitAPIException {
-        BlamerInput input = new BlamerInput();
+        FileLocations input = new FileLocations();
         input.addLine("file", 1);
 
         Blames blames = new Blames();
@@ -211,7 +211,7 @@ class GitBlamerTest {
 
     @Test
     void shouldIgnoreMissingAuthorAndCommitter() throws GitAPIException {
-        BlamerInput input = new BlamerInput();
+        FileLocations input = new FileLocations();
         input.addLine("file", 1);
 
         Blames blames = new Blames();
@@ -232,7 +232,7 @@ class GitBlamerTest {
 
     @Test
     void shouldUseCommitterIfAuthorIsMissing() throws GitAPIException {
-        BlamerInput input = new BlamerInput();
+        FileLocations input = new FileLocations();
         input.addLine("file", 1);
 
         Blames blames = new Blames();
