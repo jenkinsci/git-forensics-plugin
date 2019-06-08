@@ -279,6 +279,6 @@ class GitBlamerTest {
     private void verifyResult(final FileBlame request, final int line) {
         assertThat(request.getEmail(line)).isEqualTo(EMAIL + line);
         assertThat(request.getName(line)).isEqualTo(NAME + line);
-        assertThat(request.getCommit(line)).isNotBlank().isNotEqualTo(EMPTY);// final getter
+        assertThat(request.getCommit(line)).isNotBlank().isNotEqualTo(EMPTY); // final getter
     }
 }
