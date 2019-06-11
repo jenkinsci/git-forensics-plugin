@@ -34,6 +34,10 @@ import io.jenkins.plugins.forensics.blame.FileLocations;
  * @author Ullrich Hafner
  * @see <a href="http://issues.jenkins-ci.org/browse/JENKINS-6748">Issue 6748</a>
  */
+// TODO: Whom should we blame if the whole file is marked? Or if a range is marked and multiple authors are in the range
+// TODO: Links in commits?
+// TODO: Check if we should also create new Jenkins users
+// TODO: Blame needs only run for new warnings
 @SuppressFBWarnings(value = "SE", justification = "GitClient implementation is Serializable")
 public class GitBlamer implements Serializable {
     private static final long serialVersionUID = -619059996626444900L;
