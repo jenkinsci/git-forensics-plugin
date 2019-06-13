@@ -3,25 +3,21 @@ package io.jenkins.plugins.git.forensics.reference;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Launcher;
-import hudson.init.InitMilestone;
-import hudson.init.Initializer;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
-import hudson.model.Run;
+import hudson.model.Job;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
-import hudson.util.ComboBoxModel;
-import hudson.util.FormValidation;
-import hudson.util.ListBoxModel;
+import jenkins.model.Jenkins;
 import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
-import org.kohsuke.stapler.QueryParameter;
 
 import java.io.IOException;
+import java.util.Optional;
 
 /**
  * Recorder for finding reference Jobs and intersection Points in the git history.
@@ -49,11 +45,18 @@ public class GitReferenceRecorder extends Recorder {
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-        build.addAction(new GitCommit(build));
+        if (!NO_REFERENCE_JOB.equals(referenceJobName) && referenceJobName != null) {
+            Jenkins jenkins = Jenkins.getInstanceOrNull();
+            if (jenkins == null) {
+                return false;
+            }
+            Optional<Job<?, ?>> referenceJob =  Optional.ofNullable(jenkins.getItemByFullName(referenceJobName, Job.class));
+            if (referenceJob.isPresent()) {
+                build.addAction(new GitBranchMasterIntersectionFinder(build, maxCommits, referenceJob.get().getLastBuild()));
+            }
+        }
         return true;
     }
-
-    //TODO call reference classes to find intersection/log git commits.
 
     // Partly copied from IssuesRecorder.java (warnings-ng)
 

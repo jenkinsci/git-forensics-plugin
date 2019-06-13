@@ -1,16 +1,13 @@
 package io.jenkins.plugins.git.forensics.reference;
 
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.LogCommand;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.revwalk.RevCommit;
+import hudson.model.Run;
+import jenkins.model.RunAction2;
 
-import java.io.IOException;
+import javax.annotation.CheckForNull;
+import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * This class tries to find the reversion of the last shared Commit of the current Git branch and the master branch.
@@ -18,29 +15,30 @@ import java.util.List;
  * @author Arne Schöntag
  */
 // TODO Name to be Changed
-// TODO Suche über GitCommitLogs nicht über Git Befehle
-public class GitBranchMasterIntersectionFinder {
+public class GitBranchMasterIntersectionFinder implements RunAction2, Serializable {
 
-    private final Repository repo;
+    private static final long serialVersionUID = -4549516129641755356L;
+    private transient Run<?, ?> run;
+
+    private transient Run<?, ?> reference;
+
+    private final String NAME = "GitBranchMasterIntersectionFinder";
+    private final String NO_INTERSECTION_FOUND = "No intersection was found in master commits";
+
     /**
      * Defines how far the Finder will look in the past commits to find an intersection.
      */
-    private int maxLogs = Integer.MAX_VALUE;
+    private int maxLogs;
 
     /**
-     * @param repo the git repository.
+     * @param run the Jenkins build.
+     * @param maxLogs defines how far the Finder will look in the past commits to find an intersection.
+     * @param reference the name of the Reference Job
      */
-    public GitBranchMasterIntersectionFinder(final Repository repo) {
-        this.repo = repo;
-    }
-
-    /**
-     * @param repo the git repository.
-     * @param maxLogs defines how far the Finder will look in the past commits to find an intersection
-     */
-    public GitBranchMasterIntersectionFinder(final Repository repo, int maxLogs) {
-        this.repo = repo;
+    public GitBranchMasterIntersectionFinder(Run<?, ?> run, int maxLogs, Run<?, ?> reference) {
+        this.run = run;
         this.maxLogs = maxLogs;
+        this.reference = reference;
     }
 
     /**
@@ -48,48 +46,70 @@ public class GitBranchMasterIntersectionFinder {
      *
      * @return the hash value (ObjectId) of the reversion
      *          or null if an error occurred during evaluation or no intersection was found (should not happen)
-     * @throws GitAPIException
      */
-    public ObjectId findReferencePoint() throws GitAPIException {
+    public Optional<String> findReferencePoint() {
         try {
-            String currentBranch = repo.getBranch();
-            if ("master".equals(currentBranch)) {
-                return null;
-            }
-            Git git = new Git(repo);
-            LogCommand branchLog = git.log();
-            Iterable<RevCommit> branchCommits = branchLog.call();
+            GitCommit thisCommit = run.getAction(GitCommit.class);
+            GitCommit referenceCommit = reference.getAction(GitCommit.class);
+            List<String> branchCommits = new ArrayList<>(thisCommit.getGitCommitLog().getReversions());
+            List<String> masterCommits = new ArrayList<>(referenceCommit.getGitCommitLog().getReversions());
 
-            // TODO does this work?
-            LogCommand masterLog = git.log().add(repo.resolve("master"));
-            Iterable<RevCommit> masterCommits = masterLog.call();
-
-            // Find newest shared Commit
-            List<RevCommit> masterCommitList = new ArrayList<>();
-            masterCommits.forEach(masterCommitList::add);
-
-            RevCommit result = null;
-            Iterator<RevCommit> iterator = branchCommits.iterator();
-            RevCommit next;
-            int index = 0;
-            while (result == null && iterator.hasNext()) {
-                next = iterator.next();
-                if (masterCommitList.contains(next)) {
-                    result = next;
-                }
-                // If the maximal count of commits in the past is reached
-                if (++index >= maxLogs) {
-                    break;
-                }
+            // Fill master commit list
+            Run<?, ?> tmp = reference;
+            // TODO only maxLogs in the past or more?
+            while (masterCommits.size() < maxLogs && tmp.getPreviousBuild() != null) {
+                tmp = tmp.getPreviousBuild();
+                masterCommits.addAll(tmp.getAction(GitCommit.class).getGitCommitLog().getReversions());
             }
-            if (result == null) {
-                return null;
+
+            // Fill branch commit list
+            tmp = run;
+            while (branchCommits.size() < maxLogs && tmp.getPreviousBuild() != null) {
+                tmp = tmp.getPreviousBuild();
+                branchCommits.addAll(tmp.getAction(GitCommit.class).getGitCommitLog().getReversions());
             }
-            return result.getId();
+
+            Optional<String> referencePoint = branchCommits.stream().filter(reversion -> masterCommits.contains(reversion)).findFirst();
+            return referencePoint;
+        } catch (Exception e) {
+            // TODO Logging
+            return Optional.empty();
         }
-        catch (IOException e) {
-            e.printStackTrace();
+    }
+
+    public String getSummary() {
+        Optional<String> summary = findReferencePoint();
+        if (summary.isPresent()) {
+            return summary.get();
         }
+        return NO_INTERSECTION_FOUND;
+    }
+
+    @Override
+    public void onAttached(Run<?, ?> r) {
+        this.run = r;
+    }
+
+    @Override
+    public void onLoad(Run<?, ?> r) {
+        onAttached(r);
+    }
+
+    @CheckForNull
+    @Override
+    public String getIconFileName() {
+        return null;
+    }
+
+    @CheckForNull
+    @Override
+    public String getDisplayName() {
+        return NAME;
+    }
+
+    @CheckForNull
+    @Override
+    public String getUrlName() {
         return null;
     }
 }
