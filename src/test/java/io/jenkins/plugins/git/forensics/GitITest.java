@@ -21,6 +21,7 @@ public class GitITest {
     protected static final String FOO_EMAIL = "foo@jenkins.io";
     protected static final String BAR_NAME = "Bar";
     protected static final String BAR_EMAIL = "bar@jenkins.io";
+
     /** Git repository in a temporary folder. */
     @Rule
     public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();

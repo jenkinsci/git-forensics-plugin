@@ -1,8 +1,7 @@
 package io.jenkins.plugins.git.forensics.miner;
 
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -15,6 +14,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
 import io.jenkins.plugins.forensics.miner.FileStatistics;
+import io.jenkins.plugins.forensics.miner.RepositoryStatistics;
 
 /**
  * Mines a Git repository and creates statistics for all available files.
@@ -30,19 +30,25 @@ public class RepositoryMiner {
         git = new Git(repository);
     }
 
-    Map<String, FileStatistics> analyze(final Set<String> files) {
-        return files.stream().collect(Collectors.toMap(Function.identity(), this::analyzeHistory));
+    RepositoryStatistics analyze(final Set<String> files) {
+        RepositoryStatistics statistics = new RepositoryStatistics();
+        List<FileStatistics> fileStatistics = files.stream()
+                .map(file -> analyzeHistory(file, statistics))
+                .collect(Collectors.toList());
+        statistics.addAll(fileStatistics);
+        return statistics;
     }
 
-    private FileStatistics analyzeHistory(final String file) {
-        FileStatistics fileStatistics = new FileStatistics(file);
+    private FileStatistics analyzeHistory(final String fileName,
+            final RepositoryStatistics statistics) {
+        FileStatistics fileStatistics = new FileStatistics(fileName);
         try {
-            Iterable<RevCommit> commits = git.log().addPath(file).call();
+            Iterable<RevCommit> commits = git.log().addPath(fileName).call();
             commits.forEach(c -> fileStatistics.inspectCommit(c.getCommitTime(), getAuthor(c)));
             return fileStatistics;
         }
         catch (GitAPIException exception) {
-            // FIXME: logging
+            statistics.logException(exception, "Can't analyze history of file %s", fileName);
         }
         return fileStatistics;
     }

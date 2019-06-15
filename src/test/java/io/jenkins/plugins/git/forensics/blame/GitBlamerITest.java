@@ -31,12 +31,6 @@ import static org.mockito.Mockito.*;
  * @author Ullrich Hafner
  */
 public class GitBlamerITest extends GitITest {
-    private static final String FILE_NAME = "source.txt";
-    private static final String FOO_NAME = "Foo";
-    private static final String FOO_EMAIL = "foo@jenkins.io";
-    private static final String BAR_NAME = "Bar";
-    private static final String BAR_EMAIL = "bar@jenkins.io";
-
     /** Jenkins rule per suite. */
     @ClassRule
     public static final JenkinsRule JENKINS_PER_SUITE = new JenkinsRule();

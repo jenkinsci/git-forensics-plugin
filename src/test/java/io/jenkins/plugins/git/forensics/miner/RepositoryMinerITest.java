@@ -1,12 +1,12 @@
 package io.jenkins.plugins.git.forensics.miner;
 
-import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.jgit.lib.Repository;
 import org.junit.Test;
 
 import io.jenkins.plugins.forensics.miner.FileStatistics;
+import io.jenkins.plugins.forensics.miner.RepositoryStatistics;
 import io.jenkins.plugins.git.forensics.GitITest;
 
 import static io.jenkins.plugins.forensics.assertions.Assertions.*;
@@ -17,6 +17,8 @@ import static io.jenkins.plugins.forensics.assertions.Assertions.*;
  * @author Ullrich Hafner
  */
 public class RepositoryMinerITest extends GitITest {
+    private static final String FILE = "file";
+
     /** Verifies that the single file of the default initialization does have 1 commit and author. */
     @Test
     public void shouldCollectSingleFile() {
@@ -24,15 +26,15 @@ public class RepositoryMinerITest extends GitITest {
         RepositoryMiner collector = new RepositoryMiner(repository);
 
         Set<String> files = findAllFiles(repository);
-        Map<String, FileStatistics> statisticsPerFile = collector.analyze(files);
+        RepositoryStatistics statisticsPerFile = collector.analyze(files);
 
-        assertThat(statisticsPerFile).containsOnlyKeys("file");
+        assertThat(statisticsPerFile).hasFiles(FILE);
 
         assertDefaultFileStatistics(statisticsPerFile);
     }
 
-    private void assertDefaultFileStatistics(final Map<String, FileStatistics> statisticsPerFile) {
-        FileStatistics fileStatistics = statisticsPerFile.get("file");
+    private void assertDefaultFileStatistics(final RepositoryStatistics statistics) {
+        FileStatistics fileStatistics = statistics.get(FILE);
         assertThat(fileStatistics).hasNumberOfAuthors(1);
         assertThat(fileStatistics).hasNumberOfCommits(1);
         assertThat(fileStatistics).hasAgeInDays(0);
@@ -50,9 +52,9 @@ public class RepositoryMinerITest extends GitITest {
 
         RepositoryMiner collector = new RepositoryMiner(repository);
 
-        Map<String, FileStatistics> statisticsPerFile = collector.analyze(files);
+        RepositoryStatistics statisticsPerFile = collector.analyze(files);
 
-        assertThat(statisticsPerFile).containsOnlyKeys("file", FILE_NAME);
+        assertThat(statisticsPerFile).hasFiles(FILE, FILE_NAME);
 
         assertDefaultFileStatistics(statisticsPerFile);
 
@@ -76,9 +78,9 @@ public class RepositoryMinerITest extends GitITest {
 
         RepositoryMiner collector = new RepositoryMiner(repository);
 
-        Map<String, FileStatistics> statisticsPerFile = collector.analyze(files);
+        RepositoryStatistics statisticsPerFile = collector.analyze(files);
 
-        assertThat(statisticsPerFile).containsOnlyKeys("file", FILE_NAME);
+        assertThat(statisticsPerFile).hasFiles(FILE, FILE_NAME);
 
         assertDefaultFileStatistics(statisticsPerFile);
 
