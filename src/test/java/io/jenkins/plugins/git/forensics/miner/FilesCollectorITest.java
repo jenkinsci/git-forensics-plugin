@@ -2,7 +2,7 @@ package io.jenkins.plugins.git.forensics.miner;
 
 import org.junit.Test;
 
-import io.jenkins.plugins.git.forensics.GitITest;
+import io.jenkins.plugins.git.forensics.util.GitITest;
 
 import static org.assertj.core.api.Assertions.*;
 

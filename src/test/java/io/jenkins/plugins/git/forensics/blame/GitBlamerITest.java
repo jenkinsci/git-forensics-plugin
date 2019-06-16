@@ -20,7 +20,7 @@ import hudson.plugins.git.extensions.GitSCMExtension;
 import io.jenkins.plugins.forensics.blame.Blames;
 import io.jenkins.plugins.forensics.blame.FileBlame;
 import io.jenkins.plugins.forensics.blame.FileLocations;
-import io.jenkins.plugins.git.forensics.GitITest;
+import io.jenkins.plugins.git.forensics.util.GitITest;
 
 import static io.jenkins.plugins.forensics.assertions.Assertions.*;
 import static org.mockito.Mockito.*;
