@@ -4,10 +4,10 @@
 [![Jenkins Version](https://img.shields.io/badge/Jenkins-2.121.1-green.svg)](https://jenkins.io/download/)
 ![JDK8](https://img.shields.io/badge/jdk-8-yellow.svg)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![GitHub pull requests](https://img.shields.io/github/issues-pr/uhafner/git-forensics-plugin.svg)](https://github.com/uhafner/git-forensics-plugin/pulls)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/jenkinsci/git-forensics-plugin.svg)](https://github.com/jenkinsci/git-forensics-plugin/pulls)
 
-This Git Forensics Jenkins plugin mines and analyzes data from a Git repository. Currently, this plugin is only used
-by [Jenkins´ Warning Next Generation Plugin](https://github.com/jenkinsci/warnings-ng-plugin). 
+This Git Forensics Jenkins plugin mines and analyzes data from a Git repository. It implements all extension points of
+[Jenkins' Forensics API Plugin](https://github.com/jenkinsci/forensics-api-plugin).
 
 The following services are provided by this plugin:
 - **Blames**: Shows what revision and author last modified a specified set of lines of a file.
@@ -18,6 +18,6 @@ The following services are provided by this plugin:
     - last modification time
 
 
-[![Travis](https://img.shields.io/travis/uhafner/git-forensics-plugin.svg?logo=travis&label=travis%20build&logoColor=white)](https://travis-ci.org/uhafner/git-forensics-plugin)
-[![Codacy](https://api.codacy.com/project/badge/Grade/6f1e586841f7419bb40973862c8871aa)](https://www.codacy.com/app/uhafner/git-forensics-plugin?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=uhafner/git-forensics-plugin&amp;utm_campaign=Badge_Grade)
-[![Codecov](https://img.shields.io/codecov/c/github/uhafner/git-forensics-plugin.svg)](https://codecov.io/gh/uhafner/git-forensics-plugin)
+[![Travis](https://img.shields.io/travis/jenkinsci/git-forensics-plugin.svg?logo=travis&label=travis%20build&logoColor=white)](https://travis-ci.org/jenkinsci/git-forensics-plugin)
+[![Codacy](https://api.codacy.com/project/badge/Grade/6f1e586841f7419bb40973862c8871aa)](https://www.codacy.com/app/jenkinsci/git-forensics-plugin?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=jenkinsci/git-forensics-plugin&amp;utm_campaign=Badge_Grade)
+[![Codecov](https://img.shields.io/codecov/c/github/jenkinsci/git-forensics-plugin.svg)](https://codecov.io/gh/jenkinsci/git-forensics-plugin)
