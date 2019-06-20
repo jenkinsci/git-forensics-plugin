@@ -464,7 +464,7 @@
           <version>${jacoco-maven-plugin.version}</version>
           <configuration>
             <includes>
-              <include>io/jenkins/plugins/git/**/*</include>
+              <include>io/jenkins/plugins/**/*</include>
             </includes>
           </configuration>
           <executions>
