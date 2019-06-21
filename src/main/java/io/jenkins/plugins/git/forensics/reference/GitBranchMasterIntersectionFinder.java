@@ -25,6 +25,8 @@ public class GitBranchMasterIntersectionFinder implements RunAction2, Serializab
     private final String NAME = "GitBranchMasterIntersectionFinder";
     private final String NO_INTERSECTION_FOUND = "No intersection was found in master commits";
 
+    private String buildId = "";
+
     /**
      * Defines how far the Finder will look in the past commits to find an intersection.
      */
@@ -54,22 +56,38 @@ public class GitBranchMasterIntersectionFinder implements RunAction2, Serializab
             List<String> branchCommits = new ArrayList<>(thisCommit.getGitCommitLog().getReversions());
             List<String> masterCommits = new ArrayList<>(referenceCommit.getGitCommitLog().getReversions());
 
-            // Fill master commit list
-            Run<?, ?> tmp = reference;
-            // TODO only maxLogs in the past or more?
-            while (masterCommits.size() < maxLogs && tmp.getPreviousBuild() != null) {
-                tmp = tmp.getPreviousBuild();
-                masterCommits.addAll(tmp.getAction(GitCommit.class).getGitCommitLog().getReversions());
-            }
+            Optional<String> referencePoint = Optional.empty();
 
             // Fill branch commit list
-            tmp = run;
-            while (branchCommits.size() < maxLogs && tmp.getPreviousBuild() != null) {
+            Run<?, ?> tmp = run;
+            while (branchCommits.size() < maxLogs && tmp != null) {
+                GitCommit gitCommit = tmp.getAction(GitCommit.class);
+                if (gitCommit == null) {
+                    // Skip build if it has no GitCommit Action.
+                    continue;
+                }
+                branchCommits.addAll(gitCommit.getGitCommitLog().getReversions());
                 tmp = tmp.getPreviousBuild();
-                branchCommits.addAll(tmp.getAction(GitCommit.class).getGitCommitLog().getReversions());
             }
 
-            Optional<String> referencePoint = branchCommits.stream().filter(reversion -> masterCommits.contains(reversion)).findFirst();
+            // Fill master commit list and check for intersection point
+            tmp = reference;
+            while (masterCommits.size() < maxLogs && tmp != null) {
+                GitCommit gitCommit = tmp.getAction(GitCommit.class);
+                if (gitCommit == null) {
+                    // Skip build if it has no GitCommit Action.
+                    continue;
+                }
+                masterCommits.addAll(gitCommit.getGitCommitLog().getReversions());
+                referencePoint = branchCommits.stream().filter(reversion -> masterCommits.contains(reversion)).findFirst();
+                // If an intersection is found the buildId in Jenkins will be saved
+                if(referencePoint.isPresent()){
+                    setBuildId(tmp.getExternalizableId());
+                    break;
+                }
+                tmp = tmp.getPreviousBuild();
+            }
+
             return referencePoint;
         } catch (Exception e) {
             // TODO Logging
@@ -83,6 +101,14 @@ public class GitBranchMasterIntersectionFinder implements RunAction2, Serializab
             return summary.get();
         }
         return NO_INTERSECTION_FOUND;
+    }
+
+    public String getBuildId() {
+        return buildId;
+    }
+
+    public void setBuildId(String buildId) {
+        this.buildId = buildId;
     }
 
     @Override
