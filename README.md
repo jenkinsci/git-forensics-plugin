@@ -18,6 +18,6 @@ The following services are provided by this plugin:
     - last modification time
 
 
-[![Travis](https://img.shields.io/travis/jenkinsci/git-forensics-plugin.svg?logo=travis&label=travis%20build&logoColor=white)](https://travis-ci.org/jenkinsci/git-forensics-plugin)
+[![Travis](https://img.shields.io/travis/jenkinsci/git-forensics-plugin/master.svg?logo=travis&label=travis%20build&logoColor=white)](https://travis-ci.org/jenkinsci/git-forensics-plugin)
 [![Codacy](https://api.codacy.com/project/badge/Grade/6f1e586841f7419bb40973862c8871aa)](https://www.codacy.com/app/jenkinsci/git-forensics-plugin?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=jenkinsci/git-forensics-plugin&amp;utm_campaign=Badge_Grade)
 [![Codecov](https://img.shields.io/codecov/c/github/jenkinsci/git-forensics-plugin.svg)](https://codecov.io/gh/jenkinsci/git-forensics-plugin)
