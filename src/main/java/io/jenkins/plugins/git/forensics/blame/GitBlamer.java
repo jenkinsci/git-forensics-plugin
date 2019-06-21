@@ -1,7 +1,6 @@
 package io.jenkins.plugins.git.forensics.blame;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.nio.file.Paths;
 
 import org.eclipse.jgit.api.BlameCommand;
@@ -13,6 +12,8 @@ import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -22,6 +23,7 @@ import hudson.FilePath;
 import hudson.plugins.git.GitException;
 import hudson.remoting.VirtualChannel;
 
+import io.jenkins.plugins.forensics.blame.Blamer;
 import io.jenkins.plugins.forensics.blame.Blames;
 import io.jenkins.plugins.forensics.blame.FileBlame;
 import io.jenkins.plugins.forensics.blame.FileLocations;
@@ -39,7 +41,7 @@ import io.jenkins.plugins.forensics.blame.FileLocations;
 // TODO: Check if we should also create new Jenkins users
 // TODO: Blame needs only run for new warnings
 @SuppressFBWarnings(value = "SE", justification = "GitClient implementation is Serializable")
-public class GitBlamer implements Serializable {
+public class GitBlamer extends Blamer {
     private static final long serialVersionUID = -619059996626444900L;
 
     static final String NO_HEAD_ERROR = "Could not retrieve HEAD commit, aborting";
@@ -63,6 +65,7 @@ public class GitBlamer implements Serializable {
         this.gitCommit = gitCommit;
     }
 
+    @Override
     public Blames blame(final FileLocations input) {
         Blames blames = new Blames();
         try {
@@ -142,7 +145,7 @@ public class GitBlamer implements Serializable {
          * @param blameRunner
          *         the runner to invoke Git
          */
-        // FIXME: @VisibleForTesting
+        @VisibleForTesting
         void run(final String fileName, final BlameRunner blameRunner) {
             try {
                 BlameResult blame = blameRunner.run(fileName);
