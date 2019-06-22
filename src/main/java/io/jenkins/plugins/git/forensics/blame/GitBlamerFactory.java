@@ -24,27 +24,41 @@ import io.jenkins.plugins.forensics.util.FilteredLog;
  */
 @Extension
 public class GitBlamerFactory extends BlamerFactory {
+    static final String INFO_BLAMER_CREATED = "Creating GitBlamer to obtain SCM blame information for affected files";
+    static final String INFO_SHALLOW_CLONE = "Skipping issues blame since Git has been configured with shallow clone";
+    static final String ERROR_BLAMER = "Exception while creating a GitClient instance";
+
     @Override
     public Optional<Blamer> createBlamer(final SCM scm, final Run<?, ?> build,
             final FilePath workspace, final TaskListener listener, final FilteredLog logger) {
+        if (scm instanceof GitSCM) {
+            return createGitBlamer((GitSCM) scm, build, workspace, listener, logger);
+        }
+        logger.logInfo("Skipping issues blame since SCM '%s' is not of type GitSCM", scm.getType());
+        return Optional.empty();
+    }
+
+    private Optional<Blamer> createGitBlamer(final GitSCM git, final Run<?, ?> build,
+            final FilePath workspace, final TaskListener listener, final FilteredLog logger) {
+        if (isShallow(git)) {
+            logger.logInfo(INFO_SHALLOW_CLONE);
+
+            return Optional.empty();
+        }
+
         try {
-            GitSCM gitSCM = asGit(scm);
-            if (isShallow(gitSCM)) {
-                logger.logError("Skipping issues blame since Git has been configured with shallow clone");
-
-                return Optional.empty();
-            }
-
             EnvVars environment = build.getEnvironment(listener);
-            GitClient gitClient = gitSCM.createClient(listener, environment, build, workspace);
+            GitClient gitClient = git.createClient(listener, environment, build, workspace);
             String gitCommit = environment.getOrDefault("GIT_COMMIT", "HEAD");
 
+            logger.logInfo(INFO_BLAMER_CREATED);
             return Optional.of(new GitBlamer(gitClient, gitCommit));
         }
         catch (IOException | InterruptedException e) {
-            logger.logException(e, "Exception while creating a GitClient instance");
+            logger.logException(e, ERROR_BLAMER);
+
+            return Optional.empty();
         }
-        return Optional.empty();
     }
 
     private boolean isShallow(final GitSCM git) {
@@ -53,9 +67,5 @@ public class GitBlamerFactory extends BlamerFactory {
             return option.isShallow();
         }
         return false;
-    }
-
-    private GitSCM asGit(final SCM scm) {
-        return (GitSCM) scm;
     }
 }
