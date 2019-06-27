@@ -34,7 +34,7 @@ public class GitBlamerFactory extends BlamerFactory {
         if (scm instanceof GitSCM) {
             return createGitBlamer((GitSCM) scm, build, workspace, listener, logger);
         }
-        logger.logInfo("Skipping issues blame since SCM '%s' is not of type GitSCM", scm.getType());
+        logger.logInfo("Skipping blame since SCM '%s' is not of type GitSCM", scm.getType());
         return Optional.empty();
     }
 

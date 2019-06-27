@@ -41,7 +41,7 @@ class GitBlamerFactoryTest {
         assertThat(factory.createBlamer(new NullSCM(), null, null, NULL_LISTENER, logger)).isEmpty();
 
         assertThat(logger).hasNoErrorMessages();
-        assertThat(logger).hasInfoMessages("Skipping issues blame since SCM 'hudson.scm.NullSCM' is not of type GitSCM");
+        assertThat(logger).hasInfoMessages("Skipping blame since SCM 'hudson.scm.NullSCM' is not of type GitSCM");
     }
 
     @Test

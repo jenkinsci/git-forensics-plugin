@@ -71,7 +71,8 @@ public class GitBlamer extends Blamer {
     public Blames blame(final FileLocations locations) {
         Blames blames = new Blames();
         try {
-            blames.logInfo("Invoking Git blamer to create author and commit information for all affected files");
+            blames.logInfo("Invoking Git blamer to create author and commit information for %d affected files",
+                    locations.size());
             blames.logInfo("GIT_COMMIT env = '%s'", gitCommit);
             blames.logInfo("Git working tree = '%s'", git.getWorkTree());
 
