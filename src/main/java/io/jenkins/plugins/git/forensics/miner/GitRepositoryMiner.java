@@ -1,5 +1,6 @@
 package io.jenkins.plugins.git.forensics.miner;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -7,6 +8,8 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -14,6 +17,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
 import io.jenkins.plugins.forensics.miner.FileStatistics;
+import io.jenkins.plugins.forensics.miner.RepositoryMiner;
 import io.jenkins.plugins.forensics.miner.RepositoryStatistics;
 
 /**
@@ -23,11 +27,13 @@ import io.jenkins.plugins.forensics.miner.RepositoryStatistics;
  * @see io.jenkins.plugins.forensics.miner.FileStatistics
  * @see io.jenkins.plugins.git.forensics.miner.FilesCollector
  */
-public class RepositoryMiner {
-    private final Git git;
+public class GitRepositoryMiner extends RepositoryMiner {
+    private static final long serialVersionUID = 1157958118716013983L;
 
-    RepositoryMiner(final Repository repository) {
-        git = new Git(repository);
+    private final Repository repository;
+
+    GitRepositoryMiner(final Repository repository) {
+        this.repository = repository;
     }
 
     RepositoryStatistics analyze(final Set<String> files) {
@@ -43,6 +49,7 @@ public class RepositoryMiner {
             final RepositoryStatistics statistics) {
         FileStatistics fileStatistics = new FileStatistics(fileName);
         try {
+            Git git = new Git(repository);
             Iterable<RevCommit> commits = git.log().addPath(fileName).call();
             commits.forEach(c -> fileStatistics.inspectCommit(c.getCommitTime(), getAuthor(c)));
             return fileStatistics;
@@ -64,5 +71,19 @@ public class RepositoryMiner {
             return StringUtils.defaultString(committer.getEmailAddress(), committer.getName());
         }
         return StringUtils.EMPTY;
+    }
+
+    @Override
+    public RepositoryStatistics mine() {
+        try {
+            ObjectId head = repository.resolve(Constants.HEAD);
+            Set<String> files = new FilesCollector(repository).findAllFor(head);
+            return analyze(files);
+        }
+        catch (IOException exception) {
+            RepositoryStatistics statistics = new RepositoryStatistics();
+            statistics.logException(exception, "Can't obtain HEAD of repository.");
+            return statistics;
+        }
     }
 }

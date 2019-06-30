@@ -92,7 +92,7 @@ public class GitCheckoutListener extends SCMListener {
         public RepositoryStatistics invoke(final Repository repository, final VirtualChannel channel) throws IOException, InterruptedException {
             Set<String> files = new FilesCollector(repository).findAllFor(repository.resolve(Constants.HEAD));
 
-            return new RepositoryMiner(repository).analyze(files);
+            return new GitRepositoryMiner(repository).analyze(files);
         }
     }
 

@@ -12,7 +12,7 @@ import io.jenkins.plugins.git.forensics.util.GitITest;
 import static io.jenkins.plugins.forensics.assertions.Assertions.*;
 
 /**
- * Tests the class {@link RepositoryMiner}.
+ * Tests the class {@link GitRepositoryMiner}.
  *
  * @author Ullrich Hafner
  */
@@ -23,7 +23,7 @@ public class RepositoryMinerITest extends GitITest {
     @Test
     public void shouldCollectSingleFile() {
         Repository repository = createRepository();
-        RepositoryMiner collector = new RepositoryMiner(repository);
+        GitRepositoryMiner collector = new GitRepositoryMiner(repository);
 
         Set<String> files = findAllFiles(repository);
         RepositoryStatistics statisticsPerFile = collector.analyze(files);
@@ -50,7 +50,7 @@ public class RepositoryMinerITest extends GitITest {
         Repository repository = createRepository();
         Set<String> files = findAllFiles(repository);
 
-        RepositoryMiner collector = new RepositoryMiner(repository);
+        GitRepositoryMiner collector = new GitRepositoryMiner(repository);
 
         RepositoryStatistics statisticsPerFile = collector.analyze(files);
 
@@ -76,7 +76,7 @@ public class RepositoryMinerITest extends GitITest {
         Repository repository = createRepository();
         Set<String> files = findAllFiles(repository);
 
-        RepositoryMiner collector = new RepositoryMiner(repository);
+        GitRepositoryMiner collector = new GitRepositoryMiner(repository);
 
         RepositoryStatistics statisticsPerFile = collector.analyze(files);
 
