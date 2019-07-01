@@ -18,13 +18,13 @@ import io.jenkins.plugins.forensics.miner.RepositoryMiner;
 import io.jenkins.plugins.forensics.util.FilteredLog;
 
 /**
- * FIXME: comment class.
+ * A {@link MinerFactory} for Git. Handles Git repositories that do not have option ShallowClone set.
  *
  * @author Ullrich Hafner
  */
 @Extension
 public class GitMinerFactory extends MinerFactory {
-    static final String INFO_BLAMER_CREATED = "Creating GitBlamer to obtain SCM blame information for affected files";
+    static final String INFO_BLAMER_CREATED = "Invoking GitMiner to creates statistics for all available repository files.";
     static final String INFO_SHALLOW_CLONE = "Skipping issues blame since Git has been configured with shallow clone";
     static final String ERROR_BLAMER = "Exception while creating a GitClient instance";
 
@@ -49,10 +49,10 @@ public class GitMinerFactory extends MinerFactory {
         try {
             EnvVars environment = build.getEnvironment(listener);
             GitClient gitClient = git.createClient(listener, environment, build, workspace);
-            String gitCommit = environment.getOrDefault("GIT_COMMIT", "HEAD");
 
             logger.logInfo(INFO_BLAMER_CREATED);
-            return Optional.of(new GitRepositoryMiner(gitClient.getRepository()));
+
+            return Optional.of(new GitRepositoryMiner(gitClient));
         }
         catch (IOException | InterruptedException e) {
             logger.logException(e, ERROR_BLAMER);

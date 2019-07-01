@@ -36,7 +36,7 @@ public class FilesCollector {
             }
             return files;
         }
-        catch (IOException exception) {
+        catch (IOException exception) { // FIXME: add logging
             return Collections.emptySet();
         }
     }

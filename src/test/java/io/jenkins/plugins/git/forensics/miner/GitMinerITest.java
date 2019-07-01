@@ -14,6 +14,7 @@ import hudson.plugins.git.GitSCM;
 import io.jenkins.plugins.forensics.miner.FileStatisticsPublisher;
 import io.jenkins.plugins.git.forensics.util.GitITest;
 
+import static io.jenkins.plugins.git.forensics.miner.GitMinerFactory.*;
 import static org.assertj.core.api.Assertions.*;
 
 /**
@@ -39,10 +40,12 @@ public class GitMinerITest extends GitITest {
         String consoleLog = getConsoleLog(build);
         System.out.println(consoleLog);
         assertThat(consoleLog).contains(
-                "[Forensics] Analyzed history of",
-                "[Forensics] File with most commits",
-                "[Forensics] File with most number of authors",
-                "[Forensics] Least recently modified file");
+                INFO_BLAMER_CREATED,
+                "[Forensics] Analyzed history of 17 files",
+                "[Forensics] File with most commits (#4): file1.txt",
+                "[Forensics] File with most number of authors (#1): file1.txt",
+                "[Forensics] Oldest file (0 days): file1.txt",
+                "[Forensics] Least recently modified file (0 days): file1.txt");
     }
 
     private void initializeGit() {

@@ -18,13 +18,13 @@ import io.jenkins.plugins.forensics.blame.BlamerFactory;
 import io.jenkins.plugins.forensics.util.FilteredLog;
 
 /**
- * A {@link BlamerFactory} gor Git. Handles Git repositories that do not have option ShallowClone set.
+ * A {@link BlamerFactory} for Git. Handles Git repositories that do not have option ShallowClone set.
  *
  * @author Ullrich Hafner
  */
 @Extension
 public class GitBlamerFactory extends BlamerFactory {
-    static final String INFO_BLAMER_CREATED = "Creating GitBlamer to obtain SCM blame information for affected files";
+    static final String INFO_BLAMER_CREATED = "Invoking GitMiner to obtain SCM blame information for affected files";
     static final String INFO_SHALLOW_CLONE = "Skipping issues blame since Git has been configured with shallow clone";
     static final String ERROR_BLAMER = "Exception while creating a GitClient instance";
 
@@ -34,7 +34,7 @@ public class GitBlamerFactory extends BlamerFactory {
         if (scm instanceof GitSCM) {
             return createGitBlamer((GitSCM) scm, build, workspace, listener, logger);
         }
-        logger.logInfo("Skipping blame since SCM '%s' is not of type GitSCM", scm.getType());
+        logger.logInfo("Skipping blamer since SCM '%s' is not of type GitSCM", scm.getType());
         return Optional.empty();
     }
 
