@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.jenkinsci.plugins.gitclient.GitClient;
 import hudson.EnvVars;
+import hudson.Extension;
 import hudson.FilePath;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -21,6 +22,7 @@ import io.jenkins.plugins.forensics.util.FilteredLog;
  *
  * @author Ullrich Hafner
  */
+@Extension
 public class GitMinerFactory extends MinerFactory {
     static final String INFO_BLAMER_CREATED = "Creating GitBlamer to obtain SCM blame information for affected files";
     static final String INFO_SHALLOW_CLONE = "Skipping issues blame since Git has been configured with shallow clone";

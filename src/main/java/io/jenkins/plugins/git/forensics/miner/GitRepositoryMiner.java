@@ -38,16 +38,20 @@ public class GitRepositoryMiner extends RepositoryMiner {
 
     RepositoryStatistics analyze(final Set<String> files) {
         RepositoryStatistics statistics = new RepositoryStatistics();
+        statistics.logInfo("Invoking Git miner to create creates statistics for all available files");
+
         List<FileStatistics> fileStatistics = files.stream()
                 .map(file -> analyzeHistory(file, statistics))
                 .collect(Collectors.toList());
         statistics.addAll(fileStatistics);
+
         return statistics;
     }
 
     private FileStatistics analyzeHistory(final String fileName,
             final RepositoryStatistics statistics) {
         FileStatistics fileStatistics = new FileStatistics(fileName);
+
         try {
             Git git = new Git(repository);
             Iterable<RevCommit> commits = git.log().addPath(fileName).call();

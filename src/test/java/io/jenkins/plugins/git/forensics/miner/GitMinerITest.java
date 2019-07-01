@@ -11,14 +11,17 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.plugins.git.GitSCM;
 
+import io.jenkins.plugins.forensics.miner.FileStatisticsPublisher;
 import io.jenkins.plugins.git.forensics.util.GitITest;
 
 import static org.assertj.core.api.Assertions.*;
 
 /**
- * Tests the class {@link GitCheckoutListener}.
+ * FIXME: comment class.
+ *
+ * @author Ullrich Hafner
  */
-public class GitCheckoutListenerITest extends GitITest {
+public class GitMinerITest extends GitITest {
     /** Jenkins rule per suite. */
     @ClassRule
     public static final JenkinsRule JENKINS_PER_SUITE = new JenkinsRule();
@@ -36,10 +39,10 @@ public class GitCheckoutListenerITest extends GitITest {
         String consoleLog = getConsoleLog(build);
         System.out.println(consoleLog);
         assertThat(consoleLog).contains(
-                "[Git Forensics] Analyzed history of",
-                "[Git Forensics] File with most commits",
-                "[Git Forensics] File with most number of authors",
-                "[Git Forensics] Least recently modified file");
+                "[Forensics] Analyzed history of",
+                "[Forensics] File with most commits",
+                "[Forensics] File with most number of authors",
+                "[Forensics] Least recently modified file");
     }
 
     private void initializeGit() {
@@ -86,6 +89,7 @@ public class GitCheckoutListenerITest extends GitITest {
                     Collections.emptyList(), false, Collections.emptyList(),
                     null, null, Collections.emptyList());
             project.setScm(scm);
+            project.getPublishersList().add(new FileStatisticsPublisher());
             return project;
         }
         catch (IOException exception) {
@@ -101,5 +105,4 @@ public class GitCheckoutListenerITest extends GitITest {
             throw new AssertionError(e);
         }
     }
-
 }
