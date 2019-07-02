@@ -131,23 +131,28 @@ public class GitBlamer extends Blamer {
         }
 
         @Override
-        public Blames invoke(final Repository repo, final VirtualChannel channel) throws InterruptedException {
-            BlameRunner blameRunner = new BlameRunner(repo, headCommit);
+        public Blames invoke(final Repository repository, final VirtualChannel channel) throws InterruptedException {
+            try {
+                BlameRunner blameRunner = new BlameRunner(repository, headCommit);
 
-            for (String file : locations.getRelativePaths()) {
-                run(file, blameRunner);
+                for (String file : locations.getRelativePaths()) {
+                    run(file, blameRunner);
 
-                if (Thread.interrupted()) { // Cancel request by user
-                    String message = "Blaming has been interrupted while computing blame information";
-                    blames.logInfo(message);
+                    if (Thread.interrupted()) { // Cancel request by user
+                        String message = "Blaming has been interrupted while computing blame information";
+                        blames.logInfo(message);
 
-                    throw new InterruptedException(message);
+                        throw new InterruptedException(message);
+                    }
                 }
+
+                blames.logInfo("-> blamed authors of issues in %d files", blames.size());
+
+                return blames;
             }
-
-            blames.logInfo("-> blamed authors of issues in %d files", blames.size());
-
-            return blames;
+            finally {
+                repository.close();
+            }
         }
 
         /**

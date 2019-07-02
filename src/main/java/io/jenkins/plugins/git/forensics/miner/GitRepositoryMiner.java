@@ -67,6 +67,9 @@ public class GitRepositoryMiner extends RepositoryMiner {
                 statistics.logException(exception, "Can't obtain HEAD of repository.");
                 return statistics;
             }
+            finally {
+                repository.close();
+            }
         }
 
         RepositoryStatistics analyze(final Repository repository, final Set<String> files) {
