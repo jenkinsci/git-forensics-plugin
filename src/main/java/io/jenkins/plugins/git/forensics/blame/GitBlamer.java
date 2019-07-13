@@ -62,6 +62,8 @@ public class GitBlamer extends Blamer {
      *         content of environment variable GIT_COMMIT
      */
     public GitBlamer(final GitClient git, final String gitCommit) {
+        super();
+
         workspace = git.getWorkTree();
         this.git = git;
         this.gitCommit = gitCommit;

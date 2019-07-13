@@ -38,7 +38,7 @@ public class GitITest {
      *         if the initialization fails
      */
     @Before
-    @SuppressWarnings("IllegalCatch")
+    @SuppressWarnings({"IllegalCatch", "PMD.SignatureDeclareThrowsException"})
     public void init() throws Exception {
         sampleRepo.init();
     }
@@ -80,7 +80,9 @@ public class GitITest {
      */
     protected Repository createRepository() {
         try {
-            return new RepositoryBuilder().setWorkTree(sampleRepo.getRoot()).setMustExist(true).build();
+            RepositoryBuilder repositoryBuilder = new RepositoryBuilder().setWorkTree(sampleRepo.getRoot()).setMustExist(true);
+
+            return repositoryBuilder.build();
         }
         catch (IOException exception) {
             throw new AssertionError(exception);
