@@ -29,7 +29,7 @@
     <eclipse-collections.version>9.2.0</eclipse-collections.version>
 
     <!-- Jenkins Plugin Dependencies Versions -->
-    <forensics-api-plugin.version>0.1-SNAPSHOT</forensics-api-plugin.version>
+    <forensics-api-plugin.version>0.1.1</forensics-api-plugin.version>
     <git-plugin.version>3.9.1</git-plugin.version>
 
     <!-- Test Library Dependencies Versions -->
