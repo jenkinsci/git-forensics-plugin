@@ -47,7 +47,7 @@ class GitBlamerTest {
     void shouldAbortIfHeadCommitIsMissing() {
         GitBlamer blamer = new GitBlamer(createGitClient(), HEAD);
 
-        Blames blames = blamer.blame(new FileLocations());
+        Blames blames = blamer.blame(createLocations());
 
         assertThat(blames.isEmpty()).isTrue();
         assertThat(blames.getErrorMessages()).contains(GitBlamer.NO_HEAD_ERROR);
@@ -60,7 +60,7 @@ class GitBlamerTest {
 
         GitBlamer blamer = new GitBlamer(gitClient, HEAD);
 
-        Blames blames = blamer.blame(new FileLocations());
+        Blames blames = blamer.blame(createLocations());
 
         assertThat(blames.isEmpty()).isTrue();
         assertThat(blames.getErrorMessages()).contains(GitBlamer.NO_HEAD_ERROR);
@@ -77,7 +77,7 @@ class GitBlamerTest {
         when(gitClient.getWorkTree()).thenReturn(workTree);
 
         GitBlamer blamer = new GitBlamer(gitClient, HEAD);
-        Blames blames = blamer.blame(new FileLocations());
+        Blames blames = blamer.blame(createLocations());
 
         assertThat(blames.isEmpty()).isTrue();
         assertThat(blames.getErrorMessages()).contains(GitBlamer.BLAME_ERROR);
@@ -100,7 +100,7 @@ class GitBlamerTest {
         when(gitClient.getWorkTree()).thenReturn(workTree);
 
         GitBlamer blamer = new GitBlamer(gitClient, HEAD);
-        Blames blames = blamer.blame(new FileLocations());
+        Blames blames = blamer.blame(createLocations());
 
         assertThat(blames.isEmpty()).isTrue();
         assertThat(blames.getErrorMessages()).isEmpty();
@@ -115,7 +115,7 @@ class GitBlamerTest {
 
     private void verifyExceptionHandling(final Class<? extends Exception> exception) throws GitAPIException {
         Blames blames = new Blames();
-        FileLocations blamerInput = new FileLocations();
+        FileLocations blamerInput = createLocations();
         BlameCallback callback = createCallback(blames, blamerInput);
 
         BlameRunner runner = mock(BlameRunner.class);
@@ -181,9 +181,7 @@ class GitBlamerTest {
     private FileLocations createLocations() {
         FileSystem fileSystem = mock(FileSystem.class);
         when(fileSystem.resolveAbsolutePath(anyString(), any())).thenReturn(WORKSPACE);
-        FileLocations locations = new FileLocations();
-        locations.setFileSystem(fileSystem);
-        locations.setWorkspace(WORKSPACE);
+        FileLocations locations = new FileLocations(WORKSPACE, fileSystem);
         return locations;
     }
 

@@ -32,6 +32,7 @@ public class GitBlamerITest extends GitITest {
     /** Jenkins rule per suite. */
     @ClassRule
     public static final JenkinsRule JENKINS_PER_SUITE = new JenkinsRule();
+    private static final String WORKSPACE = "workspace";
 
     /**
      * Verifies that the blames are empty if there are no requests defined.
@@ -40,7 +41,7 @@ public class GitBlamerITest extends GitITest {
     public void shouldCreateEmptyBlamesIfRequestIsEmpty() {
         GitBlamer gitBlamer = createBlamer();
 
-        Blames blames = gitBlamer.blame(new FileLocations());
+        Blames blames = gitBlamer.blame(new FileLocations(WORKSPACE));
 
         assertThat(blames.isEmpty()).isTrue();
     }
@@ -52,8 +53,7 @@ public class GitBlamerITest extends GitITest {
     public void shouldCreateBlamesIfRequestIsExistingFile() {
         create2RevisionsWithDifferentAuthors();
 
-        FileLocations locations = new FileLocations();
-        locations.setWorkspace(sampleRepo.getRoot());
+        FileLocations locations = new FileLocations(sampleRepo.getRoot());
         String absolutePath = locations.getWorkspace() + FILE_NAME;
         locations.addLine(absolutePath, 2);
         locations.addLine(absolutePath, 3);
