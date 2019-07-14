@@ -68,13 +68,7 @@ class GitBlamerTest {
 
     @Test
     void shouldAbortIfWithRepositoryThrowsException() throws InterruptedException, IOException {
-        GitClient gitClient = mock(GitClient.class);
-
-        ObjectId id = mock(ObjectId.class);
-        when(gitClient.revParse(HEAD)).thenReturn(id);
-        when(gitClient.withRepository(any())).thenThrow(new IOException());
-        FilePath workTree = createWorkTreeStub();
-        when(gitClient.getWorkTree()).thenReturn(workTree);
+        GitClient gitClient = createStubbedClientWithException(new IOException());
 
         GitBlamer blamer = new GitBlamer(gitClient, HEAD);
         Blames blames = blamer.blame(createLocations());
@@ -83,27 +77,33 @@ class GitBlamerTest {
         assertThat(blames.getErrorMessages()).contains(GitBlamer.BLAME_ERROR);
     }
 
-    private FilePath createWorkTreeStub() {
-        File mock = mock(File.class);
-        when(mock.getPath()).thenReturn("/");
-        return new FilePath(mock);
-    }
-
     @Test
     void shouldFinishWithIntermediateResultIfInterrupted() throws InterruptedException, IOException {
-        GitClient gitClient = mock(GitClient.class);
-
-        ObjectId id = mock(ObjectId.class);
-        when(gitClient.revParse(HEAD)).thenReturn(id);
-        when(gitClient.withRepository(any())).thenThrow(new InterruptedException());
-        FilePath workTree = createWorkTreeStub();
-        when(gitClient.getWorkTree()).thenReturn(workTree);
+        GitClient gitClient = createStubbedClientWithException(new InterruptedException());
 
         GitBlamer blamer = new GitBlamer(gitClient, HEAD);
         Blames blames = blamer.blame(createLocations());
 
         assertThat(blames.isEmpty()).isTrue();
         assertThat(blames.getErrorMessages()).isEmpty();
+    }
+
+    private GitClient createStubbedClientWithException(final Exception exception) throws InterruptedException, IOException {
+        GitClient gitClient = mock(GitClient.class);
+
+        ObjectId id = mock(ObjectId.class);
+        when(gitClient.revParse(HEAD)).thenReturn(id);
+        when(gitClient.withRepository(any())).thenThrow(exception);
+        FilePath workTree = createWorkTreeStub();
+        when(gitClient.getWorkTree()).thenReturn(workTree);
+
+        return gitClient;
+    }
+
+    private FilePath createWorkTreeStub() {
+        File mock = mock(File.class);
+        when(mock.getPath()).thenReturn("/");
+        return new FilePath(mock);
     }
 
     @Test
@@ -147,46 +147,7 @@ class GitBlamerTest {
     }
 
     @Test
-    void shouldMapResultToRequestWithTwoLines() throws GitAPIException {
-        FileLocations locations = createLocations();
-        locations.addLine(ABSOLUTE_PATH, 1);
-        locations.addLine(ABSOLUTE_PATH, 2);
-
-        Blames blames = new Blames();
-        BlameCallback callback = createCallback(blames, locations);
-
-        BlameResult result = createResult(2);
-
-        stubResultForIndex(result, 0);
-        stubResultForIndex(result, 1);
-
-        BlameRunner blameRunner = createBlameRunner(result);
-        callback.run(FILE, blameRunner);
-
-        FileBlame blame = blames.getBlame(ABSOLUTE_PATH);
-        verifyResult(blame, 1);
-        verifyResult(blame, 2);
-    }
-
-    private GitClient createGitClient() {
-        GitClient gitClient = mock(GitClient.class);
-        when(gitClient.getWorkTree()).thenReturn(new FilePath((VirtualChannel) null, ""));
-        return gitClient;
-    }
-
-    private BlameCallback createCallback(final Blames blames, final FileLocations blamerInput) {
-        return new BlameCallback(WORKSPACE, blamerInput, blames, mock(ObjectId.class));
-    }
-
-    private FileLocations createLocations() {
-        FileSystem fileSystem = mock(FileSystem.class);
-        when(fileSystem.resolveAbsolutePath(anyString(), any())).thenReturn(WORKSPACE);
-        FileLocations locations = new FileLocations(WORKSPACE, fileSystem);
-        return locations;
-    }
-
-    @Test
-    void shouldStoreAbsolutePaths() throws GitAPIException {
+    void shouldMapResultToRequestWithTwoLinesOfAbsolutePaths() throws GitAPIException {
         FileLocations locations = createLocations();
         locations.addLine(ABSOLUTE_PATH, 1);
         locations.addLine(ABSOLUTE_PATH, 2);
@@ -207,6 +168,22 @@ class GitBlamerTest {
         FileBlame blame = blames.getBlame(ABSOLUTE_PATH);
         verifyResult(blame, 1);
         verifyResult(blame, 2);
+    }
+
+    private GitClient createGitClient() {
+        GitClient gitClient = mock(GitClient.class);
+        when(gitClient.getWorkTree()).thenReturn(new FilePath((VirtualChannel) null, ""));
+        return gitClient;
+    }
+
+    private BlameCallback createCallback(final Blames blames, final FileLocations blamerInput) {
+        return new BlameCallback(WORKSPACE, blamerInput, blames, mock(ObjectId.class));
+    }
+
+    private FileLocations createLocations() {
+        FileSystem fileSystem = mock(FileSystem.class);
+        when(fileSystem.resolveAbsolutePath(anyString(), any())).thenReturn(WORKSPACE);
+        return new FileLocations(WORKSPACE, fileSystem);
     }
 
     @Test
