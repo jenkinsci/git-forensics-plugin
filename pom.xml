@@ -12,7 +12,7 @@
   <groupId>io.jenkins.plugins</groupId>
   <packaging>hpi</packaging>
   <name>Git Forensics Plugin</name>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>0.1.0-alpha-1-SNAPSHOT</version>
   <description>Jenkins plug-in that mines and analyzes data from a Git repository.</description>
 
   <properties>
@@ -26,8 +26,10 @@
     <error-prone.version>2.3.3</error-prone.version>
     <spotbugs.annotations>3.1.12</spotbugs.annotations>
     <commons.lang.version>3.9</commons.lang.version>
+    <eclipse-collections.version>9.2.0</eclipse-collections.version>
 
     <!-- Jenkins Plugin Dependencies Versions -->
+    <forensics-api-plugin.version>0.1-alpha-1</forensics-api-plugin.version>
     <git-plugin.version>3.9.1</git-plugin.version>
 
     <!-- Test Library Dependencies Versions -->
@@ -100,6 +102,16 @@
       <artifactId>commons-lang3</artifactId>
       <version>${commons.lang.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.eclipse.collections</groupId>
+      <artifactId>eclipse-collections-api</artifactId>
+      <version>${eclipse-collections.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.collections</groupId>
+      <artifactId>eclipse-collections</artifactId>
+      <version>${eclipse-collections.version}</version>
+    </dependency>
 
     <!-- Jenkins Plugin Dependencies -->
     <dependency>
@@ -107,8 +119,20 @@
       <artifactId>git</artifactId>
       <version>${git-plugin.version}</version>
     </dependency>
+    <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>forensics-api</artifactId>
+      <version>${forensics-api-plugin.version}</version>
+    </dependency>
 
     <!-- Test Dependencies -->
+    <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>forensics-api</artifactId>
+      <version>${forensics-api-plugin.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>
@@ -119,6 +143,18 @@
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-engine</artifactId>
       <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.vintage</groupId>
+      <artifactId>junit-vintage-engine</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.12</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -168,6 +204,12 @@
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${maven-surefire.plugin}</version>
+        <configuration>
+          <excludes>
+            <exclude>**/*ITest.*</exclude>
+            <exclude>**/InjectedTest.*</exclude>
+          </excludes>
+        </configuration>
         <dependencies>
           <dependency>
             <groupId>com.tngtech.archunit</groupId>
@@ -175,6 +217,25 @@
             <version>${archunit.version}</version>
           </dependency>
         </dependencies>
+      </plugin>
+      <plugin>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>${maven-failsafe.plugin}</version>
+        <configuration>
+          <includes>
+            <include>**/*ITest.*</include>
+            <include>**/*InjectedTest.*</include>
+          </includes>
+          <reuseForks>false</reuseForks>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <artifactId>maven-javadoc-plugin</artifactId>
@@ -311,7 +372,7 @@
           <includeTests>true</includeTests>
         </configuration>
       </plugin>
-      <!--<plugin>
+      <plugin>
         <groupId>org.revapi</groupId>
         <artifactId>revapi-maven-plugin</artifactId>
         <version>${revapi-maven-plugin.version}</version>
@@ -328,6 +389,7 @@
           </dependency>
         </dependencies>
         <configuration>
+          <skip>true</skip> <!-- FIXME: enable after 1.0.0 -->
           <analysisConfiguration>
             <revapi.semver.ignore>
               <enabled>true</enabled>
@@ -370,32 +432,6 @@
             <phase>verify</phase>
           </execution>
         </executions>
-      </plugin>-->
-      <plugin>
-        <groupId>org.assertj</groupId>
-        <artifactId>assertj-assertions-generator-maven-plugin</artifactId>
-        <version>2.1.0</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>generate-assertions</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <packages>
-            <package>io.jenkins.plugins.git.forensics</package>
-          </packages>
-          <entryPointClassPackage>io.jenkins.plugins.plugins.git.forensics.assertions</entryPointClassPackage>
-          <cleanTargetDir>true</cleanTargetDir>
-          <hierarchical>false</hierarchical>
-          <generateBddAssertions>false</generateBddAssertions>
-          <generateJUnitSoftAssertions>false</generateJUnitSoftAssertions>
-          <templates>
-            <templatesDirectory>${project.basedir}/etc/templates/</templatesDirectory>
-            <assertionsEntryPointClass>assertions_entry_point_class_template.txt</assertionsEntryPointClass>
-          </templates>
-        </configuration>
       </plugin>
     </plugins>
     <pluginManagement>
@@ -465,7 +501,7 @@
           <version>${jacoco-maven-plugin.version}</version>
           <configuration>
             <includes>
-              <include>io/jenkins/plugins/git/**/*</include>
+              <include>io/jenkins/plugins/**/*</include>
             </includes>
           </configuration>
           <executions>
