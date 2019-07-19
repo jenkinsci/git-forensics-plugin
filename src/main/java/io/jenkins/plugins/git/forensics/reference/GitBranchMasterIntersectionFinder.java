@@ -1,10 +1,9 @@
 package io.jenkins.plugins.git.forensics.reference;
 
 import hudson.model.Run;
-import jenkins.model.RunAction2;
+import io.jenkins.plugins.forensics.reference.BranchMasterIntersectionFinder;
 
 import javax.annotation.CheckForNull;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -15,7 +14,7 @@ import java.util.Optional;
  * @author Arne Schöntag
  */
 // TODO Name to be Changed
-public class GitBranchMasterIntersectionFinder implements RunAction2, Serializable {
+public class GitBranchMasterIntersectionFinder extends BranchMasterIntersectionFinder {
 
     private static final long serialVersionUID = -4549516129641755356L;
     private transient Run<?, ?> run;
@@ -43,12 +42,6 @@ public class GitBranchMasterIntersectionFinder implements RunAction2, Serializab
         this.reference = reference;
     }
 
-    /**
-     * Method to determine the Reversion of the last Commit which is shared with the master branch.
-     *
-     * @return the hash value (ObjectId) of the reversion
-     *          or null if an error occurred during evaluation or no intersection was found (should not happen)
-     */
     public Optional<String> findReferencePoint() {
         try {
             GitCommit thisCommit = run.getAction(GitCommit.class);
