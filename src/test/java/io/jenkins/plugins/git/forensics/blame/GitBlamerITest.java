@@ -14,8 +14,6 @@ import hudson.model.Job;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
-import hudson.plugins.git.SubmoduleConfig;
-import hudson.plugins.git.extensions.GitSCMExtension;
 
 import io.jenkins.plugins.forensics.blame.Blames;
 import io.jenkins.plugins.forensics.blame.FileBlame;
@@ -34,6 +32,7 @@ public class GitBlamerITest extends GitITest {
     /** Jenkins rule per suite. */
     @ClassRule
     public static final JenkinsRule JENKINS_PER_SUITE = new JenkinsRule();
+    private static final String WORKSPACE = "workspace";
 
     /**
      * Verifies that the blames are empty if there are no requests defined.
@@ -42,9 +41,9 @@ public class GitBlamerITest extends GitITest {
     public void shouldCreateEmptyBlamesIfRequestIsEmpty() {
         GitBlamer gitBlamer = createBlamer();
 
-        Blames blames = gitBlamer.blame(new FileLocations());
+        Blames blames = gitBlamer.blame(new FileLocations(WORKSPACE));
 
-        assertThat(blames).isEmpty();
+        assertThat(blames.isEmpty()).isTrue();
     }
 
     /**
@@ -54,23 +53,23 @@ public class GitBlamerITest extends GitITest {
     public void shouldCreateBlamesIfRequestIsExistingFile() {
         create2RevisionsWithDifferentAuthors();
 
-        FileLocations input = new FileLocations();
-        input.addLine(FILE_NAME, 2);
-        input.addLine(FILE_NAME, 3);
-        input.addLine(FILE_NAME, 4);
-        input.addLine(FILE_NAME, 5);
+        FileLocations locations = new FileLocations(sampleRepo.getRoot());
+        String absolutePath = locations.getWorkspace() + FILE_NAME;
+        locations.addLine(absolutePath, 2);
+        locations.addLine(absolutePath, 3);
+        locations.addLine(absolutePath, 4);
+        locations.addLine(absolutePath, 5);
 
         GitBlamer gitBlamer = createBlamer();
 
-        Blames blames = gitBlamer.blame(input);
+        Blames blames = gitBlamer.blame(locations);
 
-        assertThat(blames).isNotEmpty();
-        assertThat(blames).hasFiles(FILE_NAME);
-        assertThat(blames).hasNoErrorMessages();
-        assertThat(blames).hasInfoMessages("-> blamed authors of issues in 1 files");
+        assertThat(blames.getFiles()).isNotEmpty().containsExactly(absolutePath);
+        assertThat(blames.getErrorMessages()).isEmpty();
+        assertThat(blames.getInfoMessages()).contains("-> blamed authors of issues in 1 files");
 
-        FileBlame request = blames.get(FILE_NAME);
-        assertThat(request).hasFileName(FILE_NAME);
+        FileBlame request = blames.getBlame(absolutePath);
+        assertThat(request).hasFileName(absolutePath);
 
         assertThatBlameIsEmpty(request, 1);
         assertThatBlameIs(request, 2);
@@ -84,8 +83,8 @@ public class GitBlamerITest extends GitITest {
         try {
             GitSCM scm = new GitSCM(
                     GitSCM.createRepoList("file:///" + sampleRepo.getRoot(), null),
-                    Collections.emptyList(), false, Collections.<SubmoduleConfig>emptyList(),
-                    null, null, Collections.<GitSCMExtension>emptyList());
+                    Collections.emptyList(), false, Collections.emptyList(),
+                    null, null, Collections.emptyList());
             Run run = mock(Run.class);
             Job job = mock(Job.class);
             when(run.getParent()).thenReturn(job);

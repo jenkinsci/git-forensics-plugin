@@ -1,12 +1,14 @@
 package io.jenkins.plugins.git.forensics.blame;
 
 import java.io.IOException;
+import java.nio.file.LinkOption;
 import java.nio.file.Paths;
 
 import org.eclipse.jgit.api.BlameCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.eclipse.jgit.blame.BlameResult;
+import org.eclipse.jgit.dircache.InvalidPathException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Repository;
@@ -60,16 +62,19 @@ public class GitBlamer extends Blamer {
      *         content of environment variable GIT_COMMIT
      */
     public GitBlamer(final GitClient git, final String gitCommit) {
+        super();
+
         workspace = git.getWorkTree();
         this.git = git;
         this.gitCommit = gitCommit;
     }
 
     @Override
-    public Blames blame(final FileLocations input) {
+    public Blames blame(final FileLocations locations) {
         Blames blames = new Blames();
         try {
-            blames.logInfo("Invoking Git blamer to create author and commit information for all affected files");
+            blames.logInfo("Invoking Git blamer to create author and commit information for %d affected files",
+                    locations.size());
             blames.logInfo("GIT_COMMIT env = '%s'", gitCommit);
             blames.logInfo("Git working tree = '%s'", git.getWorkTree());
 
@@ -83,7 +88,7 @@ public class GitBlamer extends Blamer {
             String workspacePath = getWorkspacePath();
             blames.logInfo("Job workspace = '%s'", workspacePath);
 
-            return git.withRepository(new BlameCallback(input, blames, headCommit));
+            return git.withRepository(new BlameCallback(workspacePath, locations, blames, headCommit));
         }
         catch (IOException exception) {
             blames.logException(exception, BLAME_ERROR);
@@ -97,8 +102,13 @@ public class GitBlamer extends Blamer {
         return blames;
     }
 
-    private String getWorkspacePath() throws IOException {
-        return Paths.get(workspace.getRemote()).toAbsolutePath().normalize().toRealPath().toString();
+    private String getWorkspacePath() {
+        try {
+            return Paths.get(workspace.getRemote()).toAbsolutePath().normalize().toRealPath(LinkOption.NOFOLLOW_LINKS).toString();
+        }
+        catch (IOException | InvalidPathException exception) {
+            return workspace.getRemote();
+        }
     }
 
     /**
@@ -108,11 +118,14 @@ public class GitBlamer extends Blamer {
         private static final long serialVersionUID = 8794666938104738260L;
 
         private final ObjectId headCommit;
-        private final FileLocations input;
+        private final String workspacePath;
+        private final FileLocations locations;
         private final Blames blames;
 
-        BlameCallback(final FileLocations input, final Blames blames, final ObjectId headCommit) {
-            this.input = input;
+        BlameCallback(final String workspacePath, final FileLocations locations, final Blames blames,
+                final ObjectId headCommit) {
+            this.workspacePath = workspacePath;
+            this.locations = locations;
             this.blames = blames;
             this.headCommit = headCommit;
         }
@@ -121,7 +134,7 @@ public class GitBlamer extends Blamer {
         public Blames invoke(final Repository repo, final VirtualChannel channel) throws InterruptedException {
             BlameRunner blameRunner = new BlameRunner(repo, headCommit);
 
-            for (String file : input.getFiles()) {
+            for (String file : locations.getRelativePaths()) {
                 run(file, blameRunner);
 
                 if (Thread.interrupted()) { // Cancel request by user
@@ -153,8 +166,8 @@ public class GitBlamer extends Blamer {
                     blames.logError("- no blame results for file <%s>", fileName);
                 }
                 else {
-                    for (int line : input.get(fileName)) {
-                        FileBlame request = new FileBlame(fileName);
+                    for (int line : locations.getLines(fileName)) {
+                        FileBlame fileBlame = new FileBlame(workspacePath + "/" + fileName);
                         int lineIndex = line - 1; // first line is index 0
                         if (lineIndex < blame.getResultContents().size()) {
                             PersonIdent who = blame.getSourceAuthor(lineIndex);
@@ -166,18 +179,18 @@ public class GitBlamer extends Blamer {
                                         lineIndex, fileName);
                             }
                             else {
-                                request.setName(line, who.getName());
-                                request.setEmail(line, who.getEmailAddress());
+                                fileBlame.setName(line, who.getName());
+                                fileBlame.setEmail(line, who.getEmailAddress());
                             }
                             RevCommit commit = blame.getSourceCommit(lineIndex);
                             if (commit == null) {
                                 blames.logError("- no commit ID found for line %d in file %s", lineIndex, fileName);
                             }
                             else {
-                                request.setCommit(line, commit.getName());
+                                fileBlame.setCommit(line, commit.getName());
                             }
                         }
-                        blames.add(request);
+                        blames.add(fileBlame);
                     }
                 }
             }
