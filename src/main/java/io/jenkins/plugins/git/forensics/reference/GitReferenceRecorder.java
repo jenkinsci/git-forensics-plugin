@@ -16,7 +16,6 @@ import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import java.io.IOException;
 import java.util.Optional;
 
 /**
@@ -27,6 +26,7 @@ import java.util.Optional;
  * @author Arne Schöntag
  */
 @Extension(ordinal=10000)
+@SuppressWarnings("unused")
 public class GitReferenceRecorder extends Recorder {
     private static final String NO_REFERENCE_JOB = "-";
 
@@ -44,16 +44,15 @@ public class GitReferenceRecorder extends Recorder {
     }
 
     @Override
-    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+    @SuppressWarnings("unchecked")
+    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
         if (!NO_REFERENCE_JOB.equals(referenceJobName) && referenceJobName != null) {
             Jenkins jenkins = Jenkins.getInstanceOrNull();
             if (jenkins == null) {
                 return false;
             }
             Optional<Job<?, ?>> referenceJob =  Optional.ofNullable(jenkins.getItemByFullName(referenceJobName, Job.class));
-            if (referenceJob.isPresent()) {
-                build.addAction(new GitBranchMasterIntersectionFinder(build, maxCommits, referenceJob.get().getLastBuild()));
-            }
+            referenceJob.ifPresent(job -> build.addAction(new GitBranchMasterIntersectionFinder(build, maxCommits, job.getLastBuild())));
         }
         return true;
     }

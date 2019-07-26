@@ -21,8 +21,8 @@ public class GitBranchMasterIntersectionFinder extends BranchMasterIntersectionF
 
     private transient Run<?, ?> reference;
 
-    private final String NAME = "GitBranchMasterIntersectionFinder";
-    private final String NO_INTERSECTION_FOUND = "No intersection was found in master commits";
+    private static final String NAME = "GitBranchMasterIntersectionFinder";
+    private static final String NO_INTERSECTION_FOUND = "No intersection was found in master commits";
 
     private String buildId = "";
 
@@ -72,7 +72,7 @@ public class GitBranchMasterIntersectionFinder extends BranchMasterIntersectionF
                     continue;
                 }
                 masterCommits.addAll(gitCommit.getGitCommitLog().getReversions());
-                referencePoint = branchCommits.stream().filter(reversion -> masterCommits.contains(reversion)).findFirst();
+                referencePoint = branchCommits.stream().filter(masterCommits::contains).findFirst();
                 // If an intersection is found the buildId in Jenkins will be saved
                 if(referencePoint.isPresent()){
                     setBuildId(tmp.getExternalizableId());
@@ -90,10 +90,7 @@ public class GitBranchMasterIntersectionFinder extends BranchMasterIntersectionF
 
     public String getSummary() {
         Optional<String> summary = findReferencePoint();
-        if (summary.isPresent()) {
-            return summary.get();
-        }
-        return NO_INTERSECTION_FOUND;
+        return summary.orElse(NO_INTERSECTION_FOUND);
     }
 
     public String getBuildId() {
