@@ -1,4 +1,4 @@
-package io.jenkins.plugins.git.forensics.blame;
+package io.jenkins.plugins.git.forensics.miner;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -19,29 +19,29 @@ import hudson.plugins.git.extensions.impl.CloneOption;
 import hudson.scm.NullSCM;
 import hudson.util.DescribableList;
 
-import io.jenkins.plugins.forensics.blame.Blamer;
+import io.jenkins.plugins.forensics.miner.RepositoryMiner;
 import io.jenkins.plugins.forensics.util.FilteredLog;
 
 import static io.jenkins.plugins.forensics.assertions.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Tests the class {@link GitBlamerFactory}.
+ * Tests the class {@link GitMinerFactory}.
  *
- * @author Andreas Pabst
+ * @author Ullrich Hafner
  */
-class GitBlamerFactoryTest {
+public class GitMinerFactoryTest {
     private static final TaskListener NULL_LISTENER = TaskListener.NULL;
 
     @Test
     void shouldSkipIfScmIsNotGit() {
         FilteredLog logger = createLogger();
 
-        GitBlamerFactory factory = new GitBlamerFactory();
-        assertThat(factory.createBlamer(new NullSCM(), null, null, NULL_LISTENER, logger)).isEmpty();
+        GitMinerFactory factory = new GitMinerFactory();
+        assertThat(factory.createMiner(new NullSCM(), null, null, NULL_LISTENER, logger)).isEmpty();
 
         assertThat(logger).hasNoErrorMessages();
-        assertThat(logger).hasInfoMessages("Skipping blamer since SCM 'hudson.scm.NullSCM' is not of type GitSCM");
+        assertThat(logger).hasInfoMessages("Skipping miner since SCM 'hudson.scm.NullSCM' is not of type GitSCM");
     }
 
     @Test
@@ -59,12 +59,12 @@ class GitBlamerFactoryTest {
 
         FilteredLog logger = createLogger();
 
-        GitBlamerFactory factory = new GitBlamerFactory();
-        Optional<Blamer> blamer = factory.createBlamer(gitSCM, run, null, NULL_LISTENER, logger);
+        GitMinerFactory factory = new GitMinerFactory();
+        Optional<RepositoryMiner> blamer = factory.createMiner(gitSCM, run, null, NULL_LISTENER, logger);
 
-        assertThat(blamer).isNotEmpty().containsInstanceOf(GitBlamer.class);
+        assertThat(blamer).isNotEmpty().containsInstanceOf(GitRepositoryMiner.class);
         assertThat(logger).hasNoErrorMessages();
-        assertThat(logger).hasInfoMessages(GitBlamerFactory.INFO_BLAMER_CREATED);
+        assertThat(logger).hasInfoMessages(GitMinerFactory.INFO_BLAMER_CREATED);
     }
 
     @Test
@@ -77,16 +77,16 @@ class GitBlamerFactoryTest {
 
         FilteredLog logger = createLogger();
 
-        GitBlamerFactory gitChecker = new GitBlamerFactory();
+        GitMinerFactory gitChecker = new GitMinerFactory();
 
-        assertThat(gitChecker.createBlamer(gitSCM, mock(Run.class), null, NULL_LISTENER, logger)).isEmpty();
-        assertThat(logger).hasInfoMessages(GitBlamerFactory.INFO_SHALLOW_CLONE);
+        assertThat(gitChecker.createMiner(gitSCM, mock(Run.class), null, NULL_LISTENER, logger)).isEmpty();
+        assertThat(logger).hasInfoMessages(GitMinerFactory.INFO_SHALLOW_CLONE);
         assertThat(logger).hasNoErrorMessages();
     }
 
     @Test
     void shouldCreateNullBlamerOnError() throws IOException, InterruptedException {
-        GitBlamerFactory gitChecker = new GitBlamerFactory();
+        GitMinerFactory gitChecker = new GitMinerFactory();
         Run<?, ?> run = mock(Run.class);
         List<GitSCMExtension> extensions = new ArrayList<>();
         GitSCM gitSCM = new GitSCM(null, null, false, null, null, null, extensions);
@@ -95,8 +95,8 @@ class GitBlamerFactoryTest {
 
         FilteredLog logger = createLogger();
 
-        assertThat(gitChecker.createBlamer(gitSCM, run, null, NULL_LISTENER, logger)).isEmpty();
-        assertThat(logger).hasErrorMessages(GitBlamerFactory.ERROR_BLAMER);
+        assertThat(gitChecker.createMiner(gitSCM, run, null, NULL_LISTENER, logger)).isEmpty();
+        assertThat(logger).hasErrorMessages(GitMinerFactory.ERROR_BLAMER);
         assertThat(logger).hasNoInfoMessages();
     }
 

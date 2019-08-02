@@ -1,4 +1,4 @@
-package io.jenkins.plugins.git.forensics.blame;
+package io.jenkins.plugins.git.forensics.miner;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -13,32 +13,32 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.impl.CloneOption;
 import hudson.scm.SCM;
 
-import io.jenkins.plugins.forensics.blame.Blamer;
-import io.jenkins.plugins.forensics.blame.BlamerFactory;
+import io.jenkins.plugins.forensics.miner.MinerFactory;
+import io.jenkins.plugins.forensics.miner.RepositoryMiner;
 import io.jenkins.plugins.forensics.util.FilteredLog;
 
 /**
- * A {@link BlamerFactory} for Git. Handles Git repositories that do not have option ShallowClone set.
+ * A {@link MinerFactory} for Git. Handles Git repositories that do not have option ShallowClone set.
  *
  * @author Ullrich Hafner
  */
 @Extension
-public class GitBlamerFactory extends BlamerFactory {
-    static final String INFO_BLAMER_CREATED = "Invoking GitMiner to obtain SCM blame information for affected files";
+public class GitMinerFactory extends MinerFactory {
+    static final String INFO_BLAMER_CREATED = "Invoking GitMiner to creates statistics for all available repository files.";
     static final String INFO_SHALLOW_CLONE = "Skipping issues blame since Git has been configured with shallow clone";
     static final String ERROR_BLAMER = "Exception while creating a GitClient instance";
 
     @Override
-    public Optional<Blamer> createBlamer(final SCM scm, final Run<?, ?> build,
-            final FilePath workspace, final TaskListener listener, final FilteredLog logger) {
+    public Optional<RepositoryMiner> createMiner(final SCM scm, final Run<?, ?> build, final FilePath workspace,
+            final TaskListener listener, final FilteredLog logger) {
         if (scm instanceof GitSCM) {
-            return createGitBlamer((GitSCM) scm, build, workspace, listener, logger);
+            return createMiner((GitSCM) scm, build, workspace, listener, logger);
         }
-        logger.logInfo("Skipping blamer since SCM '%s' is not of type GitSCM", scm.getType());
+        logger.logInfo("Skipping miner since SCM '%s' is not of type GitSCM", scm.getType());
         return Optional.empty();
     }
 
-    private Optional<Blamer> createGitBlamer(final GitSCM git, final Run<?, ?> build,
+    private Optional<RepositoryMiner> createMiner(final GitSCM git, final Run<?, ?> build,
             final FilePath workspace, final TaskListener listener, final FilteredLog logger) {
         if (isShallow(git)) {
             logger.logInfo(INFO_SHALLOW_CLONE);
@@ -49,10 +49,10 @@ public class GitBlamerFactory extends BlamerFactory {
         try {
             EnvVars environment = build.getEnvironment(listener);
             GitClient gitClient = git.createClient(listener, environment, build, workspace);
-            String gitCommit = environment.getOrDefault("GIT_COMMIT", "HEAD");
 
             logger.logInfo(INFO_BLAMER_CREATED);
-            return Optional.of(new GitBlamer(gitClient, gitCommit));
+
+            return Optional.of(new GitRepositoryMiner(gitClient));
         }
         catch (IOException | InterruptedException e) {
             logger.logException(e, ERROR_BLAMER);
@@ -68,4 +68,5 @@ public class GitBlamerFactory extends BlamerFactory {
         }
         return false;
     }
+
 }
