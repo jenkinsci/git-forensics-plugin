@@ -50,11 +50,11 @@ public class GitRepositoryMiner extends RepositoryMiner {
     }
 
     @Override
-    public RepositoryStatistics mine(final Collection<String> paths) throws InterruptedException {
+    public RepositoryStatistics mine(final Collection<String> relativeFileNames) throws InterruptedException {
         try {
             String workspacePath = getWorkspacePath();
 
-            return gitClient.withRepository(new RepositoryStatisticsCallback(workspacePath, paths));
+            return gitClient.withRepository(new RepositoryStatisticsCallback(workspacePath, relativeFileNames));
         }
         catch (IOException exception) {
             RepositoryStatistics statistics = new RepositoryStatistics();
