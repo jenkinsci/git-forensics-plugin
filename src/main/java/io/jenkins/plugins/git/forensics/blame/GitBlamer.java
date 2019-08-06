@@ -88,7 +88,10 @@ public class GitBlamer extends Blamer {
             String workspacePath = getWorkspacePath();
             blames.logInfo("Job workspace = '%s'", workspacePath);
 
-            return git.withRepository(new BlameCallback(workspacePath, locations, blames, headCommit));
+            long nano = System.nanoTime();
+            Blames filledBlames = git.withRepository(new BlameCallback(workspacePath, locations, blames, headCommit));
+            filledBlames.logInfo("Blaming of authors took %d seconds", 1 + (System.nanoTime() - nano) / 1_000_000_000L);
+            return filledBlames;
         }
         catch (IOException exception) {
             blames.logException(exception, BLAME_ERROR);

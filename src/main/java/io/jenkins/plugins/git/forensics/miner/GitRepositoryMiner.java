@@ -54,7 +54,12 @@ public class GitRepositoryMiner extends RepositoryMiner {
         try {
             String workspacePath = getWorkspacePath();
 
-            return gitClient.withRepository(new RepositoryStatisticsCallback(workspacePath, relativeFileNames));
+            long nano = System.nanoTime();
+            RepositoryStatistics statistics = gitClient.withRepository(
+                    new RepositoryStatisticsCallback(workspacePath, relativeFileNames));
+            statistics.logInfo("Mining of the Git repository took %d seconds",
+                    1 + (System.nanoTime() - nano) / 1_000_000_000L);
+            return statistics;
         }
         catch (IOException exception) {
             RepositoryStatistics statistics = new RepositoryStatistics();
