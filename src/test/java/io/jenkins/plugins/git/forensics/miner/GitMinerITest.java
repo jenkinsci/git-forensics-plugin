@@ -7,6 +7,8 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.plugins.git.GitSCM;
@@ -48,6 +50,7 @@ public class GitMinerITest extends GitITest {
                 "[Forensics] Least recently modified file (0 days): file1.txt");
     }
 
+    @SuppressFBWarnings("SBSC_USE_STRINGBUFFER_CONCATENATION")
     private void initializeGit() {
         for (int round = 0; round < 4; round++) {
             String path = "";

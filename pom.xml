@@ -12,7 +12,7 @@
   <groupId>io.jenkins.plugins</groupId>
   <packaging>hpi</packaging>
   <name>Git Forensics Plugin</name>
-  <version>0.1-alpha-6-SNAPSHOT</version>
+  <version>0.2.0-SNAPSHOT</version>
   <description>Jenkins plug-in that mines and analyzes data from a Git repository.</description>
 
   <properties>
@@ -21,7 +21,7 @@
     <java.level>8</java.level>
     <jenkins-test-harness.version>2.49</jenkins-test-harness.version>
     <spotbugs.failOnError>false</spotbugs.failOnError>
-    <slf4j-nop.version>1.7.26</slf4j-nop.version>
+    <slf4j.version>1.7.26</slf4j.version>
 
     <!-- Library Dependencies Versions -->
     <error-prone.version>2.3.3</error-prone.version>
@@ -30,7 +30,7 @@
     <eclipse-collections.version>9.2.0</eclipse-collections.version>
 
     <!-- Jenkins Plugin Dependencies Versions -->
-    <forensics-api-plugin.version>0.2-alpha-1-SNAPSHOT</forensics-api-plugin.version>
+    <forensics-api-plugin.version>0.2.0-SNAPSHOT</forensics-api-plugin.version>
     <git-plugin.version>3.9.1</git-plugin.version>
 
     <!-- Test Library Dependencies Versions -->
@@ -102,6 +102,11 @@
         <artifactId>scm-api</artifactId>
         <version>2.2.6</version>
       </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>${slf4j.version}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -111,7 +116,7 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-nop</artifactId>
-      <version>${slf4j-nop.version}</version>
+      <version>${slf4j.version}</version>
     </dependency>
     <dependency>
       <groupId>com.github.spotbugs</groupId>
