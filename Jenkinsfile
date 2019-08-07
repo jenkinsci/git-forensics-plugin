@@ -1,10 +1,10 @@
-node ('linux') {
-    timeout(60) {
-        stage ('Checkout') {
+node ('maven') {
+    timeout(200) {
+        stage ('Linux Checkout') {
             checkout scm
         }
 
-        stage ('Build') {
+        stage ('Linux Build') {
             String jdk = '8'
             String jdkTool = "jdk${jdk}"
             List<String> env = [
@@ -32,28 +32,30 @@ node ('linux') {
                 sh command
             }
 
+            archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
+
             junit testResults: '**/target/*-reports/TEST-*.xml'
 
-            recordIssues tool: mavenConsole(), referenceJobName: 'Plugins/git-forensics/master'
-            recordIssues tools: [java(), javaDoc()], sourceCodeEncoding: 'UTF-8', referenceJobName: 'Plugins/git-forensics/master'
-            recordIssues tool: checkStyle(pattern: 'target/checkstyle-result.xml'), sourceCodeEncoding: 'UTF-8', referenceJobName: 'Plugins/git-forensics/master'
-            recordIssues tool: errorProne(), sourceCodeEncoding: 'UTF-8', referenceJobName: 'Plugins/git-forensics/master'
-            recordIssues tool: cpd(pattern: 'target/cpd.xml'), sourceCodeEncoding: 'UTF-8', referenceJobName: 'Plugins/git-forensics/master'
-            recordIssues tool: pmdParser(pattern: 'target/pmd.xml'), sourceCodeEncoding: 'UTF-8', referenceJobName: 'Plugins/git-forensics/master'
-            recordIssues tool: spotBugs(pattern: 'target/spotbugsXml.xml'), sourceCodeEncoding: 'UTF-8', referenceJobName: 'Plugins/git-forensics/master'
-            recordIssues tool: taskScanner(includePattern:'**/*.java', excludePattern:'target/**/*', highTags:'FIXME', normalTags:'TODO'), sourceCodeEncoding: 'UTF-8', referenceJobName: 'Plugins/git-forensics/master'
+            recordIssues enabledForFailure: true, tool: mavenConsole(), referenceJobName: 'Plugins/git-forensics/master'
+            recordIssues enabledForFailure: true, tools: [java(), javaDoc()], sourceCodeEncoding: 'UTF-8', referenceJobName: 'Plugins/git-forensics/master'
+            recordIssues enabledForFailure: true, tool: checkStyle(pattern: 'target/checkstyle-result.xml'), sourceCodeEncoding: 'UTF-8', referenceJobName: 'Plugins/git-forensics/master'
+            recordIssues enabledForFailure: true, tool: errorProne(), sourceCodeEncoding: 'UTF-8', referenceJobName: 'Plugins/git-forensics/master'
+            recordIssues enabledForFailure: true, tool: cpd(pattern: 'target/cpd.xml'), sourceCodeEncoding: 'UTF-8', referenceJobName: 'Plugins/git-forensics/master'
+            recordIssues enabledForFailure: true, tool: pmdParser(pattern: 'target/pmd.xml'), sourceCodeEncoding: 'UTF-8', referenceJobName: 'Plugins/git-forensics/master'
+            recordIssues enabledForFailure: true, tool: spotBugs(pattern: 'target/spotbugsXml.xml'), sourceCodeEncoding: 'UTF-8', referenceJobName: 'Plugins/git-forensics/master'
+            recordIssues enabledForFailure: true, tool: taskScanner(includePattern:'**/*.java', excludePattern:'target/**/*', highTags:'FIXME', normalTags:'TODO'), sourceCodeEncoding: 'UTF-8', referenceJobName: 'Plugins/git-forensics/master'
             jacoco()
         }
     }
 }
 
 node ('windows') {
-    timeout(60) {
-        stage ('Checkout') {
+    timeout(200) {
+        stage ('Windows Checkout') {
             checkout scm
         }
 
-        stage ('Build') {
+        stage ('Windows Build') {
             String jdk = '8'
             String jdkTool = "jdk${jdk}"
             List<String> env = [

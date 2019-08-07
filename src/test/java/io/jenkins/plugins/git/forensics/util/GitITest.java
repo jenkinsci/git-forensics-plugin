@@ -8,6 +8,8 @@ import org.eclipse.jgit.lib.RepositoryBuilder;
 import org.junit.Before;
 import org.junit.Rule;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import jenkins.plugins.git.GitSampleRepoRule;
 
 /**
@@ -78,6 +80,7 @@ public class GitITest {
      *
      * @return the sample repository
      */
+    @SuppressFBWarnings("BC")
     protected Repository createRepository() {
         try {
             RepositoryBuilder repositoryBuilder = new RepositoryBuilder();

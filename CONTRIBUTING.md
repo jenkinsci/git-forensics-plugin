@@ -22,9 +22,9 @@ Start reading the code and you'll get the hang of it. A complete description of 
 coding guidelines is part of a [separate GitHub repository](https://github.com/uhafner/codingstyle), which 
 is only available in German. 
 
-For [IntelliJ IDEA](https://www.jetbrains.com/idea/) or [Eclipse](https://www.eclipse.org/) users: 
+For [IntelliJ IDEA](https://www.jetbrains.com/idea/) users: 
 the coding style is stored in configuration files within this project. If you import this project into 
-IntelliJ or Eclipse this style will used automatically. 
+IntelliJ this style will used automatically. 
 
 Moreover (since this project is about static code analysis :wink:) a configuration for the following static code
 analysis tools is defined in the POM and the `etc` and `.idea` folders:
