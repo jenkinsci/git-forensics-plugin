@@ -12,6 +12,11 @@ This Git Forensics Jenkins plugin mines and analyzes data from a Git repository.
 
 The following services are provided by this plugin:
 - **Blames**: Shows what revision and author last modified a specified set of lines of a file.
+- **File statistics**: Collects commit statistics for repository files:
+  - total number of commits
+  - total number of different authors
+  - creation time
+  - last modification time
 
 [![Jenkins](https://ci.jenkins.io/job/Plugins/job/git-forensics-plugin/job/master/badge/icon)](https://ci.jenkins.io/job/Plugins/job/git-forensics-plugin/job/master/)
 [![Travis](https://img.shields.io/travis/jenkinsci/git-forensics-plugin/master.svg?logo=travis&label=travis%20build&logoColor=white)](https://travis-ci.org/jenkinsci/git-forensics-plugin)
