@@ -45,6 +45,8 @@ public class GitRepositoryMiner extends RepositoryMiner {
     private final FilePath workspace;
 
     GitRepositoryMiner(final GitClient gitClient) {
+        super();
+
         this.gitClient = gitClient;
         workspace = gitClient.getWorkTree();
     }
