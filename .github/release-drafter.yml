@@ -1,7 +1,5 @@
-_extends: .github
-tag-template: git-forensics-$NEXT_MINOR_VERSION
+tag-template: git-forensics-$NEXT_PATCH_VERSION
 name-template: Git Forensics $NEXT_PATCH_VERSION 🎁
-version-template: $MAJOR.$MINOR.$PATCH
 
 template: |
   $CHANGES
@@ -31,3 +29,7 @@ categories:
     labels:
       - test
       - tests
+
+replacers:
+  - search: '/\[*JENKINS-(\d+)\]*\s*-*\s*/g'
+    replace: '[JENKINS-$1](https://issues.jenkins-ci.org/browse/JENKINS-$1) - '
