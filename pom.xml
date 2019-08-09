@@ -31,7 +31,7 @@
 
     <!-- Jenkins Plugin Dependencies Versions -->
     <forensics-api-plugin.version>0.2.1</forensics-api-plugin.version>
-    <git-plugin.version>3.9.1</git-plugin.version>
+    <git-plugin.version>3.11.0</git-plugin.version>
 
     <!-- Test Library Dependencies Versions -->
     <junit.version>5.5.1</junit.version>
