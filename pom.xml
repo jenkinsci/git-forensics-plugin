@@ -21,7 +21,7 @@
     <java.level>8</java.level>
     <jenkins-test-harness.version>2.49</jenkins-test-harness.version>
     <spotbugs.failOnError>false</spotbugs.failOnError>
-    <slf4j.version>1.7.26</slf4j.version>
+    <slf4j.version>1.7.27</slf4j.version>
 
     <!-- Library Dependencies Versions -->
     <error-prone.version>2.3.3</error-prone.version>
