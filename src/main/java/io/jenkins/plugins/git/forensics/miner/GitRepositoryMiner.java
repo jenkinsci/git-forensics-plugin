@@ -111,7 +111,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
 
         RepositoryStatistics analyze(final Repository repository, final Collection<String> files) {
             RepositoryStatistics statistics = new RepositoryStatistics();
-            statistics.logInfo("Invoking Git miner to create creates statistics for all available files");
+            statistics.logInfo("Invoking Git miner to create statistics for all available files");
 
             List<FileStatistics> fileStatistics = files.stream()
                     .map(file -> analyzeHistory(repository, file, statistics))
