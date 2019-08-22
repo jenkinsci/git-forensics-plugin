@@ -1,10 +1,9 @@
 package io.jenkins.plugins.git.forensics.reference;
 
 import hudson.model.Run;
-import jenkins.model.RunAction2;
+import io.jenkins.plugins.forensics.reference.VCSCommit;
 
 import javax.annotation.CheckForNull;
-import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -12,7 +11,7 @@ import java.util.List;
  *
  * @author Arne Schöntag
  */
-public class GitCommit implements RunAction2, Serializable {
+public class GitCommit implements VCSCommit {
 
     private static final long serialVersionUID = 8994811233847179343L;
     private transient Run<?, ?> run;

@@ -2,20 +2,19 @@ package io.jenkins.plugins.git.forensics.reference;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.Launcher;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.BuildListener;
-import hudson.model.Job;
+import hudson.model.*;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Publisher;
-import hudson.tasks.Recorder;
+import io.jenkins.plugins.forensics.reference.ReferenceRecorder;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang3.StringUtils;
+import jenkins.tasks.SimpleBuildStep;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
 
+import javax.annotation.Nonnull;
+import java.io.IOException;
 import java.util.Optional;
 
 /**
@@ -27,16 +26,8 @@ import java.util.Optional;
  */
 @Extension(ordinal=10000)
 @SuppressWarnings("unused")
-public class GitReferenceRecorder extends Recorder {
-    private static final String NO_REFERENCE_JOB = "-";
+public class GitReferenceRecorder extends ReferenceRecorder implements SimpleBuildStep {
 
-    private String referenceJobName;
-
-    private int maxCommits;
-
-    // Needed to register in Jenkins?
-    private String id;
-    private String name;
 
     @DataBoundConstructor
     public GitReferenceRecorder() {
@@ -44,74 +35,15 @@ public class GitReferenceRecorder extends Recorder {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
+    public void perform(@Nonnull Run<?, ?> run, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull TaskListener listener) throws InterruptedException, IOException {
+        this.run = run;
         if (!NO_REFERENCE_JOB.equals(referenceJobName) && referenceJobName != null) {
             Jenkins jenkins = Jenkins.getInstanceOrNull();
-            if (jenkins == null) {
-                return false;
-            }
             Optional<Job<?, ?>> referenceJob =  Optional.ofNullable(jenkins.getItemByFullName(referenceJobName, Job.class));
-            referenceJob.ifPresent(job -> build.addAction(new GitBranchMasterIntersectionFinder(build, maxCommits, job.getLastBuild())));
+            referenceJob.ifPresent(job -> run.addAction(new GitBranchMasterIntersectionFinder(run, maxCommits, job.getLastBuild())));
         }
-        return true;
     }
 
-    // Partly copied from IssuesRecorder.java (warnings-ng)
-
-    /**
-     * Sets the reference job to get the results for the issue difference computation.
-     *
-     * @param referenceJobName
-     *         the name of reference job
-     */
-    @DataBoundSetter
-    public void setReferenceJobName(final String referenceJobName) {
-        if (NO_REFERENCE_JOB.equals(referenceJobName)) {
-            this.referenceJobName = StringUtils.EMPTY;
-        }
-        this.referenceJobName = referenceJobName;
-    }
-
-    /**
-     * Returns the reference job to get the results for the issue difference computation. If the job is not defined,
-     * then {@link #NO_REFERENCE_JOB} is returned.
-     *
-     * @return the name of reference job, or {@link #NO_REFERENCE_JOB} if undefined
-     */
-    public String getReferenceJobName() {
-        if (StringUtils.isBlank(referenceJobName)) {
-            return NO_REFERENCE_JOB;
-        }
-        return referenceJobName;
-    }
-
-    public int getMaxCommits() {
-        return maxCommits;
-    }
-
-    @DataBoundSetter
-    public void setMaxCommits(final int maxCommits) {
-        this.maxCommits = maxCommits;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    @DataBoundSetter
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    @DataBoundSetter
-    public void setName(String name) {
-        this.name = name;
-    }
 
     /**
      * Descriptor for this step: defines the context and the UI elements.
