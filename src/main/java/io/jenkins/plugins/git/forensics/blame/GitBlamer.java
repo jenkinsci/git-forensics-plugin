@@ -43,7 +43,7 @@ import io.jenkins.plugins.forensics.blame.FileLocations;
 // TODO: Check if we should also create new Jenkins users
 // TODO: Blame needs only run for new warnings
 @SuppressFBWarnings(value = "SE", justification = "GitClient implementation is Serializable")
-public class GitBlamer extends Blamer {
+class GitBlamer extends Blamer {
     private static final long serialVersionUID = -619059996626444900L;
 
     static final String NO_HEAD_ERROR = "Could not retrieve HEAD commit, aborting";
@@ -61,7 +61,7 @@ public class GitBlamer extends Blamer {
      * @param gitCommit
      *         content of environment variable GIT_COMMIT
      */
-    public GitBlamer(final GitClient git, final String gitCommit) {
+    GitBlamer(final GitClient git, final String gitCommit) {
         super();
 
         workspace = git.getWorkTree();
