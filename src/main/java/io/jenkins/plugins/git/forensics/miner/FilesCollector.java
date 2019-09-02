@@ -16,7 +16,7 @@ import org.eclipse.jgit.treewalk.TreeWalk;
  *
  * @author Ullrich Hafner
  */
-public class FilesCollector {
+class FilesCollector {
     private final Repository repository;
 
     FilesCollector(final Repository repository) {
@@ -24,10 +24,18 @@ public class FilesCollector {
     }
 
     Set<String> findAllFor(final ObjectId commitId) {
-        try {
-            RevWalk revWalk = new RevWalk(repository);
+        try (RevWalk revWalk = new RevWalk(repository)) {
             RevTree tree = revWalk.parseCommit(commitId).getTree();
-            TreeWalk treeWalk = new TreeWalk(repository);
+
+            return walkRepositoryTree(tree);
+        }
+        catch (IOException exception) { // TODO: add logging
+            return Collections.emptySet();
+        }
+    }
+
+    private Set<String> walkRepositoryTree(final RevTree tree) throws IOException {
+        try (TreeWalk treeWalk = new TreeWalk(repository)) {
             treeWalk.setRecursive(true);
             treeWalk.addTree(tree);
             Set<String> files = new HashSet<>();
@@ -35,9 +43,6 @@ public class FilesCollector {
                 files.add(treeWalk.getPathString());
             }
             return files;
-        }
-        catch (IOException exception) { // FIXME: add logging
-            return Collections.emptySet();
         }
     }
 }

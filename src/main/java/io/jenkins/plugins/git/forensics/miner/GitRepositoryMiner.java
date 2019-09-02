@@ -127,8 +127,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
                 final RepositoryStatistics statistics) {
             FileStatistics fileStatistics = new FileStatistics(workspacePath + "/" + fileName);
 
-            try {
-                Git git = new Git(repository);
+            try (Git git = new Git(repository)) {
                 Iterable<RevCommit> commits = git.log().addPath(fileName).call();
                 commits.forEach(c -> fileStatistics.inspectCommit(c.getCommitTime(), getAuthor(c)));
                 return fileStatistics;
