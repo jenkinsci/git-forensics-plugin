@@ -5,6 +5,7 @@ import java.util.Collections;
 
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -82,7 +83,7 @@ public class GitBlamerITest extends GitITest {
     /**
      * Verifies that the last committer of the whole file is used if no specific line number is given.
      */
-    @Test
+    @Test @Issue("JENKINS-59252")
     public void shouldAssignLastCommitterIfNoLineNumberIsGiven() {
         create2RevisionsWithDifferentAuthors();
 
