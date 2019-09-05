@@ -1,7 +1,5 @@
 package io.jenkins.plugins.git.forensics.reference;
 
-import org.eclipse.jgit.lib.Repository;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,33 +9,18 @@ import java.util.List;
  *
  * @author Arne Schöntag
  */
+@SuppressWarnings("unused")
 public class GitCommitLog implements Serializable {
     private static final long serialVersionUID = 8988806831945499189L;
 
-//    private static final long serialVersionUID = 2L;
+    /** Holds the hash keys of the commit reversions. */
+    private final List<String> reversions = new ArrayList<>();
 
-    // Default value 100
-//    private final int maxCommits;
-
-    /** Holds the hash keys of the commit reversions */
-    final List<String> reversions = new ArrayList<>();
-
-//    private transient final Repository repo;
-//
-//    public GitCommitLog(Repository repo) {
-//        this(repo, 100);
-//    }
-//
-//    public GitCommitLog(Repository repo, int maxCommits) {
-//        this.repo = repo;
-//        this.maxCommits = maxCommits;
-//    }
-
-    public List<String> getReversions(){
+    public List<String> getReversions() {
         return reversions;
     }
 
-    public void addRevision(String rev) {
+    public void addRevision(final String rev) {
         reversions.add(rev);
     }
 }

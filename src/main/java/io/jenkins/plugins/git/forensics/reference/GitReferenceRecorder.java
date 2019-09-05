@@ -1,10 +1,12 @@
 package io.jenkins.plugins.git.forensics.reference;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.model.*;
+import hudson.model.AbstractProject;
+import hudson.model.Job;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Publisher;
 import io.jenkins.plugins.forensics.reference.ReferenceRecorder;
@@ -14,7 +16,6 @@ import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.Nonnull;
-import java.io.IOException;
 import java.util.Optional;
 
 /**
@@ -24,7 +25,7 @@ import java.util.Optional;
  * @author Ullrich Hafner
  * @author Arne Schöntag
  */
-@Extension(ordinal=10000)
+@Extension(ordinal = 10000)
 @SuppressWarnings("unused")
 public class GitReferenceRecorder extends ReferenceRecorder implements SimpleBuildStep {
 
@@ -35,12 +36,13 @@ public class GitReferenceRecorder extends ReferenceRecorder implements SimpleBui
     }
 
     @Override
-    public void perform(@Nonnull Run<?, ?> run, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull TaskListener listener) throws InterruptedException, IOException {
-        this.run = run;
-        if (!NO_REFERENCE_JOB.equals(referenceJobName) && referenceJobName != null) {
+    @SuppressWarnings("unchecked")
+    public void perform(@Nonnull final Run<?, ?> run, @Nonnull final FilePath workspace, @Nonnull final Launcher launcher, @Nonnull final TaskListener listener) {
+        setRun(run);
+        if (!NO_REFERENCE_JOB.equals(getReferenceJobName()) && getReferenceJobName() != null) {
             Jenkins jenkins = Jenkins.getInstanceOrNull();
-            Optional<Job<?, ?>> referenceJob =  Optional.ofNullable(jenkins.getItemByFullName(referenceJobName, Job.class));
-            referenceJob.ifPresent(job -> run.addAction(new GitBranchMasterIntersectionFinder(run, maxCommits, job.getLastBuild())));
+            Optional<Job<?, ?>> referenceJob =  Optional.ofNullable(jenkins.getItemByFullName(getReferenceJobName(), Job.class));
+            referenceJob.ifPresent(job -> getRun().addAction(new GitBranchMasterIntersectionFinder(getRun(), getMaxCommits(), job.getLastBuild())));
         }
     }
 
@@ -53,9 +55,7 @@ public class GitReferenceRecorder extends ReferenceRecorder implements SimpleBui
     @SuppressWarnings("unused") // most methods are used by the corresponding jelly view
     public static class Descriptor extends BuildStepDescriptor<Publisher> {
 
-
-
-        @NonNull
+        @Nonnull
         @Override
         public String getDisplayName() {
             return "Git Forensics Recorder";

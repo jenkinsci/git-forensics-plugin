@@ -10,6 +10,7 @@ import hudson.plugins.git.GitSCM;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
+import io.jenkins.plugins.forensics.util.FilteredLog;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.LogCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -21,7 +22,6 @@ import org.eclipse.jgit.revwalk.RevWalk;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 
-import javax.annotation.CheckForNull;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,10 +35,11 @@ import java.util.List;
  * @author Arne Schöntag
  */
 @Extension
+@SuppressWarnings("unused")
 public class GitCommitListener extends SCMListener {
 
     @Override
-    public void onCheckout(Run<?,?> build, SCM scm, FilePath workspace, TaskListener listener, @CheckForNull File changelogFile, @CheckForNull SCMRevisionState pollingBaseline) throws Exception {
+    public void onCheckout(final Run<?,?> build, final SCM scm, final FilePath workspace, final TaskListener listener, final File changelogFile, final SCMRevisionState pollingBaseline) throws Exception {
         if (!(scm instanceof GitSCM)) {
             return;
         }
@@ -76,13 +77,15 @@ public class GitCommitListener extends SCMListener {
         private transient final Run<?,?> build;
         private final String latestReversionOfPreviousCommit;
 
-        public GitCommitCall(Run<?, ?> build, String latestReversionOfPreviousCommit) {
+        private FilteredLog log = createLog();
+
+        public GitCommitCall(final Run<?, ?> build, final String latestReversionOfPreviousCommit) {
             this.build = build;
             this.latestReversionOfPreviousCommit = latestReversionOfPreviousCommit;
         }
 
         @Override
-        public GitCommit invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
+        public GitCommit invoke(final Repository repo, final VirtualChannel channel) throws IOException {
             GitCommit result = new GitCommit(build);
             List<String> newCommits = new ArrayList<>();
             Git git = new Git(repo);
@@ -93,7 +96,7 @@ public class GitCommitListener extends SCMListener {
                 ObjectId head = repo.resolve(Constants.HEAD);
                 ObjectId headCommit = walk.parseCommit(head);
                 LogCommand logCommand = git.log().add(headCommit);
-                Iterable<RevCommit> commits = null;
+                Iterable<RevCommit> commits;
                 commits = logCommand.call();
                 Iterator<RevCommit> iterator = commits.iterator();
                 RevCommit next;
@@ -107,11 +110,15 @@ public class GitCommitListener extends SCMListener {
                     newCommits.add(commitId);
                 }
             } catch (GitAPIException e) {
-                e.printStackTrace();
+               log.logError("GitAPIException: " + e.getMessage());
             }
 
             result.getGitCommitLog().getReversions().addAll(newCommits);
             return result;
+        }
+
+        private FilteredLog createLog() {
+            return new FilteredLog("Errors while extracting commit reversion information from Git:");
         }
     }
 

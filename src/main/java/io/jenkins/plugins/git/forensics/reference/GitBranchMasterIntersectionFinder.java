@@ -3,7 +3,6 @@ package io.jenkins.plugins.git.forensics.reference;
 import hudson.model.Run;
 import io.jenkins.plugins.forensics.reference.BranchMasterIntersectionFinder;
 
-import javax.annotation.CheckForNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -29,63 +28,58 @@ public class GitBranchMasterIntersectionFinder extends BranchMasterIntersectionF
     /**
      * Defines how far the Finder will look in the past commits to find an intersection.
      */
-    private int maxLogs;
+    private final int maxLogs;
 
-    /**
-     * @param run the Jenkins build.
-     * @param maxLogs defines how far the Finder will look in the past commits to find an intersection.
-     * @param reference the name of the Reference Job
-     */
-    public GitBranchMasterIntersectionFinder(Run<?, ?> run, int maxLogs, Run<?, ?> reference) {
+    public GitBranchMasterIntersectionFinder(final Run<?, ?> run, int maxLogs, final Run<?, ?> reference) {
+        super();
         this.run = run;
         this.maxLogs = maxLogs;
         this.reference = reference;
     }
 
+    /**
+     * Returns the build of the reference job which has the last intersection with the current build.
+     * @return build id.
+     */
     public Optional<String> findReferencePoint() {
-        try {
-            GitCommit thisCommit = run.getAction(GitCommit.class);
-            GitCommit referenceCommit = reference.getAction(GitCommit.class);
-            List<String> branchCommits = new ArrayList<>(thisCommit.getGitCommitLog().getReversions());
-            List<String> masterCommits = new ArrayList<>(referenceCommit.getGitCommitLog().getReversions());
+        GitCommit thisCommit = run.getAction(GitCommit.class);
+        GitCommit referenceCommit = reference.getAction(GitCommit.class);
+        List<String> branchCommits = new ArrayList<>(thisCommit.getGitCommitLog().getReversions());
+        List<String> masterCommits = new ArrayList<>(referenceCommit.getGitCommitLog().getReversions());
 
-            Optional<String> referencePoint = Optional.empty();
+        Optional<String> referencePoint = Optional.empty();
 
-            // Fill branch commit list
-            Run<?, ?> tmp = run;
-            while (branchCommits.size() < maxLogs && tmp != null) {
-                GitCommit gitCommit = tmp.getAction(GitCommit.class);
-                if (gitCommit == null) {
-                    // Skip build if it has no GitCommit Action.
-                    continue;
-                }
-                branchCommits.addAll(gitCommit.getGitCommitLog().getReversions());
-                tmp = tmp.getPreviousBuild();
+        // Fill branch commit list
+        Run<?, ?> tmp = run;
+        while (branchCommits.size() < maxLogs && tmp != null) {
+            GitCommit gitCommit = tmp.getAction(GitCommit.class);
+            if (gitCommit == null) {
+                // Skip build if it has no GitCommit Action.
+                continue;
             }
-
-            // Fill master commit list and check for intersection point
-            tmp = reference;
-            while (masterCommits.size() < maxLogs && tmp != null) {
-                GitCommit gitCommit = tmp.getAction(GitCommit.class);
-                if (gitCommit == null) {
-                    // Skip build if it has no GitCommit Action.
-                    continue;
-                }
-                masterCommits.addAll(gitCommit.getGitCommitLog().getReversions());
-                referencePoint = branchCommits.stream().filter(masterCommits::contains).findFirst();
-                // If an intersection is found the buildId in Jenkins will be saved
-                if(referencePoint.isPresent()){
-                    setBuildId(tmp.getExternalizableId());
-                    break;
-                }
-                tmp = tmp.getPreviousBuild();
-            }
-
-            return referencePoint;
-        } catch (Exception e) {
-            // TODO Logging
-            return Optional.empty();
+            branchCommits.addAll(gitCommit.getGitCommitLog().getReversions());
+            tmp = tmp.getPreviousBuild();
         }
+
+        // Fill master commit list and check for intersection point
+        tmp = reference;
+        while (masterCommits.size() < maxLogs && tmp != null) {
+            GitCommit gitCommit = tmp.getAction(GitCommit.class);
+            if (gitCommit == null) {
+                // Skip build if it has no GitCommit Action.
+                continue;
+            }
+            masterCommits.addAll(gitCommit.getGitCommitLog().getReversions());
+            referencePoint = branchCommits.stream().filter(masterCommits::contains).findFirst();
+            // If an intersection is found the buildId in Jenkins will be saved
+            if(referencePoint.isPresent()) {
+                setBuildId(tmp.getExternalizableId());
+                break;
+            }
+            tmp = tmp.getPreviousBuild();
+        }
+
+        return referencePoint;
     }
 
     public String getSummary() {
@@ -97,33 +91,38 @@ public class GitBranchMasterIntersectionFinder extends BranchMasterIntersectionF
         return buildId;
     }
 
-    public void setBuildId(String buildId) {
+    public void setBuildId(final String buildId) {
         this.buildId = buildId;
     }
 
     @Override
-    public void onAttached(Run<?, ?> r) {
+    public void onAttached(final Run<?, ?> r) {
         this.run = r;
     }
 
     @Override
-    public void onLoad(Run<?, ?> r) {
+    public void onLoad(final Run<?, ?> r) {
         onAttached(r);
     }
 
-    @CheckForNull
+    public Run<?, ?> getReference() {
+        return reference;
+    }
+
+    public void setReference(Run<?, ?> reference) {
+        this.reference = reference;
+    }
+
     @Override
     public String getIconFileName() {
         return null;
     }
 
-    @CheckForNull
     @Override
     public String getDisplayName() {
         return NAME;
     }
 
-    @CheckForNull
     @Override
     public String getUrlName() {
         return null;
