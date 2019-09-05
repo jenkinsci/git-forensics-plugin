@@ -12,7 +12,7 @@
   <groupId>io.jenkins.plugins</groupId>
   <packaging>hpi</packaging>
   <name>Git Forensics Plugin</name>
-  <version>0.3.2</version>
+  <version>0.3.3-SNAPSHOT</version>
   <description>Jenkins plug-in that mines and analyzes data from a Git repository.</description>
 
   <properties>
@@ -566,7 +566,7 @@
     <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
     <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
-    <tag>git-forensics-0.3.2</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <repositories>
