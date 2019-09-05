@@ -79,6 +79,33 @@ public class GitBlamerITest extends GitITest {
         assertThatBlameIsEmpty(request, 6);
     }
 
+    /**
+     * Verifies that the last committer of the whole file is used if no specific line number is given.
+     */
+    @Test
+    public void shouldAssignLastCommitterIfNoLineNumberIsGiven() {
+        create2RevisionsWithDifferentAuthors();
+
+        FileLocations locations = new FileLocations(sampleRepo.getRoot());
+        String absolutePath = locations.getWorkspace() + FILE_NAME;
+        locations.addLine(absolutePath, 0);
+
+        GitBlamer gitBlamer = createBlamer();
+
+        Blames blames = gitBlamer.blame(locations);
+
+        assertThat(blames.getFiles()).isNotEmpty().containsExactly(absolutePath);
+        assertThat(blames.getErrorMessages()).isEmpty();
+        assertThat(blames.getInfoMessages()).contains("-> blamed authors of issues in 1 files");
+
+        FileBlame request = blames.getBlame(absolutePath);
+        assertThat(request).hasFileName(absolutePath);
+
+        assertThat(request.getName(0)).isEqualTo(BAR_NAME);
+        assertThat(request.getEmail(0)).isEqualTo(BAR_EMAIL);
+        assertThat(request.getCommit(0)).isEqualTo(getHead());
+    }
+
     private GitBlamer createBlamer() {
         try {
             GitSCM scm = new GitSCM(

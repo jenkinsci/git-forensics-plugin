@@ -3,8 +3,11 @@ package io.jenkins.plugins.git.forensics.blame;
 import java.io.IOException;
 import java.nio.file.LinkOption;
 import java.nio.file.Paths;
+import java.util.Optional;
+import java.util.stream.StreamSupport;
 
 import org.eclipse.jgit.api.BlameCommand;
+import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.eclipse.jgit.blame.BlameResult;
@@ -107,7 +110,11 @@ class GitBlamer extends Blamer {
 
     private String getWorkspacePath() {
         try {
-            return Paths.get(workspace.getRemote()).toAbsolutePath().normalize().toRealPath(LinkOption.NOFOLLOW_LINKS).toString();
+            return Paths.get(workspace.getRemote())
+                    .toAbsolutePath()
+                    .normalize()
+                    .toRealPath(LinkOption.NOFOLLOW_LINKS)
+                    .toString();
         }
         catch (IOException | InvalidPathException exception) {
             return workspace.getRemote();
@@ -119,6 +126,7 @@ class GitBlamer extends Blamer {
      */
     static class BlameCallback implements RepositoryCallback<Blames> {
         private static final long serialVersionUID = 8794666938104738260L;
+        private static final int WHOLE_FILE = 0;
 
         private final ObjectId headCommit;
         private final String workspacePath;
@@ -139,7 +147,7 @@ class GitBlamer extends Blamer {
                 BlameRunner blameRunner = new BlameRunner(repository, headCommit);
 
                 for (String file : locations.getRelativePaths()) {
-                    run(file, blameRunner);
+                    run(file, blameRunner, new LastCommitRunner(repository));
 
                     if (Thread.interrupted()) { // Cancel request by user
                         String message = "Blaming has been interrupted while computing blame information";
@@ -164,10 +172,12 @@ class GitBlamer extends Blamer {
          * @param fileName
          *         the file to get the blames for
          * @param blameRunner
-         *         the runner to invoke Git
+         *         the runner to invoke Git blame
+         * @param lastCommitRunner
+         *         the runner to find the last commit
          */
         @VisibleForTesting
-        void run(final String fileName, final BlameRunner blameRunner) {
+        void run(final String fileName, final BlameRunner blameRunner, final LastCommitRunner lastCommitRunner) {
             try {
                 BlameResult blame = blameRunner.run(fileName);
                 if (blame == null) {
@@ -176,27 +186,11 @@ class GitBlamer extends Blamer {
                 else {
                     for (int line : locations.getLines(fileName)) {
                         FileBlame fileBlame = new FileBlame(workspacePath + "/" + fileName);
-                        int lineIndex = line - 1; // first line is index 0
-                        if (lineIndex < blame.getResultContents().size()) {
-                            PersonIdent who = blame.getSourceAuthor(lineIndex);
-                            if (who == null) {
-                                who = blame.getSourceCommitter(lineIndex);
-                            }
-                            if (who == null) {
-                                blames.logError("- no author or committer information found for line %d in file %s",
-                                        lineIndex, fileName);
-                            }
-                            else {
-                                fileBlame.setName(line, who.getName());
-                                fileBlame.setEmail(line, who.getEmailAddress());
-                            }
-                            RevCommit commit = blame.getSourceCommit(lineIndex);
-                            if (commit == null) {
-                                blames.logError("- no commit ID found for line %d in file %s", lineIndex, fileName);
-                            }
-                            else {
-                                fileBlame.setCommit(line, commit.getName());
-                            }
+                        if (line <= 0) {
+                            fillWithLastCommit(fileName, fileBlame, lastCommitRunner);
+                        }
+                        else if (line <= blame.getResultContents().size()) {
+                            fillWithBlameResult(fileName, fileBlame, blame, line);
                         }
                         blames.add(fileBlame);
                     }
@@ -207,6 +201,47 @@ class GitBlamer extends Blamer {
                         fileName, headCommit);
             }
             blames.logSummary();
+        }
+
+        private void fillWithBlameResult(final String fileName, final FileBlame fileBlame, final BlameResult blame,
+                final int line) {
+            int lineIndex = line - 1; // first line is index 0
+            PersonIdent who = blame.getSourceAuthor(lineIndex);
+            if (who == null) {
+                who = blame.getSourceCommitter(lineIndex);
+            }
+            if (who == null) {
+                blames.logError("- no author or committer information found for line %d in file %s",
+                        lineIndex, fileName);
+            }
+            else {
+                fileBlame.setName(line, who.getName());
+                fileBlame.setEmail(line, who.getEmailAddress());
+            }
+            RevCommit commit = blame.getSourceCommit(lineIndex);
+            if (commit == null) {
+                blames.logError("- no commit ID found for line %d in file %s", lineIndex, fileName);
+            }
+            else {
+                fileBlame.setCommit(line, commit.getName());
+            }
+        }
+
+        private void fillWithLastCommit(final String fileName, final FileBlame fileBlame,
+                final LastCommitRunner lastCommitRunner) throws GitAPIException {
+            Optional<RevCommit> commit = lastCommitRunner.run(fileName);
+            if (commit.isPresent()) {
+                RevCommit revCommit = commit.get();
+                fileBlame.setCommit(WHOLE_FILE, revCommit.getName());
+                PersonIdent who = revCommit.getAuthorIdent();
+                if (who == null) {
+                    who = revCommit.getCommitterIdent();
+                }
+                if (who != null) {
+                    fileBlame.setName(WHOLE_FILE, who.getName());
+                    fileBlame.setEmail(WHOLE_FILE, who.getEmailAddress());
+                }
+            }
         }
     }
 
@@ -228,6 +263,25 @@ class GitBlamer extends Blamer {
             blame.setFilePath(fileName);
             blame.setStartCommit(headCommit);
             return blame.call();
+        }
+    }
+
+    /**
+     * Executes the Git log command for a given file.
+     */
+    static class LastCommitRunner {
+        private final Repository repo;
+
+        LastCommitRunner(final Repository repo) {
+            this.repo = repo;
+        }
+
+        Optional<RevCommit> run(final String fileName) throws GitAPIException {
+            try (Git git = new Git(repo)) {
+                Iterable<RevCommit> commits = git.log().addPath(fileName).call();
+
+                return StreamSupport.stream(commits.spliterator(), false).findFirst();
+            }
         }
     }
 }
