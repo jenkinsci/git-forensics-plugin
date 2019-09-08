@@ -1,0 +1,29 @@
+{
+  "name": "git-forensics",
+  "version": "1.0.0",
+  "description": "Git Forensics Jenkins Plugin",
+  "directories": {
+    "doc": "doc"
+  },
+  "dependencies": {
+    "remark-cli": "^6.0.1",
+    "remark-lint": "^6.0.5",
+    "remark-preset-lint-recommended": "^3.0.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "lint-md": "remark ."
+  },
+  "remarkConfig": {
+    "plugins": [
+      "remark-preset-lint-recommended"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jenkinsci/forensics-api-plugin.git"
+  },
+  "author": "Ullrich Hafner",
+  "license": "MIT",
+  "homepage": "https://github.com/jenkinsci/forensics-api-plugin#readme"
+}
