@@ -13,14 +13,18 @@ import java.util.List;
 public class GitCommitLog implements Serializable {
     private static final long serialVersionUID = 8988806831945499189L;
 
-    /** Holds the hash keys of the commit reversions. */
-    private final List<String> reversions = new ArrayList<>();
+    /** Holds the hash keys of the commit revisions. */
+    private final List<String> revisions = new ArrayList<>();
 
-    public List<String> getReversions() {
-        return reversions;
+    public List<String> getRevisions() {
+        return revisions;
+    }
+
+    public void addRevisions(final List<String> list) {
+        revisions.addAll(list);
     }
 
     public void addRevision(final String rev) {
-        reversions.add(rev);
+        revisions.add(rev);
     }
 }

@@ -42,7 +42,7 @@ public class GitReferenceRecorder extends ReferenceRecorder implements SimpleBui
         if (!NO_REFERENCE_JOB.equals(getReferenceJobName()) && getReferenceJobName() != null) {
             Jenkins jenkins = Jenkins.getInstanceOrNull();
             Optional<Job<?, ?>> referenceJob =  Optional.ofNullable(jenkins.getItemByFullName(getReferenceJobName(), Job.class));
-            referenceJob.ifPresent(job -> getRun().addAction(new GitBranchMasterIntersectionFinder(getRun(), getMaxCommits(), job.getLastBuild())));
+            referenceJob.ifPresent(job -> getRun().addAction(new GitBranchMasterIntersectionFinder(getRun(), getMaxCommits(), job.getLastCompletedBuild())));
         }
     }
 

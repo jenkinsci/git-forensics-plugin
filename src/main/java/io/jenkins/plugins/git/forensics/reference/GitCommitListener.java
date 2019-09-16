@@ -43,18 +43,21 @@ public class GitCommitListener extends SCMListener {
         if (!(scm instanceof GitSCM)) {
             return;
         }
-        /* Looking for the latest Reversion (Commit) on the previous build.
+        /* Looking for the latest revision (Commit) on the previous build.
          * If the previous build has no commits (f.e. manual triggered) then it will looked further
          * in the past until one is found or there is no previous build.
          */
-        String latestReversionOfPreviousCommit = null;
+        String latestRevisionOfPreviousCommit = null;
         Run previous = build.getPreviousBuild();
-        while (previous != null && latestReversionOfPreviousCommit == null) {
+        while (previous != null && latestRevisionOfPreviousCommit == null) {
             GitCommit gitCommit = previous.getAction(GitCommit.class);
-            if (gitCommit.getGitCommitLog().getReversions().isEmpty()) {
+            if (gitCommit == null) {
+                break;
+            }
+            if (gitCommit.getRevisions().isEmpty()) {
                 previous = previous.getPreviousBuild();
             } else {
-                latestReversionOfPreviousCommit = gitCommit.getGitCommitLog().getReversions().get(0);
+                latestRevisionOfPreviousCommit = gitCommit.getLatestRevision();
             }
         }
 
@@ -64,7 +67,7 @@ public class GitCommitListener extends SCMListener {
         GitClient gitClient = gitSCM.createClient(listener, environment, build, workspace);
 
         // Save new commits
-        GitCommit gitCommit = gitClient.withRepository(new GitCommitCall(build, latestReversionOfPreviousCommit));
+        GitCommit gitCommit = gitClient.withRepository(new GitCommitCall(build, latestRevisionOfPreviousCommit));
         build.addAction(gitCommit);
     }
 
@@ -75,22 +78,20 @@ public class GitCommitListener extends SCMListener {
 
         private static final long serialVersionUID = -5980402198857923793L;
         private transient final Run<?,?> build;
-        private final String latestReversionOfPreviousCommit;
+        private final String latestRevisionOfPreviousCommit;
 
         private FilteredLog log = createLog();
 
-        public GitCommitCall(final Run<?, ?> build, final String latestReversionOfPreviousCommit) {
+        public GitCommitCall(final Run<?, ?> build, final String latestRevisionOfPreviousCommit) {
             this.build = build;
-            this.latestReversionOfPreviousCommit = latestReversionOfPreviousCommit;
+            this.latestRevisionOfPreviousCommit = latestRevisionOfPreviousCommit;
         }
 
         @Override
         public GitCommit invoke(final Repository repo, final VirtualChannel channel) throws IOException {
             GitCommit result = new GitCommit(build);
             List<String> newCommits = new ArrayList<>();
-            Git git = new Git(repo);
-
-            try {
+            try (Git git = new Git(repo)) {
                 // Determine new commits to log since last build
                 RevWalk walk = new RevWalk(repo);
                 ObjectId head = repo.resolve(Constants.HEAD);
@@ -103,22 +104,22 @@ public class GitCommitListener extends SCMListener {
                 while (iterator.hasNext()) {
                     next = iterator.next();
                     String commitId = next.getId().toString();
-                    // If latestReversionOfPreviousCommit is null, all commits will be added.
-                    if (commitId.equals(latestReversionOfPreviousCommit)) {
+                    // If latestRevisionOfPreviousCommit is null, all commits will be added.
+                    if (commitId.equals(latestRevisionOfPreviousCommit)) {
                         break;
                     }
                     newCommits.add(commitId);
                 }
             } catch (GitAPIException e) {
-               log.logError("GitAPIException: " + e.getMessage());
+                log.logException(e, "Unable to call log command on git repository.");
             }
 
-            result.getGitCommitLog().getReversions().addAll(newCommits);
+            result.getGitCommitLog().addRevisions(newCommits);
             return result;
         }
 
         private FilteredLog createLog() {
-            return new FilteredLog("Errors while extracting commit reversion information from Git:");
+            return new FilteredLog("Errors while extracting commit revision information from Git:");
         }
     }
 
