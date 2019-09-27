@@ -15,7 +15,7 @@ import jenkins.tasks.SimpleBuildStep;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Optional;
 
 /**
@@ -25,7 +25,7 @@ import java.util.Optional;
  * @author Ullrich Hafner
  * @author Arne Schöntag
  */
-@Extension(ordinal = 10000)
+@Extension(ordinal = 10_000)
 @SuppressWarnings("unused")
 public class GitReferenceRecorder extends ReferenceRecorder implements SimpleBuildStep {
 
@@ -37,7 +37,7 @@ public class GitReferenceRecorder extends ReferenceRecorder implements SimpleBui
 
     @Override
     @SuppressWarnings("unchecked")
-    public void perform(@Nonnull final Run<?, ?> run, @Nonnull final FilePath workspace, @Nonnull final Launcher launcher, @Nonnull final TaskListener listener) {
+    public void perform(final Run<?, ?> run, final FilePath workspace, final Launcher launcher, final TaskListener listener) {
         setRun(run);
         if (!NO_REFERENCE_JOB.equals(getReferenceJobName()) && getReferenceJobName() != null) {
             Jenkins jenkins = Jenkins.getInstanceOrNull();
@@ -55,7 +55,7 @@ public class GitReferenceRecorder extends ReferenceRecorder implements SimpleBui
     @SuppressWarnings("unused") // most methods are used by the corresponding jelly view
     public static class Descriptor extends BuildStepDescriptor<Publisher> {
 
-        @Nonnull
+        @NonNull
         @Override
         public String getDisplayName() {
             return "Git Forensics Recorder";

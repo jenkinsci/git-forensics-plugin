@@ -12,7 +12,7 @@ import java.util.Optional;
  *
  * @author Arne Schöntag
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "Checkstyle.HiddenField"})
 public class GitCommit implements VCSCommit {
 
     private static final long serialVersionUID = 8994811233847179343L;
@@ -40,7 +40,7 @@ public class GitCommit implements VCSCommit {
     }
 
     @Override
-    public Optional<String> getReferencePoint(VCSCommit reference, int maxLogs) {
+    public Optional<String> getReferencePoint(final VCSCommit reference, final int maxLogs) {
         if (reference.getClass() != GitCommit.class) {
             // Incompatible version control types.
             // Wont happen if this build and the reference build are from the same VCS repository.
@@ -75,7 +75,7 @@ public class GitCommit implements VCSCommit {
             masterCommits.addAll(gitCommit.getGitCommitLog().getRevisions());
             referencePoint = branchCommits.stream().filter(masterCommits::contains).findFirst();
             // If an intersection is found the buildId in Jenkins will be saved
-            if(referencePoint.isPresent()) {
+            if (referencePoint.isPresent()) {
                 return Optional.of(tmp.getExternalizableId());
             }
             tmp = tmp.getPreviousBuild();
@@ -95,12 +95,12 @@ public class GitCommit implements VCSCommit {
     }
 
     @Override
-    public void addRevisions(List<String> list) {
+    public void addRevisions(final List<String> list) {
         gitCommitLog.addRevisions(list);
     }
 
     @Override
-    public void addRevision(String rev) {
+    public void addRevision(final String rev) {
         gitCommitLog.addRevision(rev);
     }
 

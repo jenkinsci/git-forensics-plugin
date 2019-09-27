@@ -39,7 +39,7 @@ import java.util.List;
 public class GitCommitListener extends SCMListener {
 
     @Override
-    public void onCheckout(final Run<?,?> build, final SCM scm, final FilePath workspace, final TaskListener listener, final File changelogFile, final SCMRevisionState pollingBaseline) throws Exception {
+    public void onCheckout(final Run<?, ?> build, final SCM scm, final FilePath workspace, final TaskListener listener, final File changelogFile, final SCMRevisionState pollingBaseline) throws Exception {
         if (!(scm instanceof GitSCM)) {
             return;
         }
@@ -56,7 +56,8 @@ public class GitCommitListener extends SCMListener {
             }
             if (gitCommit.getRevisions().isEmpty()) {
                 previous = previous.getPreviousBuild();
-            } else {
+            }
+            else {
                 latestRevisionOfPreviousCommit = gitCommit.getLatestRevision();
             }
         }
@@ -77,12 +78,12 @@ public class GitCommitListener extends SCMListener {
     static class GitCommitCall implements RepositoryCallback<GitCommit> {
 
         private static final long serialVersionUID = -5980402198857923793L;
-        private transient final Run<?,?> build;
+        private final transient Run<?, ?> build;
         private final String latestRevisionOfPreviousCommit;
 
-        private FilteredLog log = createLog();
+        private final FilteredLog log = createLog();
 
-        public GitCommitCall(final Run<?, ?> build, final String latestRevisionOfPreviousCommit) {
+        GitCommitCall(final Run<?, ?> build, final String latestRevisionOfPreviousCommit) {
             this.build = build;
             this.latestRevisionOfPreviousCommit = latestRevisionOfPreviousCommit;
         }
@@ -110,7 +111,8 @@ public class GitCommitListener extends SCMListener {
                     }
                     newCommits.add(commitId);
                 }
-            } catch (GitAPIException e) {
+            }
+            catch (GitAPIException e) {
                 log.logException(e, "Unable to call log command on git repository.");
             }
 

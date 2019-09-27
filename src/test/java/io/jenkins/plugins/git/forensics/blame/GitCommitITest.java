@@ -36,7 +36,7 @@ public class GitCommitITest {
         createAndCommitFile("Test.java", "public class Test {}");
 
         FreeStyleProject reference = createFreeStyleProject("reference", new GitSCM(gitRepo.toString()));
-        JENKINS_PER_SUITE.assertBuildStatus(Result.SUCCESS,reference.scheduleBuild2(0, new Action[0]));
+        JENKINS_PER_SUITE.assertBuildStatus(Result.SUCCESS, reference.scheduleBuild2(0, new Action[0]));
 
         GitCommit referenceGitCommit = reference.getLastCompletedBuild().getAction(GitCommit.class);
         assertEquals(2, referenceGitCommit.getRevisions().size());
@@ -45,7 +45,7 @@ public class GitCommitITest {
 
         GitSCM git = new GitSCM(gitRepo.toString());
         FreeStyleProject job = createFreeStyleProject("job", git);
-        JENKINS_PER_SUITE.assertBuildStatus(Result.SUCCESS,job.scheduleBuild2(0, new Action[0]));
+        JENKINS_PER_SUITE.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0, new Action[0]));
 
         GitCommit jobGitCommit = job.getLastCompletedBuild().getAction(GitCommit.class);
         assertEquals(3, jobGitCommit.getRevisions().size());
@@ -61,14 +61,9 @@ public class GitCommitITest {
         gitRepo.git("commit", "--message=" + fileName + " created");
     }
 
-    private FreeStyleProject createFreeStyleProject(String name, SCM scm) {
-        try {
-            FreeStyleProject project = JENKINS_PER_SUITE.createFreeStyleProject(name);
-            project.setScm(scm);
-            return project;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
+    private FreeStyleProject createFreeStyleProject(final String name, final SCM scm) throws IOException {
+        FreeStyleProject project = JENKINS_PER_SUITE.createFreeStyleProject(name);
+        project.setScm(scm);
+        return project;
     }
 }

@@ -11,6 +11,7 @@ import java.util.Optional;
  * @author Arne Schöntag
  */
 // TODO Name to be Changed
+@SuppressWarnings({"PMD.DataClass", "Checkstyle.HiddenField"})
 public class GitBranchMasterIntersectionFinder extends BranchMasterIntersectionFinder {
 
     private static final long serialVersionUID = -4549516129641755356L;
@@ -28,7 +29,7 @@ public class GitBranchMasterIntersectionFinder extends BranchMasterIntersectionF
      */
     private final int maxLogs;
 
-    public GitBranchMasterIntersectionFinder(final Run<?, ?> run, int maxLogs, final Run<?, ?> reference) {
+    public GitBranchMasterIntersectionFinder(final Run<?, ?> run, final int maxLogs, final Run<?, ?> reference) {
         super();
         this.run = run;
         this.maxLogs = maxLogs;
@@ -75,7 +76,7 @@ public class GitBranchMasterIntersectionFinder extends BranchMasterIntersectionF
         return reference;
     }
 
-    public void setReference(Run<?, ?> reference) {
+    public void setReference(final Run<?, ?> reference) {
         this.reference = reference;
     }
 

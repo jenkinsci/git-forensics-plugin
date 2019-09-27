@@ -55,14 +55,9 @@ public class GitCommitListenerITest {
         gitRepo.git("commit", "--message=" + fileName + " created");
     }
 
-    private FreeStyleProject createFreeStyleProject(String name, SCM scm) {
-        try {
+    private FreeStyleProject createFreeStyleProject(final String name, final SCM scm) throws IOException {
             FreeStyleProject project = JENKINS_PER_SUITE.createFreeStyleProject(name);
             project.setScm(scm);
             return project;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 }
