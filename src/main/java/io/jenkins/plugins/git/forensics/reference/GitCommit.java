@@ -23,6 +23,7 @@ public class GitCommit extends VCSCommit {
     private final GitCommitLog gitCommitLog;
 
     public GitCommit(final Run<?, ?> run) {
+        super();
         this.run = run;
         gitCommitLog = new GitCommitLog();
     }
