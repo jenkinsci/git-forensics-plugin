@@ -17,9 +17,12 @@ import java.io.IOException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
+@SuppressWarnings("PMD.SignatureDeclareThrowsException")
 public class GitCommitListenerITest {
 
-    /** Jenkins rule per suite. */
+    /**
+     * Jenkins rule per suite.
+     */
     @ClassRule
     public static final JenkinsRule JENKINS_PER_SUITE = new JenkinsRule();
 
@@ -56,8 +59,8 @@ public class GitCommitListenerITest {
     }
 
     private FreeStyleProject createFreeStyleProject(final String name, final SCM scm) throws IOException {
-            FreeStyleProject project = JENKINS_PER_SUITE.createFreeStyleProject(name);
-            project.setScm(scm);
-            return project;
+        FreeStyleProject project = JENKINS_PER_SUITE.createFreeStyleProject(name);
+        project.setScm(scm);
+        return project;
     }
 }

@@ -18,9 +18,12 @@ import java.util.Optional;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+@SuppressWarnings("PMD.SignatureDeclareThrowsException")
 public class GitCommitITest {
 
-    /** Jenkins rule per suite. */
+    /**
+     * Jenkins rule per suite.
+     */
     @ClassRule
     public static final JenkinsRule JENKINS_PER_SUITE = new JenkinsRule();
 

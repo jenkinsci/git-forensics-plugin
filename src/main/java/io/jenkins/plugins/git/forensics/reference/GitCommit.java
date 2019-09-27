@@ -12,8 +12,8 @@ import java.util.Optional;
  *
  * @author Arne Schöntag
  */
-@SuppressWarnings({"unused", "Checkstyle.HiddenField"})
-public class GitCommit implements VCSCommit {
+@SuppressWarnings({"unused", "checkstyle:HiddenField"})
+public class GitCommit extends VCSCommit {
 
     private static final long serialVersionUID = 8994811233847179343L;
     private transient Run<?, ?> run;

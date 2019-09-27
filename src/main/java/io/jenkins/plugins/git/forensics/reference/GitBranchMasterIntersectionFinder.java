@@ -11,7 +11,7 @@ import java.util.Optional;
  * @author Arne Schöntag
  */
 // TODO Name to be Changed
-@SuppressWarnings({"PMD.DataClass", "Checkstyle.HiddenField"})
+@SuppressWarnings({"PMD.DataClass", "checkstyle:HiddenField"})
 public class GitBranchMasterIntersectionFinder extends BranchMasterIntersectionFinder {
 
     private static final long serialVersionUID = -4549516129641755356L;
