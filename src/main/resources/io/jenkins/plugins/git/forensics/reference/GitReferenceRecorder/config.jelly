@@ -1,0 +1,11 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form">
+
+        <f:entry title="${%title.maxCommits}" description="${%description.maxCommits}" field="maxCommits">
+            <f:number default="100"/>
+        </f:entry>
+
+        <f:entry title="${%title.referenceJob}" field="referenceJobName" description="${%description.referenceJob}">
+            <f:combobox/>
+        </f:entry>
+</j:jelly>
