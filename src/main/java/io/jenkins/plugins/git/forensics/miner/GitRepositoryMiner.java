@@ -94,6 +94,11 @@ public class GitRepositoryMiner extends RepositoryMiner {
             try {
                 if (paths.isEmpty()) { // scan whole repository
                     ObjectId head = repository.resolve(Constants.HEAD);
+                    if (head == null) {
+                        RepositoryStatistics statistics = new RepositoryStatistics();
+                        statistics.logError("Can't obtain HEAD of repository.");
+                        return statistics;
+                    }
                     Set<String> files = new FilesCollector(repository).findAllFor(head);
                     return analyze(repository, files);
                 }
