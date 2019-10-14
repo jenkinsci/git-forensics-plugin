@@ -16,7 +16,6 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
 
-import io.jenkins.plugins.forensics.blame.FileLocations;
 import io.jenkins.plugins.forensics.miner.FileStatistics;
 import io.jenkins.plugins.forensics.miner.RepositoryStatistics;
 import io.jenkins.plugins.git.forensics.util.GitITest;
@@ -107,9 +106,7 @@ public class GitRepositoryMinerITest extends GitITest {
     }
 
     private String absolute(final String fileName) {
-        FileLocations locations = new FileLocations(sampleRepo.getRoot());
-
-        return locations.getWorkspace() + fileName;
+        return sampleRepo.getRoot().toString() + "/" + fileName;
     }
 
     private GitRepositoryMiner createMiner() {

@@ -42,23 +42,23 @@ public class GitRepositoryMiner extends RepositoryMiner {
     private static final long serialVersionUID = 1157958118716013983L;
 
     private final GitClient gitClient;
-    private final FilePath workspace;
+    private final FilePath workTree;
 
     GitRepositoryMiner(final GitClient gitClient) {
         super();
 
         this.gitClient = gitClient;
-        workspace = gitClient.getWorkTree();
+        workTree = gitClient.getWorkTree();
     }
 
     @Override
-    public RepositoryStatistics mine(final Collection<String> relativeFileNames) throws InterruptedException {
+    public RepositoryStatistics mine(final Collection<String> absoluteFileNames) throws InterruptedException {
         try {
             String workspacePath = getWorkspacePath();
 
             long nano = System.nanoTime();
             RepositoryStatistics statistics = gitClient.withRepository(
-                    new RepositoryStatisticsCallback(workspacePath, relativeFileNames));
+                    new RepositoryStatisticsCallback(workspacePath, absoluteFileNames));
             statistics.logInfo("Mining of the Git repository took %d seconds",
                     1 + (System.nanoTime() - nano) / 1_000_000_000L);
             return statistics;
@@ -72,10 +72,10 @@ public class GitRepositoryMiner extends RepositoryMiner {
 
     private String getWorkspacePath() {
         try {
-            return Paths.get(workspace.getRemote()).toAbsolutePath().normalize().toRealPath(LinkOption.NOFOLLOW_LINKS).toString();
+            return Paths.get(workTree.getRemote()).toAbsolutePath().normalize().toRealPath(LinkOption.NOFOLLOW_LINKS).toString();
         }
         catch (IOException | InvalidPathException exception) {
-            return workspace.getRemote();
+            return workTree.getRemote();
         }
     }
 

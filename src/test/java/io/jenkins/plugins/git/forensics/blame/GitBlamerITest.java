@@ -33,7 +33,6 @@ public class GitBlamerITest extends GitITest {
     /** Jenkins rule per suite. */
     @ClassRule
     public static final JenkinsRule JENKINS_PER_SUITE = new JenkinsRule();
-    private static final String WORKSPACE = "workspace";
 
     /**
      * Verifies that the blames are empty if there are no requests defined.
@@ -42,7 +41,7 @@ public class GitBlamerITest extends GitITest {
     public void shouldCreateEmptyBlamesIfRequestIsEmpty() {
         GitBlamer gitBlamer = createBlamer();
 
-        Blames blames = gitBlamer.blame(new FileLocations(WORKSPACE));
+        Blames blames = gitBlamer.blame(new FileLocations());
 
         assertThat(blames.isEmpty()).isTrue();
     }
@@ -54,8 +53,8 @@ public class GitBlamerITest extends GitITest {
     public void shouldCreateBlamesIfRequestIsExistingFile() {
         create2RevisionsWithDifferentAuthors();
 
-        FileLocations locations = new FileLocations(sampleRepo.getRoot());
-        String absolutePath = locations.getWorkspace() + FILE_NAME;
+        FileLocations locations = new FileLocations();
+        String absolutePath = getAbsolutePath();
         locations.addLine(absolutePath, 2);
         locations.addLine(absolutePath, 3);
         locations.addLine(absolutePath, 4);
@@ -80,6 +79,10 @@ public class GitBlamerITest extends GitITest {
         assertThatBlameIsEmpty(request, 6);
     }
 
+    private String getAbsolutePath() {
+        return sampleRepo.getRoot() + "/" + FILE_NAME;
+    }
+
     /**
      * Verifies that the last committer of the whole file is used if no specific line number is given.
      */
@@ -87,8 +90,8 @@ public class GitBlamerITest extends GitITest {
     public void shouldAssignLastCommitterIfNoLineNumberIsGiven() {
         create2RevisionsWithDifferentAuthors();
 
-        FileLocations locations = new FileLocations(sampleRepo.getRoot());
-        String absolutePath = locations.getWorkspace() + FILE_NAME;
+        FileLocations locations = new FileLocations();
+        String absolutePath = getAbsolutePath();
         locations.addLine(absolutePath, 0);
 
         GitBlamer gitBlamer = createBlamer();

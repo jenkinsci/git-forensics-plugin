@@ -1,6 +1,5 @@
 package io.jenkins.plugins.git.forensics.miner;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +11,6 @@ import org.junit.jupiter.api.Test;
 
 import org.jenkinsci.plugins.gitclient.GitClient;
 import hudson.EnvVars;
-import hudson.FilePath;
 import hudson.model.Run;
 import hudson.model.Saveable;
 import hudson.model.TaskListener;
@@ -60,7 +58,6 @@ public class GitMinerFactoryTest {
 
         GitClient gitClient = mock(GitClient.class);
         when(gitSCM.createClient(NULL_LISTENER, envVars, run, null)).thenReturn(gitClient);
-        FilePath workspace = createWorkTreeStub();
         ObjectId commit = mock(ObjectId.class);
         when(gitClient.revParse(anyString())).thenReturn(commit);
 
@@ -72,12 +69,6 @@ public class GitMinerFactoryTest {
         assertThat(blamer).isNotEmpty().containsInstanceOf(GitRepositoryMiner.class);
         assertThat(logger).hasNoErrorMessages();
         assertThat(logger).hasInfoMessages(GitMinerFactory.INFO_MINER_CREATED);
-    }
-
-    private FilePath createWorkTreeStub() {
-        File mock = mock(File.class);
-        when(mock.getPath()).thenReturn("/");
-        return new FilePath(mock);
     }
 
     @Test
