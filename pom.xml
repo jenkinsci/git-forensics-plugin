@@ -428,39 +428,31 @@
           </dependency>
         </dependencies>
         <configuration>
-          <skip>true</skip> <!-- FIXME: enable after 1.0.0 -->
           <analysisConfiguration>
             <revapi.semver.ignore>
               <enabled>true</enabled>
             </revapi.semver.ignore>
             <revapi.ignore>
               <item>
+                <regex>true</regex>
                 <code>java.class.nonPublicPartOfAPI</code>
-                <classQualifiedName>org.jvnet.hudson.reactor.Reactor.Node</classQualifiedName>
+                <classQualifiedName>org.jvnet.hudson.*</classQualifiedName>
                 <justification>Not relevant</justification>
               </item>
               <item>
+                <regex>true</regex>
                 <code>java.class.nonPublicPartOfAPI</code>
-                <classQualifiedName>hudson.remoting.Command</classQualifiedName>
+                <classQualifiedName>hudson.*</classQualifiedName>
                 <justification>Not relevant</justification>
               </item>
               <item>
+                <regex>true</regex>
                 <code>java.class.nonPublicPartOfAPI</code>
-                <classQualifiedName>hudson.remoting.CommandTransport.CommandReceiver</classQualifiedName>
-                <justification>Not relevant</justification>
-              </item>
-              <item>
-                <code>java.class.nonPublicPartOfAPI</code>
-                <classQualifiedName>hudson.model.FingerprintMap.FingerprintParams</classQualifiedName>
-                <justification>Not relevant</justification>
-              </item>
-              <item>
-                <code>java.class.nonPublicPartOfAPI</code>
-                <classQualifiedName>org.kohsuke.stapler.AncestorImpl</classQualifiedName>
+                <classQualifiedName>org.kohsuke.*</classQualifiedName>
                 <justification>Not relevant</justification>
               </item>
             </revapi.ignore>
-          </analysisConfiguration>
+         </analysisConfiguration>
         </configuration>
         <executions>
           <execution>
