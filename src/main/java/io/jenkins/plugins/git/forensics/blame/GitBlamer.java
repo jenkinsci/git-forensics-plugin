@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.BlameCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -54,7 +55,7 @@ class GitBlamer extends Blamer {
 
     private final GitClient git;
     private final String gitCommit;
-    private final FilePath workspace;
+    private final FilePath workTree;
 
     /**
      * Creates a new blamer for Git.
@@ -67,7 +68,7 @@ class GitBlamer extends Blamer {
     GitBlamer(final GitClient git, final String gitCommit) {
         super();
 
-        workspace = git.getWorkTree();
+        workTree = git.getWorkTree();
         this.git = git;
         this.gitCommit = gitCommit;
     }
@@ -88,11 +89,11 @@ class GitBlamer extends Blamer {
             }
             blames.logInfo("Git commit ID = '%s'", headCommit.getName());
 
-            String workspacePath = getWorkspacePath();
-            blames.logInfo("Job workspace = '%s'", workspacePath);
+            String workTree = getWorkTreePath();
+            blames.logInfo("Git work tree = '%s'", workTree);
 
             long nano = System.nanoTime();
-            Blames filledBlames = git.withRepository(new BlameCallback(workspacePath, locations, blames, headCommit));
+            Blames filledBlames = git.withRepository(new BlameCallback(workTree, locations, blames, headCommit));
             filledBlames.logInfo("Blaming of authors took %d seconds", 1 + (System.nanoTime() - nano) / 1_000_000_000L);
             return filledBlames;
         }
@@ -108,16 +109,16 @@ class GitBlamer extends Blamer {
         return blames;
     }
 
-    private String getWorkspacePath() {
+    private String getWorkTreePath() {
         try {
-            return Paths.get(workspace.getRemote())
+            return Paths.get(workTree.getRemote())
                     .toAbsolutePath()
                     .normalize()
                     .toRealPath(LinkOption.NOFOLLOW_LINKS)
                     .toString();
         }
         catch (IOException | InvalidPathException exception) {
-            return workspace.getRemote();
+            return workTree.getRemote();
         }
     }
 
@@ -129,16 +130,18 @@ class GitBlamer extends Blamer {
         private static final int WHOLE_FILE = 0;
 
         private final ObjectId headCommit;
-        private final String workspacePath;
+        private final String workTree;
         private final FileLocations locations;
         private final Blames blames;
+        private final String workTreeSuffix;
 
-        BlameCallback(final String workspacePath, final FileLocations locations, final Blames blames,
+        BlameCallback(final String workTree, final FileLocations locations, final Blames blames,
                 final ObjectId headCommit) {
-            this.workspacePath = workspacePath;
+            this.workTree = workTree;
             this.locations = locations;
             this.blames = blames;
             this.headCommit = headCommit;
+            workTreeSuffix = workTree.replaceFirst(locations.getWorkspace(), StringUtils.EMPTY);
         }
 
         @Override
@@ -166,6 +169,13 @@ class GitBlamer extends Blamer {
             }
         }
 
+        private String cleanupFileName(final String file) {
+            if (StringUtils.isEmpty(workTreeSuffix)) {
+                return  file;
+            }
+            return file.replaceFirst(workTreeSuffix + "/", StringUtils.EMPTY);
+        }
+
         /**
          * Runs Git blame for one file.
          *
@@ -179,13 +189,14 @@ class GitBlamer extends Blamer {
         @VisibleForTesting
         void run(final String fileName, final BlameRunner blameRunner, final LastCommitRunner lastCommitRunner) {
             try {
-                BlameResult blame = blameRunner.run(fileName);
+                String fileNameInWorkTree = cleanupFileName(fileName);
+                BlameResult blame = blameRunner.run(fileNameInWorkTree);
                 if (blame == null) {
-                    blames.logError("- no blame results for file <%s>", fileName);
+                    blames.logError("- no blame results for file <%s>", fileNameInWorkTree);
                 }
                 else {
                     for (int line : locations.getLines(fileName)) {
-                        FileBlame fileBlame = new FileBlame(workspacePath + "/" + fileName);
+                        FileBlame fileBlame = new FileBlame(workTree + "/" + fileName);
                         if (line <= 0) {
                             fillWithLastCommit(fileName, fileBlame, lastCommitRunner);
                         }

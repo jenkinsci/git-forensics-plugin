@@ -1,15 +1,18 @@
 package io.jenkins.plugins.git.forensics.blame;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import org.assertj.core.util.Lists;
+import org.eclipse.jgit.lib.ObjectId;
 import org.junit.jupiter.api.Test;
 
 import org.jenkinsci.plugins.gitclient.GitClient;
 import hudson.EnvVars;
+import hudson.FilePath;
 import hudson.model.Run;
 import hudson.model.Saveable;
 import hudson.model.TaskListener;
@@ -21,6 +24,7 @@ import hudson.util.DescribableList;
 
 import io.jenkins.plugins.forensics.blame.Blamer;
 import io.jenkins.plugins.forensics.util.FilteredLog;
+import io.jenkins.plugins.git.forensics.GitRepositoryValidator;
 
 import static io.jenkins.plugins.forensics.assertions.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -41,7 +45,7 @@ class GitBlamerFactoryTest {
         assertThat(factory.createBlamer(new NullSCM(), null, null, NULL_LISTENER, logger)).isEmpty();
 
         assertThat(logger).hasNoErrorMessages();
-        assertThat(logger).hasInfoMessages("Skipping blamer since SCM 'hudson.scm.NullSCM' is not of type GitSCM");
+        assertThat(logger).hasInfoMessages("SCM 'hudson.scm.NullSCM' is not of type GitSCM");
     }
 
     @Test
@@ -55,16 +59,25 @@ class GitBlamerFactoryTest {
         when(run.getEnvironment(NULL_LISTENER)).thenReturn(envVars);
 
         GitClient gitClient = mock(GitClient.class);
-        when(gitSCM.createClient(NULL_LISTENER, envVars, run, null)).thenReturn(gitClient);
+        FilePath workspace = createWorkTreeStub();
+        ObjectId commit = mock(ObjectId.class);
+        when(gitClient.revParse(anyString())).thenReturn(commit);
 
+        when(gitSCM.createClient(NULL_LISTENER, envVars, run, workspace)).thenReturn(gitClient);
         FilteredLog logger = createLogger();
 
         GitBlamerFactory factory = new GitBlamerFactory();
-        Optional<Blamer> blamer = factory.createBlamer(gitSCM, run, null, NULL_LISTENER, logger);
+        Optional<Blamer> blamer = factory.createBlamer(gitSCM, run, workspace, NULL_LISTENER, logger);
 
         assertThat(blamer).isNotEmpty().containsInstanceOf(GitBlamer.class);
         assertThat(logger).hasNoErrorMessages();
         assertThat(logger).hasInfoMessages(GitBlamerFactory.INFO_BLAMER_CREATED);
+    }
+
+    private FilePath createWorkTreeStub() {
+        File mock = mock(File.class);
+        when(mock.getPath()).thenReturn("/");
+        return new FilePath(mock);
     }
 
     @Test
@@ -80,7 +93,7 @@ class GitBlamerFactoryTest {
         GitBlamerFactory gitChecker = new GitBlamerFactory();
 
         assertThat(gitChecker.createBlamer(gitSCM, mock(Run.class), null, NULL_LISTENER, logger)).isEmpty();
-        assertThat(logger).hasInfoMessages(GitBlamerFactory.INFO_SHALLOW_CLONE);
+        assertThat(logger).hasInfoMessages(GitRepositoryValidator.INFO_SHALLOW_CLONE);
         assertThat(logger).hasNoErrorMessages();
     }
 
@@ -96,8 +109,8 @@ class GitBlamerFactoryTest {
         FilteredLog logger = createLogger();
 
         assertThat(gitChecker.createBlamer(gitSCM, run, null, NULL_LISTENER, logger)).isEmpty();
-        assertThat(logger).hasErrorMessages(GitBlamerFactory.ERROR_BLAMER);
-        assertThat(logger).hasNoInfoMessages();
+        assertThat(logger).hasNoErrorMessages();
+        assertThat(logger).hasInfoMessages("Exception while creating a GitClient instance for work tree 'null'");
     }
 
     private FilteredLog createLogger() {
