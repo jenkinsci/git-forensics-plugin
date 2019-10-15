@@ -120,7 +120,7 @@ class GitBlamerTest {
 
         BlameRunner runner = mock(BlameRunner.class);
         when(runner.run(RELATIVE_PATH)).thenThrow(exception);
-        callback.run(ABSOLUTE_PATH, runner, createLastCommitRunner());
+        callback.run(ABSOLUTE_PATH, RELATIVE_PATH, runner, createLastCommitRunner());
 
         assertThat(blames.getErrorMessages()).hasSize(3);
         assertThat(blames.getErrorMessages().get(1)).startsWith(
@@ -140,7 +140,8 @@ class GitBlamerTest {
 
         stubResultForIndex(result, 0);
 
-        callback.run(ABSOLUTE_PATH, createBlameRunner(result), createLastCommitRunner());
+        callback.run(ABSOLUTE_PATH, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner()
+        );
 
         verifyResult(blames.getBlame(ABSOLUTE_PATH), 1);
     }
@@ -163,7 +164,8 @@ class GitBlamerTest {
         stubResultForIndex(result, 0);
         stubResultForIndex(result, 1);
 
-        callback.run(ABSOLUTE_PATH, createBlameRunner(result), createLastCommitRunner());
+        callback.run(ABSOLUTE_PATH, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner()
+        );
 
         assertThat(blames.contains(ABSOLUTE_PATH)).isTrue();
         FileBlame blame = blames.getBlame(ABSOLUTE_PATH);
@@ -178,7 +180,7 @@ class GitBlamerTest {
     }
 
     private BlameCallback createCallback(final Blames blames, final FileLocations blamerInput) {
-        return new BlameCallback(WORKSPACE, blamerInput, blames, mock(ObjectId.class));
+        return new BlameCallback(blamerInput, blames, mock(ObjectId.class));
     }
 
     @Test
@@ -196,7 +198,7 @@ class GitBlamerTest {
         BlameRunner blameRunner = createBlameRunner(result);
         LastCommitRunner lastCommitRunner = createLastCommitRunner();
 
-        callback.run(ABSOLUTE_PATH, blameRunner, lastCommitRunner);
+        callback.run(ABSOLUTE_PATH, RELATIVE_PATH, blameRunner, lastCommitRunner);
 
         FileBlame blame = blames.getBlame(ABSOLUTE_PATH);
         verifyResult(blame, 1);
@@ -205,8 +207,8 @@ class GitBlamerTest {
         assertThat(blame.getName(3)).isEqualTo(EMPTY);
         assertThat(blame.getCommit(3)).isEqualTo(EMPTY);
 
-        callback.run("otherFile", blameRunner, lastCommitRunner);
-        assertThat(blames.getErrorMessages()).contains("- skipping file 'otherFile' (outside of work tree)");
+        callback.run("otherFile", "otherFile", blameRunner, lastCommitRunner);
+        assertThat(blames.getErrorMessages()).contains("- no blame results for file 'otherFile'");
     }
 
     @Test
@@ -220,7 +222,8 @@ class GitBlamerTest {
         BlameResult result = createResult(1);
         when(result.getSourceAuthor(0)).thenReturn(new PersonIdent(NAME, EMAIL));
 
-        callback.run(ABSOLUTE_PATH, createBlameRunner(result), createLastCommitRunner());
+        callback.run(ABSOLUTE_PATH, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner()
+        );
 
         FileBlame blame = blames.getBlame(ABSOLUTE_PATH);
         assertThat(blame.getEmail(1)).isEqualTo(EMAIL);
@@ -240,7 +243,8 @@ class GitBlamerTest {
         RevCommit commit = mock(RevCommit.class);
         when(result.getSourceCommit(0)).thenReturn(commit);
 
-        callback.run(ABSOLUTE_PATH, createBlameRunner(result), createLastCommitRunner());
+        callback.run(ABSOLUTE_PATH, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner()
+        );
 
         FileBlame blame = blames.getBlame(ABSOLUTE_PATH);
         assertThat(blame.getEmail(1)).isEqualTo(EMPTY);
@@ -261,7 +265,8 @@ class GitBlamerTest {
         when(result.getSourceCommit(0)).thenReturn(commit);
         when(result.getSourceCommitter(0)).thenReturn(new PersonIdent(NAME + 1, EMAIL + 1));
 
-        callback.run(ABSOLUTE_PATH, createBlameRunner(result), createLastCommitRunner());
+        callback.run(ABSOLUTE_PATH, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner()
+        );
 
         FileBlame blame = blames.getBlame(ABSOLUTE_PATH);
         verifyResult(blame, 1);

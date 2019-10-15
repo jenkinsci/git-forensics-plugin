@@ -33,7 +33,7 @@ public class GitRepositoryMinerITest extends GitITest {
     @ClassRule
     public static final JenkinsRule JENKINS_PER_SUITE = new JenkinsRule();
 
-    private static final String FILE = "file";
+    private static final String OTHER_FILE = "file";
 
     /** 
      * Verifies that the single file of the default initialization does have 1 commit and author. 
@@ -44,9 +44,10 @@ public class GitRepositoryMinerITest extends GitITest {
     @Test
     public void shouldCollectSingleFile() throws InterruptedException {
         GitRepositoryMiner miner = createMiner();
-        RepositoryStatistics statisticsPerFile = miner.mine(Collections.singleton(FILE));
+        String absolute = absolute(OTHER_FILE);
+        RepositoryStatistics statisticsPerFile = miner.mine(Collections.singleton(absolute));
 
-        assertThat(statisticsPerFile).hasFiles(absolute(FILE));
+        assertThat(statisticsPerFile).hasFiles(absolute);
 
         assertDefaultFileStatistics(statisticsPerFile);
     }
@@ -62,15 +63,18 @@ public class GitRepositoryMinerITest extends GitITest {
         writeFileAsAuthorFoo("First");
         writeFileAsAuthorFoo("Second");
 
+        String absoluteOtherFile = absolute(OTHER_FILE);
+        String absoluteFile = absolute(FILE_NAME);
+
         GitRepositoryMiner miner = createMiner();
 
-        RepositoryStatistics statisticsPerFile = miner.mine(Lists.fixedSize.of(FILE, FILE_NAME));
+        RepositoryStatistics statisticsPerFile = miner.mine(Lists.fixedSize.of(absoluteOtherFile, absoluteFile));
 
-        assertThat(statisticsPerFile).hasFiles(absolute(FILE), absolute(FILE_NAME));
+        assertThat(statisticsPerFile).hasFiles(absoluteOtherFile, absoluteFile);
 
         assertDefaultFileStatistics(statisticsPerFile);
 
-        FileStatistics fileStatistics = statisticsPerFile.get(absolute(FILE_NAME));
+        FileStatistics fileStatistics = statisticsPerFile.get(absoluteFile);
         assertThat(fileStatistics).hasNumberOfAuthors(1);
         assertThat(fileStatistics).hasNumberOfCommits(2);
         assertThat(fileStatistics).hasAgeInDays(0);
@@ -90,15 +94,17 @@ public class GitRepositoryMinerITest extends GitITest {
         writeFileAsAuthorFoo("First");
         writeFileAsAuthorBar("Second");
 
+        String absoluteOtherFile = absolute(OTHER_FILE);
+        String absoluteFile = absolute(FILE_NAME);
+
         GitRepositoryMiner miner = createMiner();
+        RepositoryStatistics statisticsPerFile = miner.mine(Lists.fixedSize.of(absoluteFile, absoluteOtherFile));
 
-        RepositoryStatistics statisticsPerFile = miner.mine(Lists.fixedSize.of(FILE, FILE_NAME));
-
-        assertThat(statisticsPerFile).hasFiles(absolute(FILE), absolute(FILE_NAME));
+        assertThat(statisticsPerFile).hasFiles(absoluteOtherFile, absoluteFile);
 
         assertDefaultFileStatistics(statisticsPerFile);
 
-        FileStatistics fileStatistics = statisticsPerFile.get(absolute(FILE_NAME));
+        FileStatistics fileStatistics = statisticsPerFile.get(absoluteFile);
         assertThat(fileStatistics).hasNumberOfAuthors(2);
         assertThat(fileStatistics).hasNumberOfCommits(4);
         assertThat(fileStatistics).hasAgeInDays(0);
@@ -129,7 +135,7 @@ public class GitRepositoryMinerITest extends GitITest {
     }
 
     private void assertDefaultFileStatistics(final RepositoryStatistics statistics) {
-        FileStatistics fileStatistics = statistics.get(absolute(FILE));
+        FileStatistics fileStatistics = statistics.get(absolute(OTHER_FILE));
         assertThat(fileStatistics).hasNumberOfAuthors(1);
         assertThat(fileStatistics).hasNumberOfCommits(1);
         assertThat(fileStatistics).hasAgeInDays(0);
