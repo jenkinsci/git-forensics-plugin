@@ -23,10 +23,10 @@ import io.jenkins.plugins.forensics.util.FilteredLog;
  * @author Ullrich Hafner
  */
 public class GitRepositoryValidator {
+    /** Error message. */
     @VisibleForTesting
     public static final String INFO_SHALLOW_CLONE = "Skipping issues blame since Git has been configured with shallow clone";
-    @VisibleForTesting
-    public static final String INFO_GIT_CLIENT = "Exception while creating a GitClient instance for work tree '%s'";
+
     private static final String HEAD = "HEAD";
 
     private final SCM scm;
@@ -89,7 +89,7 @@ public class GitRepositoryValidator {
             // ignore and skip working tree
         }
 
-        logger.logInfo(INFO_GIT_CLIENT, workTree);
+        logger.logInfo("Exception while creating a GitClient instance for work tree '%s'", workTree);
         return false;
     }
 
