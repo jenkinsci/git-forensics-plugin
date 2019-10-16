@@ -1,8 +1,6 @@
 package io.jenkins.plugins.git.forensics.blame;
 
 import java.io.IOException;
-import java.nio.file.LinkOption;
-import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
 
@@ -11,7 +9,6 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.eclipse.jgit.blame.BlameResult;
-import org.eclipse.jgit.dircache.InvalidPathException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Repository;
@@ -23,7 +20,6 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import org.jenkinsci.plugins.gitclient.GitClient;
-import hudson.FilePath;
 import hudson.plugins.git.GitException;
 import hudson.remoting.VirtualChannel;
 
@@ -54,7 +50,6 @@ class GitBlamer extends Blamer {
 
     private final GitClient git;
     private final String gitCommit;
-    private final FilePath workTree;
 
     /**
      * Creates a new blamer for Git.
@@ -67,7 +62,6 @@ class GitBlamer extends Blamer {
     GitBlamer(final GitClient git, final String gitCommit) {
         super();
 
-        workTree = git.getWorkTree();
         this.git = git;
         this.gitCommit = gitCommit;
     }
@@ -85,10 +79,6 @@ class GitBlamer extends Blamer {
                 blames.logError(NO_HEAD_ERROR);
                 return blames;
             }
-            blames.logInfo("Git commit ID = '%s'", headCommit.getName());
-
-            String workTreeResolvedPath = getWorkTreePath();
-            blames.logInfo("Git working tree = '%s'", workTreeResolvedPath);
 
             long nano = System.nanoTime();
             Blames filledBlames = git.withRepository(new BlameCallback(locations, blames, headCommit));
@@ -105,19 +95,6 @@ class GitBlamer extends Blamer {
             // nothing to do, already logged
         }
         return blames;
-    }
-
-    private String getWorkTreePath() {
-        try {
-            return Paths.get(workTree.getRemote())
-                    .toAbsolutePath()
-                    .normalize()
-                    .toRealPath(LinkOption.NOFOLLOW_LINKS)
-                    .toString();
-        }
-        catch (IOException | InvalidPathException exception) {
-            return workTree.getRemote();
-        }
     }
 
     /**
@@ -140,6 +117,9 @@ class GitBlamer extends Blamer {
         @Override
         public Blames invoke(final Repository repository, final VirtualChannel channel) throws InterruptedException {
             try {
+                blames.logInfo("Git commit ID = '%s'", headCommit.getName());
+                blames.logInfo("Git working tree = '%s'", getWorkTree(repository));
+
                 BlameRunner blameRunner = new BlameRunner(repository, headCommit);
                 LastCommitRunner lastCommitRunner = new LastCommitRunner(repository);
                 String workTree = getWorkTree(repository);

@@ -101,17 +101,26 @@ public class GitRepositoryValidator {
         return false;
     }
 
+    /**
+     * Creates a {@link GitClient} using the field values.
+     *
+     * @return a {@link GitClient}
+     */
     public GitClient createClient() {
         try {
             EnvVars environment = build.getEnvironment(listener);
-            return ((GitSCM)scm).createClient(listener, environment, build, workTree);
+            return ((GitSCM) scm).createClient(listener, environment, build, workTree);
         }
         catch (IOException | InterruptedException e) {
             throw new GitException(e);
         }
-
     }
 
+    /**
+     * Returns the GIT_COMMIT environment variable, or 'HEAD' if not set.
+     *
+     * @return a {@link GitClient}
+     */
     public String getHead() {
         try {
             EnvVars environment = build.getEnvironment(listener);
