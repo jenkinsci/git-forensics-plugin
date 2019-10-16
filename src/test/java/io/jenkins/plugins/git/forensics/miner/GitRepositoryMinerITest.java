@@ -111,10 +111,6 @@ public class GitRepositoryMinerITest extends GitITest {
         assertThat(fileStatistics).hasLastModifiedInDays(0);
     }
 
-    private String absolute(final String fileName) {
-        return sampleRepo.getRoot().toString() + "/" + fileName;
-    }
-
     private GitRepositoryMiner createMiner() {
         try {
             GitSCM scm = new GitSCM(

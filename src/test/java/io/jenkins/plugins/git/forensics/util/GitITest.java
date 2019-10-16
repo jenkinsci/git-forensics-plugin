@@ -12,6 +12,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import jenkins.plugins.git.GitSampleRepoRule;
 
+import io.jenkins.plugins.git.forensics.AbstractRepositoryCallback;
+
 /**
  * Base class for Git integration tests. Provides a Git repository that will b e initialized for each test.
  *
@@ -150,5 +152,26 @@ public class GitITest {
         git("config", "user.name", BAR_NAME);
         git("config", "user.email", BAR_EMAIL);
         git("commit", "--message=Bar");
+    }
+
+    /**
+     * Returns the absolute path of the working tree.
+     *
+     * @return absolute path to the working tree (normalized with Unix file separators).
+     */
+    protected String getRepositoryRoot() {
+        return AbstractRepositoryCallback.getAbsolutePath(sampleRepo.getRoot());
+    }
+
+    /**
+     * Returns the absolute path of the working tree.
+     *
+     * @param fileName
+     *         the relative file name
+     *
+     * @return absolute path to the working tree (normalized with Unix file separators).
+     */
+    protected String absolute(final String fileName) {
+        return getRepositoryRoot() + "/" + fileName;
     }
 }

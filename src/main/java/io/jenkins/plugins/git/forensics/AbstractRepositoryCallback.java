@@ -1,5 +1,6 @@
 package io.jenkins.plugins.git.forensics;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.LinkOption;
 
@@ -33,7 +34,7 @@ public abstract class AbstractRepositoryCallback<T> implements RepositoryCallbac
      *
      * @return the absolute path to the working tree
      */
-    protected String getWorkTree(final Repository repository) {
+    public static String getWorkTree(final Repository repository) {
         return makeUnixPath(getAbsolutePathToWorkingTree(repository));
     }
 
@@ -42,6 +43,8 @@ public abstract class AbstractRepositoryCallback<T> implements RepositoryCallbac
      *
      * @param repository
      *         the repository
+     * @param fileName
+     *         absolute file name
      *
      * @return the absolute path to the working tree
      */
@@ -49,20 +52,32 @@ public abstract class AbstractRepositoryCallback<T> implements RepositoryCallbac
         return fileName.replaceFirst(getWorkTree(repository) + SLASH, StringUtils.EMPTY);
     }
 
-    private String getAbsolutePathToWorkingTree(final Repository repository) {
+    private static String getAbsolutePathToWorkingTree(final Repository repository) {
+        return getAbsolutePath(repository.getWorkTree());
+    }
+
+    /**
+     * Returns an absolute path for a given file in the Git repository, normalized using Unix path separators.
+     *
+     * @param absolute
+     *         absolute file name
+     *
+     * @return the absolute path to the working tree
+     */
+    public static String getAbsolutePath(final File absolute) {
         try {
-            return repository.getWorkTree().toPath()
+            return absolute.toPath()
                     .toAbsolutePath()
                     .normalize()
                     .toRealPath(LinkOption.NOFOLLOW_LINKS)
                     .toString();
         }
         catch (IOException | InvalidPathException exception) {
-            return repository.getWorkTree().toString();
+            return absolute.toString();
         }
     }
 
-    private String makeUnixPath(final String fileName) {
+    private static String makeUnixPath(final String fileName) {
         return fileName.replace(BACK_SLASH, SLASH);
     }
 }

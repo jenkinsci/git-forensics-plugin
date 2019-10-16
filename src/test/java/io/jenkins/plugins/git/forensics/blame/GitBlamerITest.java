@@ -54,7 +54,7 @@ public class GitBlamerITest extends GitITest {
         create2RevisionsWithDifferentAuthors();
 
         FileLocations locations = new FileLocations();
-        String absolutePath = getAbsolutePath();
+        String absolutePath = absolute(FILE_NAME);
         locations.addLine(absolutePath, 2);
         locations.addLine(absolutePath, 3);
         locations.addLine(absolutePath, 4);
@@ -79,10 +79,6 @@ public class GitBlamerITest extends GitITest {
         assertThatBlameIsEmpty(request, 6);
     }
 
-    private String getAbsolutePath() {
-        return sampleRepo.getRoot() + "/" + FILE_NAME;
-    }
-
     /**
      * Verifies that the last committer of the whole file is used if no specific line number is given.
      */
@@ -91,7 +87,7 @@ public class GitBlamerITest extends GitITest {
         create2RevisionsWithDifferentAuthors();
 
         FileLocations locations = new FileLocations();
-        String absolutePath = getAbsolutePath();
+        String absolutePath = absolute(FILE_NAME);
         locations.addLine(absolutePath, 0);
 
         GitBlamer gitBlamer = createBlamer();
