@@ -1,27 +1,15 @@
 package io.jenkins.plugins.git.forensics.miner;
 
-import java.io.IOException;
 import java.util.Collections;
 
 import org.eclipse.collections.impl.factory.Lists;
-import org.junit.ClassRule;
 import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
-
-import org.jenkinsci.plugins.gitclient.GitClient;
-import hudson.EnvVars;
-import hudson.FilePath;
-import hudson.model.Job;
-import hudson.model.Run;
-import hudson.model.TaskListener;
-import hudson.plugins.git.GitSCM;
 
 import io.jenkins.plugins.forensics.miner.FileStatistics;
 import io.jenkins.plugins.forensics.miner.RepositoryStatistics;
 import io.jenkins.plugins.git.forensics.util.GitITest;
 
 import static io.jenkins.plugins.forensics.assertions.Assertions.*;
-import static org.mockito.Mockito.*;
 
 /**
  * Tests the class {@link GitRepositoryMiner}.
@@ -29,10 +17,6 @@ import static org.mockito.Mockito.*;
  * @author Ullrich Hafner
  */
 public class GitRepositoryMinerITest extends GitITest {
-    /** Jenkins rule per suite. */
-    @ClassRule
-    public static final JenkinsRule JENKINS_PER_SUITE = new JenkinsRule();
-
     private static final String OTHER_FILE = "file";
 
     /** 
@@ -112,22 +96,7 @@ public class GitRepositoryMinerITest extends GitITest {
     }
 
     private GitRepositoryMiner createMiner() {
-        try {
-            GitSCM scm = new GitSCM(
-                    GitSCM.createRepoList("file:///" + sampleRepo.getRoot(), null),
-                    Collections.emptyList(), false, Collections.emptyList(),
-                    null, null, Collections.emptyList());
-            Run run = mock(Run.class);
-            Job job = mock(Job.class);
-            when(run.getParent()).thenReturn(job);
-
-            GitClient gitClient = scm.createClient(TaskListener.NULL, new EnvVars(), run,
-                    new FilePath(sampleRepo.getRoot()));
-            return new GitRepositoryMiner(gitClient);
-        }
-        catch (IOException | InterruptedException exception) {
-            throw new AssertionError(exception);
-        }
+        return new GitRepositoryMiner(createGitClient());
     }
 
     private void assertDefaultFileStatistics(final RepositoryStatistics statistics) {
