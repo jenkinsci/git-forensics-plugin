@@ -35,7 +35,7 @@ public abstract class AbstractRepositoryCallback<T> implements RepositoryCallbac
      * @return the absolute path to the working tree
      */
     public static String getWorkTree(final Repository repository) {
-        return makeUnixPath(getAbsolutePathToWorkingTree(repository));
+        return getAbsolutePath(repository.getWorkTree());
     }
 
     /**
@@ -52,10 +52,6 @@ public abstract class AbstractRepositoryCallback<T> implements RepositoryCallbac
         return fileName.replaceFirst(getWorkTree(repository) + SLASH, StringUtils.EMPTY);
     }
 
-    private static String getAbsolutePathToWorkingTree(final Repository repository) {
-        return getAbsolutePath(repository.getWorkTree());
-    }
-
     /**
      * Returns an absolute path for a given file in the Git repository, normalized using Unix path separators.
      *
@@ -65,6 +61,10 @@ public abstract class AbstractRepositoryCallback<T> implements RepositoryCallbac
      * @return the absolute path to the working tree
      */
     public static String getAbsolutePath(final File absolute) {
+        return makeUnixPath(resolve(absolute));
+    }
+
+    private static String resolve(final File absolute) {
         try {
             return absolute.toPath()
                     .toAbsolutePath()
