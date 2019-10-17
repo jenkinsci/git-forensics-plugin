@@ -68,6 +68,8 @@ public class GitRepositoryMiner extends RepositoryMiner {
         private final Collection<String> paths;
 
         RepositoryStatisticsCallback(final Collection<String> paths) {
+            super();
+
             this.paths = paths;
         }
 

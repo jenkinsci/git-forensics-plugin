@@ -109,6 +109,8 @@ class GitBlamer extends Blamer {
         private final Blames blames;
 
         BlameCallback(final FileLocations locations, final Blames blames, final ObjectId headCommit) {
+            super();
+
             this.locations = locations;
             this.blames = blames;
             this.headCommit = headCommit;
