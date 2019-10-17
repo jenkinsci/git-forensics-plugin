@@ -81,6 +81,19 @@ public class GitBranchMasterIntersectionFinder extends BranchMasterIntersectionF
     }
 
     @Override
+    public Run<?, ?> getRun() {
+        return run;
+    }
+
+    @Override
+    public Optional<Run<?, ?>> getReferenceBuild() {
+        if (buildId != null) {
+            return Optional.of(Run.fromExternalizableId(buildId));
+        }
+        return Optional.empty();
+    }
+
+    @Override
     public String getIconFileName() {
         return null;
     }
