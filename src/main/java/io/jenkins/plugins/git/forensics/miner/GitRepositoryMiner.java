@@ -1,8 +1,6 @@
 package io.jenkins.plugins.git.forensics.miner;
 
 import java.io.IOException;
-import java.nio.file.LinkOption;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -11,7 +9,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.dircache.InvalidPathException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
@@ -22,13 +19,12 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.jenkinsci.plugins.gitclient.RepositoryCallback;
-import hudson.FilePath;
 import hudson.remoting.VirtualChannel;
 
 import io.jenkins.plugins.forensics.miner.FileStatistics;
 import io.jenkins.plugins.forensics.miner.RepositoryMiner;
 import io.jenkins.plugins.forensics.miner.RepositoryStatistics;
+import io.jenkins.plugins.git.forensics.AbstractRepositoryCallback;
 
 /**
  * Mines a Git repository and creates statistics for all available files.
@@ -42,23 +38,19 @@ public class GitRepositoryMiner extends RepositoryMiner {
     private static final long serialVersionUID = 1157958118716013983L;
 
     private final GitClient gitClient;
-    private final FilePath workspace;
 
     GitRepositoryMiner(final GitClient gitClient) {
         super();
 
         this.gitClient = gitClient;
-        workspace = gitClient.getWorkTree();
     }
 
     @Override
-    public RepositoryStatistics mine(final Collection<String> relativeFileNames) throws InterruptedException {
+    public RepositoryStatistics mine(final Collection<String> absoluteFileNames) throws InterruptedException {
         try {
-            String workspacePath = getWorkspacePath();
-
             long nano = System.nanoTime();
             RepositoryStatistics statistics = gitClient.withRepository(
-                    new RepositoryStatisticsCallback(workspacePath, relativeFileNames));
+                    new RepositoryStatisticsCallback(absoluteFileNames));
             statistics.logInfo("Mining of the Git repository took %d seconds",
                     1 + (System.nanoTime() - nano) / 1_000_000_000L);
             return statistics;
@@ -70,22 +62,14 @@ public class GitRepositoryMiner extends RepositoryMiner {
         }
     }
 
-    private String getWorkspacePath() {
-        try {
-            return Paths.get(workspace.getRemote()).toAbsolutePath().normalize().toRealPath(LinkOption.NOFOLLOW_LINKS).toString();
-        }
-        catch (IOException | InvalidPathException exception) {
-            return workspace.getRemote();
-        }
-    }
-
-    private static class RepositoryStatisticsCallback implements RepositoryCallback<RepositoryStatistics> {
+    private static class RepositoryStatisticsCallback extends AbstractRepositoryCallback<RepositoryStatistics> {
         private static final long serialVersionUID = 7667073858514128136L;
-        private final String workspacePath;
+
         private final Collection<String> paths;
 
-        RepositoryStatisticsCallback(final String workspacePath, final Collection<String> paths) {
-            this.workspacePath = workspacePath;
+        RepositoryStatisticsCallback(final Collection<String> paths) {
+            super();
+
             this.paths = paths;
         }
 
@@ -117,6 +101,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
         RepositoryStatistics analyze(final Repository repository, final Collection<String> files) {
             RepositoryStatistics statistics = new RepositoryStatistics();
             statistics.logInfo("Invoking Git miner to create statistics for all available files");
+            statistics.logInfo("Git working tree = '%s'", getWorkTree(repository));
 
             List<FileStatistics> fileStatistics = files.stream()
                     .map(file -> analyzeHistory(repository, file, statistics))
@@ -130,10 +115,10 @@ public class GitRepositoryMiner extends RepositoryMiner {
 
         private FileStatistics analyzeHistory(final Repository repository, final String fileName,
                 final RepositoryStatistics statistics) {
-            FileStatistics fileStatistics = new FileStatistics(workspacePath + "/" + fileName);
+            FileStatistics fileStatistics = new FileStatistics(fileName);
 
             try (Git git = new Git(repository)) {
-                Iterable<RevCommit> commits = git.log().addPath(fileName).call();
+                Iterable<RevCommit> commits = git.log().addPath(getRelativePath(repository, fileName)).call();
                 commits.forEach(c -> fileStatistics.inspectCommit(c.getCommitTime(), getAuthor(c)));
                 return fileStatistics;
             }

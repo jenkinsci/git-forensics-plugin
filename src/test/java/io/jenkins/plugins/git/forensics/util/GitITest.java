@@ -1,16 +1,30 @@
 package io.jenkins.plugins.git.forensics.util;
 
 import java.io.IOException;
+import java.util.Collections;
 
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.RepositoryBuilder;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
+import org.jvnet.hudson.test.JenkinsRule;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
+import org.jenkinsci.plugins.gitclient.GitClient;
+import hudson.EnvVars;
+import hudson.FilePath;
+import hudson.model.Job;
+import hudson.model.Run;
+import hudson.model.TaskListener;
+import hudson.plugins.git.GitSCM;
 import jenkins.plugins.git.GitSampleRepoRule;
+
+import io.jenkins.plugins.git.forensics.AbstractRepositoryCallback;
+
+import static org.mockito.Mockito.*;
 
 /**
  * Base class for Git integration tests. Provides a Git repository that will b e initialized for each test.
@@ -32,6 +46,10 @@ public class GitITest {
     /** Git repository in a temporary folder. */
     @Rule
     public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
+
+    /** Jenkins rule per suite. */
+    @ClassRule
+    public static final JenkinsRule JENKINS_PER_SUITE = new JenkinsRule();
 
     /**
      * Initializes the Git repository.
@@ -150,5 +168,50 @@ public class GitITest {
         git("config", "user.name", BAR_NAME);
         git("config", "user.email", BAR_EMAIL);
         git("commit", "--message=Bar");
+    }
+
+    /**
+     * Returns the absolute path of the working tree.
+     *
+     * @return absolute path to the working tree (normalized with Unix file separators).
+     */
+    protected String getRepositoryRoot() {
+        return AbstractRepositoryCallback.getAbsolutePath(sampleRepo.getRoot());
+    }
+
+    /**
+     * Returns the absolute path of the working tree.
+     *
+     * @param fileName
+     *         the relative file name
+     *
+     * @return absolute path to the working tree (normalized with Unix file separators).
+     */
+    protected String absolute(final String fileName) {
+        return getRepositoryRoot() + "/" + fileName;
+    }
+
+    /**
+     * Creates a {@link GitClient} that uses the sample repository.
+     *
+     * @return a {@link GitClient}
+     */
+    protected GitClient createGitClient() {
+        try {
+            GitSCM scm = new GitSCM(
+                    GitSCM.createRepoList("file:///" + sampleRepo.getRoot(), null),
+                    Collections.emptyList(), false, Collections.emptyList(),
+                    null, null, Collections.emptyList());
+            @SuppressWarnings("rawtypes")
+            Run run = mock(Run.class);
+            Job<?, ?> job = mock(Job.class);
+            when(run.getParent()).thenReturn(job);
+
+            return scm.createClient(TaskListener.NULL, new EnvVars(), run,
+                    new FilePath(sampleRepo.getRoot()));
+        }
+        catch (IOException | InterruptedException exception) {
+            throw new AssertionError(exception);
+        }
     }
 }

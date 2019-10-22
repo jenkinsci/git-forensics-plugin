@@ -1,20 +1,7 @@
 package io.jenkins.plugins.git.forensics.blame;
 
-import java.io.IOException;
-import java.util.Collections;
-
-import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
-import org.jvnet.hudson.test.JenkinsRule;
-
-import org.jenkinsci.plugins.gitclient.GitClient;
-import hudson.EnvVars;
-import hudson.FilePath;
-import hudson.model.Job;
-import hudson.model.Run;
-import hudson.model.TaskListener;
-import hudson.plugins.git.GitSCM;
 
 import io.jenkins.plugins.forensics.blame.Blames;
 import io.jenkins.plugins.forensics.blame.FileBlame;
@@ -22,7 +9,6 @@ import io.jenkins.plugins.forensics.blame.FileLocations;
 import io.jenkins.plugins.git.forensics.util.GitITest;
 
 import static io.jenkins.plugins.forensics.assertions.Assertions.*;
-import static org.mockito.Mockito.*;
 
 /**
  * Tests the class {@link GitBlamer}.
@@ -30,11 +16,6 @@ import static org.mockito.Mockito.*;
  * @author Ullrich Hafner
  */
 public class GitBlamerITest extends GitITest {
-    /** Jenkins rule per suite. */
-    @ClassRule
-    public static final JenkinsRule JENKINS_PER_SUITE = new JenkinsRule();
-    private static final String WORKSPACE = "workspace";
-
     /**
      * Verifies that the blames are empty if there are no requests defined.
      */
@@ -42,7 +23,7 @@ public class GitBlamerITest extends GitITest {
     public void shouldCreateEmptyBlamesIfRequestIsEmpty() {
         GitBlamer gitBlamer = createBlamer();
 
-        Blames blames = gitBlamer.blame(new FileLocations(WORKSPACE));
+        Blames blames = gitBlamer.blame(new FileLocations());
 
         assertThat(blames.isEmpty()).isTrue();
     }
@@ -54,8 +35,8 @@ public class GitBlamerITest extends GitITest {
     public void shouldCreateBlamesIfRequestIsExistingFile() {
         create2RevisionsWithDifferentAuthors();
 
-        FileLocations locations = new FileLocations(sampleRepo.getRoot());
-        String absolutePath = locations.getWorkspace() + FILE_NAME;
+        FileLocations locations = new FileLocations();
+        String absolutePath = absolute(FILE_NAME);
         locations.addLine(absolutePath, 2);
         locations.addLine(absolutePath, 3);
         locations.addLine(absolutePath, 4);
@@ -87,8 +68,8 @@ public class GitBlamerITest extends GitITest {
     public void shouldAssignLastCommitterIfNoLineNumberIsGiven() {
         create2RevisionsWithDifferentAuthors();
 
-        FileLocations locations = new FileLocations(sampleRepo.getRoot());
-        String absolutePath = locations.getWorkspace() + FILE_NAME;
+        FileLocations locations = new FileLocations();
+        String absolutePath = absolute(FILE_NAME);
         locations.addLine(absolutePath, 0);
 
         GitBlamer gitBlamer = createBlamer();
@@ -108,22 +89,7 @@ public class GitBlamerITest extends GitITest {
     }
 
     private GitBlamer createBlamer() {
-        try {
-            GitSCM scm = new GitSCM(
-                    GitSCM.createRepoList("file:///" + sampleRepo.getRoot(), null),
-                    Collections.emptyList(), false, Collections.emptyList(),
-                    null, null, Collections.emptyList());
-            Run run = mock(Run.class);
-            Job job = mock(Job.class);
-            when(run.getParent()).thenReturn(job);
-
-            GitClient gitClient = scm.createClient(TaskListener.NULL, new EnvVars(), run,
-                    new FilePath(sampleRepo.getRoot()));
-            return new GitBlamer(gitClient, "HEAD");
-        }
-        catch (IOException | InterruptedException exception) {
-            throw new AssertionError(exception);
-        }
+        return new GitBlamer(createGitClient(), "HEAD");
     }
 
     private void create2RevisionsWithDifferentAuthors() {

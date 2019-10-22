@@ -1,28 +1,15 @@
 package io.jenkins.plugins.git.forensics.miner;
 
-import java.io.IOException;
 import java.util.Collections;
 
 import org.eclipse.collections.impl.factory.Lists;
-import org.junit.ClassRule;
 import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
 
-import org.jenkinsci.plugins.gitclient.GitClient;
-import hudson.EnvVars;
-import hudson.FilePath;
-import hudson.model.Job;
-import hudson.model.Run;
-import hudson.model.TaskListener;
-import hudson.plugins.git.GitSCM;
-
-import io.jenkins.plugins.forensics.blame.FileLocations;
 import io.jenkins.plugins.forensics.miner.FileStatistics;
 import io.jenkins.plugins.forensics.miner.RepositoryStatistics;
 import io.jenkins.plugins.git.forensics.util.GitITest;
 
 import static io.jenkins.plugins.forensics.assertions.Assertions.*;
-import static org.mockito.Mockito.*;
 
 /**
  * Tests the class {@link GitRepositoryMiner}.
@@ -30,11 +17,7 @@ import static org.mockito.Mockito.*;
  * @author Ullrich Hafner
  */
 public class GitRepositoryMinerITest extends GitITest {
-    /** Jenkins rule per suite. */
-    @ClassRule
-    public static final JenkinsRule JENKINS_PER_SUITE = new JenkinsRule();
-
-    private static final String FILE = "file";
+    private static final String OTHER_FILE = "file";
 
     /** 
      * Verifies that the single file of the default initialization does have 1 commit and author. 
@@ -45,9 +28,10 @@ public class GitRepositoryMinerITest extends GitITest {
     @Test
     public void shouldCollectSingleFile() throws InterruptedException {
         GitRepositoryMiner miner = createMiner();
-        RepositoryStatistics statisticsPerFile = miner.mine(Collections.singleton(FILE));
+        String absolute = absolute(OTHER_FILE);
+        RepositoryStatistics statisticsPerFile = miner.mine(Collections.singleton(absolute));
 
-        assertThat(statisticsPerFile).hasFiles(absolute(FILE));
+        assertThat(statisticsPerFile).hasFiles(absolute);
 
         assertDefaultFileStatistics(statisticsPerFile);
     }
@@ -63,15 +47,18 @@ public class GitRepositoryMinerITest extends GitITest {
         writeFileAsAuthorFoo("First");
         writeFileAsAuthorFoo("Second");
 
+        String absoluteOtherFile = absolute(OTHER_FILE);
+        String absoluteFile = absolute(FILE_NAME);
+
         GitRepositoryMiner miner = createMiner();
 
-        RepositoryStatistics statisticsPerFile = miner.mine(Lists.fixedSize.of(FILE, FILE_NAME));
+        RepositoryStatistics statisticsPerFile = miner.mine(Lists.fixedSize.of(absoluteOtherFile, absoluteFile));
 
-        assertThat(statisticsPerFile).hasFiles(absolute(FILE), absolute(FILE_NAME));
+        assertThat(statisticsPerFile).hasFiles(absoluteOtherFile, absoluteFile);
 
         assertDefaultFileStatistics(statisticsPerFile);
 
-        FileStatistics fileStatistics = statisticsPerFile.get(absolute(FILE_NAME));
+        FileStatistics fileStatistics = statisticsPerFile.get(absoluteFile);
         assertThat(fileStatistics).hasNumberOfAuthors(1);
         assertThat(fileStatistics).hasNumberOfCommits(2);
         assertThat(fileStatistics).hasAgeInDays(0);
@@ -91,48 +78,29 @@ public class GitRepositoryMinerITest extends GitITest {
         writeFileAsAuthorFoo("First");
         writeFileAsAuthorBar("Second");
 
+        String absoluteOtherFile = absolute(OTHER_FILE);
+        String absoluteFile = absolute(FILE_NAME);
+
         GitRepositoryMiner miner = createMiner();
+        RepositoryStatistics statisticsPerFile = miner.mine(Lists.fixedSize.of(absoluteFile, absoluteOtherFile));
 
-        RepositoryStatistics statisticsPerFile = miner.mine(Lists.fixedSize.of(FILE, FILE_NAME));
-
-        assertThat(statisticsPerFile).hasFiles(absolute(FILE), absolute(FILE_NAME));
+        assertThat(statisticsPerFile).hasFiles(absoluteOtherFile, absoluteFile);
 
         assertDefaultFileStatistics(statisticsPerFile);
 
-        FileStatistics fileStatistics = statisticsPerFile.get(absolute(FILE_NAME));
+        FileStatistics fileStatistics = statisticsPerFile.get(absoluteFile);
         assertThat(fileStatistics).hasNumberOfAuthors(2);
         assertThat(fileStatistics).hasNumberOfCommits(4);
         assertThat(fileStatistics).hasAgeInDays(0);
         assertThat(fileStatistics).hasLastModifiedInDays(0);
     }
 
-    private String absolute(final String fileName) {
-        FileLocations locations = new FileLocations(sampleRepo.getRoot());
-
-        return locations.getWorkspace() + fileName;
-    }
-
     private GitRepositoryMiner createMiner() {
-        try {
-            GitSCM scm = new GitSCM(
-                    GitSCM.createRepoList("file:///" + sampleRepo.getRoot(), null),
-                    Collections.emptyList(), false, Collections.emptyList(),
-                    null, null, Collections.emptyList());
-            Run run = mock(Run.class);
-            Job job = mock(Job.class);
-            when(run.getParent()).thenReturn(job);
-
-            GitClient gitClient = scm.createClient(TaskListener.NULL, new EnvVars(), run,
-                    new FilePath(sampleRepo.getRoot()));
-            return new GitRepositoryMiner(gitClient);
-        }
-        catch (IOException | InterruptedException exception) {
-            throw new AssertionError(exception);
-        }
+        return new GitRepositoryMiner(createGitClient());
     }
 
     private void assertDefaultFileStatistics(final RepositoryStatistics statistics) {
-        FileStatistics fileStatistics = statistics.get(absolute(FILE));
+        FileStatistics fileStatistics = statistics.get(absolute(OTHER_FILE));
         assertThat(fileStatistics).hasNumberOfAuthors(1);
         assertThat(fileStatistics).hasNumberOfCommits(1);
         assertThat(fileStatistics).hasAgeInDays(0);

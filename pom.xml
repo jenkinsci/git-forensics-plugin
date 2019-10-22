@@ -12,7 +12,7 @@
   <groupId>io.jenkins.plugins</groupId>
   <packaging>hpi</packaging>
   <name>Git Forensics Plugin</name>
-  <version>0.3.3-SNAPSHOT</version>
+  <version>0.5.0-SNAPSHOT</version>
   <description>Jenkins plug-in that mines and analyzes data from a Git repository.</description>
 
   <properties>
@@ -30,7 +30,7 @@
     <eclipse-collections.version>9.2.0</eclipse-collections.version>
 
     <!-- Jenkins Plugin Dependencies Versions -->
-    <forensics-api-plugin.version>0.4.1</forensics-api-plugin.version>
+    <forensics-api-plugin.version>0.5.0-20191017.180939-5</forensics-api-plugin.version>
     <git-plugin.version>3.9.1</git-plugin.version>
 
     <!-- Test Library Dependencies Versions -->
@@ -428,39 +428,31 @@
           </dependency>
         </dependencies>
         <configuration>
-          <skip>true</skip> <!-- FIXME: enable after 1.0.0 -->
           <analysisConfiguration>
             <revapi.semver.ignore>
               <enabled>true</enabled>
             </revapi.semver.ignore>
             <revapi.ignore>
               <item>
+                <regex>true</regex>
                 <code>java.class.nonPublicPartOfAPI</code>
-                <classQualifiedName>org.jvnet.hudson.reactor.Reactor.Node</classQualifiedName>
+                <classQualifiedName>org.jvnet.hudson.*</classQualifiedName>
                 <justification>Not relevant</justification>
               </item>
               <item>
+                <regex>true</regex>
                 <code>java.class.nonPublicPartOfAPI</code>
-                <classQualifiedName>hudson.remoting.Command</classQualifiedName>
+                <classQualifiedName>hudson.*</classQualifiedName>
                 <justification>Not relevant</justification>
               </item>
               <item>
+                <regex>true</regex>
                 <code>java.class.nonPublicPartOfAPI</code>
-                <classQualifiedName>hudson.remoting.CommandTransport.CommandReceiver</classQualifiedName>
-                <justification>Not relevant</justification>
-              </item>
-              <item>
-                <code>java.class.nonPublicPartOfAPI</code>
-                <classQualifiedName>hudson.model.FingerprintMap.FingerprintParams</classQualifiedName>
-                <justification>Not relevant</justification>
-              </item>
-              <item>
-                <code>java.class.nonPublicPartOfAPI</code>
-                <classQualifiedName>org.kohsuke.stapler.AncestorImpl</classQualifiedName>
+                <classQualifiedName>org.kohsuke.*</classQualifiedName>
                 <justification>Not relevant</justification>
               </item>
             </revapi.ignore>
-          </analysisConfiguration>
+         </analysisConfiguration>
         </configuration>
         <executions>
           <execution>
