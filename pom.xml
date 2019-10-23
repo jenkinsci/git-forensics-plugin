@@ -451,6 +451,18 @@
                 <classQualifiedName>org.kohsuke.*</classQualifiedName>
                 <justification>Not relevant</justification>
               </item>
+              <item>
+                <regex>true</regex>
+                <code>java.class.nonPublicPartOfAPI</code>
+                <classQualifiedName>net.sf.json.*</classQualifiedName>
+                <justification>Not relevant</justification>
+              </item>
+              <item>
+                <regex>true</regex>
+                <code>java.class.nonPublicPartOfAPI</code>
+                <classQualifiedName>org.eclipse.jgit.transport.*</classQualifiedName>
+                <justification>Not relevant</justification>
+              </item>
             </revapi.ignore>
          </analysisConfiguration>
         </configuration>
