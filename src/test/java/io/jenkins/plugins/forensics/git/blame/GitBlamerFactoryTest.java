@@ -1,4 +1,4 @@
-package io.jenkins.plugins.git.forensics.blame;
+package io.jenkins.plugins.forensics.git.blame;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,6 +9,8 @@ import java.util.Optional;
 import org.assertj.core.util.Lists;
 import org.eclipse.jgit.lib.ObjectId;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mockito;
 
 import org.jenkinsci.plugins.gitclient.GitClient;
 import hudson.EnvVars;
@@ -23,11 +25,10 @@ import hudson.scm.NullSCM;
 import hudson.util.DescribableList;
 
 import io.jenkins.plugins.forensics.blame.Blamer;
+import io.jenkins.plugins.forensics.git.util.GitRepositoryValidator;
 import io.jenkins.plugins.forensics.util.FilteredLog;
-import io.jenkins.plugins.git.forensics.GitRepositoryValidator;
 
 import static io.jenkins.plugins.forensics.assertions.Assertions.*;
-import static org.mockito.Mockito.*;
 
 /**
  * Tests the class {@link GitBlamerFactory}.
@@ -50,20 +51,20 @@ class GitBlamerFactoryTest {
 
     @Test
     void shouldCreateBlamerForGit() throws IOException, InterruptedException {
-        GitSCM gitSCM = mock(GitSCM.class);
-        when(gitSCM.getExtensions()).thenReturn(new DescribableList<>(Saveable.NOOP));
+        GitSCM gitSCM = Mockito.mock(GitSCM.class);
+        Mockito.when(gitSCM.getExtensions()).thenReturn(new DescribableList<>(Saveable.NOOP));
 
-        Run<?, ?> run = mock(Run.class);
+        Run<?, ?> run = Mockito.mock(Run.class);
         EnvVars envVars = new EnvVars();
         envVars.put("GIT_COMMIT", "test_commit");
-        when(run.getEnvironment(NULL_LISTENER)).thenReturn(envVars);
+        Mockito.when(run.getEnvironment(NULL_LISTENER)).thenReturn(envVars);
 
-        GitClient gitClient = mock(GitClient.class);
+        GitClient gitClient = Mockito.mock(GitClient.class);
         FilePath workspace = createWorkTreeStub();
-        ObjectId commit = mock(ObjectId.class);
-        when(gitClient.revParse(anyString())).thenReturn(commit);
+        ObjectId commit = Mockito.mock(ObjectId.class);
+        Mockito.when(gitClient.revParse(ArgumentMatchers.anyString())).thenReturn(commit);
 
-        when(gitSCM.createClient(NULL_LISTENER, envVars, run, workspace)).thenReturn(gitClient);
+        Mockito.when(gitSCM.createClient(NULL_LISTENER, envVars, run, workspace)).thenReturn(gitClient);
         FilteredLog logger = createLogger();
 
         GitBlamerFactory factory = new GitBlamerFactory();
@@ -75,24 +76,24 @@ class GitBlamerFactoryTest {
     }
 
     private FilePath createWorkTreeStub() {
-        File mock = mock(File.class);
-        when(mock.getPath()).thenReturn("/");
+        File mock = Mockito.mock(File.class);
+        Mockito.when(mock.getPath()).thenReturn("/");
         return new FilePath(mock);
     }
 
     @Test
     void shouldCreateNullBlamerOnShallowGit() {
-        CloneOption shallowCloneOption = mock(CloneOption.class);
-        when(shallowCloneOption.isShallow()).thenReturn(true);
+        CloneOption shallowCloneOption = Mockito.mock(CloneOption.class);
+        Mockito.when(shallowCloneOption.isShallow()).thenReturn(true);
 
-        GitSCM gitSCM = mock(GitSCM.class);
-        when(gitSCM.getExtensions()).thenReturn(new DescribableList<>(Saveable.NOOP, Lists.list(shallowCloneOption)));
+        GitSCM gitSCM = Mockito.mock(GitSCM.class);
+        Mockito.when(gitSCM.getExtensions()).thenReturn(new DescribableList<>(Saveable.NOOP, Lists.list(shallowCloneOption)));
 
         FilteredLog logger = createLogger();
 
         GitBlamerFactory gitChecker = new GitBlamerFactory();
 
-        assertThat(gitChecker.createBlamer(gitSCM, mock(Run.class), null, NULL_LISTENER, logger)).isEmpty();
+        assertThat(gitChecker.createBlamer(gitSCM, Mockito.mock(Run.class), null, NULL_LISTENER, logger)).isEmpty();
         assertThat(logger).hasInfoMessages(GitRepositoryValidator.INFO_SHALLOW_CLONE);
         assertThat(logger).hasNoErrorMessages();
     }
@@ -100,11 +101,11 @@ class GitBlamerFactoryTest {
     @Test
     void shouldCreateNullBlamerOnError() throws IOException, InterruptedException {
         GitBlamerFactory gitChecker = new GitBlamerFactory();
-        Run<?, ?> run = mock(Run.class);
+        Run<?, ?> run = Mockito.mock(Run.class);
         List<GitSCMExtension> extensions = new ArrayList<>();
         GitSCM gitSCM = new GitSCM(null, null, false, null, null, null, extensions);
 
-        when(run.getEnvironment(NULL_LISTENER)).thenThrow(new IOException());
+        Mockito.when(run.getEnvironment(NULL_LISTENER)).thenThrow(new IOException());
 
         FilteredLog logger = createLogger();
 

@@ -1,0 +1,17 @@
+@startuml
+
+skinparam componentStyle uml2
+skinparam component {
+  BorderColor #a0a0a0
+  BackgroundColor #f8f8f8
+}
+
+[Blamer] <<..blame..>>
+[Miner] <<..miner>>
+
+[Utilities] <<..util>>
+
+[Blamer] --> [Utilities]
+[Miner] --> [Utilities]
+
+@enduml

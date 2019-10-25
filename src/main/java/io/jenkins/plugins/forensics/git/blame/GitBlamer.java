@@ -1,4 +1,4 @@
-package io.jenkins.plugins.git.forensics.blame;
+package io.jenkins.plugins.forensics.git.blame;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -27,7 +27,7 @@ import io.jenkins.plugins.forensics.blame.Blamer;
 import io.jenkins.plugins.forensics.blame.Blames;
 import io.jenkins.plugins.forensics.blame.FileBlame;
 import io.jenkins.plugins.forensics.blame.FileLocations;
-import io.jenkins.plugins.git.forensics.AbstractRepositoryCallback;
+import io.jenkins.plugins.forensics.git.util.AbstractRepositoryCallback;
 
 /**
  * Assigns git blames to warnings. Based on the solution by John Gibson, see JENKINS-6748. This code is intended to run

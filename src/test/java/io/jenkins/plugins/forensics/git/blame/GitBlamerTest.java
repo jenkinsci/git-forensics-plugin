@@ -1,4 +1,4 @@
-package io.jenkins.plugins.git.forensics.blame;
+package io.jenkins.plugins.forensics.git.blame;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,6 +13,8 @@ import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mockito;
 
 import org.jenkinsci.plugins.gitclient.GitClient;
 import hudson.FilePath;
@@ -22,12 +24,11 @@ import hudson.remoting.VirtualChannel;
 import io.jenkins.plugins.forensics.blame.Blames;
 import io.jenkins.plugins.forensics.blame.FileBlame;
 import io.jenkins.plugins.forensics.blame.FileLocations;
-import io.jenkins.plugins.git.forensics.blame.GitBlamer.BlameCallback;
-import io.jenkins.plugins.git.forensics.blame.GitBlamer.BlameRunner;
-import io.jenkins.plugins.git.forensics.blame.GitBlamer.LastCommitRunner;
+import io.jenkins.plugins.forensics.git.blame.GitBlamer.BlameCallback;
+import io.jenkins.plugins.forensics.git.blame.GitBlamer.BlameRunner;
+import io.jenkins.plugins.forensics.git.blame.GitBlamer.LastCommitRunner;
 
 import static io.jenkins.plugins.forensics.assertions.Assertions.*;
-import static org.mockito.Mockito.*;
 
 /**
  * Tests the class {@link GitBlamer}.
@@ -49,14 +50,14 @@ class GitBlamerTest {
 
         Blames blames = blamer.blame(new FileLocations());
 
-        assertThat(blames.isEmpty()).isTrue();
+        assertThat(blames).isEmpty();
         assertThat(blames.getErrorMessages()).contains(GitBlamer.NO_HEAD_ERROR);
     }
 
     @Test
     void shouldAbortIfRefParseThrowsException() throws InterruptedException {
         GitClient gitClient = createGitClient();
-        when(gitClient.revParse(HEAD)).thenThrow(new GitException());
+        Mockito.when(gitClient.revParse(HEAD)).thenThrow(new GitException());
 
         GitBlamer blamer = new GitBlamer(gitClient, HEAD);
 
@@ -89,20 +90,20 @@ class GitBlamerTest {
     }
 
     private GitClient createStubbedClientWithException(final Exception exception) throws InterruptedException, IOException {
-        GitClient gitClient = mock(GitClient.class);
+        GitClient gitClient = Mockito.mock(GitClient.class);
 
-        ObjectId id = mock(ObjectId.class);
-        when(gitClient.revParse(HEAD)).thenReturn(id);
-        when(gitClient.withRepository(any())).thenThrow(exception);
+        ObjectId id = Mockito.mock(ObjectId.class);
+        Mockito.when(gitClient.revParse(HEAD)).thenReturn(id);
+        Mockito.when(gitClient.withRepository(ArgumentMatchers.any())).thenThrow(exception);
         FilePath workTree = createWorkTreeStub();
-        when(gitClient.getWorkTree()).thenReturn(workTree);
+        Mockito.when(gitClient.getWorkTree()).thenReturn(workTree);
 
         return gitClient;
     }
 
     private FilePath createWorkTreeStub() {
-        File mock = mock(File.class);
-        when(mock.getPath()).thenReturn("/");
+        File mock = Mockito.mock(File.class);
+        Mockito.when(mock.getPath()).thenReturn("/");
         return new FilePath(mock);
     }
 
@@ -118,8 +119,8 @@ class GitBlamerTest {
         FileLocations blamerInput = new FileLocations();
         BlameCallback callback = createCallback(blames, blamerInput);
 
-        BlameRunner runner = mock(BlameRunner.class);
-        when(runner.run(RELATIVE_PATH)).thenThrow(exception);
+        BlameRunner runner = Mockito.mock(BlameRunner.class);
+        Mockito.when(runner.run(RELATIVE_PATH)).thenThrow(exception);
         callback.run(ABSOLUTE_PATH, RELATIVE_PATH, runner, createLastCommitRunner());
 
         assertThat(blames.getErrorMessages()).hasSize(3);
@@ -147,7 +148,7 @@ class GitBlamerTest {
     }
 
     private LastCommitRunner createLastCommitRunner() {
-        return mock(LastCommitRunner.class);
+        return Mockito.mock(LastCommitRunner.class);
     }
 
     @Test
@@ -174,13 +175,13 @@ class GitBlamerTest {
     }
 
     private GitClient createGitClient() {
-        GitClient gitClient = mock(GitClient.class);
-        when(gitClient.getWorkTree()).thenReturn(new FilePath((VirtualChannel) null, ""));
+        GitClient gitClient = Mockito.mock(GitClient.class);
+        Mockito.when(gitClient.getWorkTree()).thenReturn(new FilePath((VirtualChannel) null, ""));
         return gitClient;
     }
 
     private BlameCallback createCallback(final Blames blames, final FileLocations blamerInput) {
-        return new BlameCallback(blamerInput, blames, mock(ObjectId.class));
+        return new BlameCallback(blamerInput, blames, Mockito.mock(ObjectId.class));
     }
 
     @Test
@@ -220,7 +221,7 @@ class GitBlamerTest {
         BlameCallback callback = createCallback(blames, locations);
 
         BlameResult result = createResult(1);
-        when(result.getSourceAuthor(0)).thenReturn(new PersonIdent(NAME, EMAIL));
+        Mockito.when(result.getSourceAuthor(0)).thenReturn(new PersonIdent(NAME, EMAIL));
 
         callback.run(ABSOLUTE_PATH, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner()
         );
@@ -240,8 +241,8 @@ class GitBlamerTest {
         BlameCallback callback = createCallback(blames, locations);
 
         BlameResult result = createResult(1);
-        RevCommit commit = mock(RevCommit.class);
-        when(result.getSourceCommit(0)).thenReturn(commit);
+        RevCommit commit = Mockito.mock(RevCommit.class);
+        Mockito.when(result.getSourceCommit(0)).thenReturn(commit);
 
         callback.run(ABSOLUTE_PATH, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner()
         );
@@ -261,9 +262,9 @@ class GitBlamerTest {
         BlameCallback callback = createCallback(blames, locations);
 
         BlameResult result = createResult(1);
-        RevCommit commit = mock(RevCommit.class);
-        when(result.getSourceCommit(0)).thenReturn(commit);
-        when(result.getSourceCommitter(0)).thenReturn(new PersonIdent(NAME + 1, EMAIL + 1));
+        RevCommit commit = Mockito.mock(RevCommit.class);
+        Mockito.when(result.getSourceCommit(0)).thenReturn(commit);
+        Mockito.when(result.getSourceCommitter(0)).thenReturn(new PersonIdent(NAME + 1, EMAIL + 1));
 
         callback.run(ABSOLUTE_PATH, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner()
         );
@@ -274,28 +275,28 @@ class GitBlamerTest {
 
     private BlameResult createResult(final int size) {
         RawText resultSize = createResultSize(size);
-        BlameResult result = mock(BlameResult.class);
-        when(result.getResultContents()).thenReturn(resultSize);
+        BlameResult result = Mockito.mock(BlameResult.class);
+        Mockito.when(result.getResultContents()).thenReturn(resultSize);
         return result;
     }
 
     private BlameRunner createBlameRunner(final BlameResult result) throws GitAPIException {
-        BlameRunner blameRunner = mock(BlameRunner.class);
-        when(blameRunner.run(RELATIVE_PATH)).thenReturn(result);
+        BlameRunner blameRunner = Mockito.mock(BlameRunner.class);
+        Mockito.when(blameRunner.run(RELATIVE_PATH)).thenReturn(result);
         return blameRunner;
     }
 
     private RawText createResultSize(final int size) {
-        RawText text = mock(RawText.class);
-        when(text.size()).thenReturn(size);
+        RawText text = Mockito.mock(RawText.class);
+        Mockito.when(text.size()).thenReturn(size);
         return text;
     }
 
     private void stubResultForIndex(final BlameResult result, final int index) {
         int line = index + 1;
-        when(result.getSourceAuthor(index)).thenReturn(new PersonIdent(NAME + line, EMAIL + line));
-        RevCommit commit = mock(RevCommit.class);
-        when(result.getSourceCommit(index)).thenReturn(commit);
+        Mockito.when(result.getSourceAuthor(index)).thenReturn(new PersonIdent(NAME + line, EMAIL + line));
+        RevCommit commit = Mockito.mock(RevCommit.class);
+        Mockito.when(result.getSourceCommit(index)).thenReturn(commit);
     }
 
     private void verifyResult(final FileBlame request, final int line) {

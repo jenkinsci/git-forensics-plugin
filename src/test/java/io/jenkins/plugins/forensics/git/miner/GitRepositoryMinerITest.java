@@ -1,13 +1,13 @@
-package io.jenkins.plugins.git.forensics.miner;
+package io.jenkins.plugins.forensics.git.miner;
 
 import java.util.Collections;
 
 import org.eclipse.collections.impl.factory.Lists;
 import org.junit.Test;
 
+import io.jenkins.plugins.forensics.git.util.GitITest;
 import io.jenkins.plugins.forensics.miner.FileStatistics;
 import io.jenkins.plugins.forensics.miner.RepositoryStatistics;
-import io.jenkins.plugins.git.forensics.util.GitITest;
 
 import static io.jenkins.plugins.forensics.assertions.Assertions.*;
 
@@ -48,7 +48,7 @@ public class GitRepositoryMinerITest extends GitITest {
         writeFileAsAuthorFoo("Second");
 
         String absoluteOtherFile = absolute(OTHER_FILE);
-        String absoluteFile = absolute(FILE_NAME);
+        String absoluteFile = absolute(GitITest.FILE_NAME);
 
         GitRepositoryMiner miner = createMiner();
 
@@ -79,7 +79,7 @@ public class GitRepositoryMinerITest extends GitITest {
         writeFileAsAuthorBar("Second");
 
         String absoluteOtherFile = absolute(OTHER_FILE);
-        String absoluteFile = absolute(FILE_NAME);
+        String absoluteFile = absolute(GitITest.FILE_NAME);
 
         GitRepositoryMiner miner = createMiner();
         RepositoryStatistics statisticsPerFile = miner.mine(Lists.fixedSize.of(absoluteFile, absoluteOtherFile));

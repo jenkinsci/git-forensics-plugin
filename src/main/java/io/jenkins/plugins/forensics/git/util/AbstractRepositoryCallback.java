@@ -1,4 +1,4 @@
-package io.jenkins.plugins.git.forensics;
+package io.jenkins.plugins.forensics.git.util;
 
 import java.io.File;
 import java.io.IOException;
