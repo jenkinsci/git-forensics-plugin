@@ -1,4 +1,4 @@
-package io.jenkins.plugins.git.forensics.blame;
+package io.jenkins.plugins.forensics.git.blame;
 
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -6,7 +6,7 @@ import org.jvnet.hudson.test.Issue;
 import io.jenkins.plugins.forensics.blame.Blames;
 import io.jenkins.plugins.forensics.blame.FileBlame;
 import io.jenkins.plugins.forensics.blame.FileLocations;
-import io.jenkins.plugins.git.forensics.util.GitITest;
+import io.jenkins.plugins.forensics.git.util.GitITest;
 
 import static io.jenkins.plugins.forensics.assertions.Assertions.*;
 
@@ -25,7 +25,7 @@ public class GitBlamerITest extends GitITest {
 
         Blames blames = gitBlamer.blame(new FileLocations());
 
-        assertThat(blames.isEmpty()).isTrue();
+        assertThat(blames).isEmpty();
     }
 
     /**
@@ -36,7 +36,7 @@ public class GitBlamerITest extends GitITest {
         create2RevisionsWithDifferentAuthors();
 
         FileLocations locations = new FileLocations();
-        String absolutePath = absolute(FILE_NAME);
+        String absolutePath = absolute(GitITest.FILE_NAME);
         locations.addLine(absolutePath, 2);
         locations.addLine(absolutePath, 3);
         locations.addLine(absolutePath, 4);
@@ -46,9 +46,9 @@ public class GitBlamerITest extends GitITest {
 
         Blames blames = gitBlamer.blame(locations);
 
-        assertThat(blames.getFiles()).isNotEmpty().containsExactly(absolutePath);
-        assertThat(blames.getErrorMessages()).isEmpty();
-        assertThat(blames.getInfoMessages()).contains("-> blamed authors of issues in 1 files");
+        assertThat(blames).hasOnlyFiles(absolutePath);
+        assertThat(blames).hasNoErrorMessages();
+        assertThat(blames).hasInfoMessages("-> blamed authors of issues in 1 files");
 
         FileBlame request = blames.getBlame(absolutePath);
         assertThat(request).hasFileName(absolutePath);
@@ -69,22 +69,22 @@ public class GitBlamerITest extends GitITest {
         create2RevisionsWithDifferentAuthors();
 
         FileLocations locations = new FileLocations();
-        String absolutePath = absolute(FILE_NAME);
+        String absolutePath = absolute(GitITest.FILE_NAME);
         locations.addLine(absolutePath, 0);
 
         GitBlamer gitBlamer = createBlamer();
 
         Blames blames = gitBlamer.blame(locations);
 
-        assertThat(blames.getFiles()).isNotEmpty().containsExactly(absolutePath);
-        assertThat(blames.getErrorMessages()).isEmpty();
-        assertThat(blames.getInfoMessages()).contains("-> blamed authors of issues in 1 files");
+        assertThat(blames).hasOnlyFiles(absolutePath);
+        assertThat(blames).hasNoErrorMessages();
+        assertThat(blames).hasInfoMessages("-> blamed authors of issues in 1 files");
 
         FileBlame request = blames.getBlame(absolutePath);
         assertThat(request).hasFileName(absolutePath);
 
-        assertThat(request.getName(0)).isEqualTo(BAR_NAME);
-        assertThat(request.getEmail(0)).isEqualTo(BAR_EMAIL);
+        assertThat(request.getName(0)).isEqualTo(GitITest.BAR_NAME);
+        assertThat(request.getEmail(0)).isEqualTo(GitITest.BAR_EMAIL);
         assertThat(request.getCommit(0)).isEqualTo(getHead());
     }
 
@@ -93,30 +93,30 @@ public class GitBlamerITest extends GitITest {
     }
 
     private void create2RevisionsWithDifferentAuthors() {
-        writeFile(FILE_NAME, "OLD\nOLD\nOLD\nOLD\nOLD\nOLD\n");
-        git("add", FILE_NAME);
-        git("config", "user.name", FOO_NAME);
-        git("config", "user.email", FOO_EMAIL);
+        writeFile(GitITest.FILE_NAME, "OLD\nOLD\nOLD\nOLD\nOLD\nOLD\n");
+        git("add", GitITest.FILE_NAME);
+        git("config", "user.name", GitITest.FOO_NAME);
+        git("config", "user.email", GitITest.FOO_EMAIL);
         git("commit", "--message=Init");
         git("rev-parse", "HEAD");
 
-        writeFile(FILE_NAME, "OLD\nOLD\nNEW\nNEW\nOLD\nOLD\n");
-        git("add", FILE_NAME);
-        git("config", "user.name", BAR_NAME);
-        git("config", "user.email", BAR_EMAIL);
+        writeFile(GitITest.FILE_NAME, "OLD\nOLD\nNEW\nNEW\nOLD\nOLD\n");
+        git("add", GitITest.FILE_NAME);
+        git("config", "user.name", GitITest.BAR_NAME);
+        git("config", "user.email", GitITest.BAR_EMAIL);
         git("commit", "--message=Change");
         git("rev-parse", "HEAD");
     }
 
     private void assertThatBlameIsHeadWith(final FileBlame request, final int line) {
-        assertThat(request.getName(line)).isEqualTo(BAR_NAME);
-        assertThat(request.getEmail(line)).isEqualTo(BAR_EMAIL);
+        assertThat(request.getName(line)).isEqualTo(GitITest.BAR_NAME);
+        assertThat(request.getEmail(line)).isEqualTo(GitITest.BAR_EMAIL);
         assertThat(request.getCommit(line)).isEqualTo(getHead());
     }
 
     private void assertThatBlameIs(final FileBlame request, final int line) {
-        assertThat(request.getName(line)).isEqualTo(FOO_NAME);
-        assertThat(request.getEmail(line)).isEqualTo(FOO_EMAIL);
+        assertThat(request.getName(line)).isEqualTo(GitITest.FOO_NAME);
+        assertThat(request.getEmail(line)).isEqualTo(GitITest.FOO_EMAIL);
         assertThat(request.getCommit(line)).isNotEqualTo(getHead());
     }
 

@@ -1,4 +1,4 @@
-package io.jenkins.plugins.git.forensics.miner;
+package io.jenkins.plugins.forensics.git.miner;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -21,17 +21,17 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import hudson.remoting.VirtualChannel;
 
+import io.jenkins.plugins.forensics.git.util.AbstractRepositoryCallback;
 import io.jenkins.plugins.forensics.miner.FileStatistics;
 import io.jenkins.plugins.forensics.miner.RepositoryMiner;
 import io.jenkins.plugins.forensics.miner.RepositoryStatistics;
-import io.jenkins.plugins.git.forensics.AbstractRepositoryCallback;
 
 /**
  * Mines a Git repository and creates statistics for all available files.
  *
  * @author Ullrich Hafner
  * @see io.jenkins.plugins.forensics.miner.FileStatistics
- * @see io.jenkins.plugins.git.forensics.miner.FilesCollector
+ * @see FilesCollector
  */
 @SuppressFBWarnings(value = "SE", justification = "GitClient implementation is Serializable")
 public class GitRepositoryMiner extends RepositoryMiner {

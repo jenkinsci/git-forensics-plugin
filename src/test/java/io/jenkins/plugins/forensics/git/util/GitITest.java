@@ -1,4 +1,4 @@
-package io.jenkins.plugins.git.forensics.util;
+package io.jenkins.plugins.forensics.git.util;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -21,8 +21,6 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
 import jenkins.plugins.git.GitSampleRepoRule;
-
-import io.jenkins.plugins.git.forensics.AbstractRepositoryCallback;
 
 import static org.mockito.Mockito.*;
 

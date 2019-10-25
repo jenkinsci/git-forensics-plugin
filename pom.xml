@@ -22,6 +22,7 @@
     <jenkins-test-harness.version>2.49</jenkins-test-harness.version>
     <spotbugs.failOnError>false</spotbugs.failOnError>
     <slf4j.version>1.7.28</slf4j.version>
+    <module.name>${project.groupId}.git.forensics</module.name>
 
     <!-- Library Dependencies Versions -->
     <error-prone.version>2.3.3</error-prone.version>
@@ -38,6 +39,7 @@
     <junit-platform-launcher.version>1.5.2</junit-platform-launcher.version>
     <mockito.version>3.1.0</mockito.version>
     <assertj.version>3.13.2</assertj.version>
+    <archunit.version>0.11.0</archunit.version>
 
     <!-- Maven plug-in versions -->
     <maven-pmd-plugin.version>3.12.0</maven-pmd-plugin.version>
@@ -59,7 +61,6 @@
     <pitest-maven.junit5.plugin>0.9</pitest-maven.junit5.plugin>
     <revapi-maven-plugin.version>0.11.1</revapi-maven-plugin.version>
     <revapi-java.version>0.19.1</revapi-java.version>
-    <archunit.version>0.11.0</archunit.version>
 
   </properties>
 
@@ -220,6 +221,24 @@
       <version>${assertj.version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>com.tngtech.archunit</groupId>
+      <artifactId>archunit-junit5-api</artifactId>
+      <version>${archunit.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.tngtech.archunit</groupId>
+      <artifactId>archunit-junit5-engine</artifactId>
+      <version>${archunit.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>junit-platform-engine</artifactId>
+          <groupId>org.junit.platform</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
 
     <!-- GitSampleRepoRule -->
     <dependency>
@@ -240,6 +259,21 @@
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>${maven-jar-plugin.version}</version>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Built-By>Ullrich Hafner</Built-By>
+              <Url>${project.scm.url}</Url>
+              <Jenkins-ClassFilter-Whitelisted>true</Jenkins-ClassFilter-Whitelisted>
+              <Automatic-Module-Name>${module.name}</Automatic-Module-Name>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${maven-surefire.plugin}</version>
@@ -428,6 +462,7 @@
           </dependency>
         </dependencies>
         <configuration>
+          <skip>true</skip>
           <analysisConfiguration>
             <revapi.semver.ignore>
               <enabled>true</enabled>
@@ -479,20 +514,6 @@
     </plugins>
     <pluginManagement>
       <plugins>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-jar-plugin</artifactId>
-          <version>${maven-jar-plugin.version}</version>
-          <configuration>
-            <archive>
-              <manifestEntries>
-                <Built-By>Ullrich Hafner</Built-By>
-                <Url>${project.scm.url}</Url>
-                <Jenkins-ClassFilter-Whitelisted>true</Jenkins-ClassFilter-Whitelisted>
-              </manifestEntries>
-            </archive>
-          </configuration>
-        </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>animal-sniffer-maven-plugin</artifactId>
