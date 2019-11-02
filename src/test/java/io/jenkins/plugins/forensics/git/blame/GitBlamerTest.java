@@ -2,6 +2,8 @@ package io.jenkins.plugins.forensics.git.blame;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
+import java.util.Random;
 
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
@@ -38,7 +40,9 @@ import static io.jenkins.plugins.forensics.assertions.Assertions.*;
 class GitBlamerTest {
     private static final String EMAIL = "email";
     private static final String NAME = "name";
+    private static final int TIME = 12_345;
     private static final String EMPTY = "-";
+    private static final int EMPTY_TIME = 0;
     private static final String HEAD = "HEAD";
     private static final String WORKSPACE = "/workspace";
     private static final String RELATIVE_PATH = "file.txt";
@@ -89,7 +93,8 @@ class GitBlamerTest {
         assertThat(blames.getErrorMessages()).isEmpty();
     }
 
-    private GitClient createStubbedClientWithException(final Exception exception) throws InterruptedException, IOException {
+    private GitClient createStubbedClientWithException(final Exception exception)
+            throws InterruptedException, IOException {
         GitClient gitClient = Mockito.mock(GitClient.class);
 
         ObjectId id = Mockito.mock(ObjectId.class);
@@ -230,6 +235,7 @@ class GitBlamerTest {
         assertThat(blame.getEmail(1)).isEqualTo(EMAIL);
         assertThat(blame.getName(1)).isEqualTo(NAME);
         assertThat(blame.getCommit(1)).isEqualTo(EMPTY);
+        assertThat(blame.getTime(1)).isEqualTo(EMPTY_TIME);
     }
 
     @Test
@@ -241,7 +247,7 @@ class GitBlamerTest {
         BlameCallback callback = createCallback(blames, locations);
 
         BlameResult result = createResult(1);
-        RevCommit commit = Mockito.mock(RevCommit.class);
+        RevCommit commit = createCommit();
         Mockito.when(result.getSourceCommit(0)).thenReturn(commit);
 
         callback.run(ABSOLUTE_PATH, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner()
@@ -251,6 +257,7 @@ class GitBlamerTest {
         assertThat(blame.getEmail(1)).isEqualTo(EMPTY);
         assertThat(blame.getName(1)).isEqualTo(EMPTY);
         assertThat(blame.getCommit(1)).isNotBlank().isNotEqualTo(EMPTY);
+        assertThat(blame.getTime(1)).isNotEqualTo(EMPTY_TIME);
     }
 
     @Test
@@ -262,8 +269,9 @@ class GitBlamerTest {
         BlameCallback callback = createCallback(blames, locations);
 
         BlameResult result = createResult(1);
-        RevCommit commit = Mockito.mock(RevCommit.class);
+        RevCommit commit = createCommit();
         Mockito.when(result.getSourceCommit(0)).thenReturn(commit);
+        Mockito.when(result.getSourceAuthor(0)).thenReturn(null);
         Mockito.when(result.getSourceCommitter(0)).thenReturn(new PersonIdent(NAME + 1, EMAIL + 1));
 
         callback.run(ABSOLUTE_PATH, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner()
@@ -271,6 +279,22 @@ class GitBlamerTest {
 
         FileBlame blame = blames.getBlame(ABSOLUTE_PATH);
         verifyResult(blame, 1);
+    }
+
+    private RevCommit createCommit() {
+        return createCommit(TIME);
+    }
+    
+    private RevCommit createCommit(final int commitTime) {
+        String commitData = String.format("tree %040x\n"
+                        + "author Foo Bar <foo@bar.com> %d +0000\n"
+                        + "committer Foo Bar <foo@bar.com> %d +0000\n\n"
+                        + "%s",
+                new Random().nextLong(),
+                commitTime,
+                commitTime,
+                "Commit message");
+        return RevCommit.parse(commitData.getBytes());
     }
 
     private BlameResult createResult(final int size) {
@@ -295,7 +319,7 @@ class GitBlamerTest {
     private void stubResultForIndex(final BlameResult result, final int index) {
         int line = index + 1;
         Mockito.when(result.getSourceAuthor(index)).thenReturn(new PersonIdent(NAME + line, EMAIL + line));
-        RevCommit commit = Mockito.mock(RevCommit.class);
+        RevCommit commit = createCommit();
         Mockito.when(result.getSourceCommit(index)).thenReturn(commit);
     }
 
@@ -303,5 +327,6 @@ class GitBlamerTest {
         assertThat(request.getEmail(line)).isEqualTo(EMAIL + line);
         assertThat(request.getName(line)).isEqualTo(NAME + line);
         assertThat(request.getCommit(line)).isNotBlank().isNotEqualTo(EMPTY); // final getter
+        assertThat(request.getTime(line)).isNotEqualTo(EMPTY_TIME);
     }
 }
