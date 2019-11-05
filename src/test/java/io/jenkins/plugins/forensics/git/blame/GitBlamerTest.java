@@ -2,15 +2,15 @@ package io.jenkins.plugins.forensics.git.blame;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Date;
-import java.util.Random;
 
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.eclipse.jgit.api.errors.NoHeadException;
 import org.eclipse.jgit.blame.BlameResult;
 import org.eclipse.jgit.diff.RawText;
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.ObjectInserter;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.jupiter.api.Test;
@@ -259,7 +259,7 @@ class GitBlamerTest {
         FileBlame blame = blames.getBlame(ABSOLUTE_PATH);
         assertThat(blame.getEmail(1)).isEqualTo(EMPTY);
         assertThat(blame.getName(1)).isEqualTo(EMPTY);
-        assertThat(blame.getCommit(1)).isNotBlank().isNotEqualTo(EMPTY);
+        assertThat(blame.getCommit(1)).isEqualTo(getCommitID());
         assertThat(blame.getTime(1)).isEqualTo(TIME);
     }
 
@@ -272,7 +272,7 @@ class GitBlamerTest {
         BlameCallback callback = createCallback(blames, locations);
 
         BlameResult result = createResult(1);
-        RevCommit commit = createCommit();
+        RevCommit commit = createCommit(TIME + 1);
         Mockito.when(result.getSourceCommit(0)).thenReturn(commit);
         Mockito.when(result.getSourceAuthor(0)).thenReturn(null);
         Mockito.when(result.getSourceCommitter(0)).thenReturn(new PersonIdent(NAME + 1, EMAIL + 1));
@@ -288,16 +288,29 @@ class GitBlamerTest {
         return createCommit(TIME);
     }
 
-    @SuppressFBWarnings(value = "VA_FORMAT_STRING_USES_NEWLINE", justification = "JGit apparently can't parse windows line-endings (\r\n)")
     private RevCommit createCommit(final int commitTime) {
-        String commitData = String.format("tree %040x\n"
+        return RevCommit.parse(getRawCommit(commitTime));
+    }
+
+    private String getCommitID() {
+        return getCommitID(TIME);
+    }
+
+    private String getCommitID(final int commitTime) {
+        try (ObjectInserter.Formatter fmt = new ObjectInserter.Formatter()) {
+            return fmt.idFor(Constants.OBJ_COMMIT, getRawCommit(commitTime)).getName();
+        }
+    }
+
+    @SuppressFBWarnings(value = "VA_FORMAT_STRING_USES_NEWLINE", justification = "JGit apparently can't parse windows line-endings (\r\n)")
+    private byte[] getRawCommit(final int commitTime) {
+        return String.format("tree 216785864a817e2c5d9d5b54881a1f153da52096\n"
                         + "author Foo Bar <foo@bar.com> %d +0000\n"
                         + "committer Foo Bar <foo@bar.com> %d +0000\n\n"
                         + "Commit message",
-                new Random().nextLong(),
                 commitTime,
-                commitTime);
-        return RevCommit.parse(commitData.getBytes());
+                commitTime)
+                .getBytes();
     }
 
     private BlameResult createResult(final int size) {
@@ -322,14 +335,14 @@ class GitBlamerTest {
     private void stubResultForIndex(final BlameResult result, final int index) {
         int line = index + 1;
         Mockito.when(result.getSourceAuthor(index)).thenReturn(new PersonIdent(NAME + line, EMAIL + line));
-        RevCommit commit = createCommit();
+        RevCommit commit = createCommit(TIME + line);
         Mockito.when(result.getSourceCommit(index)).thenReturn(commit);
     }
 
     private void verifyResult(final FileBlame request, final int line) {
         assertThat(request.getEmail(line)).isEqualTo(EMAIL + line);
         assertThat(request.getName(line)).isEqualTo(NAME + line);
-        assertThat(request.getCommit(line)).isNotBlank().isNotEqualTo(EMPTY); // final getter
-        assertThat(request.getTime(line)).isEqualTo(TIME);
+        assertThat(request.getCommit(line)).isEqualTo(getCommitID(TIME + line));
+        assertThat(request.getTime(line)).isEqualTo(TIME + line);
     }
 }
