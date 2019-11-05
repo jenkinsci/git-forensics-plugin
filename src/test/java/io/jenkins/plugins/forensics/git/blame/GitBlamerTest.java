@@ -18,6 +18,8 @@ import org.jvnet.hudson.test.Issue;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import org.jenkinsci.plugins.gitclient.GitClient;
 import hudson.FilePath;
 import hudson.plugins.git.GitException;
@@ -285,11 +287,12 @@ class GitBlamerTest {
     private RevCommit createCommit() {
         return createCommit(TIME);
     }
-    
+
+    @SuppressFBWarnings(value = "VA_FORMAT_STRING_USES_NEWLINE", justification = "JGit apparently can't parse windows line-endings (\r\n)")
     private RevCommit createCommit(final int commitTime) {
-        String commitData = String.format("tree %040x%n"
-                        + "author Foo Bar <foo@bar.com> %d +0000%n"
-                        + "committer Foo Bar <foo@bar.com> %d +0000%n%n"
+        String commitData = String.format("tree %040x\n"
+                        + "author Foo Bar <foo@bar.com> %d +0000\n"
+                        + "committer Foo Bar <foo@bar.com> %d +0000\n\n"
                         + "Commit message",
                 new Random().nextLong(),
                 commitTime,
