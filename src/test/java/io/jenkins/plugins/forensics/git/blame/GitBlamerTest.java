@@ -212,6 +212,7 @@ class GitBlamerTest {
         assertThat(blame.getEmail(3)).isEqualTo(EMPTY);
         assertThat(blame.getName(3)).isEqualTo(EMPTY);
         assertThat(blame.getCommit(3)).isEqualTo(EMPTY);
+        assertThat(blame.getTime(3)).isEqualTo(EMPTY_TIME);
 
         callback.run("otherFile", "otherFile", blameRunner, lastCommitRunner);
         assertThat(blames.getErrorMessages()).contains("- no blame results for file 'otherFile'");
@@ -257,7 +258,7 @@ class GitBlamerTest {
         assertThat(blame.getEmail(1)).isEqualTo(EMPTY);
         assertThat(blame.getName(1)).isEqualTo(EMPTY);
         assertThat(blame.getCommit(1)).isNotBlank().isNotEqualTo(EMPTY);
-        assertThat(blame.getTime(1)).isNotEqualTo(EMPTY_TIME);
+        assertThat(blame.getTime(1)).isEqualTo(TIME);
     }
 
     @Test
@@ -286,14 +287,13 @@ class GitBlamerTest {
     }
     
     private RevCommit createCommit(final int commitTime) {
-        String commitData = String.format("tree %040x\n"
-                        + "author Foo Bar <foo@bar.com> %d +0000\n"
-                        + "committer Foo Bar <foo@bar.com> %d +0000\n\n"
-                        + "%s",
+        String commitData = String.format("tree %040x%n"
+                        + "author Foo Bar <foo@bar.com> %d +0000%n"
+                        + "committer Foo Bar <foo@bar.com> %d +0000%n%n"
+                        + "Commit message",
                 new Random().nextLong(),
                 commitTime,
-                commitTime,
-                "Commit message");
+                commitTime);
         return RevCommit.parse(commitData.getBytes());
     }
 
@@ -327,6 +327,6 @@ class GitBlamerTest {
         assertThat(request.getEmail(line)).isEqualTo(EMAIL + line);
         assertThat(request.getName(line)).isEqualTo(NAME + line);
         assertThat(request.getCommit(line)).isNotBlank().isNotEqualTo(EMPTY); // final getter
-        assertThat(request.getTime(line)).isNotEqualTo(EMPTY_TIME);
+        assertThat(request.getTime(line)).isEqualTo(TIME);
     }
 }
