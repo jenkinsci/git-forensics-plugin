@@ -12,7 +12,7 @@
   <groupId>io.jenkins.plugins</groupId>
   <packaging>hpi</packaging>
   <name>Git Forensics Plugin</name>
-  <version>0.5.1-SNAPSHOT</version>
+  <version>0.6.0-SNAPSHOT</version>
   <description>Jenkins plug-in that mines and analyzes data from a Git repository.</description>
 
   <properties>
