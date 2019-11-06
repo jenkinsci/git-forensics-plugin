@@ -619,7 +619,7 @@
       <url>http://repo.jenkins-ci.org/public/</url>
     </repository>
     <repository>
-      <id>github</id>
+      <id>github-codingstyle</id>
       <name>Apache Maven Packages of Ullrich Hafner's Codingstyle</name>
       <url>https://maven.pkg.github.com/uhafner/codingstyle</url>
     </repository>
