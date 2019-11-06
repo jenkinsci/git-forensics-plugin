@@ -8,13 +8,17 @@ import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.eclipse.jgit.api.errors.NoHeadException;
 import org.eclipse.jgit.blame.BlameResult;
 import org.eclipse.jgit.diff.RawText;
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.ObjectInserter;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import org.jenkinsci.plugins.gitclient.GitClient;
 import hudson.FilePath;
@@ -38,7 +42,9 @@ import static io.jenkins.plugins.forensics.assertions.Assertions.*;
 class GitBlamerTest {
     private static final String EMAIL = "email";
     private static final String NAME = "name";
+    private static final int TIME = 12_345;
     private static final String EMPTY = "-";
+    private static final int EMPTY_TIME = 0;
     private static final String HEAD = "HEAD";
     private static final String WORKSPACE = "/workspace";
     private static final String RELATIVE_PATH = "file.txt";
@@ -89,7 +95,8 @@ class GitBlamerTest {
         assertThat(blames.getErrorMessages()).isEmpty();
     }
 
-    private GitClient createStubbedClientWithException(final Exception exception) throws InterruptedException, IOException {
+    private GitClient createStubbedClientWithException(final Exception exception)
+            throws InterruptedException, IOException {
         GitClient gitClient = Mockito.mock(GitClient.class);
 
         ObjectId id = Mockito.mock(ObjectId.class);
@@ -207,6 +214,7 @@ class GitBlamerTest {
         assertThat(blame.getEmail(3)).isEqualTo(EMPTY);
         assertThat(blame.getName(3)).isEqualTo(EMPTY);
         assertThat(blame.getCommit(3)).isEqualTo(EMPTY);
+        assertThat(blame.getTime(3)).isEqualTo(EMPTY_TIME);
 
         callback.run("otherFile", "otherFile", blameRunner, lastCommitRunner);
         assertThat(blames.getErrorMessages()).contains("- no blame results for file 'otherFile'");
@@ -230,6 +238,7 @@ class GitBlamerTest {
         assertThat(blame.getEmail(1)).isEqualTo(EMAIL);
         assertThat(blame.getName(1)).isEqualTo(NAME);
         assertThat(blame.getCommit(1)).isEqualTo(EMPTY);
+        assertThat(blame.getTime(1)).isEqualTo(EMPTY_TIME);
     }
 
     @Test
@@ -241,7 +250,7 @@ class GitBlamerTest {
         BlameCallback callback = createCallback(blames, locations);
 
         BlameResult result = createResult(1);
-        RevCommit commit = Mockito.mock(RevCommit.class);
+        RevCommit commit = createCommit();
         Mockito.when(result.getSourceCommit(0)).thenReturn(commit);
 
         callback.run(ABSOLUTE_PATH, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner()
@@ -250,7 +259,8 @@ class GitBlamerTest {
         FileBlame blame = blames.getBlame(ABSOLUTE_PATH);
         assertThat(blame.getEmail(1)).isEqualTo(EMPTY);
         assertThat(blame.getName(1)).isEqualTo(EMPTY);
-        assertThat(blame.getCommit(1)).isNotBlank().isNotEqualTo(EMPTY);
+        assertThat(blame.getCommit(1)).isEqualTo(getCommitID());
+        assertThat(blame.getTime(1)).isEqualTo(TIME);
     }
 
     @Test
@@ -262,8 +272,9 @@ class GitBlamerTest {
         BlameCallback callback = createCallback(blames, locations);
 
         BlameResult result = createResult(1);
-        RevCommit commit = Mockito.mock(RevCommit.class);
+        RevCommit commit = createCommit(TIME + 1);
         Mockito.when(result.getSourceCommit(0)).thenReturn(commit);
+        Mockito.when(result.getSourceAuthor(0)).thenReturn(null);
         Mockito.when(result.getSourceCommitter(0)).thenReturn(new PersonIdent(NAME + 1, EMAIL + 1));
 
         callback.run(ABSOLUTE_PATH, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner()
@@ -271,6 +282,35 @@ class GitBlamerTest {
 
         FileBlame blame = blames.getBlame(ABSOLUTE_PATH);
         verifyResult(blame, 1);
+    }
+
+    private RevCommit createCommit() {
+        return createCommit(TIME);
+    }
+
+    private RevCommit createCommit(final int commitTime) {
+        return RevCommit.parse(getRawCommit(commitTime));
+    }
+
+    private String getCommitID() {
+        return getCommitID(TIME);
+    }
+
+    private String getCommitID(final int commitTime) {
+        try (ObjectInserter.Formatter fmt = new ObjectInserter.Formatter()) {
+            return fmt.idFor(Constants.OBJ_COMMIT, getRawCommit(commitTime)).getName();
+        }
+    }
+
+    @SuppressFBWarnings(value = "VA_FORMAT_STRING_USES_NEWLINE", justification = "JGit apparently can't parse windows line-endings (\r\n)")
+    private byte[] getRawCommit(final int commitTime) {
+        return String.format("tree 216785864a817e2c5d9d5b54881a1f153da52096\n"
+                        + "author Foo Bar <foo@bar.com> %d +0000\n"
+                        + "committer Foo Bar <foo@bar.com> %d +0000\n\n"
+                        + "Commit message",
+                commitTime,
+                commitTime)
+                .getBytes();
     }
 
     private BlameResult createResult(final int size) {
@@ -295,13 +335,14 @@ class GitBlamerTest {
     private void stubResultForIndex(final BlameResult result, final int index) {
         int line = index + 1;
         Mockito.when(result.getSourceAuthor(index)).thenReturn(new PersonIdent(NAME + line, EMAIL + line));
-        RevCommit commit = Mockito.mock(RevCommit.class);
+        RevCommit commit = createCommit(TIME + line);
         Mockito.when(result.getSourceCommit(index)).thenReturn(commit);
     }
 
     private void verifyResult(final FileBlame request, final int line) {
         assertThat(request.getEmail(line)).isEqualTo(EMAIL + line);
         assertThat(request.getName(line)).isEqualTo(NAME + line);
-        assertThat(request.getCommit(line)).isNotBlank().isNotEqualTo(EMPTY); // final getter
+        assertThat(request.getCommit(line)).isEqualTo(getCommitID(TIME + line));
+        assertThat(request.getTime(line)).isEqualTo(TIME + line);
     }
 }

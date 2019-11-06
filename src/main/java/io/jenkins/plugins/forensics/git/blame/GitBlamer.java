@@ -208,10 +208,11 @@ class GitBlamer extends Blamer {
             }
             RevCommit commit = blame.getSourceCommit(lineIndex);
             if (commit == null) {
-                blames.logError("- no commit ID found for line %d in file %s", lineIndex, fileName);
+                blames.logError("- no commit ID and time found for line %d in file %s", lineIndex, fileName);
             }
             else {
                 fileBlame.setCommit(line, commit.getName());
+                fileBlame.setTime(line, commit.getCommitTime());
             }
         }
 
