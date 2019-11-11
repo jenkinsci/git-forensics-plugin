@@ -30,11 +30,14 @@
     <module name="JavadocMethod">
       <property name="scope" value="protected"/>
       <property name="allowUndeclaredRTE" value="true"/>
-      <property name="allowMissingPropertyJavadoc" value="true"/>
       <property name="suppressLoadErrors" value="true"/>
+    </module>
+    <module name="MissingJavadocMethodCheck">
+      <property name="allowMissingPropertyJavadoc" value="true"/>
     </module>
     <module name="JavadocVariable">
       <property name="scope" value="protected"/>
+      <property name="tokens" value="VARIABLE_DEF"/>
     </module>
     <module name="JavadocStyle">
       <property name="severity" value="warning"/>
