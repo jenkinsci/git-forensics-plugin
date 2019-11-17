@@ -20,17 +20,16 @@ import io.jenkins.plugins.forensics.util.FilteredLog;
  */
 @Extension
 public class GitMinerFactory extends MinerFactory {
-    static final String INFO_MINER_CREATED = "Invoking GitMiner to creates statistics for all available repository files.";
-
     @Override
     public Optional<RepositoryMiner> createMiner(final SCM scm, final Run<?, ?> build, final FilePath workTree,
             final TaskListener listener, final FilteredLog logger) {
         GitRepositoryValidator validator = new GitRepositoryValidator(scm, build, workTree, listener, logger);
         if (validator.isGitRepository()) {
-            logger.logInfo(INFO_MINER_CREATED);
+            logger.logInfo("-> Git miner successfully created in working tree '%s'", workTree);
 
             return Optional.of(new GitRepositoryMiner(validator.createClient()));
         }
+        logger.logInfo("-> Git miner could not be created for SCM '%s' in working tree '%s'", scm, workTree);
         return Optional.empty();
     }
 }
