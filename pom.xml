@@ -14,6 +14,7 @@
   <name>Git Forensics Plugin</name>
   <version>0.6.1-SNAPSHOT</version>
   <description>Jenkins plug-in that mines and analyzes data from a Git repository.</description>
+  <url>https://github.com/jenkinsci/git-forensics-plugin</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
