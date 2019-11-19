@@ -20,17 +20,16 @@ import io.jenkins.plugins.forensics.util.FilteredLog;
  */
 @Extension
 public class GitBlamerFactory extends BlamerFactory {
-    static final String INFO_BLAMER_CREATED = "Invoking GitBlamer to obtain SCM blame information for affected files";
-
     @Override
     public Optional<Blamer> createBlamer(final SCM scm, final Run<?, ?> build,
             final FilePath workTree, final TaskListener listener, final FilteredLog logger) {
         GitRepositoryValidator validator = new GitRepositoryValidator(scm, build, workTree, listener, logger);
         if (validator.isGitRepository()) {
-            logger.logInfo(INFO_BLAMER_CREATED);
+            logger.logInfo("-> Git blamer successfully created in working tree '%s'", workTree);
 
             return Optional.of(new GitBlamer(validator.createClient(), validator.getHead()));
         }
+        logger.logInfo("-> Git blamer could not be created for SCM '%s' in working tree '%s'", scm, workTree);
         return Optional.empty();
     }
 }

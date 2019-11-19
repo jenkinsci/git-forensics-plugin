@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>3.51</version>
+    <version>3.53</version>
     <relativePath />
   </parent>
 
@@ -12,8 +12,9 @@
   <groupId>io.jenkins.plugins</groupId>
   <packaging>hpi</packaging>
   <name>Git Forensics Plugin</name>
-  <version>0.6.0-SNAPSHOT</version>
+  <version>0.6.1-SNAPSHOT</version>
   <description>Jenkins plug-in that mines and analyzes data from a Git repository.</description>
+  <url>https://github.com/jenkinsci/git-forensics-plugin</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -33,7 +34,7 @@
     <eclipse-collections.version>9.2.0</eclipse-collections.version>
 
     <!-- Jenkins Plugin Dependencies Versions -->
-    <forensics-api-plugin.version>0.6.0</forensics-api-plugin.version>
+    <forensics-api-plugin.version>0.6.1</forensics-api-plugin.version>
     <git-plugin.version>3.9.1</git-plugin.version>
 
     <!-- Test Library Dependencies Versions -->

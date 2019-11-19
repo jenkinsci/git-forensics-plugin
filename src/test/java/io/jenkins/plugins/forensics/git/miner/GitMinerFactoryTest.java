@@ -69,7 +69,7 @@ class GitMinerFactoryTest {
 
         assertThat(blamer).isNotEmpty().containsInstanceOf(GitRepositoryMiner.class);
         assertThat(logger).hasNoErrorMessages();
-        assertThat(logger).hasInfoMessages(GitMinerFactory.INFO_MINER_CREATED);
+        assertThat(logger).hasInfoMessages("-> Git miner successfully created in working tree 'null'");
     }
 
     @Test

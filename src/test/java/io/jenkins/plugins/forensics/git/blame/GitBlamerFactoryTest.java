@@ -72,7 +72,7 @@ class GitBlamerFactoryTest {
 
         assertThat(blamer).isNotEmpty().containsInstanceOf(GitBlamer.class);
         assertThat(logger).hasNoErrorMessages();
-        assertThat(logger).hasInfoMessages(GitBlamerFactory.INFO_BLAMER_CREATED);
+        assertThat(logger).hasInfoMessages("-> Git blamer successfully created in working tree '/'");
     }
 
     private FilePath createWorkTreeStub() {
