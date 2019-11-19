@@ -22,7 +22,7 @@
     <jenkins-test-harness.version>2.49</jenkins-test-harness.version>
     <spotbugs.failOnError>false</spotbugs.failOnError>
     <slf4j.version>1.7.29</slf4j.version>
-    <codingstyle.version>0.2.4</codingstyle.version>
+    <codingstyle.version>0.2.7</codingstyle.version>
 
     <module.name>${project.groupId}.git.forensics</module.name>
 
@@ -617,11 +617,6 @@
     <repository>
       <id>repo.jenkins-ci.org</id>
       <url>http://repo.jenkins-ci.org/public/</url>
-    </repository>
-    <repository>
-      <id>github-codingstyle</id>
-      <name>Apache Maven Packages of Ullrich Hafner's Codingstyle</name>
-      <url>https://maven.pkg.github.com/uhafner/codingstyle</url>
     </repository>
   </repositories>
 
