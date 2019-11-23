@@ -53,7 +53,6 @@
     <jacoco-maven-plugin.version>0.8.5</jacoco-maven-plugin.version>
     <maven-surefire.plugin>3.0.0-M4</maven-surefire.plugin>
     <maven-failsafe.plugin>3.0.0-M4</maven-failsafe.plugin>
-    <jar.maven.plugin>3.0.2</jar.maven.plugin>
     <versions-maven-plugin.version>2.7</versions-maven-plugin.version>
     <depgraph-maven-plugin.version>3.3.0</depgraph-maven-plugin.version>
     <animal-sniffer-maven-plugin.version>1.18</animal-sniffer-maven-plugin.version>
