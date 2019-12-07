@@ -23,7 +23,7 @@
     <jenkins-test-harness.version>2.49</jenkins-test-harness.version>
     <spotbugs.failOnError>false</spotbugs.failOnError>
     <slf4j.version>1.7.29</slf4j.version>
-    <codingstyle.version>0.2.7</codingstyle.version>
+    <codingstyle.version>0.3.0</codingstyle.version>
 
     <module.name>${project.groupId}.git.forensics</module.name>
 
@@ -34,7 +34,8 @@
     <eclipse-collections.version>9.2.0</eclipse-collections.version>
 
     <!-- Jenkins Plugin Dependencies Versions -->
-    <forensics-api-plugin.version>0.6.1</forensics-api-plugin.version>
+    <plugin-util-api.version>0.1.0-beta1-rc10.5177988a84e6</plugin-util-api.version>
+    <forensics-api-plugin.version>0.6.2-rc264.1e3082f9c320</forensics-api-plugin.version>
     <git-plugin.version>3.9.1</git-plugin.version>
 
     <!-- Test Library Dependencies Versions -->
@@ -166,6 +167,12 @@
       <artifactId>forensics-api</artifactId>
       <version>${forensics-api-plugin.version}</version>
     </dependency>
+    <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>plugin-util-api</artifactId>
+      <version>${plugin-util-api.version}</version>
+    </dependency>
+
 
     <!-- Test Dependencies -->
     <dependency>
@@ -240,6 +247,21 @@
           <groupId>org.junit.platform</groupId>
         </exclusion>
       </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>plugin-util-api</artifactId>
+      <version>${plugin-util-api.version}</version>
+      <scope>test</scope>
+      <type>test-jar</type>
+    </dependency>
+    <dependency>
+      <groupId>edu.hm.hafner</groupId>
+      <artifactId>codingstyle</artifactId>
+      <version>${codingstyle.version}</version>
+      <scope>test</scope>
+      <type>test-jar</type>
     </dependency>
 
     <!-- GitSampleRepoRule -->

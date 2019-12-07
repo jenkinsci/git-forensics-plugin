@@ -1,7 +1,10 @@
 package io.jenkins.plugins.forensics.git.blame;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
+
+import edu.hm.hafner.util.FilteredLog;
 
 import io.jenkins.plugins.forensics.blame.Blames;
 import io.jenkins.plugins.forensics.blame.FileBlame;
@@ -16,6 +19,8 @@ import static io.jenkins.plugins.forensics.assertions.Assertions.*;
  * @author Ullrich Hafner
  */
 public class GitBlamerITest extends GitITest {
+    private final FilteredLog log = new FilteredLog(StringUtils.EMPTY);
+
     /**
      * Verifies that the blames are empty if there are no requests defined.
      */
@@ -23,7 +28,7 @@ public class GitBlamerITest extends GitITest {
     public void shouldCreateEmptyBlamesIfRequestIsEmpty() {
         GitBlamer gitBlamer = createBlamer();
 
-        Blames blames = gitBlamer.blame(new FileLocations());
+        Blames blames = gitBlamer.blame(new FileLocations(), log);
 
         assertThat(blames).isEmpty();
     }
@@ -44,11 +49,11 @@ public class GitBlamerITest extends GitITest {
 
         GitBlamer gitBlamer = createBlamer();
 
-        Blames blames = gitBlamer.blame(locations);
+        Blames blames = gitBlamer.blame(locations, log);
 
         assertThat(blames).hasOnlyFiles(absolutePath);
-        assertThat(blames).hasNoErrorMessages();
-        assertThat(blames).hasInfoMessages("-> blamed authors of issues in 1 files");
+        assertThat(log.getErrorMessages()).isEmpty();
+        assertThat(log.getInfoMessages()).contains("-> blamed authors of issues in 1 files");
 
         FileBlame request = blames.getBlame(absolutePath);
         assertThat(request).hasFileName(absolutePath);
@@ -74,11 +79,11 @@ public class GitBlamerITest extends GitITest {
 
         GitBlamer gitBlamer = createBlamer();
 
-        Blames blames = gitBlamer.blame(locations);
+        Blames blames = gitBlamer.blame(locations, log);
 
         assertThat(blames).hasOnlyFiles(absolutePath);
-        assertThat(blames).hasNoErrorMessages();
-        assertThat(blames).hasInfoMessages("-> blamed authors of issues in 1 files");
+        assertThat(log.getErrorMessages()).isEmpty();
+        assertThat(log.getInfoMessages()).contains("-> blamed authors of issues in 1 files");
 
         FileBlame request = blames.getBlame(absolutePath);
         assertThat(request).hasFileName(absolutePath);

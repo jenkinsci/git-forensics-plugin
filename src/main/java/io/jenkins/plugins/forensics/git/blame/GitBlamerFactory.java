@@ -2,6 +2,8 @@ package io.jenkins.plugins.forensics.git.blame;
 
 import java.util.Optional;
 
+import edu.hm.hafner.util.FilteredLog;
+
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.model.Run;
@@ -11,7 +13,6 @@ import hudson.scm.SCM;
 import io.jenkins.plugins.forensics.blame.Blamer;
 import io.jenkins.plugins.forensics.blame.BlamerFactory;
 import io.jenkins.plugins.forensics.git.util.GitRepositoryValidator;
-import io.jenkins.plugins.forensics.util.FilteredLog;
 
 /**
  * A {@link BlamerFactory} for Git. Handles Git repositories that do not have option ShallowClone set.

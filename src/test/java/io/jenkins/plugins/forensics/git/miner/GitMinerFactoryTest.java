@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
+import edu.hm.hafner.util.FilteredLog;
+
 import org.jenkinsci.plugins.gitclient.GitClient;
 import hudson.EnvVars;
 import hudson.model.Run;
@@ -24,7 +26,6 @@ import hudson.util.DescribableList;
 
 import io.jenkins.plugins.forensics.git.util.GitRepositoryValidator;
 import io.jenkins.plugins.forensics.miner.RepositoryMiner;
-import io.jenkins.plugins.forensics.util.FilteredLog;
 
 import static io.jenkins.plugins.forensics.assertions.Assertions.*;
 
@@ -43,8 +44,8 @@ class GitMinerFactoryTest {
         GitMinerFactory factory = new GitMinerFactory();
         assertThat(factory.createMiner(new NullSCM(), null, null, NULL_LISTENER, logger)).isEmpty();
 
-        assertThat(logger).hasNoErrorMessages();
-        assertThat(logger).hasInfoMessages("SCM 'hudson.scm.NullSCM' is not of type GitSCM");
+        assertThat(logger.getErrorMessages()).isEmpty();
+        assertThat(logger.getInfoMessages()).contains("SCM 'hudson.scm.NullSCM' is not of type GitSCM");
     }
 
     @Test
@@ -68,8 +69,8 @@ class GitMinerFactoryTest {
         Optional<RepositoryMiner> blamer = factory.createMiner(gitSCM, run, null, NULL_LISTENER, logger);
 
         assertThat(blamer).isNotEmpty().containsInstanceOf(GitRepositoryMiner.class);
-        assertThat(logger).hasNoErrorMessages();
-        assertThat(logger).hasInfoMessages("-> Git miner successfully created in working tree 'null'");
+        assertThat(logger.getErrorMessages()).isEmpty();
+        assertThat(logger.getInfoMessages()).contains("-> Git miner successfully created in working tree 'null'");
     }
 
     @Test
@@ -85,8 +86,8 @@ class GitMinerFactoryTest {
         GitMinerFactory gitChecker = new GitMinerFactory();
 
         assertThat(gitChecker.createMiner(gitSCM, Mockito.mock(Run.class), null, NULL_LISTENER, logger)).isEmpty();
-        assertThat(logger).hasInfoMessages(GitRepositoryValidator.INFO_SHALLOW_CLONE);
-        assertThat(logger).hasNoErrorMessages();
+        assertThat(logger.getInfoMessages()).contains(GitRepositoryValidator.INFO_SHALLOW_CLONE);
+        assertThat(logger.getErrorMessages()).isEmpty();
     }
 
     @Test
@@ -101,8 +102,8 @@ class GitMinerFactoryTest {
         FilteredLog logger = createLogger();
 
         assertThat(gitChecker.createMiner(gitSCM, run, null, NULL_LISTENER, logger)).isEmpty();
-        assertThat(logger).hasNoErrorMessages();
-        assertThat(logger).hasInfoMessages("Exception while creating a GitClient instance for work tree 'null'");
+        assertThat(logger.getErrorMessages()).isEmpty();
+        assertThat(logger.getInfoMessages()).contains("Exception while creating a GitClient instance for work tree 'null'");
     }
 
     private FilteredLog createLogger() {

@@ -3,6 +3,7 @@ package io.jenkins.plugins.forensics.git.blame;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.eclipse.jgit.api.errors.NoHeadException;
@@ -18,6 +19,7 @@ import org.jvnet.hudson.test.Issue;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
+import edu.hm.hafner.util.FilteredLog;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -49,15 +51,16 @@ class GitBlamerTest {
     private static final String WORKSPACE = "/workspace";
     private static final String RELATIVE_PATH = "file.txt";
     private static final String ABSOLUTE_PATH = WORKSPACE + "/" + RELATIVE_PATH;
-
+    
     @Test
     void shouldAbortIfHeadCommitIsMissing() {
         GitBlamer blamer = new GitBlamer(createGitClient(), HEAD);
 
-        Blames blames = blamer.blame(new FileLocations());
+        FilteredLog log = new FilteredLog(StringUtils.EMPTY);
+        Blames blames = blamer.blame(new FileLocations(), log);
 
         assertThat(blames).isEmpty();
-        assertThat(blames.getErrorMessages()).contains(GitBlamer.NO_HEAD_ERROR);
+        assertThat(log.getErrorMessages()).contains(GitBlamer.NO_HEAD_ERROR);
     }
 
     @Test
@@ -67,10 +70,11 @@ class GitBlamerTest {
 
         GitBlamer blamer = new GitBlamer(gitClient, HEAD);
 
-        Blames blames = blamer.blame(new FileLocations());
+        FilteredLog log = new FilteredLog(StringUtils.EMPTY);
+        Blames blames = blamer.blame(new FileLocations(), log);
 
         assertThat(blames.isEmpty()).isTrue();
-        assertThat(blames.getErrorMessages()).contains(GitBlamer.NO_HEAD_ERROR);
+        assertThat(log.getErrorMessages()).contains(GitBlamer.NO_HEAD_ERROR);
     }
 
     @Test
@@ -78,10 +82,11 @@ class GitBlamerTest {
         GitClient gitClient = createStubbedClientWithException(new IOException());
 
         GitBlamer blamer = new GitBlamer(gitClient, HEAD);
-        Blames blames = blamer.blame(new FileLocations());
+        FilteredLog log = new FilteredLog(StringUtils.EMPTY);
+        Blames blames = blamer.blame(new FileLocations(), log);
 
         assertThat(blames.isEmpty()).isTrue();
-        assertThat(blames.getErrorMessages()).contains(GitBlamer.BLAME_ERROR);
+        assertThat(log.getErrorMessages()).contains(GitBlamer.BLAME_ERROR);
     }
 
     @Test
@@ -89,10 +94,11 @@ class GitBlamerTest {
         GitClient gitClient = createStubbedClientWithException(new InterruptedException());
 
         GitBlamer blamer = new GitBlamer(gitClient, HEAD);
-        Blames blames = blamer.blame(new FileLocations());
+        FilteredLog log = new FilteredLog(StringUtils.EMPTY);
+        Blames blames = blamer.blame(new FileLocations(), log);
 
         assertThat(blames.isEmpty()).isTrue();
-        assertThat(blames.getErrorMessages()).isEmpty();
+        assertThat(log.getErrorMessages()).isEmpty();
     }
 
     private GitClient createStubbedClientWithException(final Exception exception)
@@ -124,16 +130,17 @@ class GitBlamerTest {
     private void verifyExceptionHandling(final Class<? extends Exception> exception) throws GitAPIException {
         Blames blames = new Blames();
         FileLocations blamerInput = new FileLocations();
-        BlameCallback callback = createCallback(blames, blamerInput);
+        FilteredLog log = new FilteredLog(StringUtils.EMPTY);
+        BlameCallback callback = createCallback(blames, blamerInput, log);
 
         BlameRunner runner = Mockito.mock(BlameRunner.class);
         Mockito.when(runner.run(RELATIVE_PATH)).thenThrow(exception);
         callback.run(ABSOLUTE_PATH, RELATIVE_PATH, runner, createLastCommitRunner());
 
-        assertThat(blames.getErrorMessages()).hasSize(3);
-        assertThat(blames.getErrorMessages().get(1)).startsWith(
+        assertThat(log.getErrorMessages()).hasSize(3);
+        assertThat(log.getErrorMessages().get(1)).startsWith(
                 "- error running git blame on '" + ABSOLUTE_PATH + "' with revision");
-        assertThat(blames.getErrorMessages().get(2)).startsWith(exception.getName());
+        assertThat(log.getErrorMessages().get(2)).startsWith(exception.getName());
     }
 
     @Test
@@ -142,14 +149,14 @@ class GitBlamerTest {
         locations.addLine(ABSOLUTE_PATH, 1);
 
         Blames blames = new Blames();
-        BlameCallback callback = createCallback(blames, locations);
+        FilteredLog log = new FilteredLog(StringUtils.EMPTY);
+        BlameCallback callback = createCallback(blames, locations, log);
 
         BlameResult result = createResult(1);
 
         stubResultForIndex(result, 0);
 
-        callback.run(ABSOLUTE_PATH, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner()
-        );
+        callback.run(ABSOLUTE_PATH, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner());
 
         verifyResult(blames.getBlame(ABSOLUTE_PATH), 1);
     }
@@ -165,15 +172,15 @@ class GitBlamerTest {
         locations.addLine(ABSOLUTE_PATH, 2);
 
         Blames blames = new Blames();
-        BlameCallback callback = createCallback(blames, locations);
+        FilteredLog log = new FilteredLog(StringUtils.EMPTY);
+        BlameCallback callback = createCallback(blames, locations, log);
 
         BlameResult result = createResult(2);
 
         stubResultForIndex(result, 0);
         stubResultForIndex(result, 1);
 
-        callback.run(ABSOLUTE_PATH, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner()
-        );
+        callback.run(ABSOLUTE_PATH, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner());
 
         assertThat(blames.contains(ABSOLUTE_PATH)).isTrue();
         FileBlame blame = blames.getBlame(ABSOLUTE_PATH);
@@ -187,8 +194,8 @@ class GitBlamerTest {
         return gitClient;
     }
 
-    private BlameCallback createCallback(final Blames blames, final FileLocations blamerInput) {
-        return new BlameCallback(blamerInput, blames, Mockito.mock(ObjectId.class));
+    private BlameCallback createCallback(final Blames blames, final FileLocations blamerInput, final FilteredLog log) {
+        return new BlameCallback(blamerInput, blames, Mockito.mock(ObjectId.class), log);
     }
 
     @Test
@@ -198,7 +205,8 @@ class GitBlamerTest {
         locations.addLine(ABSOLUTE_PATH, 2);
 
         Blames blames = new Blames();
-        BlameCallback callback = createCallback(blames, locations);
+        FilteredLog log = new FilteredLog(StringUtils.EMPTY);
+        BlameCallback callback = createCallback(blames, locations, log);
 
         BlameResult result = createResult(1);
         stubResultForIndex(result, 0);
@@ -217,7 +225,7 @@ class GitBlamerTest {
         assertThat(blame.getTime(3)).isEqualTo(EMPTY_TIME);
 
         callback.run("otherFile", "otherFile", blameRunner, lastCommitRunner);
-        assertThat(blames.getErrorMessages()).contains("- no blame results for file 'otherFile'");
+        assertThat(log.getErrorMessages()).contains("- no blame results for file 'otherFile'");
     }
 
     @Test
@@ -226,13 +234,13 @@ class GitBlamerTest {
         locations.addLine(ABSOLUTE_PATH, 1);
 
         Blames blames = new Blames();
-        BlameCallback callback = createCallback(blames, locations);
+        FilteredLog log = new FilteredLog(StringUtils.EMPTY);
+        BlameCallback callback = createCallback(blames, locations, log);
 
         BlameResult result = createResult(1);
         Mockito.when(result.getSourceAuthor(0)).thenReturn(new PersonIdent(NAME, EMAIL));
 
-        callback.run(ABSOLUTE_PATH, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner()
-        );
+        callback.run(ABSOLUTE_PATH, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner());
 
         FileBlame blame = blames.getBlame(ABSOLUTE_PATH);
         assertThat(blame.getEmail(1)).isEqualTo(EMAIL);
@@ -247,14 +255,14 @@ class GitBlamerTest {
         locations.addLine(ABSOLUTE_PATH, 1);
 
         Blames blames = new Blames();
-        BlameCallback callback = createCallback(blames, locations);
+        FilteredLog log = new FilteredLog(StringUtils.EMPTY);
+        BlameCallback callback = createCallback(blames, locations, log);
 
         BlameResult result = createResult(1);
         RevCommit commit = createCommit();
         Mockito.when(result.getSourceCommit(0)).thenReturn(commit);
 
-        callback.run(ABSOLUTE_PATH, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner()
-        );
+        callback.run(ABSOLUTE_PATH, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner());
 
         FileBlame blame = blames.getBlame(ABSOLUTE_PATH);
         assertThat(blame.getEmail(1)).isEqualTo(EMPTY);
@@ -269,7 +277,8 @@ class GitBlamerTest {
         locations.addLine(ABSOLUTE_PATH, 1);
 
         Blames blames = new Blames();
-        BlameCallback callback = createCallback(blames, locations);
+        FilteredLog log = new FilteredLog(StringUtils.EMPTY);
+        BlameCallback callback = createCallback(blames, locations, log);
 
         BlameResult result = createResult(1);
         RevCommit commit = createCommit(TIME + 1);
@@ -277,8 +286,7 @@ class GitBlamerTest {
         Mockito.when(result.getSourceAuthor(0)).thenReturn(null);
         Mockito.when(result.getSourceCommitter(0)).thenReturn(new PersonIdent(NAME + 1, EMAIL + 1));
 
-        callback.run(ABSOLUTE_PATH, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner()
-        );
+        callback.run(ABSOLUTE_PATH, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner());
 
         FileBlame blame = blames.getBlame(ABSOLUTE_PATH);
         verifyResult(blame, 1);

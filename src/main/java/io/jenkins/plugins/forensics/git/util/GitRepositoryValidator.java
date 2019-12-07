@@ -4,6 +4,8 @@ import java.io.IOException;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import edu.hm.hafner.util.FilteredLog;
+
 import org.jenkinsci.plugins.gitclient.GitClient;
 import hudson.EnvVars;
 import hudson.FilePath;
@@ -13,8 +15,6 @@ import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.impl.CloneOption;
 import hudson.scm.SCM;
-
-import io.jenkins.plugins.forensics.util.FilteredLog;
 
 /**
  * Inspects a given working tree and determines if this path is a valid Git repository that can be used to run one of
