@@ -15,6 +15,7 @@ import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 
+import edu.hm.hafner.util.FilteredLog;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -46,18 +47,19 @@ public class GitRepositoryMiner extends RepositoryMiner {
     }
 
     @Override
-    public RepositoryStatistics mine(final Collection<String> absoluteFileNames) throws InterruptedException {
+    public RepositoryStatistics mine(final Collection<String> absoluteFileNames, final FilteredLog logger)
+            throws InterruptedException {
         try {
             long nano = System.nanoTime();
             RepositoryStatistics statistics = gitClient.withRepository(
-                    new RepositoryStatisticsCallback(absoluteFileNames));
-            statistics.logInfo("Mining of the Git repository took %d seconds",
+                    new RepositoryStatisticsCallback(absoluteFileNames, logger));
+            logger.logInfo("Mining of the Git repository took %d seconds",
                     1 + (System.nanoTime() - nano) / 1_000_000_000L);
             return statistics;
         }
         catch (IOException exception) {
             RepositoryStatistics statistics = new RepositoryStatistics();
-            statistics.logException(exception, "Exception occurred while mining the Git repository using GitClient");
+            logger.logException(exception, "Exception occurred while mining the Git repository using GitClient");
             return statistics;
         }
     }
@@ -66,11 +68,13 @@ public class GitRepositoryMiner extends RepositoryMiner {
         private static final long serialVersionUID = 7667073858514128136L;
 
         private final Collection<String> paths;
+        private final FilteredLog logger;
 
-        RepositoryStatisticsCallback(final Collection<String> paths) {
+        RepositoryStatisticsCallback(final Collection<String> paths, final FilteredLog logger) {
             super();
 
             this.paths = paths;
+            this.logger = logger;
         }
 
         @Override
@@ -80,7 +84,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
                     ObjectId head = repository.resolve(Constants.HEAD);
                     if (head == null) {
                         RepositoryStatistics statistics = new RepositoryStatistics();
-                        statistics.logError("Can't obtain HEAD of repository.");
+                        logger.logError("Can't obtain HEAD of repository.");
                         return statistics;
                     }
                     Set<String> files = new FilesCollector(repository).findAllFor(head);
@@ -90,7 +94,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
             }
             catch (IOException exception) {
                 RepositoryStatistics statistics = new RepositoryStatistics();
-                statistics.logException(exception, "Can't obtain HEAD of repository.");
+                logger.logException(exception, "Can't obtain HEAD of repository.");
                 return statistics;
             }
             finally {
@@ -100,15 +104,15 @@ public class GitRepositoryMiner extends RepositoryMiner {
 
         RepositoryStatistics analyze(final Repository repository, final Collection<String> files) {
             RepositoryStatistics statistics = new RepositoryStatistics();
-            statistics.logInfo("Invoking Git miner to create statistics for all available files");
-            statistics.logInfo("Git working tree = '%s'", getWorkTree(repository));
+            logger.logInfo("Invoking Git miner to create statistics for all available files");
+            logger.logInfo("Git working tree = '%s'", getWorkTree(repository));
 
             List<FileStatistics> fileStatistics = files.stream()
                     .map(file -> analyzeHistory(repository, file, statistics))
                     .collect(Collectors.toList());
             statistics.addAll(fileStatistics);
 
-            statistics.logInfo("-> created statistics for %d files", statistics.size());
+            logger.logInfo("-> created statistics for %d files", statistics.size());
 
             return statistics;
         }
@@ -123,7 +127,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
                 return fileStatistics;
             }
             catch (GitAPIException exception) {
-                statistics.logException(exception, "Can't analyze history of file %s", fileName);
+                logger.logException(exception, "Can't analyze history of file %s", fileName);
             }
             return fileStatistics;
         }
