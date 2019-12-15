@@ -36,7 +36,8 @@
     <eclipse-collections.version>9.2.0</eclipse-collections.version>
 
     <!-- Jenkins Plugin Dependencies Versions -->
-    <plugin-util-api.version>0.1.0-beta1</plugin-util-api.version>
+    <plugin-util-api.version>0.1.0-beta2</plugin-util-api.version>
+    <data-tables-api.version>1.10.20-4-beta1</data-tables-api.version>
     <forensics-api-plugin.version>0.7.0-beta2</forensics-api-plugin.version>
     <git-plugin.version>4.0.0</git-plugin.version>
     <scm-api.version>2.6.3</scm-api.version>
@@ -256,6 +257,13 @@
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>plugin-util-api</artifactId>
       <version>${plugin-util-api.version}</version>
+      <scope>test</scope>
+      <type>test-jar</type>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>data-tables-api</artifactId>
+      <version>${data-tables-api.version}</version>
       <scope>test</scope>
       <type>test-jar</type>
     </dependency>
