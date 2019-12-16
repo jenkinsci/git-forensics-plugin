@@ -30,15 +30,13 @@ public class GitMinerStepITest extends GitITest {
     
     /** Verifies that the table contains two rows with the correct statistics. */
     @Test
-    public void shouldFillTableDynamically() throws IOException {
+    public void shouldFillTableDynamically() {
         writeFileAsAuthorFoo("First");
         writeFileAsAuthorBar("Second");
         writeFileAsAuthorFoo("First");
         writeFileAsAuthorBar("Second");
 
-        FreeStyleProject job = createFreeStyleProject();
-        job.setScm(new GitSCM(getRepositoryRoot()));
-        job.getPublishersList().add(new RepositoryMinerStep());
+        FreeStyleProject job = createJobWithMiner();
 
         Run<?, ?> build = buildSuccessfully(job);
 
@@ -53,5 +51,17 @@ public class GitMinerStepITest extends GitITest {
         assertThat(table.getRow(1).getValuesByColumnLabel())
                 .contains(entry(FILE, "source.txt"), entry(AUTHORS, "2"), entry(COMMITS, "4"))
                 .containsKeys(LAST_COMMIT, ADDED); // value depends on the runtime and cannot be verified
+    }
+
+    private FreeStyleProject createJobWithMiner() {
+        try {
+            FreeStyleProject job = createFreeStyleProject();
+            job.setScm(new GitSCM(getRepositoryRoot()));
+            job.getPublishersList().add(new RepositoryMinerStep());
+            return job;
+        }
+        catch (IOException exception) {
+            throw new AssertionError(exception);
+        }
     }
 }
