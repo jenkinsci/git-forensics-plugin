@@ -25,7 +25,7 @@
     <jenkins-test-harness.version>2.49</jenkins-test-harness.version>
     <spotbugs.failOnError>false</spotbugs.failOnError>
     <slf4j.version>1.7.29</slf4j.version>
-    <codingstyle.version>0.3.0</codingstyle.version>
+    <codingstyle.version>0.3.1</codingstyle.version>
 
     <module.name>${project.groupId}.git.forensics</module.name>
 
