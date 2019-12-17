@@ -41,7 +41,7 @@ import static io.jenkins.plugins.forensics.assertions.Assertions.*;
  *
  * @author Ullrich Hafner
  */
-@SuppressWarnings("checkstyle:ClassDataAbstractionCoupling")
+@SuppressWarnings({"checkstyle:ClassDataAbstractionCoupling", "PMD.ExcessiveImports"})
 class GitBlamerTest {
     private static final String EMAIL = "email";
     private static final String NAME = "name";

@@ -108,7 +108,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
             logger.logInfo("Git working tree = '%s'", getWorkTree(repository));
 
             List<FileStatistics> fileStatistics = files.stream()
-                    .map(file -> analyzeHistory(repository, file, statistics))
+                    .map(file -> analyzeHistory(repository, file))
                     .collect(Collectors.toList());
             statistics.addAll(fileStatistics);
 
@@ -117,8 +117,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
             return statistics;
         }
 
-        private FileStatistics analyzeHistory(final Repository repository, final String fileName,
-                final RepositoryStatistics statistics) {
+        private FileStatistics analyzeHistory(final Repository repository, final String fileName) {
             FileStatistics fileStatistics = new FileStatistics(fileName);
 
             try (Git git = new Git(repository)) {
