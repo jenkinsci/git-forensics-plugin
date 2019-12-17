@@ -24,6 +24,7 @@ import hudson.remoting.VirtualChannel;
 
 import io.jenkins.plugins.forensics.git.util.AbstractRepositoryCallback;
 import io.jenkins.plugins.forensics.miner.FileStatistics;
+import io.jenkins.plugins.forensics.miner.FileStatistics.FileStatisticsBuilder;
 import io.jenkins.plugins.forensics.miner.RepositoryMiner;
 import io.jenkins.plugins.forensics.miner.RepositoryStatistics;
 
@@ -107,7 +108,9 @@ public class GitRepositoryMiner extends RepositoryMiner {
             logger.logInfo("Invoking Git miner to create statistics for all available files");
             logger.logInfo("Git working tree = '%s'", getWorkTree(repository));
 
+            FileStatisticsBuilder builder = new FileStatisticsBuilder();
             List<FileStatistics> fileStatistics = files.stream()
+                    .map(builder::build)
                     .map(file -> analyzeHistory(repository, file))
                     .collect(Collectors.toList());
             statistics.addAll(fileStatistics);
@@ -117,16 +120,14 @@ public class GitRepositoryMiner extends RepositoryMiner {
             return statistics;
         }
 
-        private FileStatistics analyzeHistory(final Repository repository, final String fileName) {
-            FileStatistics fileStatistics = new FileStatistics(fileName);
-
+        private FileStatistics analyzeHistory(final Repository repository, final FileStatistics fileStatistics) {
             try (Git git = new Git(repository)) {
-                Iterable<RevCommit> commits = git.log().addPath(getRelativePath(repository, fileName)).call();
+                Iterable<RevCommit> commits = git.log().addPath(getRelativePath(repository, fileStatistics.getFileName())).call();
                 commits.forEach(c -> fileStatistics.inspectCommit(c.getCommitTime(), getAuthor(c)));
                 return fileStatistics;
             }
             catch (GitAPIException exception) {
-                logger.logException(exception, "Can't analyze history of file %s", fileName);
+                logger.logException(exception, "Can't analyze history of file %s", fileStatistics.getFileName());
             }
             return fileStatistics;
         }

@@ -29,6 +29,7 @@ import hudson.remoting.VirtualChannel;
 
 import io.jenkins.plugins.forensics.blame.Blames;
 import io.jenkins.plugins.forensics.blame.FileBlame;
+import io.jenkins.plugins.forensics.blame.FileBlame.FileBlameBuilder;
 import io.jenkins.plugins.forensics.blame.FileLocations;
 import io.jenkins.plugins.forensics.git.blame.GitBlamer.BlameCallback;
 import io.jenkins.plugins.forensics.git.blame.GitBlamer.BlameRunner;
@@ -41,7 +42,7 @@ import static io.jenkins.plugins.forensics.assertions.Assertions.*;
  *
  * @author Ullrich Hafner
  */
-@SuppressWarnings({"checkstyle:ClassDataAbstractionCoupling", "PMD.ExcessiveImports"})
+@SuppressWarnings({"checkstyle:ClassDataAbstractionCoupling", "PMD.ExcessiveImports", "checkstyle:ClassFanOutComplexity"})
 class GitBlamerTest {
     private static final String EMAIL = "email";
     private static final String NAME = "name";
@@ -52,7 +53,8 @@ class GitBlamerTest {
     private static final String WORKSPACE = "/workspace";
     private static final String RELATIVE_PATH = "file.txt";
     private static final String ABSOLUTE_PATH = WORKSPACE + "/" + RELATIVE_PATH;
-    
+    private static final FileBlameBuilder BUILDER = new FileBlameBuilder();
+
     @Test
     void shouldAbortIfHeadCommitIsMissing() {
         GitBlamer blamer = new GitBlamer(createGitClient(), HEAD);
@@ -136,7 +138,7 @@ class GitBlamerTest {
 
         BlameRunner runner = Mockito.mock(BlameRunner.class);
         Mockito.when(runner.run(RELATIVE_PATH)).thenThrow(exception);
-        callback.run(ABSOLUTE_PATH, RELATIVE_PATH, runner, createLastCommitRunner());
+        callback.run(BUILDER, ABSOLUTE_PATH, RELATIVE_PATH, runner, createLastCommitRunner());
 
         assertThat(log.getErrorMessages()).hasSize(3);
         assertThat(log.getErrorMessages().get(1)).startsWith(
@@ -157,7 +159,7 @@ class GitBlamerTest {
 
         stubResultForIndex(result, 0);
 
-        callback.run(ABSOLUTE_PATH, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner());
+        callback.run(BUILDER, ABSOLUTE_PATH, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner());
 
         verifyResult(blames.getBlame(ABSOLUTE_PATH), 1);
     }
@@ -181,7 +183,7 @@ class GitBlamerTest {
         stubResultForIndex(result, 0);
         stubResultForIndex(result, 1);
 
-        callback.run(ABSOLUTE_PATH, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner());
+        callback.run(BUILDER, ABSOLUTE_PATH, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner());
 
         assertThat(blames.contains(ABSOLUTE_PATH)).isTrue();
         FileBlame blame = blames.getBlame(ABSOLUTE_PATH);
@@ -215,7 +217,7 @@ class GitBlamerTest {
         BlameRunner blameRunner = createBlameRunner(result);
         LastCommitRunner lastCommitRunner = createLastCommitRunner();
 
-        callback.run(ABSOLUTE_PATH, RELATIVE_PATH, blameRunner, lastCommitRunner);
+        callback.run(BUILDER, ABSOLUTE_PATH, RELATIVE_PATH, blameRunner, lastCommitRunner);
 
         FileBlame blame = blames.getBlame(ABSOLUTE_PATH);
         verifyResult(blame, 1);
@@ -225,7 +227,7 @@ class GitBlamerTest {
         assertThat(blame.getCommit(3)).isEqualTo(EMPTY);
         assertThat(blame.getTime(3)).isEqualTo(EMPTY_TIME);
 
-        callback.run("otherFile", "otherFile", blameRunner, lastCommitRunner);
+        callback.run(BUILDER, "otherFile", "otherFile", blameRunner, lastCommitRunner);
         assertThat(log.getErrorMessages()).contains("- no blame results for file 'otherFile'");
     }
 
@@ -241,7 +243,7 @@ class GitBlamerTest {
         BlameResult result = createResult(1);
         Mockito.when(result.getSourceAuthor(0)).thenReturn(new PersonIdent(NAME, EMAIL));
 
-        callback.run(ABSOLUTE_PATH, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner());
+        callback.run(BUILDER, ABSOLUTE_PATH, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner());
 
         FileBlame blame = blames.getBlame(ABSOLUTE_PATH);
         assertThat(blame.getEmail(1)).isEqualTo(EMAIL);
@@ -263,7 +265,7 @@ class GitBlamerTest {
         RevCommit commit = createCommit();
         Mockito.when(result.getSourceCommit(0)).thenReturn(commit);
 
-        callback.run(ABSOLUTE_PATH, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner());
+        callback.run(BUILDER, ABSOLUTE_PATH, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner());
 
         FileBlame blame = blames.getBlame(ABSOLUTE_PATH);
         assertThat(blame.getEmail(1)).isEqualTo(EMPTY);
@@ -287,7 +289,7 @@ class GitBlamerTest {
         Mockito.when(result.getSourceAuthor(0)).thenReturn(null);
         Mockito.when(result.getSourceCommitter(0)).thenReturn(new PersonIdent(NAME + 1, EMAIL + 1));
 
-        callback.run(ABSOLUTE_PATH, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner());
+        callback.run(BUILDER, ABSOLUTE_PATH, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner());
 
         FileBlame blame = blames.getBlame(ABSOLUTE_PATH);
         verifyResult(blame, 1);

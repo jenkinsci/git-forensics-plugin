@@ -27,6 +27,7 @@ import hudson.remoting.VirtualChannel;
 import io.jenkins.plugins.forensics.blame.Blamer;
 import io.jenkins.plugins.forensics.blame.Blames;
 import io.jenkins.plugins.forensics.blame.FileBlame;
+import io.jenkins.plugins.forensics.blame.FileBlame.FileBlameBuilder;
 import io.jenkins.plugins.forensics.blame.FileLocations;
 import io.jenkins.plugins.forensics.git.util.AbstractRepositoryCallback;
 
@@ -130,9 +131,10 @@ class GitBlamer extends Blamer {
                 LastCommitRunner lastCommitRunner = new LastCommitRunner(repository);
                 String workTree = getWorkTree(repository);
 
+                FileBlameBuilder builder = new FileBlameBuilder();
                 for (String file : locations.getFiles()) {
                     if (file.startsWith(workTree)) {
-                        run(file, getRelativePath(repository, file), blameRunner, lastCommitRunner);
+                        run(builder, file, getRelativePath(repository, file), blameRunner, lastCommitRunner);
 
                         if (Thread.interrupted()) { // Cancel request by user
                             String message = "Blaming has been interrupted while computing blame information";
@@ -158,6 +160,8 @@ class GitBlamer extends Blamer {
         /**
          * Runs Git blame for one file.
          *
+         * @param builder
+         *         the builder to use to create {@link FileBlame} instances
          * @param absolutePath
          *         the file to get the blames for (absolute path)
          * @param relativePath
@@ -168,7 +172,8 @@ class GitBlamer extends Blamer {
          *         the runner to find the last commit
          */
         @VisibleForTesting
-        void run(final String absolutePath, final String relativePath, final BlameRunner blameRunner,
+        void run(final FileBlameBuilder builder, final String absolutePath,
+                final String relativePath, final BlameRunner blameRunner,
                 final LastCommitRunner lastCommitRunner) {
             try {
                 BlameResult blame = blameRunner.run(relativePath);
@@ -177,7 +182,7 @@ class GitBlamer extends Blamer {
                 }
                 else {
                     for (int line : locations.getLines(absolutePath)) {
-                        FileBlame fileBlame = new FileBlame(absolutePath);
+                        FileBlame fileBlame = builder.build(absolutePath);
                         if (line <= 0) {
                             fillWithLastCommit(relativePath, fileBlame, lastCommitRunner);
                         }
