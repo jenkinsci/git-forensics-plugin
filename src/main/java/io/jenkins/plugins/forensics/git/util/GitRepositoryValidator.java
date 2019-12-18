@@ -2,9 +2,8 @@ package io.jenkins.plugins.forensics.git.util;
 
 import java.io.IOException;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import edu.hm.hafner.util.FilteredLog;
+import edu.hm.hafner.util.VisibleForTesting;
 
 import org.jenkinsci.plugins.gitclient.GitClient;
 import hudson.EnvVars;
