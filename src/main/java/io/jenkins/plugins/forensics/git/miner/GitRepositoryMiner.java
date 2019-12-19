@@ -52,9 +52,10 @@ public class GitRepositoryMiner extends RepositoryMiner {
             throws InterruptedException {
         try {
             long nano = System.nanoTime();
+            logger.logInfo("Analyzing the commit log of the Git repository '%s'", gitClient.getWorkTree());
             RepositoryStatistics statistics = gitClient.withRepository(
                     new RepositoryStatisticsCallback(absoluteFileNames, logger));
-            logger.logInfo("Mining of the Git repository took %d seconds",
+            logger.logInfo("-> created report for %d files in %d seconds", statistics.size(),
                     1 + (System.nanoTime() - nano) / 1_000_000_000L);
             return statistics;
         }
