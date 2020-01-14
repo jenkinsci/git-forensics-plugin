@@ -7,9 +7,7 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.RepositoryBuilder;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Rule;
-import org.jvnet.hudson.test.JenkinsRule;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -22,6 +20,8 @@ import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
 import jenkins.plugins.git.GitSampleRepoRule;
 
+import io.jenkins.plugins.util.IntegrationTestWithJenkinsPerSuite;
+
 import static org.mockito.Mockito.*;
 
 /**
@@ -29,7 +29,7 @@ import static org.mockito.Mockito.*;
  *
  * @author Ullrich Hafner
  */
-public class GitITest {
+public class GitITest extends IntegrationTestWithJenkinsPerSuite {
     /** File name of a source file that will be modified by two authors. */
     protected static final String FILE_NAME = "source.txt";
     /** Author 1 name. */
@@ -44,10 +44,6 @@ public class GitITest {
     /** Git repository in a temporary folder. */
     @Rule
     public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
-
-    /** Jenkins rule per suite. */
-    @ClassRule
-    public static final JenkinsRule JENKINS_PER_SUITE = new JenkinsRule();
 
     /**
      * Initializes the Git repository.

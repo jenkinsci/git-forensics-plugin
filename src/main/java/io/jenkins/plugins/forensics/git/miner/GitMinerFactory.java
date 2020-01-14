@@ -2,6 +2,8 @@ package io.jenkins.plugins.forensics.git.miner;
 
 import java.util.Optional;
 
+import edu.hm.hafner.util.FilteredLog;
+
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.model.Run;
@@ -11,7 +13,6 @@ import hudson.scm.SCM;
 import io.jenkins.plugins.forensics.git.util.GitRepositoryValidator;
 import io.jenkins.plugins.forensics.miner.MinerFactory;
 import io.jenkins.plugins.forensics.miner.RepositoryMiner;
-import io.jenkins.plugins.forensics.util.FilteredLog;
 
 /**
  * A {@link MinerFactory} for Git. Handles Git repositories that do not have option ShallowClone set.

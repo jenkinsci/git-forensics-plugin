@@ -1,5 +1,6 @@
 package io.jenkins.plugins.forensics.git.miner;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,8 +12,11 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
+import edu.hm.hafner.util.FilteredLog;
+
 import org.jenkinsci.plugins.gitclient.GitClient;
 import hudson.EnvVars;
+import hudson.FilePath;
 import hudson.model.Run;
 import hudson.model.Saveable;
 import hudson.model.TaskListener;
@@ -24,7 +28,6 @@ import hudson.util.DescribableList;
 
 import io.jenkins.plugins.forensics.git.util.GitRepositoryValidator;
 import io.jenkins.plugins.forensics.miner.RepositoryMiner;
-import io.jenkins.plugins.forensics.util.FilteredLog;
 
 import static io.jenkins.plugins.forensics.assertions.Assertions.*;
 
@@ -41,10 +44,10 @@ class GitMinerFactoryTest {
         FilteredLog logger = createLogger();
 
         GitMinerFactory factory = new GitMinerFactory();
-        assertThat(factory.createMiner(new NullSCM(), null, null, NULL_LISTENER, logger)).isEmpty();
+        assertThat(factory.createMiner(new NullSCM(), null, createWorkTreeStub(), NULL_LISTENER, logger)).isEmpty();
 
-        assertThat(logger).hasNoErrorMessages();
-        assertThat(logger).hasInfoMessages("SCM 'hudson.scm.NullSCM' is not of type GitSCM");
+        assertThat(logger.getErrorMessages()).isEmpty();
+        assertThat(logger.getInfoMessages()).contains("SCM 'hudson.scm.NullSCM' is not of type GitSCM");
     }
 
     @Test
@@ -57,19 +60,20 @@ class GitMinerFactoryTest {
         envVars.put("GIT_COMMIT", "test_commit");
         Mockito.when(run.getEnvironment(NULL_LISTENER)).thenReturn(envVars);
 
+        FilePath workspace = createWorkTreeStub();
         GitClient gitClient = Mockito.mock(GitClient.class);
-        Mockito.when(gitSCM.createClient(NULL_LISTENER, envVars, run, null)).thenReturn(gitClient);
+        Mockito.when(gitSCM.createClient(NULL_LISTENER, envVars, run, workspace)).thenReturn(gitClient);
         ObjectId commit = Mockito.mock(ObjectId.class);
         Mockito.when(gitClient.revParse(ArgumentMatchers.anyString())).thenReturn(commit);
 
         FilteredLog logger = createLogger();
 
         GitMinerFactory factory = new GitMinerFactory();
-        Optional<RepositoryMiner> blamer = factory.createMiner(gitSCM, run, null, NULL_LISTENER, logger);
+        Optional<RepositoryMiner> blamer = factory.createMiner(gitSCM, run, workspace, NULL_LISTENER, logger);
 
         assertThat(blamer).isNotEmpty().containsInstanceOf(GitRepositoryMiner.class);
-        assertThat(logger).hasNoErrorMessages();
-        assertThat(logger).hasInfoMessages("-> Git miner successfully created in working tree 'null'");
+        assertThat(logger.getErrorMessages()).isEmpty();
+        assertThat(logger.getInfoMessages()).contains("-> Git miner successfully created in working tree '/'");
     }
 
     @Test
@@ -84,9 +88,9 @@ class GitMinerFactoryTest {
 
         GitMinerFactory gitChecker = new GitMinerFactory();
 
-        assertThat(gitChecker.createMiner(gitSCM, Mockito.mock(Run.class), null, NULL_LISTENER, logger)).isEmpty();
-        assertThat(logger).hasInfoMessages(GitRepositoryValidator.INFO_SHALLOW_CLONE);
-        assertThat(logger).hasNoErrorMessages();
+        assertThat(gitChecker.createMiner(gitSCM, Mockito.mock(Run.class), createWorkTreeStub(), NULL_LISTENER, logger)).isEmpty();
+        assertThat(logger.getInfoMessages()).contains(GitRepositoryValidator.INFO_SHALLOW_CLONE);
+        assertThat(logger.getErrorMessages()).isEmpty();
     }
 
     @Test
@@ -100,9 +104,15 @@ class GitMinerFactoryTest {
 
         FilteredLog logger = createLogger();
 
-        assertThat(gitChecker.createMiner(gitSCM, run, null, NULL_LISTENER, logger)).isEmpty();
-        assertThat(logger).hasNoErrorMessages();
-        assertThat(logger).hasInfoMessages("Exception while creating a GitClient instance for work tree 'null'");
+        assertThat(gitChecker.createMiner(gitSCM, run, createWorkTreeStub(), NULL_LISTENER, logger)).isEmpty();
+        assertThat(logger.getErrorMessages()).isEmpty();
+        assertThat(logger.getInfoMessages()).contains("Exception while creating a GitClient instance for work tree '/'");
+    }
+
+    private FilePath createWorkTreeStub() {
+        File mock = Mockito.mock(File.class);
+        Mockito.when(mock.getPath()).thenReturn("/");
+        return new FilePath(mock);
     }
 
     private FilteredLog createLogger() {
