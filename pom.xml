@@ -296,6 +296,7 @@
       <groupId>org.jenkins-ci.main</groupId>
       <artifactId>jenkins-test-harness</artifactId>
       <version>${jenkins-test-harness.version}</version>
+      <scope>test</scope>
     </dependency>
 
   </dependencies>
