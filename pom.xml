@@ -38,7 +38,7 @@
     <!-- Jenkins Plugin Dependencies Versions -->
     <plugin-util-api.version>0.1.0-beta5</plugin-util-api.version>
     <data-tables-api.version>1.10.20-6-beta1</data-tables-api.version>
-    <forensics-api-plugin.version>0.7.0-beta5</forensics-api-plugin.version>
+    <forensics-api-plugin.version>0.20.3-alpha-SNAPSHOT</forensics-api-plugin.version>
     <git-plugin.version>4.0.0</git-plugin.version>
     <scm-api.version>2.6.3</scm-api.version>
 
