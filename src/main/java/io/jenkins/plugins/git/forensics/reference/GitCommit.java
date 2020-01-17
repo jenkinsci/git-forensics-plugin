@@ -40,6 +40,8 @@ public class GitCommit extends VCSCommit {
         return gitCommitLog.getRevisions().toString();
     }
 
+    public String getBuildName() {return run.getExternalizableId();}
+
     @Override
     public Optional<String> getReferencePoint(final VCSCommit reference, final int maxLogs) {
         if (reference.getClass() != GitCommit.class) {
@@ -59,6 +61,7 @@ public class GitCommit extends VCSCommit {
             GitCommit gitCommit = tmp.getAction(GitCommit.class);
             if (gitCommit == null) {
                 // Skip build if it has no GitCommit Action.
+                tmp = tmp.getPreviousBuild();
                 continue;
             }
             branchCommits.addAll(gitCommit.getGitCommitLog().getRevisions());
@@ -71,6 +74,7 @@ public class GitCommit extends VCSCommit {
             GitCommit gitCommit = tmp.getAction(GitCommit.class);
             if (gitCommit == null) {
                 // Skip build if it has no GitCommit Action.
+                tmp = tmp.getPreviousBuild();
                 continue;
             }
             masterCommits.addAll(gitCommit.getGitCommitLog().getRevisions());
@@ -81,7 +85,6 @@ public class GitCommit extends VCSCommit {
             }
             tmp = tmp.getPreviousBuild();
         }
-
         return Optional.empty();
     }
 

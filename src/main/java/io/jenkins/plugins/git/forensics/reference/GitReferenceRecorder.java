@@ -10,6 +10,7 @@ import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Publisher;
 import io.jenkins.plugins.forensics.reference.ReferenceRecorder;
+import io.jenkins.plugins.forensics.util.FilteredLog;
 import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
 import org.jenkinsci.Symbol;
@@ -29,6 +30,7 @@ import java.util.Optional;
 @SuppressWarnings("unused")
 public class GitReferenceRecorder extends ReferenceRecorder implements SimpleBuildStep {
 
+    FilteredLog log = new FilteredLog("GitReferenceRecorder");
 
     @DataBoundConstructor
     public GitReferenceRecorder() {
@@ -42,7 +44,15 @@ public class GitReferenceRecorder extends ReferenceRecorder implements SimpleBui
         if (!NO_REFERENCE_JOB.equals(getReferenceJobName()) && getReferenceJobName() != null) {
             Jenkins jenkins = Jenkins.getInstanceOrNull();
             Optional<Job<?, ?>> referenceJob =  Optional.ofNullable(jenkins.getItemByFullName(getReferenceJobName(), Job.class));
-            referenceJob.ifPresent(job -> getRun().addAction(new GitBranchMasterIntersectionFinder(getRun(), getMaxCommits(), job.getLastCompletedBuild())));
+
+            referenceJob.ifPresent(job ->  getRun().addAction(new GitBranchMasterIntersectionFinder(getRun(), getMaxCommits(), job.getLastCompletedBuild())));
+            if (!referenceJob.isPresent()) {
+                log.logInfo("ReferenceJob not found");
+            } else {
+                log.logInfo("ReferenceJob: " + referenceJob.get().getDisplayName());
+            }
+
+            log.getInfoMessages().forEach(listener.getLogger()::println);
         }
     }
 

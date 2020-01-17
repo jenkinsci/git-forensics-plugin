@@ -22,7 +22,7 @@ public class GitBranchMasterIntersectionFinder extends BranchMasterIntersectionF
     private static final String NAME = "GitBranchMasterIntersectionFinder";
     private static final String NO_INTERSECTION_FOUND = "No intersection was found in master commits";
 
-    private String buildId = "";
+    private String buildId = null;
 
     /**
      * Defines how far the Finder will look in the past commits to find an intersection.
@@ -46,10 +46,16 @@ public class GitBranchMasterIntersectionFinder extends BranchMasterIntersectionF
 
         Optional<String> buildId = thisCommit.getReferencePoint(referenceCommit, maxLogs);
         buildId.ifPresent(this::setBuildId);
+        if(!buildId.isPresent()) {
+            setBuildId(NO_INTERSECTION_FOUND);
+        }
         return buildId;
     }
 
     public String getSummary() {
+        if (this.buildId != null) {
+            return buildId;
+        }
         Optional<String> summary = findReferencePoint();
         return summary.orElse(NO_INTERSECTION_FOUND);
     }
