@@ -13,7 +13,9 @@
   <packaging>hpi</packaging>
   <name>Git Forensics Plugin</name>
   <version>${revision}${changelist}</version>
+
   <description>Jenkins plug-in that mines and analyzes data from a Git repository.</description>
+  <url>https://github.com/jenkinsci/git-forensics-plugin</url>
 
   <properties>
     <revision>0.7.0-beta4</revision>
