@@ -68,8 +68,10 @@ public class GitCommitListener extends SCMListener {
         GitClient gitClient = gitSCM.createClient(listener, environment, build, workspace);
 
         // Save new commits
-        GitCommit gitCommit = gitClient.withRepository(new GitCommitCall(build, latestRevisionOfPreviousCommit));
-        build.addAction(gitCommit);
+        GitCommit gitCommit = gitClient.withRepository(new GitCommitCall(build, latestRevisionOfPreviousCommit, gitSCM.getKey()));
+        if (gitCommit != null) {
+            build.addAction(gitCommit);
+        }
     }
 
     /**
@@ -82,15 +84,23 @@ public class GitCommitListener extends SCMListener {
         private final String latestRevisionOfPreviousCommit;
 
         private final FilteredLog log = createLog();
+        private final String repositoryKey;
 
-        GitCommitCall(final Run<?, ?> build, final String latestRevisionOfPreviousCommit) {
+        GitCommitCall(final Run<?, ?> build, final String latestRevisionOfPreviousCommit, String repositoryKey) {
             this.build = build;
             this.latestRevisionOfPreviousCommit = latestRevisionOfPreviousCommit;
+            this.repositoryKey = repositoryKey;
         }
 
         @Override
         public GitCommit invoke(final Repository repo, final VirtualChannel channel) throws IOException {
-            GitCommit result = new GitCommit(build);
+            // Check if GitCommit of Repository already Exists
+            List<GitCommit> gitCommits = build.getActions(GitCommit.class);
+            if (gitCommits.stream().anyMatch(gitCommit -> repositoryKey.equals(gitCommit.getRepositoryId()))) {
+                return null;
+            }
+
+            GitCommit result = new GitCommit(build, repositoryKey);
             List<String> newCommits = new ArrayList<>();
             try (Git git = new Git(repo)) {
                 // Determine new commits to log since last build

@@ -20,11 +20,18 @@ public class GitCommit extends VCSCommit {
 
     private static final String NAME = "GitCommit";
 
+    /**
+     * hashCode of the repository. Needed to check if a GitCommit of the same Repository already exists in a build.
+     * (prevents duplicates)
+     */
+    private final String repositoryId;
+
     private final GitCommitLog gitCommitLog;
 
-    public GitCommit(final Run<?, ?> run) {
+    public GitCommit(final Run<?, ?> run, String repositoryId) {
         super();
         this.run = run;
+        this.repositoryId = repositoryId;
         gitCommitLog = new GitCommitLog();
     }
 
@@ -86,6 +93,10 @@ public class GitCommit extends VCSCommit {
             tmp = tmp.getPreviousBuild();
         }
         return Optional.empty();
+    }
+
+    public String getRepositoryId() {
+        return repositoryId;
     }
 
     @Override
