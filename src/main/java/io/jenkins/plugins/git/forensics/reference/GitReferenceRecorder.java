@@ -17,6 +17,7 @@ import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+
 import java.util.Optional;
 
 /**
@@ -30,7 +31,9 @@ import java.util.Optional;
 @SuppressWarnings("unused")
 public class GitReferenceRecorder extends ReferenceRecorder implements SimpleBuildStep {
 
-    FilteredLog log = new FilteredLog("GitReferenceRecorder");
+    private FilteredLog log = new FilteredLog("GitReferenceRecorder");
+
+    private static final String DEFAULT_BRANCH = "master";
 
     @DataBoundConstructor
     public GitReferenceRecorder() {
@@ -41,19 +44,38 @@ public class GitReferenceRecorder extends ReferenceRecorder implements SimpleBui
     @SuppressWarnings("unchecked")
     public void perform(final Run<?, ?> run, final FilePath workspace, final Launcher launcher, final TaskListener listener) {
         setRun(run);
-        if (!NO_REFERENCE_JOB.equals(getReferenceJobName()) && getReferenceJobName() != null) {
-            Jenkins jenkins = Jenkins.getInstanceOrNull();
-            Optional<Job<?, ?>> referenceJob =  Optional.ofNullable(jenkins.getItemByFullName(getReferenceJobName(), Job.class));
+        if (log == null) {
+            // TODO This should not happen and I dont know why i happens in some builds
+            log = new FilteredLog("GitReferenceRecorder");
+        }
+        String referenceJobName = getReferenceJobName();
+        if (NO_REFERENCE_JOB.equals(referenceJobName) || referenceJobName == null) {
+            // Check if build is part of a multibranch pipeline
+            referenceJobName = buildReferenceJobName(run);
+        }
 
-            referenceJob.ifPresent(job ->  getRun().addAction(new GitBranchMasterIntersectionFinder(getRun(), getMaxCommits(), job.getLastCompletedBuild())));
+        if (referenceJobName != null) {
+            Jenkins jenkins = Jenkins.getInstanceOrNull();
+            Optional<Job<?, ?>> referenceJob = Optional.ofNullable(jenkins.getItemByFullName(referenceJobName, Job.class));
+            referenceJob.ifPresent(job -> getRun().addAction(new GitBranchMasterIntersectionFinder(getRun(), getMaxCommits(), job.getLastCompletedBuild())));
             if (!referenceJob.isPresent()) {
                 log.logInfo("ReferenceJob not found");
             } else {
                 log.logInfo("ReferenceJob: " + referenceJob.get().getDisplayName());
             }
-
-            log.getInfoMessages().forEach(listener.getLogger()::println);
         }
+
+        log.getInfoMessages().forEach(listener.getLogger()::println);
+
+    }
+
+    private String buildReferenceJobName(final Run<?, ?> run) {
+        if (run.getParent().getParent() != null) {
+            String result = run.getParent().getParent().getFullDisplayName() + "/" + DEFAULT_BRANCH;
+            log.logInfo("Searching for " + result);
+            return result;
+        }
+        return null;
     }
 
 

@@ -2,7 +2,7 @@
 <j:jelly xmlns:j="jelly:core" xmlns:t="/lib/hudson">
 
     <t:summary icon="/plugin/git-forensics/icons/commit-48x48.png">
-        Last shared commit with master branch: ${it.summary} was build in Build: ${it.buildId}
+        Estimated Reference Build: ${it.summary}
     </t:summary>
 
 </j:jelly>
