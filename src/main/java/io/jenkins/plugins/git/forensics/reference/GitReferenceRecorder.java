@@ -70,6 +70,10 @@ public class GitReferenceRecorder extends ReferenceRecorder implements SimpleBui
     }
 
     private String buildReferenceJobName(final Run<?, ?> run) {
+        if (DEFAULT_BRANCH.equals(run.getParent().getDisplayName())) {
+            // This is the master branch build - No intersection estimation necessary
+            return null;
+        }
         if (run.getParent().getParent() != null) {
             String result = run.getParent().getParent().getFullDisplayName() + "/" + DEFAULT_BRANCH;
             log.logInfo("Searching for " + result);
