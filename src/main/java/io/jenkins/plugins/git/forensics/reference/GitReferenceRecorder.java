@@ -15,6 +15,7 @@ import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
+import jenkins.branch.MultiBranchProject;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
@@ -49,12 +50,14 @@ public class GitReferenceRecorder extends ReferenceRecorder implements SimpleBui
             log = new FilteredLog("GitReferenceRecorder");
         }
         String referenceJobName = getReferenceJobName();
-        if (NO_REFERENCE_JOB.equals(referenceJobName) || referenceJobName == null) {
-            // Check if build is part of a multibranch pipeline
+        // Check if build is part of a multibranch pipeline
+        // If it is the given value of the referenceJobName will be ignored.
+        // TODO is there a situation in which I dont want to ignore it?
+        if (run.getParent().getParent() instanceof MultiBranchProject) {
             referenceJobName = buildReferenceJobName(run);
         }
 
-        if (referenceJobName != null) {
+        if (!NO_REFERENCE_JOB.equals(referenceJobName) && referenceJobName != null) {
             Jenkins jenkins = Jenkins.getInstanceOrNull();
             Optional<Job<?, ?>> referenceJob = Optional.ofNullable(jenkins.getItemByFullName(referenceJobName, Job.class));
             referenceJob.ifPresent(job -> getRun().addAction(new GitBranchMasterIntersectionFinder(getRun(), getMaxCommits(), job.getLastCompletedBuild())));
