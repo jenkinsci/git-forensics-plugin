@@ -32,8 +32,6 @@ import java.util.Optional;
 @SuppressWarnings("unused")
 public class GitReferenceRecorder extends ReferenceRecorder implements SimpleBuildStep {
 
-    private FilteredLog log = new FilteredLog("GitReferenceRecorder");
-
     private static final String DEFAULT_BRANCH = "master";
 
     @DataBoundConstructor
@@ -44,20 +42,16 @@ public class GitReferenceRecorder extends ReferenceRecorder implements SimpleBui
     @Override
     @SuppressWarnings("unchecked")
     public void perform(final Run<?, ?> run, final FilePath workspace, final Launcher launcher, final TaskListener listener) {
+        FilteredLog log = new FilteredLog("GitReferenceRecorder");
         setRun(run);
-        if (log == null) {
-            // TODO This should not happen and I dont know why i happens in some builds
-            log = new FilteredLog("GitReferenceRecorder");
-        }
+
         String referenceJobName = getReferenceJobName();
         // Check if build is part of a multibranch pipeline
-        // If it is the given value of the referenceJobName will be ignored.
-        // TODO is there a situation in which I dont want to ignore it?
-        if (run.getParent().getParent() instanceof MultiBranchProject) {
-            referenceJobName = buildReferenceJobName(run);
+        if (run.getParent().getParent() instanceof MultiBranchProject && !isReferenceJobNameSet(referenceJobName)) {
+            referenceJobName = buildReferenceJobName(run, log);
         }
 
-        if (!NO_REFERENCE_JOB.equals(referenceJobName) && referenceJobName != null) {
+        if (isReferenceJobNameSet(referenceJobName)) {
             Jenkins jenkins = Jenkins.getInstanceOrNull();
             Optional<Job<?, ?>> referenceJob = Optional.ofNullable(jenkins.getItemByFullName(referenceJobName, Job.class));
             referenceJob.ifPresent(job -> getRun().addAction(new GitBranchMasterIntersectionFinder(getRun(), getMaxCommits(), job.getLastCompletedBuild())));
@@ -72,7 +66,13 @@ public class GitReferenceRecorder extends ReferenceRecorder implements SimpleBui
 
     }
 
-    private String buildReferenceJobName(final Run<?, ?> run) {
+    /**
+     * Helping method to build a job name to look for in a multibranch pipeline.
+     * @param run the current job
+     * @param log for logging
+     * @return Projectname + "/master"
+     */
+    private String buildReferenceJobName(final Run<?, ?> run, FilteredLog log) {
         if (DEFAULT_BRANCH.equals(run.getParent().getDisplayName())) {
             // This is the master branch build - No intersection estimation necessary
             return null;
@@ -83,6 +83,15 @@ public class GitReferenceRecorder extends ReferenceRecorder implements SimpleBui
             return result;
         }
         return null;
+    }
+
+    /**
+     * Helping method to determine if a name is not null, an empty string or '-'.
+     * @param name given name to check
+     * @return true if name is not null, an empty string or '-'
+     */
+    private boolean isReferenceJobNameSet(String name) {
+        return name != null && !"".equals(name) && !NO_REFERENCE_JOB.equals(name);
     }
 
 

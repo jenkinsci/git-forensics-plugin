@@ -65,7 +65,7 @@ public class GitCommit extends VCSCommit {
         // Fill branch commit list
         Run<?, ?> tmp = run;
         while (branchCommits.size() < maxLogs && tmp != null) {
-            GitCommit gitCommit = tmp.getAction(GitCommit.class);
+            GitCommit gitCommit = getGitCommitForRepository(tmp);
             if (gitCommit == null) {
                 // Skip build if it has no GitCommit Action.
                 tmp = tmp.getPreviousBuild();
@@ -78,7 +78,7 @@ public class GitCommit extends VCSCommit {
         // Fill master commit list and check for intersection point
         tmp = referenceCommit.run;
         while (masterCommits.size() < maxLogs && tmp != null) {
-            GitCommit gitCommit = tmp.getAction(GitCommit.class);
+            GitCommit gitCommit = getGitCommitForRepository(tmp);
             if (gitCommit == null) {
                 // Skip build if it has no GitCommit Action.
                 tmp = tmp.getPreviousBuild();
@@ -93,6 +93,16 @@ public class GitCommit extends VCSCommit {
             tmp = tmp.getPreviousBuild();
         }
         return Optional.empty();
+    }
+
+    /**
+     * If multiple Repositorys are in a build this GitCommit will only look a the ones with the same repositoryId.
+     * @param run the bulid to get the Actions from
+     * @return the correct GitCommit if present. Or else null.
+     */
+    private GitCommit getGitCommitForRepository(Run<?, ?> run) {
+        List<GitCommit> list = run.getActions(GitCommit.class);
+        return list.stream().filter(gc -> this.getRepositoryId().equals(gc.getRepositoryId())).findFirst().orElse(null);
     }
 
     public String getRepositoryId() {
