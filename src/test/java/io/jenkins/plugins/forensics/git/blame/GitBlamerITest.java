@@ -41,7 +41,7 @@ public class GitBlamerITest extends GitITest {
         create2RevisionsWithDifferentAuthors();
 
         FileLocations locations = new FileLocations();
-        String absolutePath = absolute(GitITest.FILE_NAME);
+        String absolutePath = GitITest.FILE_NAME;
         locations.addLine(absolutePath, 2);
         locations.addLine(absolutePath, 3);
         locations.addLine(absolutePath, 4);
@@ -74,7 +74,7 @@ public class GitBlamerITest extends GitITest {
         create2RevisionsWithDifferentAuthors();
 
         FileLocations locations = new FileLocations();
-        String absolutePath = absolute(GitITest.FILE_NAME);
+        String absolutePath = GitITest.FILE_NAME;
         locations.addLine(absolutePath, 0);
 
         GitBlamer gitBlamer = createBlamer();

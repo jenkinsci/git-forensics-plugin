@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.LinkOption;
 
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.dircache.InvalidPathException;
 import org.eclipse.jgit.lib.Repository;
 
@@ -36,20 +35,6 @@ public abstract class AbstractRepositoryCallback<T> implements RepositoryCallbac
      */
     public static String getWorkTree(final Repository repository) {
         return getAbsolutePath(repository.getWorkTree());
-    }
-
-    /**
-     * Returns a relative path for a given absolute path with respect to the working directory of the Git repository.
-     *
-     * @param repository
-     *         the repository
-     * @param fileName
-     *         absolute file name
-     *
-     * @return the absolute path to the working tree
-     */
-    protected String getRelativePath(final Repository repository, final String fileName) {
-        return fileName.replaceFirst(getWorkTree(repository) + SLASH, StringUtils.EMPTY);
     }
 
     /**
