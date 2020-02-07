@@ -123,7 +123,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
 
         private FileStatistics analyzeHistory(final Repository repository, final FileStatistics fileStatistics) {
             try (Git git = new Git(repository)) {
-                Iterable<RevCommit> commits = git.log().addPath(getRelativePath(repository, fileStatistics.getFileName())).call();
+                Iterable<RevCommit> commits = git.log().addPath(fileStatistics.getFileName()).call();
                 commits.forEach(c -> fileStatistics.inspectCommit(c.getCommitTime(), getAuthor(c)));
                 return fileStatistics;
             }

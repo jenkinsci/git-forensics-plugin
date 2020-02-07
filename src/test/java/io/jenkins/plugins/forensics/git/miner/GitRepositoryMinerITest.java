@@ -32,7 +32,7 @@ public class GitRepositoryMinerITest extends GitITest {
     @Test
     public void shouldCollectSingleFile() throws InterruptedException {
         GitRepositoryMiner miner = createMiner();
-        String absolute = absolute(OTHER_FILE);
+        String absolute = OTHER_FILE;
         RepositoryStatistics statisticsPerFile = miner.mine(Collections.singleton(absolute), LOG);
 
         assertThat(statisticsPerFile).hasFiles(absolute);
@@ -51,8 +51,8 @@ public class GitRepositoryMinerITest extends GitITest {
         writeFileAsAuthorFoo("First");
         writeFileAsAuthorFoo("Second");
 
-        String absoluteOtherFile = absolute(OTHER_FILE);
-        String absoluteFile = absolute(GitITest.FILE_NAME);
+        String absoluteOtherFile = OTHER_FILE;
+        String absoluteFile = GitITest.FILE_NAME;
 
         GitRepositoryMiner miner = createMiner();
 
@@ -80,8 +80,8 @@ public class GitRepositoryMinerITest extends GitITest {
         writeFileAsAuthorFoo("First");
         writeFileAsAuthorBar("Second");
 
-        String absoluteOtherFile = absolute(OTHER_FILE);
-        String absoluteFile = absolute(GitITest.FILE_NAME);
+        String absoluteOtherFile = OTHER_FILE;
+        String absoluteFile = GitITest.FILE_NAME;
 
         GitRepositoryMiner miner = createMiner();
         RepositoryStatistics statisticsPerFile = miner.mine(Lists.fixedSize.of(absoluteFile, absoluteOtherFile), LOG);
@@ -100,7 +100,7 @@ public class GitRepositoryMinerITest extends GitITest {
     }
 
     private void assertDefaultFileStatistics(final RepositoryStatistics statistics) {
-        FileStatistics fileStatistics = statistics.get(absolute(OTHER_FILE));
+        FileStatistics fileStatistics = statistics.get(OTHER_FILE);
         assertThat(fileStatistics).hasNumberOfAuthors(1);
         assertThat(fileStatistics).hasNumberOfCommits(1);
     }

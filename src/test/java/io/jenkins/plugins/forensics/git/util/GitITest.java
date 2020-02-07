@@ -174,18 +174,6 @@ public class GitITest extends IntegrationTestWithJenkinsPerSuite {
     }
 
     /**
-     * Returns the absolute path of the working tree.
-     *
-     * @param fileName
-     *         the relative file name
-     *
-     * @return absolute path to the working tree (normalized with Unix file separators).
-     */
-    protected String absolute(final String fileName) {
-        return getRepositoryRoot() + "/" + fileName;
-    }
-
-    /**
      * Creates a {@link GitClient} that uses the sample repository.
      *
      * @return a {@link GitClient}

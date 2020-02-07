@@ -128,22 +128,16 @@ class GitBlamer extends Blamer {
 
                 BlameRunner blameRunner = new BlameRunner(repository, headCommit);
                 LastCommitRunner lastCommitRunner = new LastCommitRunner(repository);
-                String workTree = getWorkTree(repository);
 
                 FileBlameBuilder builder = new FileBlameBuilder();
                 for (String file : locations.getFiles()) {
-                    if (file.startsWith(workTree)) {
-                        run(builder, file, getRelativePath(repository, file), blameRunner, lastCommitRunner);
+                    run(builder, file, blameRunner, lastCommitRunner);
 
-                        if (Thread.interrupted()) { // Cancel request by user
-                            String message = "Blaming has been interrupted while computing blame information";
-                            log.logInfo(message);
+                    if (Thread.interrupted()) { // Cancel request by user
+                        String message = "Blaming has been interrupted while computing blame information";
+                        log.logInfo(message);
 
-                            throw new InterruptedException(message);
-                        }
-                    }
-                    else {
-                        log.logError("- skipping file '%s' (outside of work tree)", file);
+                        throw new InterruptedException(message);
                     }
                 }
 
@@ -161,8 +155,8 @@ class GitBlamer extends Blamer {
          *
          * @param builder
          *         the builder to use to create {@link FileBlame} instances
-         * @param absolutePath
-         *         the file to get the blames for (absolute path)
+         * @param relativePath
+         *         the file to get the blames for (relative path)
          * @param relativePath
          *         the file to get the blames for (relative path)
          * @param blameRunner
@@ -171,22 +165,21 @@ class GitBlamer extends Blamer {
          *         the runner to find the last commit
          */
         @VisibleForTesting
-        void run(final FileBlameBuilder builder, final String absolutePath,
-                final String relativePath, final BlameRunner blameRunner,
+        void run(final FileBlameBuilder builder, final String relativePath, final BlameRunner blameRunner,
                 final LastCommitRunner lastCommitRunner) {
             try {
                 BlameResult blame = blameRunner.run(relativePath);
                 if (blame == null) {
-                    log.logError("- no blame results for file '%s'", absolutePath);
+                    log.logError("- no blame results for file '%s'", relativePath);
                 }
                 else {
-                    for (int line : locations.getLines(absolutePath)) {
-                        FileBlame fileBlame = builder.build(absolutePath);
+                    for (int line : locations.getLines(relativePath)) {
+                        FileBlame fileBlame = builder.build(relativePath);
                         if (line <= 0) {
                             fillWithLastCommit(relativePath, fileBlame, lastCommitRunner);
                         }
                         else if (line <= blame.getResultContents().size()) {
-                            fillWithBlameResult(absolutePath, fileBlame, blame, line);
+                            fillWithBlameResult(relativePath, fileBlame, blame, line);
                         }
                         blames.add(fileBlame);
                     }
@@ -194,7 +187,7 @@ class GitBlamer extends Blamer {
             }
             catch (GitAPIException | JGitInternalException exception) {
                 log.logException(exception, "- error running git blame on '%s' with revision '%s'",
-                        absolutePath, headCommit);
+                        relativePath, headCommit);
             }
             log.logSummary();
         }
