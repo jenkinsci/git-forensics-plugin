@@ -29,7 +29,7 @@
 
     <!-- Jenkins Plugin Dependencies Versions -->
     <plugin-util-api.version>0.1.0-beta10</plugin-util-api.version>
-    <data-tables-api.version>1.10.20-9-beta1</data-tables-api.version>
+    <data-tables-api.version>1.10.20-10-beta1</data-tables-api.version>
     <forensics-api-plugin.version>0.7.0-beta7</forensics-api-plugin.version>
     <codingstyle.library.version>1.0.0</codingstyle.library.version>
 
