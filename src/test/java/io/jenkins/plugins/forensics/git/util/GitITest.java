@@ -1,6 +1,7 @@
-package io.jenkins.plugins.git.forensics.util;
+package io.jenkins.plugins.forensics.git.util;
 
 import java.io.IOException;
+import java.util.Collections;
 
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
@@ -10,14 +11,25 @@ import org.junit.Rule;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
+import org.jenkinsci.plugins.gitclient.GitClient;
+import hudson.EnvVars;
+import hudson.FilePath;
+import hudson.model.Job;
+import hudson.model.Run;
+import hudson.model.TaskListener;
+import hudson.plugins.git.GitSCM;
 import jenkins.plugins.git.GitSampleRepoRule;
+
+import io.jenkins.plugins.util.IntegrationTestWithJenkinsPerSuite;
+
+import static org.mockito.Mockito.*;
 
 /**
  * Base class for Git integration tests. Provides a Git repository that will b e initialized for each test.
  *
  * @author Ullrich Hafner
  */
-public class GitITest {
+public class GitITest extends IntegrationTestWithJenkinsPerSuite {
     /** File name of a source file that will be modified by two authors. */
     protected static final String FILE_NAME = "source.txt";
     /** Author 1 name. */
@@ -150,5 +162,38 @@ public class GitITest {
         git("config", "user.name", BAR_NAME);
         git("config", "user.email", BAR_EMAIL);
         git("commit", "--message=Bar");
+    }
+
+    /**
+     * Returns the absolute path of the working tree.
+     *
+     * @return absolute path to the working tree (normalized with Unix file separators).
+     */
+    protected String getRepositoryRoot() {
+        return AbstractRepositoryCallback.getAbsolutePath(sampleRepo.getRoot());
+    }
+
+    /**
+     * Creates a {@link GitClient} that uses the sample repository.
+     *
+     * @return a {@link GitClient}
+     */
+    protected GitClient createGitClient() {
+        try {
+            GitSCM scm = new GitSCM(
+                    GitSCM.createRepoList("file:///" + sampleRepo.getRoot(), null),
+                    Collections.emptyList(), false, Collections.emptyList(),
+                    null, null, Collections.emptyList());
+            @SuppressWarnings("rawtypes")
+            Run run = mock(Run.class);
+            Job<?, ?> job = mock(Job.class);
+            when(run.getParent()).thenReturn(job);
+
+            return scm.createClient(TaskListener.NULL, new EnvVars(), run,
+                    new FilePath(sampleRepo.getRoot()));
+        }
+        catch (IOException | InterruptedException exception) {
+            throw new AssertionError(exception);
+        }
     }
 }

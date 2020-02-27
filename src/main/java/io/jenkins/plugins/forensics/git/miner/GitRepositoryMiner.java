@@ -1,8 +1,6 @@
-package io.jenkins.plugins.git.forensics.miner;
+package io.jenkins.plugins.forensics.git.miner;
 
 import java.io.IOException;
-import java.nio.file.LinkOption;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -11,22 +9,22 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.dircache.InvalidPathException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 
+import edu.hm.hafner.util.FilteredLog;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.jenkinsci.plugins.gitclient.RepositoryCallback;
-import hudson.FilePath;
 import hudson.remoting.VirtualChannel;
 
+import io.jenkins.plugins.forensics.git.util.AbstractRepositoryCallback;
 import io.jenkins.plugins.forensics.miner.FileStatistics;
+import io.jenkins.plugins.forensics.miner.FileStatistics.FileStatisticsBuilder;
 import io.jenkins.plugins.forensics.miner.RepositoryMiner;
 import io.jenkins.plugins.forensics.miner.RepositoryStatistics;
 
@@ -35,58 +33,50 @@ import io.jenkins.plugins.forensics.miner.RepositoryStatistics;
  *
  * @author Ullrich Hafner
  * @see io.jenkins.plugins.forensics.miner.FileStatistics
- * @see io.jenkins.plugins.git.forensics.miner.FilesCollector
+ * @see FilesCollector
  */
 @SuppressFBWarnings(value = "SE", justification = "GitClient implementation is Serializable")
 public class GitRepositoryMiner extends RepositoryMiner {
     private static final long serialVersionUID = 1157958118716013983L;
 
     private final GitClient gitClient;
-    private final FilePath workspace;
 
     GitRepositoryMiner(final GitClient gitClient) {
         super();
 
         this.gitClient = gitClient;
-        workspace = gitClient.getWorkTree();
     }
 
     @Override
-    public RepositoryStatistics mine(final Collection<String> relativeFileNames) throws InterruptedException {
+    public RepositoryStatistics mine(final Collection<String> absoluteFileNames, final FilteredLog logger)
+            throws InterruptedException {
         try {
-            String workspacePath = getWorkspacePath();
-
             long nano = System.nanoTime();
+            logger.logInfo("Analyzing the commit log of the Git repository '%s'", gitClient.getWorkTree());
             RepositoryStatistics statistics = gitClient.withRepository(
-                    new RepositoryStatisticsCallback(workspacePath, relativeFileNames));
-            statistics.logInfo("Mining of the Git repository took %d seconds",
+                    new RepositoryStatisticsCallback(absoluteFileNames, logger));
+            logger.logInfo("-> created report for %d files in %d seconds", statistics.size(),
                     1 + (System.nanoTime() - nano) / 1_000_000_000L);
             return statistics;
         }
         catch (IOException exception) {
             RepositoryStatistics statistics = new RepositoryStatistics();
-            statistics.logException(exception, "Exception occurred while mining the Git repository using GitClient");
+            logger.logException(exception, "Exception occurred while mining the Git repository using GitClient");
             return statistics;
         }
     }
 
-    private String getWorkspacePath() {
-        try {
-            return Paths.get(workspace.getRemote()).toAbsolutePath().normalize().toRealPath(LinkOption.NOFOLLOW_LINKS).toString();
-        }
-        catch (IOException | InvalidPathException exception) {
-            return workspace.getRemote();
-        }
-    }
-
-    private static class RepositoryStatisticsCallback implements RepositoryCallback<RepositoryStatistics> {
+    private static class RepositoryStatisticsCallback extends AbstractRepositoryCallback<RepositoryStatistics> {
         private static final long serialVersionUID = 7667073858514128136L;
-        private final String workspacePath;
-        private final Collection<String> paths;
 
-        RepositoryStatisticsCallback(final String workspacePath, final Collection<String> paths) {
-            this.workspacePath = workspacePath;
+        private final Collection<String> paths;
+        private final FilteredLog logger;
+
+        RepositoryStatisticsCallback(final Collection<String> paths, final FilteredLog logger) {
+            super();
+
             this.paths = paths;
+            this.logger = logger;
         }
 
         @Override
@@ -94,6 +84,11 @@ public class GitRepositoryMiner extends RepositoryMiner {
             try {
                 if (paths.isEmpty()) { // scan whole repository
                     ObjectId head = repository.resolve(Constants.HEAD);
+                    if (head == null) {
+                        RepositoryStatistics statistics = new RepositoryStatistics();
+                        logger.logError("Can't obtain HEAD of repository.");
+                        return statistics;
+                    }
                     Set<String> files = new FilesCollector(repository).findAllFor(head);
                     return analyze(repository, files);
                 }
@@ -101,7 +96,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
             }
             catch (IOException exception) {
                 RepositoryStatistics statistics = new RepositoryStatistics();
-                statistics.logException(exception, "Can't obtain HEAD of repository.");
+                logger.logException(exception, "Can't obtain HEAD of repository.");
                 return statistics;
             }
             finally {
@@ -111,29 +106,29 @@ public class GitRepositoryMiner extends RepositoryMiner {
 
         RepositoryStatistics analyze(final Repository repository, final Collection<String> files) {
             RepositoryStatistics statistics = new RepositoryStatistics();
-            statistics.logInfo("Invoking Git miner to create statistics for all available files");
+            logger.logInfo("Invoking Git miner to create statistics for all available files");
+            logger.logInfo("Git working tree = '%s'", getWorkTree(repository));
 
+            FileStatisticsBuilder builder = new FileStatisticsBuilder();
             List<FileStatistics> fileStatistics = files.stream()
-                    .map(file -> analyzeHistory(repository, file, statistics))
+                    .map(builder::build)
+                    .map(file -> analyzeHistory(repository, file))
                     .collect(Collectors.toList());
             statistics.addAll(fileStatistics);
 
-            statistics.logInfo("-> created statistics for %d files", statistics.size());
+            logger.logInfo("-> created statistics for %d files", statistics.size());
 
             return statistics;
         }
 
-        private FileStatistics analyzeHistory(final Repository repository, final String fileName,
-                final RepositoryStatistics statistics) {
-            FileStatistics fileStatistics = new FileStatistics(workspacePath + "/" + fileName);
-
+        private FileStatistics analyzeHistory(final Repository repository, final FileStatistics fileStatistics) {
             try (Git git = new Git(repository)) {
-                Iterable<RevCommit> commits = git.log().addPath(fileName).call();
+                Iterable<RevCommit> commits = git.log().addPath(fileStatistics.getFileName()).call();
                 commits.forEach(c -> fileStatistics.inspectCommit(c.getCommitTime(), getAuthor(c)));
                 return fileStatistics;
             }
             catch (GitAPIException exception) {
-                statistics.logException(exception, "Can't analyze history of file %s", fileName);
+                logger.logException(exception, "Can't analyze history of file %s", fileStatistics.getFileName());
             }
             return fileStatistics;
         }

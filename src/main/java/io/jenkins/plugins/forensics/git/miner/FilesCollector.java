@@ -1,4 +1,4 @@
-package io.jenkins.plugins.git.forensics.miner;
+package io.jenkins.plugins.forensics.git.miner;
 
 import java.io.IOException;
 import java.util.Collections;
