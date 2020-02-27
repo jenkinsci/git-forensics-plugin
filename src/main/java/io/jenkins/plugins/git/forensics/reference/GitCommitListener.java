@@ -10,7 +10,7 @@ import hudson.plugins.git.GitSCM;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
-import io.jenkins.plugins.forensics.util.FilteredLog;
+import edu.hm.hafner.util.FilteredLog;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.LogCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;

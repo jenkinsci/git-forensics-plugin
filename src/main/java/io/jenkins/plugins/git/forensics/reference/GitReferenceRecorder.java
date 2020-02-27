@@ -10,7 +10,7 @@ import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Publisher;
 import io.jenkins.plugins.forensics.reference.ReferenceRecorder;
-import io.jenkins.plugins.forensics.util.FilteredLog;
+import edu.hm.hafner.util.FilteredLog;
 import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
 import org.jenkinsci.Symbol;
