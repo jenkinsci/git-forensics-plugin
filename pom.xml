@@ -28,10 +28,9 @@
     <eclipse-collections.version>9.2.0</eclipse-collections.version>
 
     <!-- Jenkins Plugin Dependencies Versions -->
-    <plugin-util-api.version>1.0.0</plugin-util-api.version>
+    <plugin-util-api.version>1.0.1</plugin-util-api.version>
     <data-tables-api.version>1.10.20-13</data-tables-api.version>
     <forensics-api-plugin.version>0.7.0-beta8</forensics-api-plugin.version>
-    <codingstyle.library.version>1.0.0</codingstyle.library.version>
 
     <git-plugin.version>4.1.1</git-plugin.version>
     <git-client.version>3.1.1</git-client.version>
@@ -121,13 +120,6 @@
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>data-tables-api</artifactId>
       <version>${data-tables-api.version}</version>
-      <scope>test</scope>
-      <type>test-jar</type>
-    </dependency>
-    <dependency>
-      <groupId>edu.hm.hafner</groupId>
-      <artifactId>codingstyle</artifactId>
-      <version>${codingstyle.library.version}</version>
       <scope>test</scope>
       <type>test-jar</type>
     </dependency>
