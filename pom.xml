@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jvnet.hudson.plugins</groupId>
     <artifactId>analysis-pom</artifactId>
-    <version>2.2.1</version>
+    <version>2.2.2</version>
     <relativePath />
   </parent>
 
@@ -18,7 +18,7 @@
   <url>https://github.com/jenkinsci/git-forensics-plugin</url>
 
   <properties>
-    <revision>0.7.0-beta7</revision>
+    <revision>0.7.1</revision>
     <changelist>-SNAPSHOT</changelist>
 
     <module.name>${project.groupId}.git.forensics</module.name>
@@ -28,10 +28,9 @@
     <eclipse-collections.version>9.2.0</eclipse-collections.version>
 
     <!-- Jenkins Plugin Dependencies Versions -->
-    <plugin-util-api.version>0.1.0-beta10</plugin-util-api.version>
-    <data-tables-api.version>1.10.20-10-beta1</data-tables-api.version>
-    <forensics-api-plugin.version>0.7.0-beta8</forensics-api-plugin.version>
-    <codingstyle.library.version>1.0.0</codingstyle.library.version>
+    <plugin-util-api.version>1.0.1</plugin-util-api.version>
+    <data-tables-api.version>1.10.20-13</data-tables-api.version>
+    <forensics-api-plugin.version>0.7.0</forensics-api-plugin.version>
 
     <git-plugin.version>4.1.1</git-plugin.version>
     <git-client.version>3.1.1</git-client.version>
@@ -124,13 +123,6 @@
       <scope>test</scope>
       <type>test-jar</type>
     </dependency>
-    <dependency>
-      <groupId>edu.hm.hafner</groupId>
-      <artifactId>codingstyle</artifactId>
-      <version>${codingstyle.library.version}</version>
-      <scope>test</scope>
-      <type>test-jar</type>
-    </dependency>
 
     <!-- GitSampleRepoRule -->
     <dependency>
@@ -196,14 +188,14 @@
     </repository>
     <repository>
       <id>repo.jenkins-ci.org</id>
-      <url>http://repo.jenkins-ci.org/public/</url>
+      <url>https://repo.jenkins-ci.org/public/</url>
     </repository>
   </repositories>
 
   <pluginRepositories>
     <pluginRepository>
       <id>repo.jenkins-ci.org</id>
-      <url>http://repo.jenkins-ci.org/public/</url>
+      <url>https://repo.jenkins-ci.org/public/</url>
     </pluginRepository>
   </pluginRepositories>
 
