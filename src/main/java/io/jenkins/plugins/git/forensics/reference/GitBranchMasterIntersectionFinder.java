@@ -1,5 +1,6 @@
 package io.jenkins.plugins.git.forensics.reference;
 
+import edu.hm.hafner.util.VisibleForTesting;
 import hudson.model.Run;
 import io.jenkins.plugins.forensics.reference.BranchMasterIntersectionFinder;
 
@@ -20,7 +21,7 @@ public class GitBranchMasterIntersectionFinder extends BranchMasterIntersectionF
     private transient Run<?, ?> reference;
 
     private static final String NAME = "GitBranchMasterIntersectionFinder";
-    private static final String NO_INTERSECTION_FOUND = "No intersection was found in master commits";
+    public static final String NO_INTERSECTION_FOUND = "No intersection was found in master commits";
 
     private final String buildId;
 
