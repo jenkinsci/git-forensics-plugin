@@ -30,10 +30,17 @@ public class GitBranchMasterIntersectionFinder extends BranchMasterIntersectionF
      */
     private final int maxLogs;
 
-    public GitBranchMasterIntersectionFinder(final Run<?, ?> run, final int maxLogs, final Run<?, ?> reference) {
+    private final boolean skipUnknownCommits;
+
+    private final boolean newestBuildIfNotFound;
+
+
+    public GitBranchMasterIntersectionFinder(final Run<?, ?> run, final int maxLogs, final boolean skipUnknownCommits, final boolean newestBuildIfNotFound, final Run<?, ?> reference) {
         super();
         this.run = run;
         this.maxLogs = maxLogs;
+        this.skipUnknownCommits = skipUnknownCommits;
+        this.newestBuildIfNotFound = newestBuildIfNotFound;
         this.reference = reference;
         this.buildId = findReferencePoint().get();
     }
@@ -46,9 +53,13 @@ public class GitBranchMasterIntersectionFinder extends BranchMasterIntersectionF
         GitCommit thisCommit = run.getAction(GitCommit.class);
         GitCommit referenceCommit = reference.getAction(GitCommit.class);
 
-        Optional<String> buildId = thisCommit.getReferencePoint(referenceCommit, maxLogs);
-        if(!buildId.isPresent()) {
-            buildId = Optional.of(NO_INTERSECTION_FOUND);
+        Optional<String> buildId = thisCommit.getReferencePoint(referenceCommit, maxLogs, skipUnknownCommits);
+        if (!buildId.isPresent()) {
+            if (newestBuildIfNotFound) {
+                buildId = Optional.of(reference.getExternalizableId());
+            } else {
+                buildId = Optional.of(NO_INTERSECTION_FOUND);
+            }
         }
         return buildId;
     }

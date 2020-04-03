@@ -50,7 +50,7 @@ public class GitCommit extends VCSCommit {
     public String getBuildName() {return run.getExternalizableId();}
 
     @Override
-    public Optional<String> getReferencePoint(final VCSCommit reference, final int maxLogs) {
+    public Optional<String> getReferencePoint(final VCSCommit reference, final int maxLogs, final boolean skipUnknownCommits) {
         if (reference.getClass() != GitCommit.class) {
             // Incompatible version control types.
             // Wont happen if this build and the reference build are from the same VCS repository.
@@ -84,7 +84,13 @@ public class GitCommit extends VCSCommit {
                 tmp = tmp.getPreviousBuild();
                 continue;
             }
-            masterCommits.addAll(gitCommit.getGitCommitLog().getRevisions());
+            List<String> commits = gitCommit.getGitCommitLog().getRevisions();
+            if (skipUnknownCommits && !branchCommits.containsAll(commits)) {
+                // Skip build if it has unknown commits to current branch.
+                tmp = tmp.getPreviousBuild();
+                continue;
+            }
+            masterCommits.addAll(commits);
             referencePoint = branchCommits.stream().filter(masterCommits::contains).findFirst();
             // If an intersection is found the buildId in Jenkins will be saved
             if (referencePoint.isPresent()) {

@@ -8,4 +8,12 @@
         <f:entry title="${%title.referenceJob}" field="referenceJobName" description="${%description.referenceJob}">
             <f:combobox/>
         </f:entry>
+
+        <f:entry title="${%title.skipUnknownCommits}" description="${%description.skipUnknownCommits}" field="skipUnknownCommits">
+            <f:checkbox />
+        </f:entry>
+
+        <f:entry title="${%title.newestBuildIfNotFound}" description="${%description.newestBuildIfNotFound}" field="newestBuildIfNotFound">
+            <f:checkbox />
+        </f:entry>
 </j:jelly>

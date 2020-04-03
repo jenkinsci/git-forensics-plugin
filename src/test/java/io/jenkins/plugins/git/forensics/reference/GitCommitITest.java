@@ -57,7 +57,7 @@ public class GitCommitITest {
         GitCommit jobGitCommit = job.getLastCompletedBuild().getAction(GitCommit.class);
         assertEquals(3, jobGitCommit.getRevisions().size());
 
-        Optional<String> result = jobGitCommit.getReferencePoint(referenceGitCommit, 100);
+        Optional<String> result = jobGitCommit.getReferencePoint(referenceGitCommit, 100, false);
         assertTrue(result.isPresent());
         assertEquals(reference.getLastCompletedBuild().getExternalizableId(), result.get());
     }
