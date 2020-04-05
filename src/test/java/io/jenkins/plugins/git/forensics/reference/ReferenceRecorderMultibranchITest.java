@@ -160,9 +160,9 @@ public class ReferenceRecorderMultibranchITest {
 
     /**
      * Checks if the correct build is found even if the reference build has commits that the feature build does not.
+     * This also checks the algorithm if the config skipUnknownCommits is disabled.
      * @throws Exception
      */
-    @Ignore
     @Test
     public void shouldFindBuildWithMultipleCommitsInReferenceBuild() throws Exception {
         sampleRepo.init();
@@ -175,16 +175,21 @@ public class ReferenceRecorderMultibranchITest {
         for (SCMSource source : mp.getSCMSources()) {
             assertEquals(mp, source.getOwner());
         }
-
         WorkflowJob p = scheduleAndFindBranchProject(mp, "master");
         assertEquals(new GitBranchSCMHead("master"), SCMHead.HeadByItem.findHead(p));
         assertEquals(1, mp.getItems().size());
         r.waitUntilNoActivity();
         WorkflowRun b1 = p.getLastBuild();
         assertEquals(1, b1.getNumber());
+        r.assertLogContains("initial content", b1);
         r.assertLogContains("branch=master", b1);
 
-        sampleRepo.write("test.txt", "Test");
+        // Check this plugin
+        GitCommit gitCommit = b1.getAction(GitCommit.class);
+        assertNotNull("GitCommit Action must not be null", gitCommit);
+        assertEquals("Repository should only have two Commits: the init and the flow commit",2, gitCommit.getGitCommitLog().getRevisions().size());
+
+        sampleRepo.write("test.txt", "test");
         sampleRepo.git("add", "test.txt");
         sampleRepo.git("commit", "--all", "--message=test");
 
@@ -195,10 +200,8 @@ public class ReferenceRecorderMultibranchITest {
 
         // new master commits
         sampleRepo.git("checkout", "master");
-        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics()}");
-        sampleRepo.write("test.txt", "test");
-        sampleRepo.git("add", "test.txt");
-        sampleRepo.git("commit", "--all", "--message=test");
+        sampleRepo.write("test.txt", "test edit");
+        sampleRepo.git("commit", "--all", "--message=edit-test");
 
         p = scheduleAndFindBranchProject(mp, "master");
         assertEquals(2, mp.getItems().size());
@@ -207,28 +210,25 @@ public class ReferenceRecorderMultibranchITest {
         assertEquals(2, b1.getNumber());
         r.assertLogContains("branch=master", b1);
 
-        // Check this plugin
-        GitCommit gitCommit = b1.getAction(GitCommit.class);
-        assertNotNull("GitCommit Action must not be null", gitCommit);
-        assertEquals("Repository should now have 2 commits",2, gitCommit.getGitCommitLog().getRevisions().size());
-
         p = scheduleAndFindBranchProject(mp, "feature");
         assertEquals(2, mp.getItems().size());
         r.waitUntilNoActivity();
         b1 = p.getLastBuild();
         assertEquals(1, b1.getNumber());
+        r.assertLogContains("SUBSEQUENT CONTENT", b1);
         r.assertLogContains("branch=feature", b1);
 
         // Check this plugin
         gitCommit = b1.getAction(GitCommit.class);
         assertNotNull("GitCommit Action must not be null", gitCommit);
         assertEquals("Repository should now have 4 commits",4, gitCommit.getGitCommitLog().getRevisions().size());
-
         // Found correct intersection?
         BranchMasterIntersectionFinder finder = b1.getAction(BranchMasterIntersectionFinder.class);
         assertNotNull("GitBranchMasterIntersectionFinder Action must not be null", finder);
         assertEquals("Should have found the correct intersection point", "p/master#2",finder.getBuildId());
     }
+
+    // Testing the configs
 
     /**
      * Check negative case if maxCommits is too low to find the reference Point
@@ -285,6 +285,213 @@ public class ReferenceRecorderMultibranchITest {
         BranchMasterIntersectionFinder finder = b1.getAction(BranchMasterIntersectionFinder.class);
         assertNotNull("GitBranchMasterIntersectionFinder Action must not be null", finder);
         assertEquals("Should have found the correct intersection point", GitBranchMasterIntersectionFinder.NO_INTERSECTION_FOUND,finder.getBuildId());
+    }
+
+    /**
+     * Checks the Configuration skipUnknownCommits. If there are unknown commits in the master build the algorithm should
+     * skip the build in search for the reference point.
+     * @throws Exception
+     */
+    @Test
+    public void shouldSkipBuildWithUnknownBuildsEnabled() throws Exception {
+        sampleRepo.init();
+        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file'); echo \"GitForensics\"; gitForensics skipUnknownCommits: true}");
+        sampleRepo.write("file", "initial content");
+        sampleRepo.git("add", "Jenkinsfile");
+        sampleRepo.git("commit", "--all", "--message=flow");
+        WorkflowMultiBranchProject mp = r.jenkins.createProject(WorkflowMultiBranchProject.class, "p");
+        mp.getSourcesList().add(new BranchSource(new GitSCMSource(null, sampleRepo.toString(), "", "*", "", false), new DefaultBranchPropertyStrategy(new BranchProperty[0])));
+        for (SCMSource source : mp.getSCMSources()) {
+            assertEquals(mp, source.getOwner());
+        }
+        WorkflowJob p = scheduleAndFindBranchProject(mp, "master");
+        assertEquals(new GitBranchSCMHead("master"), SCMHead.HeadByItem.findHead(p));
+        assertEquals(1, mp.getItems().size());
+        r.waitUntilNoActivity();
+        WorkflowRun b1 = p.getLastBuild();
+        assertEquals(1, b1.getNumber());
+        r.assertLogContains("initial content", b1);
+        r.assertLogContains("branch=master", b1);
+
+        // Check this plugin
+        GitCommit gitCommit = b1.getAction(GitCommit.class);
+        assertNotNull("GitCommit Action must not be null", gitCommit);
+        assertEquals("Repository should only have two Commits: the init and the flow commit",2, gitCommit.getGitCommitLog().getRevisions().size());
+
+        sampleRepo.write("test.txt", "test");
+        sampleRepo.git("add", "test.txt");
+        sampleRepo.git("commit", "--all", "--message=test");
+
+        sampleRepo.git("checkout", "-b", "feature");
+        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics skipUnknownCommits: true}");
+        sampleRepo.write("file", "subsequent content");
+        sampleRepo.git("commit", "--all", "--message=tweaked");
+
+        // new master commits
+        sampleRepo.git("checkout", "master");
+        sampleRepo.write("test.txt", "test edit");
+        sampleRepo.git("commit", "--all", "--message=edit-test");
+
+        p = scheduleAndFindBranchProject(mp, "master");
+        assertEquals(2, mp.getItems().size());
+        r.waitUntilNoActivity();
+        b1 = p.getLastBuild();
+        assertEquals(2, b1.getNumber());
+        r.assertLogContains("branch=master", b1);
+
+        p = scheduleAndFindBranchProject(mp, "feature");
+        assertEquals(2, mp.getItems().size());
+        r.waitUntilNoActivity();
+        b1 = p.getLastBuild();
+        assertEquals(1, b1.getNumber());
+        r.assertLogContains("SUBSEQUENT CONTENT", b1);
+        r.assertLogContains("branch=feature", b1);
+
+        // Check this plugin
+        gitCommit = b1.getAction(GitCommit.class);
+        assertNotNull("GitCommit Action must not be null", gitCommit);
+        assertEquals("Repository should now have 4 commits",4, gitCommit.getGitCommitLog().getRevisions().size());
+        // Found correct intersection?
+        BranchMasterIntersectionFinder finder = b1.getAction(BranchMasterIntersectionFinder.class);
+        assertNotNull("GitBranchMasterIntersectionFinder Action must not be null", finder);
+        assertEquals("Should have found the correct intersection point", "p/master#1",finder.getBuildId());
+    }
+
+    /**
+     * Checks the configuration newestBuildIfNotFound. If there is no intersection found (in this case due to insufficient maxCommits)
+     * then the newest Build of the master job should be taken as reference point.
+     * @throws Exception
+     */
+    @Test
+    public void shouldUseNewestBuildIfNewestBuildIfNotFoundIsEnabled() throws Exception {
+        sampleRepo.init();
+        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file'); echo \"GitForensics\"; gitForensics maxCommits: 2, newestBuildIfNotFound: true}");
+        sampleRepo.write("file", "initial content");
+        sampleRepo.git("add", "Jenkinsfile");
+        sampleRepo.git("commit", "--all", "--message=flow");
+        WorkflowMultiBranchProject mp = r.jenkins.createProject(WorkflowMultiBranchProject.class, "p");
+        mp.getSourcesList().add(new BranchSource(new GitSCMSource(null, sampleRepo.toString(), "", "*", "", false), new DefaultBranchPropertyStrategy(new BranchProperty[0])));
+        for (SCMSource source : mp.getSCMSources()) {
+            assertEquals(mp, source.getOwner());
+        }
+        WorkflowJob p = scheduleAndFindBranchProject(mp, "master");
+        assertEquals(new GitBranchSCMHead("master"), SCMHead.HeadByItem.findHead(p));
+        assertEquals(1, mp.getItems().size());
+        r.waitUntilNoActivity();
+        WorkflowRun b1 = p.getLastBuild();
+        assertEquals(1, b1.getNumber());
+        r.assertLogContains("initial content", b1);
+        r.assertLogContains("branch=master", b1);
+
+        sampleRepo.write("testfile.txt", "testfile");
+        sampleRepo.git("add", "testfile.txt");
+        sampleRepo.git("commit", "--all", "--message=testfile");
+
+        // Second master build
+        p = scheduleAndFindBranchProject(mp, "master");
+        assertEquals(1, mp.getItems().size());
+        r.waitUntilNoActivity();
+        b1 = p.getLastBuild();
+        assertEquals(2, b1.getNumber());
+        r.assertLogContains("branch=master", b1);
+
+        // Check this plugin
+        GitCommit gitCommit = b1.getAction(GitCommit.class);
+        assertNotNull("GitCommit Action must not be null", gitCommit);
+        assertEquals("Repository should only have two Commits: the init and the flow commit",1, gitCommit.getGitCommitLog().getRevisions().size());
+
+        sampleRepo.git("checkout", "-b", "feature");
+        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics maxCommits: 2, newestBuildIfNotFound: true}");
+        sampleRepo.write("file", "subsequent content");
+        sampleRepo.git("commit", "--all", "--message=tweaked");
+        // Second Commit
+        sampleRepo.write("test.txt", "Test");
+        sampleRepo.git("add", "test.txt");
+        sampleRepo.git("commit", "--all", "--message=test");
+        p = scheduleAndFindBranchProject(mp, "feature");
+        assertEquals(2, mp.getItems().size());
+        r.waitUntilNoActivity();
+        b1 = p.getLastBuild();
+        assertEquals(1, b1.getNumber());
+        r.assertLogContains("SUBSEQUENT CONTENT", b1);
+        r.assertLogContains("branch=feature", b1);
+
+        // Check this plugin
+        gitCommit = b1.getAction(GitCommit.class);
+        assertNotNull("GitCommit Action must not be null", gitCommit);
+        assertEquals("Repository should now have 3 commits",5, gitCommit.getGitCommitLog().getRevisions().size());
+        // Found correct intersection?
+        BranchMasterIntersectionFinder finder = b1.getAction(BranchMasterIntersectionFinder.class);
+        assertNotNull("GitBranchMasterIntersectionFinder Action must not be null", finder);
+        assertEquals("Should have found the correct intersection point", "p/master#2",finder.getBuildId());
+    }
+
+    /**
+     * Checks if the correct intersection point is found when there are multiple feature branches and one is checked out
+     * not from the master but from one of the other feature branches.
+     * @throws Exception
+     */
+    @Test
+    public void shouldFindMasterReferenceIfBranchIsCheckedOutFromAnotherFeatureBranch() throws Exception {
+        sampleRepo.init();
+        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file'); echo \"GitForensics\"; gitForensics()}");
+        sampleRepo.write("file", "initial content");
+        sampleRepo.git("add", "Jenkinsfile");
+        sampleRepo.git("commit", "--all", "--message=flow");
+        WorkflowMultiBranchProject mp = r.jenkins.createProject(WorkflowMultiBranchProject.class, "p");
+        mp.getSourcesList().add(new BranchSource(new GitSCMSource(null, sampleRepo.toString(), "", "*", "", false), new DefaultBranchPropertyStrategy(new BranchProperty[0])));
+        for (SCMSource source : mp.getSCMSources()) {
+            assertEquals(mp, source.getOwner());
+        }
+        WorkflowJob p = scheduleAndFindBranchProject(mp, "master");
+        assertEquals(new GitBranchSCMHead("master"), SCMHead.HeadByItem.findHead(p));
+        assertEquals(1, mp.getItems().size());
+        r.waitUntilNoActivity();
+        WorkflowRun b1 = p.getLastBuild();
+        assertEquals(1, b1.getNumber());
+        r.assertLogContains("initial content", b1);
+        r.assertLogContains("branch=master", b1);
+
+        // Check this plugin
+        GitCommit gitCommit = b1.getAction(GitCommit.class);
+        assertNotNull("GitCommit Action must not be null", gitCommit);
+        assertEquals("Repository should only have two Commits: the init and the flow commit",2, gitCommit.getGitCommitLog().getRevisions().size());
+
+        sampleRepo.git("checkout", "-b", "feature");
+        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics()}");
+        sampleRepo.write("file", "subsequent content");
+        sampleRepo.git("commit", "--all", "--message=tweaked");
+        p = scheduleAndFindBranchProject(mp, "feature");
+        assertEquals(2, mp.getItems().size());
+        r.waitUntilNoActivity();
+        b1 = p.getLastBuild();
+        assertEquals(1, b1.getNumber());
+        r.assertLogContains("SUBSEQUENT CONTENT", b1);
+        r.assertLogContains("branch=feature", b1);
+
+        // Check this plugin
+        gitCommit = b1.getAction(GitCommit.class);
+        assertNotNull("GitCommit Action must not be null", gitCommit);
+        assertEquals("Repository should now have 3 commits",3, gitCommit.getGitCommitLog().getRevisions().size());
+
+        // Now the second branch
+        sampleRepo.git("checkout", "-b", "feature2");
+        sampleRepo.write("test.txt", "my second feature");
+        sampleRepo.git("add", "test.txt");
+        sampleRepo.git("commit", "--all", "--message=secondFeature");
+        p = scheduleAndFindBranchProject(mp, "feature2");
+        assertEquals(3, mp.getItems().size());
+        r.waitUntilNoActivity();
+        b1 = p.getLastBuild();
+        assertEquals(1, b1.getNumber());
+        // should also contain the log from the first feature branch
+        r.assertLogContains("SUBSEQUENT CONTENT", b1);
+        r.assertLogContains("branch=feature2", b1);
+
+        // Found correct intersection? (master and not the first feature branch)
+        BranchMasterIntersectionFinder finder = b1.getAction(BranchMasterIntersectionFinder.class);
+        assertNotNull("GitBranchMasterIntersectionFinder Action must not be null", finder);
+        assertEquals("Should have found the correct intersection point", "p/master#1",finder.getBuildId());
     }
 
     public static @Nonnull
