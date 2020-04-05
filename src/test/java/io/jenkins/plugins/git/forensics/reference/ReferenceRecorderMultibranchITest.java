@@ -1,6 +1,7 @@
 package io.jenkins.plugins.git.forensics.reference;
 
 import com.cloudbees.hudson.plugins.folder.computed.FolderComputation;
+import hudson.model.Run;
 import io.jenkins.plugins.forensics.reference.BranchMasterIntersectionFinder;
 import jenkins.branch.BranchProperty;
 import jenkins.branch.BranchSource;
@@ -166,7 +167,7 @@ public class ReferenceRecorderMultibranchITest {
     @Test
     public void shouldFindBuildWithMultipleCommitsInReferenceBuild() throws Exception {
         sampleRepo.init();
-        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file'); echo \"GitForensics\"; gitForensics()}");
+        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file'); echo \"GitForensics\"; gitForensics newestBuildIfNotFound: false}");
         sampleRepo.write("file", "initial content");
         sampleRepo.git("add", "Jenkinsfile");
         sampleRepo.git("commit", "--all", "--message=flow");
@@ -492,6 +493,160 @@ public class ReferenceRecorderMultibranchITest {
         BranchMasterIntersectionFinder finder = b1.getAction(BranchMasterIntersectionFinder.class);
         assertNotNull("GitBranchMasterIntersectionFinder Action must not be null", finder);
         assertEquals("Should have found the correct intersection point", "p/master#1",finder.getBuildId());
+    }
+
+    /**
+     * Tests if the Intersection point is not found if the build is deleted.
+     * @throws Exception
+     */
+    @Test
+    public void shouldNotFindIntersectionIfBuildWasDeleted() throws Exception {
+        sampleRepo.init();
+        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file'); echo \"GitForensics\"; gitForensics()}");
+        sampleRepo.write("file", "initial content");
+        sampleRepo.git("add", "Jenkinsfile");
+        sampleRepo.git("commit", "--all", "--message=flow");
+        WorkflowMultiBranchProject mp = r.jenkins.createProject(WorkflowMultiBranchProject.class, "p");
+        mp.getSourcesList().add(new BranchSource(new GitSCMSource(null, sampleRepo.toString(), "", "*", "", false), new DefaultBranchPropertyStrategy(new BranchProperty[0])));
+        for (SCMSource source : mp.getSCMSources()) {
+            assertEquals(mp, source.getOwner());
+        }
+        WorkflowJob p = scheduleAndFindBranchProject(mp, "master");
+        assertEquals(new GitBranchSCMHead("master"), SCMHead.HeadByItem.findHead(p));
+        assertEquals(1, mp.getItems().size());
+        r.waitUntilNoActivity();
+        WorkflowRun toDelete = p.getLastBuild();
+        String toDeleteId =  toDelete.getExternalizableId();
+        assertEquals(1, toDelete.getNumber());
+        r.assertLogContains("initial content", toDelete);
+        r.assertLogContains("branch=master", toDelete);
+
+        // Check this plugin
+        GitCommit gitCommit = toDelete.getAction(GitCommit.class);
+        assertNotNull("GitCommit Action must not be null", gitCommit);
+        assertEquals("Repository should only have two Commits: the init and the flow commit",2, gitCommit.getGitCommitLog().getRevisions().size());
+
+        sampleRepo.git("checkout", "-b", "feature");
+        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics()}");
+        sampleRepo.write("file", "subsequent content");
+        sampleRepo.git("commit", "--all", "--message=tweaked");
+
+        // New master commits
+        sampleRepo.git("checkout", "master");
+        sampleRepo.write("testfile.txt", "testfile");
+        sampleRepo.git("add", "testfile.txt");
+        sampleRepo.git("commit", "--all", "--message=testfile");
+
+        // Second master build
+        p.scheduleBuild2(0).get();
+        assertEquals(1, mp.getItems().size());
+        r.waitUntilNoActivity();
+        WorkflowRun b1 = p.getLastBuild();
+        assertEquals(2, b1.getNumber());
+        r.assertLogContains("branch=master", b1);
+
+        // Check this plugin
+        gitCommit = b1.getAction(GitCommit.class);
+        assertNotNull("GitCommit Action must not be null", gitCommit);
+        assertEquals("Repository should now have 1 commits",1, gitCommit.getGitCommitLog().getRevisions().size());
+
+        // Now delete Build before the feature branch is build.
+        WorkflowRun run = (WorkflowRun) Run.fromExternalizableId(toDeleteId);
+        run.delete();
+
+        p = scheduleAndFindBranchProject(mp, "feature");
+        assertEquals(2, mp.getItems().size());
+        r.waitUntilNoActivity();
+        b1 = p.getLastBuild();
+        assertEquals(1, b1.getNumber());
+        r.assertLogContains("SUBSEQUENT CONTENT", b1);
+        r.assertLogContains("branch=feature", b1);
+
+        // Check this plugin
+        gitCommit = b1.getAction(GitCommit.class);
+        assertNotNull("GitCommit Action must not be null", gitCommit);
+        assertEquals("Repository should now have 3 commits",3, gitCommit.getGitCommitLog().getRevisions().size());
+        // Found correct intersection?
+        BranchMasterIntersectionFinder finder = b1.getAction(BranchMasterIntersectionFinder.class);
+        assertNotNull("GitBranchMasterIntersectionFinder Action must not be null", finder);
+        assertEquals("Should have found the correct intersection point", GitBranchMasterIntersectionFinder.NO_INTERSECTION_FOUND,finder.getBuildId());
+    }
+
+    /**
+     * If the Intersection point is not found due to the build being deleted the newest master build should be taken with newestBuildIfNotFound enabled.
+     * @throws Exception
+     */
+    @Test
+    public void shouldTakeNewestMasterBuildIfBuildWasDeletedAndNewestBuildIfNotFoundIsEnabled() throws Exception {
+        sampleRepo.init();
+        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file'); echo \"GitForensics\"; gitForensics newestBuildIfNotFound: true}");
+        sampleRepo.write("file", "initial content");
+        sampleRepo.git("add", "Jenkinsfile");
+        sampleRepo.git("commit", "--all", "--message=flow");
+        WorkflowMultiBranchProject mp = r.jenkins.createProject(WorkflowMultiBranchProject.class, "p");
+        mp.getSourcesList().add(new BranchSource(new GitSCMSource(null, sampleRepo.toString(), "", "*", "", false), new DefaultBranchPropertyStrategy(new BranchProperty[0])));
+        for (SCMSource source : mp.getSCMSources()) {
+            assertEquals(mp, source.getOwner());
+        }
+        WorkflowJob p = scheduleAndFindBranchProject(mp, "master");
+        assertEquals(new GitBranchSCMHead("master"), SCMHead.HeadByItem.findHead(p));
+        assertEquals(1, mp.getItems().size());
+        r.waitUntilNoActivity();
+        WorkflowRun toDelete = p.getLastBuild();
+        String toDeleteId =  toDelete.getExternalizableId();
+        assertEquals(1, toDelete.getNumber());
+        r.assertLogContains("initial content", toDelete);
+        r.assertLogContains("branch=master", toDelete);
+
+        // Check this plugin
+        GitCommit gitCommit = toDelete.getAction(GitCommit.class);
+        assertNotNull("GitCommit Action must not be null", gitCommit);
+        assertEquals("Repository should only have two Commits: the init and the flow commit",2, gitCommit.getGitCommitLog().getRevisions().size());
+
+        sampleRepo.git("checkout", "-b", "feature");
+        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics newestBuildIfNotFound: true}");
+        sampleRepo.write("file", "subsequent content");
+        sampleRepo.git("commit", "--all", "--message=tweaked");
+
+        // New master commits
+        sampleRepo.git("checkout", "master");
+        sampleRepo.write("testfile.txt", "testfile");
+        sampleRepo.git("add", "testfile.txt");
+        sampleRepo.git("commit", "--all", "--message=testfile");
+
+        // Second master build
+        p.scheduleBuild2(0).get();
+        assertEquals(1, mp.getItems().size());
+        r.waitUntilNoActivity();
+        WorkflowRun b1 = p.getLastBuild();
+        assertEquals(2, b1.getNumber());
+        r.assertLogContains("branch=master", b1);
+
+        // Check this plugin
+        gitCommit = b1.getAction(GitCommit.class);
+        assertNotNull("GitCommit Action must not be null", gitCommit);
+        assertEquals("Repository should now have 1 commits",1, gitCommit.getGitCommitLog().getRevisions().size());
+
+        // Now delete Build before the feature branch is build.
+        WorkflowRun run = (WorkflowRun) Run.fromExternalizableId(toDeleteId);
+        run.delete();
+
+        WorkflowJob p2 = scheduleAndFindBranchProject(mp, "feature");
+        assertEquals(2, mp.getItems().size());
+        r.waitUntilNoActivity();
+        b1 = p2.getLastBuild();
+        assertEquals(1, b1.getNumber());
+        r.assertLogContains("SUBSEQUENT CONTENT", b1);
+        r.assertLogContains("branch=feature", b1);
+
+        // Check this plugin
+        gitCommit = b1.getAction(GitCommit.class);
+        assertNotNull("GitCommit Action must not be null", gitCommit);
+        assertEquals("Repository should now have 3 commits",3, gitCommit.getGitCommitLog().getRevisions().size());
+        // Found correct intersection?
+        BranchMasterIntersectionFinder finder = b1.getAction(BranchMasterIntersectionFinder.class);
+        assertNotNull("GitBranchMasterIntersectionFinder Action must not be null", finder);
+        assertEquals("Should have found the correct intersection point", p.getLastBuild().getExternalizableId(), finder.getBuildId());
     }
 
     public static @Nonnull
