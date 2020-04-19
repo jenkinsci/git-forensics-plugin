@@ -32,7 +32,7 @@
     <data-tables-api.version>1.10.20-13</data-tables-api.version>
     <forensics-api-plugin.version>0.7.0</forensics-api-plugin.version>
 
-    <git-plugin.version>4.1.1</git-plugin.version>
+    <git-plugin.version>4.2.2</git-plugin.version>
     <git-client.version>3.1.1</git-client.version>
     <scm-api.version>2.6.3</scm-api.version>
 
