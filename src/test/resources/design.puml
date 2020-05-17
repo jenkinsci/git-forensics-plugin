@@ -8,10 +8,12 @@ skinparam component {
 
 [Blamer] <<..blame..>>
 [Miner] <<..miner>>
+[Reference] <<..reference>>
 
 [Utilities] <<..util>>
 
 [Blamer] --> [Utilities]
 [Miner] --> [Utilities]
+[Reference] --> [Utilities]
 
 @enduml

@@ -1,5 +1,6 @@
-package io.jenkins.plugins.git.forensics.reference;
+package io.jenkins.plugins.forensics.git.reference;
 
+import edu.hm.hafner.util.FilteredLog;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
@@ -10,7 +11,6 @@ import hudson.plugins.git.GitSCM;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
-import edu.hm.hafner.util.FilteredLog;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.LogCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -50,7 +50,8 @@ public class GitCommitListener extends SCMListener {
         String latestRevisionOfPreviousCommit = null;
         Run previous = build.getPreviousBuild();
         while (previous != null && latestRevisionOfPreviousCommit == null) {
-            GitCommit gitCommit = previous.getAction(GitCommit.class);
+            io.jenkins.plugins.git.forensics.reference.GitCommit gitCommit = previous.getAction(
+                    io.jenkins.plugins.git.forensics.reference.GitCommit.class);
             if (gitCommit == null) {
                 break;
             }
@@ -68,7 +69,7 @@ public class GitCommitListener extends SCMListener {
         GitClient gitClient = gitSCM.createClient(listener, environment, build, workspace);
 
         // Save new commits
-        GitCommit gitCommit = gitClient.withRepository(new GitCommitCall(build, latestRevisionOfPreviousCommit, gitSCM.getKey()));
+        io.jenkins.plugins.git.forensics.reference.GitCommit gitCommit = gitClient.withRepository(new GitCommitCall(build, latestRevisionOfPreviousCommit, gitSCM.getKey()));
         if (gitCommit != null) {
             build.addAction(gitCommit);
         }
@@ -77,7 +78,7 @@ public class GitCommitListener extends SCMListener {
     /**
      * Writes the Commits since last build into a GitCommit object.
      */
-    static class GitCommitCall implements RepositoryCallback<GitCommit> {
+    static class GitCommitCall implements RepositoryCallback<io.jenkins.plugins.git.forensics.reference.GitCommit> {
 
         private static final long serialVersionUID = -5980402198857923793L;
         private final transient Run<?, ?> build;
@@ -93,14 +94,14 @@ public class GitCommitListener extends SCMListener {
         }
 
         @Override
-        public GitCommit invoke(final Repository repo, final VirtualChannel channel) throws IOException {
+        public io.jenkins.plugins.git.forensics.reference.GitCommit invoke(final Repository repo, final VirtualChannel channel) throws IOException {
             // Check if GitCommit of Repository already Exists
-            List<GitCommit> gitCommits = build.getActions(GitCommit.class);
+            List<io.jenkins.plugins.git.forensics.reference.GitCommit> gitCommits = build.getActions(io.jenkins.plugins.git.forensics.reference.GitCommit.class);
             if (gitCommits.stream().anyMatch(gitCommit -> repositoryKey.equals(gitCommit.getRepositoryId()))) {
                 return null;
             }
 
-            GitCommit result = new GitCommit(build, repositoryKey);
+            io.jenkins.plugins.git.forensics.reference.GitCommit result = new io.jenkins.plugins.git.forensics.reference.GitCommit(build, repositoryKey);
             List<String> newCommits = new ArrayList<>();
             try (Git git = new Git(repo)) {
                 // Determine new commits to log since last build
@@ -134,5 +135,4 @@ public class GitCommitListener extends SCMListener {
             return new FilteredLog("Errors while extracting commit revision information from Git:");
         }
     }
-
 }

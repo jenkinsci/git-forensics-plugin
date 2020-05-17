@@ -18,7 +18,7 @@
   <url>https://github.com/jenkinsci/git-forensics-plugin</url>
 
   <properties>
-    <revision>0.7.1</revision>
+    <revision>0.21.0-alpha-SNAPSHOT</revision>
     <changelist>-SNAPSHOT</changelist>
 
     <module.name>${project.groupId}.git.forensics</module.name>
@@ -28,9 +28,9 @@
     <eclipse-collections.version>9.2.0</eclipse-collections.version>
 
     <!-- Jenkins Plugin Dependencies Versions -->
-    <plugin-util-api.version>1.0.1</plugin-util-api.version>
+    <plugin-util-api.version>1.0.2</plugin-util-api.version>
     <data-tables-api.version>1.10.20-13</data-tables-api.version>
-    <forensics-api-plugin.version>0.7.0</forensics-api-plugin.version>
+    <forensics-api-plugin.version>0.20.0-alpha-rc462.498171827934</forensics-api-plugin.version>
 
     <git-plugin.version>4.1.1</git-plugin.version>
     <git-client.version>3.1.1</git-client.version>
@@ -178,21 +178,6 @@
       </plugin>
     </plugins>
   </build>
-
-  <profiles>
-    <profile>
-      <id>skip</id>
-      <properties>
-        <maven.javadoc.skip>true</maven.javadoc.skip>
-        <pmd.skip>true</pmd.skip>
-        <spotbugs.skip>true</spotbugs.skip>
-        <checkstyle.skip>true</checkstyle.skip>
-        <skipTests>true</skipTests>
-        <skipITs>true</skipITs>
-        <revapi.skip>true</revapi.skip>
-      </properties>
-    </profile>
-  </profiles>
 
   <scm>
     <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
