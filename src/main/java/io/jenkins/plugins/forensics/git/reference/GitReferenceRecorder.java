@@ -11,6 +11,7 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Publisher;
 import io.jenkins.plugins.forensics.reference.ReferenceRecorder;
 import edu.hm.hafner.util.FilteredLog;
+import io.jenkins.plugins.util.JenkinsFacade;
 import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
 import org.jenkinsci.Symbol;
@@ -52,8 +53,8 @@ public class GitReferenceRecorder extends ReferenceRecorder implements SimpleBui
         }
 
         if (isReferenceJobNameSet(referenceJobName)) {
-            Jenkins jenkins = Jenkins.getInstanceOrNull();
-            Optional<Job<?, ?>> referenceJob = Optional.ofNullable(jenkins.getItemByFullName(referenceJobName, Job.class));
+            JenkinsFacade jenkins = new JenkinsFacade();
+            Optional<Job<?, ?>> referenceJob = jenkins.getJob(referenceJobName);
             referenceJob.ifPresent(job -> getRun().addAction(new GitBranchMasterIntersectionFinder(getRun(), getMaxCommits(), isSkipUnknownCommits(), isNewestBuildIfNotFound(), job.getLastCompletedBuild())));
             if (!referenceJob.isPresent()) {
                 log.logInfo("ReferenceJob not found");

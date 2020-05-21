@@ -13,8 +13,7 @@ import org.jvnet.hudson.test.JenkinsRule;
 
 import java.io.IOException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static io.jenkins.plugins.forensics.assertions.Assertions.*;
 
 /**
  * Tests the class {@link GitCommit}.
@@ -46,14 +45,14 @@ public class GitCommitListenerITest {
         JENKINS_PER_SUITE.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0, new Action[0]));
 
         GitCommit gitCommit = job.getLastCompletedBuild().getAction(GitCommit.class);
-        assertFalse(gitCommit.getRevisions().isEmpty());
-        assertEquals(3, gitCommit.getRevisions().size());
+        assertThat(!gitCommit.getRevisions().isEmpty());
+        assertThat(3 == gitCommit.getRevisions().size());
 
         createAndCommitFile("Third.java", "third commit after init");
         JENKINS_PER_SUITE.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0, new Action[0]));
 
         gitCommit = job.getLastCompletedBuild().getAction(GitCommit.class);
-        assertEquals(1, gitCommit.getRevisions().size());
+        assertThat(1 == gitCommit.getRevisions().size());
     }
 
     private void createAndCommitFile(final String fileName, final String content) throws Exception {
