@@ -1,4 +1,4 @@
-package io.jenkins.plugins.git.forensics.reference;
+package io.jenkins.plugins.forensics.git.reference;
 
 import hudson.model.Action;
 import hudson.model.FreeStyleProject;

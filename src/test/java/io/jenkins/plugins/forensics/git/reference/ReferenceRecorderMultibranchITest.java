@@ -1,4 +1,4 @@
-package io.jenkins.plugins.git.forensics.reference;
+package io.jenkins.plugins.forensics.git.reference;
 
 import com.cloudbees.hudson.plugins.folder.computed.FolderComputation;
 import hudson.model.Run;

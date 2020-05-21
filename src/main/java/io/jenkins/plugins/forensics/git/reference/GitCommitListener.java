@@ -50,8 +50,8 @@ public class GitCommitListener extends SCMListener {
         String latestRevisionOfPreviousCommit = null;
         Run previous = build.getPreviousBuild();
         while (previous != null && latestRevisionOfPreviousCommit == null) {
-            io.jenkins.plugins.git.forensics.reference.GitCommit gitCommit = previous.getAction(
-                    io.jenkins.plugins.git.forensics.reference.GitCommit.class);
+            GitCommit gitCommit = previous.getAction(
+                    GitCommit.class);
             if (gitCommit == null) {
                 break;
             }
@@ -69,7 +69,7 @@ public class GitCommitListener extends SCMListener {
         GitClient gitClient = gitSCM.createClient(listener, environment, build, workspace);
 
         // Save new commits
-        io.jenkins.plugins.git.forensics.reference.GitCommit gitCommit = gitClient.withRepository(new GitCommitCall(build, latestRevisionOfPreviousCommit, gitSCM.getKey()));
+        GitCommit gitCommit = gitClient.withRepository(new GitCommitCall(build, latestRevisionOfPreviousCommit, gitSCM.getKey()));
         if (gitCommit != null) {
             build.addAction(gitCommit);
         }
@@ -78,7 +78,7 @@ public class GitCommitListener extends SCMListener {
     /**
      * Writes the Commits since last build into a GitCommit object.
      */
-    static class GitCommitCall implements RepositoryCallback<io.jenkins.plugins.git.forensics.reference.GitCommit> {
+    static class GitCommitCall implements RepositoryCallback<GitCommit> {
 
         private static final long serialVersionUID = -5980402198857923793L;
         private final transient Run<?, ?> build;
@@ -94,14 +94,14 @@ public class GitCommitListener extends SCMListener {
         }
 
         @Override
-        public io.jenkins.plugins.git.forensics.reference.GitCommit invoke(final Repository repo, final VirtualChannel channel) throws IOException {
+        public GitCommit invoke(final Repository repo, final VirtualChannel channel) throws IOException {
             // Check if GitCommit of Repository already Exists
-            List<io.jenkins.plugins.git.forensics.reference.GitCommit> gitCommits = build.getActions(io.jenkins.plugins.git.forensics.reference.GitCommit.class);
+            List<GitCommit> gitCommits = build.getActions(GitCommit.class);
             if (gitCommits.stream().anyMatch(gitCommit -> repositoryKey.equals(gitCommit.getRepositoryId()))) {
                 return null;
             }
 
-            io.jenkins.plugins.git.forensics.reference.GitCommit result = new io.jenkins.plugins.git.forensics.reference.GitCommit(build, repositoryKey);
+            GitCommit result = new GitCommit(build, repositoryKey);
             List<String> newCommits = new ArrayList<>();
             try (Git git = new Git(repo)) {
                 // Determine new commits to log since last build
