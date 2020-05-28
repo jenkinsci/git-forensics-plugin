@@ -190,10 +190,10 @@ public class ReferenceRecorderMultibranchITest {
         sampleRepo.git("add", "test.txt");
         sampleRepo.git("commit", "--all", "--message=test");
 
+        // The Test will automatically build this new branch.
+        // For this scenario a new commit will be added later and
+        // build a second time.
         sampleRepo.git("checkout", "-b", "feature");
-        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics()}");
-        sampleRepo.write("file", "subsequent content");
-        sampleRepo.git("commit", "--all", "--message=tweaked");
 
         // new master commits
         sampleRepo.git("checkout", "master");
@@ -207,22 +207,29 @@ public class ReferenceRecorderMultibranchITest {
         assertThat(b1.getNumber()).isEqualTo(2);
         r.assertLogContains("branch=master", b1);
 
+        // commits on feature branch
+        sampleRepo.git("checkout", "feature");
+        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics()}");
+        sampleRepo.write("file", "subsequent content");
+        sampleRepo.git("commit", "--all", "--message=tweaked");
+
         p = scheduleAndFindBranchProject(mp, "feature");
         assertThat(mp.getItems()).hasSize(2);
         r.waitUntilNoActivity();
         b1 = p.getLastBuild();
-        assertThat(b1.getNumber()).isEqualTo(1);
+        assertThat(b1.getNumber()).isEqualTo(2);
         r.assertLogContains("SUBSEQUENT CONTENT", b1);
         r.assertLogContains("branch=feature", b1);
 
         // Check this plugin
         gitCommit = b1.getAction(GitCommit.class);
         assertThat(gitCommit).isNotNull();
-        assertThat(gitCommit.getGitCommitLog().getRevisions()).hasSize(4);
+        // Only 1 Commit since the checkout is build as well
+        assertThat(gitCommit.getGitCommitLog().getRevisions()).hasSize(1);
         // Found correct intersection?
         BranchMasterIntersectionFinder finder = b1.getAction(BranchMasterIntersectionFinder.class);
         assertThat(finder).isNotNull();
-        assertThat("p/master#2").isEqualTo(finder.getBuildId());
+        assertThat(finder.getBuildId()).isEqualTo("p/master#2");
     }
 
     // Testing the configs
@@ -420,7 +427,7 @@ public class ReferenceRecorderMultibranchITest {
         // Found correct intersection?
         BranchMasterIntersectionFinder finder = b1.getAction(BranchMasterIntersectionFinder.class);
         assertThat(finder).isNotNull();
-        assertThat("p/master#2").isEqualTo(finder.getBuildId());
+        assertThat(finder.getBuildId()).isEqualTo("p/master#2");
     }
 
     /**
