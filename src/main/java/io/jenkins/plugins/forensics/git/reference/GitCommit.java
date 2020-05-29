@@ -51,7 +51,7 @@ public class GitCommit extends VCSCommit {
 
     @Override
     public Optional<String> getReferencePoint(final VCSCommit reference, final int maxLogs, final boolean skipUnknownCommits) {
-        if (reference.getClass() != GitCommit.class) {
+        if (reference == null || reference.getClass() != GitCommit.class) {
             // Incompatible version control types.
             // Wont happen if this build and the reference build are from the same VCS repository.
             return Optional.empty();

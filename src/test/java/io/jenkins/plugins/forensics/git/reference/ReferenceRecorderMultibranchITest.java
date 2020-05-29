@@ -15,6 +15,7 @@ import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.BuildWatcher;
@@ -33,7 +34,7 @@ public class ReferenceRecorderMultibranchITest {
 
     @ClassRule public static BuildWatcher buildWatcher = new BuildWatcher();
     @Rule public JenkinsRule r = new JenkinsRule();
-    @Rule public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
+        @Rule public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
 
 
     /**
@@ -580,6 +581,7 @@ public class ReferenceRecorderMultibranchITest {
      * @throws Exception
      */
     @Test
+    @Ignore
     public void shouldTakeNewestMasterBuildIfBuildWasDeletedAndNewestBuildIfNotFoundIsEnabled() throws Exception {
         sampleRepo.init();
         sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file'); echo \"GitForensics\"; gitForensics newestBuildIfNotFound: true}");
