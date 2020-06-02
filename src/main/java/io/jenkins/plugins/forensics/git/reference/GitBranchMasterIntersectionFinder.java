@@ -20,7 +20,6 @@ public class GitBranchMasterIntersectionFinder extends BranchMasterIntersectionF
     private transient Run<?, ?> reference;
 
     private static final String NAME = "GitBranchMasterIntersectionFinder";
-    public static final String NO_INTERSECTION_FOUND = "No intersection was found in master commits";
 
     private final String buildId;
 
