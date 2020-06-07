@@ -3,6 +3,7 @@
 
     <t:summary icon="/plugin/git-forensics/icons/commit-48x48.png">
         Commits since last build: ${it.summary}
+        of Repository: ${it.repositoryId}
     </t:summary>
 
 </j:jelly>

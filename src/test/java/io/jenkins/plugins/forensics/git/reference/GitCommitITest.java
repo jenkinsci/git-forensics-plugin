@@ -1,11 +1,10 @@
-package io.jenkins.plugins.git.forensics.blame;
+package io.jenkins.plugins.forensics.git.reference;
 
 import hudson.model.Action;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import hudson.plugins.git.GitSCM;
 import hudson.scm.SCM;
-import io.jenkins.plugins.git.forensics.reference.GitCommit;
 import jenkins.plugins.git.GitSampleRepoRule;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -15,9 +14,13 @@ import org.jvnet.hudson.test.JenkinsRule;
 import java.io.IOException;
 import java.util.Optional;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static io.jenkins.plugins.forensics.assertions.Assertions.*;
 
+/**
+ * Tests the class {@link GitCommit}.
+ *
+ * @author Arne Schöntag
+ */
 @SuppressWarnings("PMD.SignatureDeclareThrowsException")
 public class GitCommitITest {
 
@@ -42,7 +45,7 @@ public class GitCommitITest {
         JENKINS_PER_SUITE.assertBuildStatus(Result.SUCCESS, reference.scheduleBuild2(0, new Action[0]));
 
         GitCommit referenceGitCommit = reference.getLastCompletedBuild().getAction(GitCommit.class);
-        assertEquals(2, referenceGitCommit.getRevisions().size());
+        assertThat(2 == referenceGitCommit.getRevisions().size());
 
         createAndCommitFile("Branch.java", "another branch");
 
@@ -51,11 +54,11 @@ public class GitCommitITest {
         JENKINS_PER_SUITE.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0, new Action[0]));
 
         GitCommit jobGitCommit = job.getLastCompletedBuild().getAction(GitCommit.class);
-        assertEquals(3, jobGitCommit.getRevisions().size());
+        assertThat(3 == jobGitCommit.getRevisions().size());
 
-        Optional<String> result = jobGitCommit.getReferencePoint(referenceGitCommit, 100);
-        assertTrue(result.isPresent());
-        assertEquals(reference.getLastCompletedBuild().getExternalizableId(), result.get());
+        Optional<String> result = jobGitCommit.getReferencePoint(referenceGitCommit, 100, false);
+        assertThat(result.isPresent());
+        assertThat(reference.getLastCompletedBuild().getExternalizableId().equals(result.get()));
     }
 
     private void createAndCommitFile(final String fileName, final String content) throws Exception {

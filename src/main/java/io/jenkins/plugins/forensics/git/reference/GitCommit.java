@@ -1,4 +1,4 @@
-package io.jenkins.plugins.git.forensics.reference;
+package io.jenkins.plugins.forensics.git.reference;
 
 import hudson.model.Run;
 import io.jenkins.plugins.forensics.reference.VCSCommit;
@@ -20,11 +20,18 @@ public class GitCommit extends VCSCommit {
 
     private static final String NAME = "GitCommit";
 
+    /**
+     * hashCode of the repository. Needed to check if a GitCommit of the same Repository already exists in a build.
+     * (prevents duplicates)
+     */
+    private final String repositoryId;
+
     private final GitCommitLog gitCommitLog;
 
-    public GitCommit(final Run<?, ?> run) {
+    public GitCommit(final Run<?, ?> run, String repositoryId) {
         super();
         this.run = run;
+        this.repositoryId = repositoryId;
         gitCommitLog = new GitCommitLog();
     }
 
@@ -40,9 +47,11 @@ public class GitCommit extends VCSCommit {
         return gitCommitLog.getRevisions().toString();
     }
 
+    public String getBuildName() {return run.getExternalizableId();}
+
     @Override
-    public Optional<String> getReferencePoint(final VCSCommit reference, final int maxLogs) {
-        if (reference.getClass() != GitCommit.class) {
+    public Optional<String> getReferencePoint(final VCSCommit reference, final int maxLogs, final boolean skipUnknownCommits) {
+        if (reference == null || reference.getClass() != GitCommit.class) {
             // Incompatible version control types.
             // Wont happen if this build and the reference build are from the same VCS repository.
             return Optional.empty();
@@ -56,9 +65,10 @@ public class GitCommit extends VCSCommit {
         // Fill branch commit list
         Run<?, ?> tmp = run;
         while (branchCommits.size() < maxLogs && tmp != null) {
-            GitCommit gitCommit = tmp.getAction(GitCommit.class);
+            GitCommit gitCommit = getGitCommitForRepository(tmp);
             if (gitCommit == null) {
                 // Skip build if it has no GitCommit Action.
+                tmp = tmp.getPreviousBuild();
                 continue;
             }
             branchCommits.addAll(gitCommit.getGitCommitLog().getRevisions());
@@ -68,12 +78,19 @@ public class GitCommit extends VCSCommit {
         // Fill master commit list and check for intersection point
         tmp = referenceCommit.run;
         while (masterCommits.size() < maxLogs && tmp != null) {
-            GitCommit gitCommit = tmp.getAction(GitCommit.class);
+            GitCommit gitCommit = getGitCommitForRepository(tmp);
             if (gitCommit == null) {
                 // Skip build if it has no GitCommit Action.
+                tmp = tmp.getPreviousBuild();
                 continue;
             }
-            masterCommits.addAll(gitCommit.getGitCommitLog().getRevisions());
+            List<String> commits = gitCommit.getGitCommitLog().getRevisions();
+            if (skipUnknownCommits && !branchCommits.containsAll(commits)) {
+                // Skip build if it has unknown commits to current branch.
+                tmp = tmp.getPreviousBuild();
+                continue;
+            }
+            masterCommits.addAll(commits);
             referencePoint = branchCommits.stream().filter(masterCommits::contains).findFirst();
             // If an intersection is found the buildId in Jenkins will be saved
             if (referencePoint.isPresent()) {
@@ -81,8 +98,21 @@ public class GitCommit extends VCSCommit {
             }
             tmp = tmp.getPreviousBuild();
         }
-
         return Optional.empty();
+    }
+
+    /**
+     * If multiple Repositorys are in a build this GitCommit will only look a the ones with the same repositoryId.
+     * @param run the bulid to get the Actions from
+     * @return the correct GitCommit if present. Or else null.
+     */
+    private GitCommit getGitCommitForRepository(Run<?, ?> run) {
+        List<GitCommit> list = run.getActions(GitCommit.class);
+        return list.stream().filter(gc -> this.getRepositoryId().equals(gc.getRepositoryId())).findFirst().orElse(null);
+    }
+
+    public String getRepositoryId() {
+        return repositoryId;
     }
 
     @Override
