@@ -20,13 +20,21 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <java.version>1.8</java.version>
     <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
+    <git-plugin.version>4.2.2</git-plugin.version>
+    <scm-api.version>2.6.3</scm-api.version>
   </properties>
 
   <dependencies>
+    <!-- Jenkins Plugin Dependencies -->
     <dependency>
       <groupId>org.jenkins-ci</groupId>
       <artifactId>acceptance-test-harness</artifactId>
       <version>1.72</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>git</artifactId>
+      <version>${git-plugin.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
@@ -40,7 +48,31 @@
       <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
+
+    <!-- GitSampleRepoRule -->
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>git</artifactId>
+      <version>${git-plugin.version}</version>
+      <scope>test</scope>
+      <type>test-jar</type>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>scm-api</artifactId>
+      <version>${scm-api.version}</version>
+      <scope>test</scope>
+      <type>test-jar</type>
+    </dependency>
+
   </dependencies>
+
+  <scm>
+    <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
+    <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
+    <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
+    <tag>${scmTag}</tag>
+  </scm>
 
   <repositories>
     <repository>

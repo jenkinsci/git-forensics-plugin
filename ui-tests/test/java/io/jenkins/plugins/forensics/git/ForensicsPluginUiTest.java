@@ -1,10 +1,7 @@
 package io.jenkins.plugins.forensics.git;
 
-import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -18,6 +15,10 @@ import org.jenkinsci.test.acceptance.plugins.warnings_ng.ScrollerUtil;
 import org.jenkinsci.test.acceptance.po.Build;
 import org.jenkinsci.test.acceptance.po.FreeStyleJob;
 import org.jenkinsci.test.acceptance.po.Job;
+import hudson.plugins.git.GitSCM;
+import jenkins.plugins.git.AbstractGitSCMSource;
+import jenkins.plugins.git.GitSCMBuilder;
+import jenkins.scm.api.SCMHead;
 
 import io.jenkins.plugins.forensics.ForensicsPublisher;
 
@@ -28,6 +29,10 @@ import io.jenkins.plugins.forensics.ForensicsPublisher;
  */
 @WithPlugins({"forensics-api", "git-forensics"})
 public class ForensicsPluginUiTest extends AbstractJUnitTest {
+
+    private final SCMHead head = new SCMHead("master");
+    private final GitSCMBuilder<?> instance = new GitSCMBuilder<>(head, new AbstractGitSCMSource.SCMRevisionImpl(head, "a5fc98f679f1e12ba5d7152521904e1c40ccf971"), "https://github.com/jenkinsci/git-forensics-plugin.git", null);
+
     /**
      * Tests the build overview page by running two builds that aggregate the three different tools into a single
      * result. Checks the contents of the result summary.
@@ -41,6 +46,18 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
 
         Build referenceBuild = shouldBuildSuccessfully(job);
         referenceBuild.open();
+    }
+
+    @Test
+    public void shouldDoSomething() {
+        FreeStyleJob job = createFreeStyleJob();
+        job.addPublisher(ForensicsPublisher.class);
+        job.save();
+
+
+        GitSCM scm = instance.build();
+
+        Build someBuild = shouldBuildSuccessfully(job);
     }
 
     private FreeStyleJob createFreeStyleJob(final String... resourcesToCopy) {
@@ -58,49 +75,6 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
 
     protected Build buildJob(final Job job) {
         return job.startBuild().waitUntilFinished();
-    }
-
-    /**
-     * Finds a resource with the given name and returns the content (decoded with UTF-8) as String.
-     *
-     * @param fileName
-     *         name of the desired resource
-     *
-     * @return the content represented as {@link String}
-     */
-    protected String readFileToString(final String fileName) {
-        return new String(readAllBytes(fileName), StandardCharsets.UTF_8);
-    }
-
-    /**
-     * Reads the contents of the desired resource. The rules for searching resources associated with this test class are
-     * implemented by the defining {@linkplain ClassLoader class loader} of this test class.  This method delegates to
-     * this object's class loader.  If this object was loaded by the bootstrap class loader, the method delegates to
-     * {@link ClassLoader#getSystemResource}.
-     * <p>
-     * Before delegation, an absolute resource name is constructed from the given resource name using this algorithm:
-     * </p>
-     * <ul>
-     * <li> If the {@code name} begins with a {@code '/'} (<tt>'&#92;u002f'</tt>), then the absolute name of the
-     * resource is the portion of the {@code name} following the {@code '/'}.</li>
-     * <li> Otherwise, the absolute name is of the following form:
-     * <blockquote> {@code modified_package_name/name} </blockquote>
-     * <p> Where the {@code modified_package_name} is the package name of this object with {@code '/'}
-     * substituted for {@code '.'} (<tt>'&#92;u002e'</tt>).</li>
-     * </ul>
-     *
-     * @param fileName
-     *         name of the desired resource
-     *
-     * @return the content represented by a byte array
-     */
-    private byte[] readAllBytes(final String fileName) {
-        try {
-            return Files.readAllBytes(getPath(fileName));
-        }
-        catch (IOException | URISyntaxException e) {
-            throw new AssertionError("Can't read resource " + fileName, e);
-        }
     }
 
     Path getPath(final String name) throws URISyntaxException {
