@@ -23,18 +23,19 @@ import org.jenkinsci.test.acceptance.po.Build;
 import org.jenkinsci.test.acceptance.po.FreeStyleJob;
 import org.jenkinsci.test.acceptance.po.Job;
 
+import io.jenkins.plugins.forensics.DetailsTable;
 import io.jenkins.plugins.forensics.ForensicsPublisher;
+import io.jenkins.plugins.forensics.ScmForensics;
 
 /**
  * Acceptance tests for the Git Forensics Plugin.
  *
  * @author Ullrich Hafner
  */
-@WithPlugins({"forensics-api", "git-forensics"})
+@WithPlugins({"forensics-api", "git-forensics", "git"})
 public class ForensicsPluginUiTest extends AbstractJUnitTest {
 
-    public static final String repoUrl = "www.woatschn.de";
-    public static final String USERNAME = "forensicsTester";
+    public static final String repositoryUrl = "https://github.com/jenkinsci/git-forensics-plugin.git";
 
     /**
      * Tests the build overview page by running two builds that aggregate the three different tools into a single
@@ -55,11 +56,16 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
         job.addPublisher(ForensicsPublisher.class);
 
         job.useScm(GitScm.class)
-                .url(repoUrl)
-                .credentials(USERNAME);
-        job.addShellStep("git checkout 8a52f0de17d8d4d8cb8bfa23c0b62f42991d183f");
+                .url(repositoryUrl)
+                .branch("28af63def44286729e3b19b03464d100fd1d0587");
         job.save();
-        job.startBuild().shouldSucceed();
+        Build build = shouldBuildSuccessfully(job);
+
+        ScmForensics scmForensics = new ScmForensics(build, "forensics");
+        scmForensics.open();
+        DetailsTable detailsTable = new DetailsTable(scmForensics);
+        int size = detailsTable.getHeaderSize();
+        System.out.println(size);
     }
 
     private FreeStyleJob createFreeStyleJob(final String... resourcesToCopy) {
