@@ -1,19 +1,15 @@
 package io.jenkins.plugins.forensics;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
+import static io.jenkins.plugins.forensics.DetailsTable.*;
+
 public class DetailsTableRow {
-    private static final String FILE = "File";
     private static final String FILE_SEPARATOR = "/";
-    private static final String AUTHORS = "Authors";
-    private static final String COMMITS = "Commits";
-    private static final String LAST_COMMIT = "Last Commit";
-    private static final String ADDED = "Added";
 
     private final WebElement row;
     private final DetailsTable detailsTable;

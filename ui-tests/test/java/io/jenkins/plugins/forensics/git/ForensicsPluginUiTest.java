@@ -4,17 +4,12 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
-import javax.inject.Inject;
-
-import org.junit.Before;
 import org.junit.Test;
 
-import org.jenkinsci.test.acceptance.docker.DockerContainerHolder;
-import org.jenkinsci.test.acceptance.docker.fixtures.GitContainer;
 import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
 import org.jenkinsci.test.acceptance.junit.WithPlugins;
-import org.jenkinsci.test.acceptance.plugins.git.GitRepo;
 import org.jenkinsci.test.acceptance.plugins.git.GitScm;
 import org.jenkinsci.test.acceptance.plugins.maven.MavenInstallation;
 import org.jenkinsci.test.acceptance.plugins.maven.MavenModuleSet;
@@ -24,6 +19,7 @@ import org.jenkinsci.test.acceptance.po.FreeStyleJob;
 import org.jenkinsci.test.acceptance.po.Job;
 
 import io.jenkins.plugins.forensics.DetailsTable;
+import io.jenkins.plugins.forensics.DetailsTableRow;
 import io.jenkins.plugins.forensics.ForensicsPublisher;
 import io.jenkins.plugins.forensics.ScmForensics;
 
@@ -35,7 +31,7 @@ import io.jenkins.plugins.forensics.ScmForensics;
 @WithPlugins({"forensics-api", "git-forensics", "git"})
 public class ForensicsPluginUiTest extends AbstractJUnitTest {
 
-    public static final String repositoryUrl = "https://github.com/jenkinsci/git-forensics-plugin.git";
+    private static final String repositoryUrl = "https://github.com/jenkinsci/git-forensics-plugin.git";
 
     /**
      * Tests the build overview page by running two builds that aggregate the three different tools into a single
@@ -65,7 +61,20 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
         scmForensics.open();
         DetailsTable detailsTable = new DetailsTable(scmForensics);
         int size = detailsTable.getHeaderSize();
-        System.out.println(size);
+        List<DetailsTableRow> detailsTableRows = detailsTable.getTableRows();
+        System.out.println(detailsTableRows.get(1).getNumberOfAuthors());
+        System.out.println(detailsTable.getForensicsInfo());
+        detailsTable.clickOnPagination(2);
+        System.out.println(detailsTable.getForensicsInfo());
+        detailsTable.searchTable("plugin/src/test/resources/design.puml");
+        System.out.println(detailsTable.getForensicsInfo());
+        detailsTable.clearSearch();
+        detailsTable.showFiftyEntries();
+        System.out.println(detailsTable.getForensicsInfo());
+        detailsTable.sortColumn("#Authors");
+        detailsTable.sortColumn("File");
+        detailsTable.sortColumn("#Commits");
+        System.out.println(detailsTableRows.get(1).getFileName());
     }
 
     private FreeStyleJob createFreeStyleJob(final String... resourcesToCopy) {
