@@ -5,20 +5,23 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import javax.inject.Inject;
+
+import org.junit.Before;
 import org.junit.Test;
 
+import org.jenkinsci.test.acceptance.docker.DockerContainerHolder;
+import org.jenkinsci.test.acceptance.docker.fixtures.GitContainer;
 import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
 import org.jenkinsci.test.acceptance.junit.WithPlugins;
+import org.jenkinsci.test.acceptance.plugins.git.GitRepo;
+import org.jenkinsci.test.acceptance.plugins.git.GitScm;
 import org.jenkinsci.test.acceptance.plugins.maven.MavenInstallation;
 import org.jenkinsci.test.acceptance.plugins.maven.MavenModuleSet;
 import org.jenkinsci.test.acceptance.plugins.warnings_ng.ScrollerUtil;
 import org.jenkinsci.test.acceptance.po.Build;
 import org.jenkinsci.test.acceptance.po.FreeStyleJob;
 import org.jenkinsci.test.acceptance.po.Job;
-import hudson.plugins.git.GitSCM;
-import jenkins.plugins.git.AbstractGitSCMSource;
-import jenkins.plugins.git.GitSCMBuilder;
-import jenkins.scm.api.SCMHead;
 
 import io.jenkins.plugins.forensics.ForensicsPublisher;
 
@@ -30,8 +33,8 @@ import io.jenkins.plugins.forensics.ForensicsPublisher;
 @WithPlugins({"forensics-api", "git-forensics"})
 public class ForensicsPluginUiTest extends AbstractJUnitTest {
 
-    private final SCMHead head = new SCMHead("master");
-    private final GitSCMBuilder<?> instance = new GitSCMBuilder<>(head, new AbstractGitSCMSource.SCMRevisionImpl(head, "a5fc98f679f1e12ba5d7152521904e1c40ccf971"), "https://github.com/jenkinsci/git-forensics-plugin.git", null);
+    public static final String repoUrl = "www.woatschn.de";
+    public static final String USERNAME = "forensicsTester";
 
     /**
      * Tests the build overview page by running two builds that aggregate the three different tools into a single
@@ -42,8 +45,6 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
         FreeStyleJob job = createFreeStyleJob();
         job.addPublisher(ForensicsPublisher.class);
 
-        job.save();
-
         Build referenceBuild = shouldBuildSuccessfully(job);
         referenceBuild.open();
     }
@@ -52,12 +53,13 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
     public void shouldDoSomething() {
         FreeStyleJob job = createFreeStyleJob();
         job.addPublisher(ForensicsPublisher.class);
+
+        job.useScm(GitScm.class)
+                .url(repoUrl)
+                .credentials(USERNAME);
+        job.addShellStep("git checkout 8a52f0de17d8d4d8cb8bfa23c0b62f42991d183f");
         job.save();
-
-
-        GitSCM scm = instance.build();
-
-        Build someBuild = shouldBuildSuccessfully(job);
+        job.startBuild().shouldSucceed();
     }
 
     private FreeStyleJob createFreeStyleJob(final String... resourcesToCopy) {
@@ -84,6 +86,7 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
         }
         return Paths.get(resource.toURI());
     }
+
     protected void copyResourceFilesToWorkspace(final Job job, final String... resources) {
         for (String file : resources) {
             job.copyResource(file);
