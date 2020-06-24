@@ -17,27 +17,27 @@ import org.openqa.selenium.WebElement;
 public class DetailsTable {
 
     /**
-     * Name of File Table Head.
+     * name of file table head.
      */
     public static final String FILE = "File";
 
     /**
-     * Name of Number of Authors Table Head.
+     * name of number of authors table head.
      */
     public static final String AUTHORS = "#Authors";
 
     /**
-     * Name of number of Commits Table Head.
+     * name of number of commits table head.
      */
     public static final String COMMITS = "#Commits";
 
     /**
-     * Name of last Commit date Table Head.
+     * name of last commit date table head.
      */
     public static final String LAST_COMMIT = "Last Commit";
 
     /**
-     * Name of date added Table Head.
+     * name of date added Table Head.
      */
     public static final String ADDED = "Added";
 
@@ -65,7 +65,9 @@ public class DetailsTable {
      *
      * @return amount of columns as Integer.
      */
-    public int getHeaderSize() { return headers.size(); }
+    public int getHeaderSize() {
+        return headers.size();
+    }
 
     /**
      * returns a List of Strings containing the Headers.
