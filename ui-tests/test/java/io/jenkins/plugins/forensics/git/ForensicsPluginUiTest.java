@@ -1,9 +1,5 @@
 package io.jenkins.plugins.forensics.git;
 
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 
 import org.junit.Test;
@@ -11,8 +7,6 @@ import org.junit.Test;
 import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
 import org.jenkinsci.test.acceptance.junit.WithPlugins;
 import org.jenkinsci.test.acceptance.plugins.git.GitScm;
-import org.jenkinsci.test.acceptance.plugins.maven.MavenInstallation;
-import org.jenkinsci.test.acceptance.plugins.maven.MavenModuleSet;
 import org.jenkinsci.test.acceptance.plugins.warnings_ng.ScrollerUtil;
 import org.jenkinsci.test.acceptance.po.Build;
 import org.jenkinsci.test.acceptance.po.FreeStyleJob;
@@ -23,6 +17,10 @@ import io.jenkins.plugins.forensics.DetailsTableRow;
 import io.jenkins.plugins.forensics.ForensicsPublisher;
 import io.jenkins.plugins.forensics.ScmForensics;
 
+import static io.jenkins.plugins.forensics.DetailsTable.*;
+
+import static org.assertj.core.api.Assertions.*;
+
 /**
  * Acceptance tests for the Git Forensics Plugin.
  *
@@ -31,7 +29,7 @@ import io.jenkins.plugins.forensics.ScmForensics;
 @WithPlugins({"forensics-api", "git-forensics", "git"})
 public class ForensicsPluginUiTest extends AbstractJUnitTest {
 
-    private static final String repositoryUrl = "https://github.com/jenkinsci/git-forensics-plugin.git";
+    private static final String REPOSITORY_URL = "https://github.com/jenkinsci/git-forensics-plugin.git";
 
     /**
      * Tests the build overview page by running two builds that aggregate the three different tools into a single
@@ -46,35 +44,135 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
         referenceBuild.open();
     }
 
+    /**
+     * Tests the Details table on ScmForensics page.
+     */
     @Test
-    public void shouldDoSomething() {
+    public void shouldShowTableWithCompleteFunctionality() {
         FreeStyleJob job = createFreeStyleJob();
         job.addPublisher(ForensicsPublisher.class);
 
         job.useScm(GitScm.class)
-                .url(repositoryUrl)
+                .url(REPOSITORY_URL)
                 .branch("28af63def44286729e3b19b03464d100fd1d0587");
         job.save();
         Build build = shouldBuildSuccessfully(job);
-
         ScmForensics scmForensics = new ScmForensics(build, "forensics");
         scmForensics.open();
         DetailsTable detailsTable = new DetailsTable(scmForensics);
-        int size = detailsTable.getHeaderSize();
-        List<DetailsTableRow> detailsTableRows = detailsTable.getTableRows();
-        System.out.println(detailsTableRows.get(1).getNumberOfAuthors());
-        System.out.println(detailsTable.getForensicsInfo());
-        detailsTable.clickOnPagination(2);
-        System.out.println(detailsTable.getForensicsInfo());
-        detailsTable.searchTable("plugin/src/test/resources/design.puml");
-        System.out.println(detailsTable.getForensicsInfo());
-        detailsTable.clearSearch();
+
+        assertTableHeaders(detailsTable);
+        assertTableEntriesAndSorting(detailsTable);
+        assertSearch(detailsTable);
+        assertPagination(detailsTable);
+    }
+
+    /**
+     * asserts the headers of the table by their size and entries.
+     *
+     * @param detailsTable
+     *         detailsTable object we want to assert the headers for.
+     */
+    private void assertTableHeaders(final DetailsTable detailsTable) {
+        assertThat(detailsTable.getHeaderSize()).isEqualTo(5);
+
+        List<String> tableHeaders = detailsTable.getHeaders();
+        assertThat(tableHeaders.get(0)).isEqualTo(DetailsTable.FILE);
+        assertThat(tableHeaders.get(1)).isEqualTo(AUTHORS);
+        assertThat(tableHeaders.get(2)).isEqualTo(COMMITS);
+        assertThat(tableHeaders.get(3)).isEqualTo(LAST_COMMIT);
+        assertThat(tableHeaders.get(4)).isEqualTo(ADDED);
+    }
+
+    /**
+     * asserts the certain table entries and then assert them again after sorting.
+     *
+     * @param detailsTable
+     *         detailsTable object we want to assert the entries for.
+     */
+    private void assertTableEntriesAndSorting(final DetailsTable detailsTable) {
+        assertThat(detailsTable.getNumberOfTableEntries()).isEqualTo(10);
+        assertThat(detailsTable.getForensicsInfo()).isEqualTo("Showing 1 to 10 of 51 entries");
+
         detailsTable.showFiftyEntries();
-        System.out.println(detailsTable.getForensicsInfo());
-        detailsTable.sortColumn("#Authors");
-        detailsTable.sortColumn("File");
-        detailsTable.sortColumn("#Commits");
-        System.out.println(detailsTableRows.get(1).getFileName());
+        assertThat(detailsTable.getNumberOfTableEntries()).isEqualTo(50);
+
+        detailsTable.sortColumn(DetailsTable.FILE);
+        assertRow(detailsTable,
+                0,
+                "config.yml",
+                1,
+                1
+        );
+
+        detailsTable.sortColumn(AUTHORS);
+        assertRow(detailsTable,
+                1,
+                "config.yml",
+                1,
+                1
+        );
+
+        detailsTable.sortColumn(COMMITS);
+        detailsTable.sortColumn(COMMITS);
+        assertRow(detailsTable,
+                0,
+                "README.md",
+                1,
+                18
+        );
+
+        detailsTable.showTenEntries();
+    }
+
+    /**
+     * asserts the search of the Table by searching for a filename and then clearing the search afterwards.
+     *
+     * @param detailsTable
+     *         detailsTable object we want to assert the search for.
+     */
+    private void assertSearch(final DetailsTable detailsTable) {
+        detailsTable.searchTable("ui-tests/pom.xml");
+        assertThat(detailsTable.getNumberOfTableEntries()).isEqualTo(2);
+
+        detailsTable.sortColumn(AUTHORS);
+        detailsTable.sortColumn(AUTHORS);
+
+        assertRow(detailsTable,
+                0,
+                "pom.xml",
+                2,
+                2
+        );
+        detailsTable.clearSearch();
+        assertThat(detailsTable.getTableRows().size()).isEqualTo(10);
+    }
+
+    private void assertPagination(final DetailsTable detailsTable) {
+        assertThat(detailsTable.getForensicsInfo()).isEqualTo("Showing 1 to 10 of 51 entries");
+
+        detailsTable.clickOnPagination(2);
+        assertThat(detailsTable.getForensicsInfo()).isEqualTo("Showing 11 to 20 of 51 entries");
+
+        detailsTable.showFiftyEntries();
+        assertThat(detailsTable.getForensicsInfo()).isEqualTo("Showing 1 to 50 of 51 entries");
+
+        detailsTable.clickOnPagination(2);
+        assertThat(detailsTable.getForensicsInfo()).isEqualTo("Showing 51 to 51 of 51 entries");
+    }
+
+    private void assertRow(
+            final DetailsTable detailsTable,
+            final int rowNum,
+            final String fileName,
+            final int numAuthors,
+            final int numCommits
+    ) {
+        DetailsTableRow secondRow = detailsTable.getTableRows().get(rowNum);
+
+        assertThat(secondRow.getFileName()).isEqualTo(fileName);
+        assertThat(secondRow.getNumberOfAuthors()).isEqualTo(numAuthors);
+        assertThat(secondRow.getNumberOfCommits()).isEqualTo(numCommits);
     }
 
     private FreeStyleJob createFreeStyleJob(final String... resourcesToCopy) {
@@ -89,30 +187,5 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
     protected Build shouldBuildSuccessfully(final Job job) {
         return job.startBuild().waitUntilFinished().shouldSucceed();
     }
-
-    protected Build buildJob(final Job job) {
-        return job.startBuild().waitUntilFinished();
-    }
-
-    Path getPath(final String name) throws URISyntaxException {
-        URL resource = getClass().getResource(name);
-        if (resource == null) {
-            throw new AssertionError("Can't find resource " + name);
-        }
-        return Paths.get(resource.toURI());
-    }
-
-    protected void copyResourceFilesToWorkspace(final Job job, final String... resources) {
-        for (String file : resources) {
-            job.copyResource(file);
-        }
-    }
-
-    protected MavenModuleSet createMavenProject() {
-        MavenInstallation.installMaven(jenkins, MavenInstallation.DEFAULT_MAVEN_ID, "3.6.3");
-
-        return jenkins.getJobs().create(MavenModuleSet.class);
-    }
-
 }
 

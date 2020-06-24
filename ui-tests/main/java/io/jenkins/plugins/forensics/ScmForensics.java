@@ -4,7 +4,6 @@ import java.net.URL;
 
 import org.apache.commons.lang3.StringUtils;
 import org.openqa.selenium.By;
-import org.openqa.selenium.WebElement;
 
 import com.google.inject.Injector;
 
@@ -54,52 +53,14 @@ public class ScmForensics extends PageObject {
     }
 
     /**
-     * Returns the total number of issues. This method requires that one of the tabs is shown that shows the total
-     * number of issues in the footer. I.e. the.
+     * Returns the total number of entries in the repository.
      *
-     * @return the total number of issues
+     * @return the total number of entries
      */
     public int getTotal() {
         String total = find(By.id("forensics_info")).getText();
 
-        return Integer.parseInt(StringUtils.substringAfter(total, "Total "));
-    }
-
-
-    /**
-     * Opens a link on the page leading to another page.
-     *
-     * @param element
-     *         the WebElement representing the link to be clicked
-     * @param type
-     *         the class of the PageObject which represents the page to which the link leads to
-     * @param <T>
-     *         actual type of the page object
-     *
-     * @return the instance of the PageObject to which the link leads to
-     */
-    // FIXME: IssuesTable should not depend on AnalysisResult
-    public <T extends PageObject> T openLinkOnSite(final WebElement element, final Class<T> type) {
-        String link = element.getAttribute("href");
-        T retVal = newInstance(type, injector, url(link));
-        element.click();
-        return retVal;
-    }
-
-    /**
-     * Opens a link to a filtered version of this AnalysisResult by clicking on a link.
-     *
-     * @param element
-     *         the WebElement representing the link to be clicked
-     *
-     * @return the instance of the filtered AnalysisResult
-     */
-    // FIXME: IssuesTable should not depend on AnalysisResult
-    public ScmForensics openFilterLinkOnSite(final WebElement element) {
-        String link = element.getAttribute("href");
-        ScmForensics retVal = newInstance(ScmForensics.class, injector, url(link), id);
-        element.click();
-        return retVal;
+        return Integer.parseInt(StringUtils.substringAfter(total, "of "));
     }
 }
 
