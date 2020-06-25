@@ -18,8 +18,6 @@ import org.jenkinsci.test.acceptance.po.PageObject;
  */
 public class ScmForensics extends PageObject {
 
-    private final String id;
-
     /**
      * Creates an instance of the page displaying the details of the issues for a specific tool.
      *
@@ -30,8 +28,6 @@ public class ScmForensics extends PageObject {
      */
     public ScmForensics(final Build parent, final String id) {
         super(parent, parent.url(id));
-
-        this.id = id;
     }
 
     /**
@@ -48,8 +44,6 @@ public class ScmForensics extends PageObject {
     @SuppressWarnings("unused") // Required to dynamically create page object using reflection
     public ScmForensics(final Injector injector, final URL url, final String id) {
         super(injector, url);
-
-        this.id = id;
     }
 
     /**

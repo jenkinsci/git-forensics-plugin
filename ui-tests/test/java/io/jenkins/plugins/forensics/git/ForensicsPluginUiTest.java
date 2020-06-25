@@ -3,6 +3,7 @@ package io.jenkins.plugins.forensics.git;
 import java.util.List;
 
 import org.junit.Test;
+import org.openqa.selenium.By;
 
 import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
 import org.jenkinsci.test.acceptance.junit.WithPlugins;
@@ -32,16 +33,31 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
     private static final String REPOSITORY_URL = "https://github.com/jenkinsci/git-forensics-plugin.git";
 
     /**
-     * Tests the build overview page by running two builds that aggregate the three different tools into a single
-     * result. Checks the contents of the result summary.
+     * Tests the build overview page by running a Build with the forensics plugin analyzing a commit hash of the
+     * git-forensics-plugin repository. Checks the contents of the result summary.
      */
     @Test
     public void shouldAggregateToolsIntoSingleResult() {
         FreeStyleJob job = createFreeStyleJob();
         job.addPublisher(ForensicsPublisher.class);
 
+        job.useScm(GitScm.class)
+                .url(REPOSITORY_URL)
+                .branch("28af63def44286729e3b19b03464d100fd1d0587");
+        job.save();
         Build referenceBuild = shouldBuildSuccessfully(job);
         referenceBuild.open();
+
+        String gitRevision = referenceBuild.getElement(
+                By.xpath("/html/body/div[4]/div[2]/table/tbody/tr[3]/td[2]"))
+                .getText();
+        String scmStatistics = referenceBuild.getElement(
+                By.xpath("/html/body/div[4]/div[2]/table/tbody/tr[4]/td[2]"))
+                .getText();
+
+        assertThat(gitRevision).isEqualTo("Revision: 28af63def44286729e3b19b03464d100fd1d0587\n"
+                + "detached");
+        assertThat(scmStatistics).isEqualTo("SCM Repository Statistics: 51 repository files");
     }
 
     /**
@@ -57,6 +73,7 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
                 .branch("28af63def44286729e3b19b03464d100fd1d0587");
         job.save();
         Build build = shouldBuildSuccessfully(job);
+
         ScmForensics scmForensics = new ScmForensics(build, "forensics");
         scmForensics.open();
         DetailsTable detailsTable = new DetailsTable(scmForensics);
