@@ -54,7 +54,7 @@ public class ScmForensics extends PageObject {
     public int getTotal() {
         String total = find(By.id("forensics_info")).getText();
 
-        return Integer.parseInt(StringUtils.substringAfter(total, "of "));
+        return Integer.parseInt(StringUtils.substringAfter(total, "of ").split(" ")[0]);
     }
 }
 

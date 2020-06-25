@@ -78,6 +78,7 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
         scmForensics.open();
         DetailsTable detailsTable = new DetailsTable(scmForensics);
 
+        assertThat(scmForensics.getTotal()).isEqualTo(51);
         assertTableHeaders(detailsTable);
         assertTableEntriesAndSorting(detailsTable);
         assertSearch(detailsTable);
