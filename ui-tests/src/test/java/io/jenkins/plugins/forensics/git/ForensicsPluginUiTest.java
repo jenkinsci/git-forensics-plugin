@@ -19,7 +19,6 @@ import io.jenkins.plugins.forensics.ForensicsPublisher;
 import io.jenkins.plugins.forensics.ScmForensics;
 
 import static io.jenkins.plugins.forensics.DetailsTable.*;
-
 import static org.assertj.core.api.Assertions.*;
 
 /**
@@ -123,6 +122,7 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
                 1
         );
 
+        detailsTable.sortColumn(AUTHORS);
         detailsTable.sortColumn(AUTHORS);
         assertRow(detailsTable,
                 1,

@@ -7,7 +7,6 @@ import org.openqa.selenium.By;
 
 import com.google.inject.Injector;
 
-
 import org.jenkinsci.test.acceptance.po.Build;
 import org.jenkinsci.test.acceptance.po.PageObject;
 
