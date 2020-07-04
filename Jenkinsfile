@@ -84,11 +84,10 @@
                                     mavenOptions += "-Djava.level=${javaLevel}"
                                 }
                                 if (skipTests) {
-                                    mavenOptions += "-DskipTests"
+                                    mavenOptions += "-DskipTests -DskipITs"
                                 }
-                                mavenOptions += "clean install"
-                                mavenOptions += "jacoco:prepare-agent test jacoco:report"
-                                infra.runMaven(mavenOptions, jdk, null, null, addToolEnv)
+                                mavenOptions += "clean install -npu -Djenkins.test.timeout=2500 -DElasticTime.factor=2 -Dsurefire.rerunFailingTestsCount=2"
+                                infra.runMaven(mavenOptions, jdk, ["BROWSER=firefox-container"], null, addToolEnv)
                             } else {
                                 echo "WARNING: Gradle mode for buildPlugin() is deprecated, please use buildPluginWithGradle()"
                                 List<String> gradleOptions = [
@@ -120,14 +119,17 @@
                             }
 
                             if (first) {
-                                recordIssues enabledForFailure: true, tool: mavenConsole()
-                                recordIssues enabledForFailure: true, tools: [java(), javaDoc()], sourceCodeEncoding: 'UTF-8'
-                                recordIssues tools: [spotBugs(), checkStyle(), pmdParser(), cpd()], sourceCodeEncoding: 'UTF-8'
+                                recordIssues enabledForFailure: true, tool: mavenConsole(), referenceJobName: 'Plugins/git-forensics-plugin/master'
+                                recordIssues enabledForFailure: true, tools: [java(), javaDoc()], sourceCodeEncoding: 'UTF-8', filters:[excludeFile('.*Assert.java')], referenceJobName: 'Plugins/git-forensics-plugin/master'
+                                recordIssues tools: [spotBugs(pattern: 'target/spotbugsXml.xml'),
+                                        checkStyle(pattern: 'target/checkstyle-result.xml'),
+                                        pmdParser(pattern: 'target/pmd.xml'),
+                                        cpd(pattern: 'target/cpd.xml')], sourceCodeEncoding: 'UTF-8', referenceJobName: 'Plugins/git-forensics-plugin/master'
                                 recordIssues enabledForFailure: true, tool: taskScanner(
                                         includePattern:'**/*.java',
                                         excludePattern:'target/**',
                                         highTags:'FIXME',
-                                        normalTags:'TODO'), sourceCodeEncoding: 'UTF-8'
+                                        normalTags:'TODO'), sourceCodeEncoding: 'UTF-8', referenceJobName: 'Plugins/git-forensics-plugin/master'
                                 if (failFast && currentBuild.result == 'UNSTABLE') {
                                     error 'There were static analysis warnings; halting early'
                                 }
