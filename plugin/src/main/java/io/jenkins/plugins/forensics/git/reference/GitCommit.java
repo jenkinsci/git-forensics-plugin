@@ -1,11 +1,10 @@
 package io.jenkins.plugins.forensics.git.reference;
 
-import hudson.model.Run;
-import io.jenkins.plugins.forensics.reference.VCSCommit;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import hudson.model.Run;
 
 /**
  * Action, which writes the information of the revisions into GitCommitLogs.

@@ -31,8 +31,8 @@ import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
 
 /**
- * Called on Checkout of a Git Repository in Jenkins. This Class determines the Commits since the last Build
- * and writes them into a GitCommit RunAction to be accessed later.
+ * Determines all commits since the last build and writes them into a {@link GitCommit} action to be accessed later.
+ * This listener is called on every checkout of a Git Repository in a Jenkins build.
  *
  * @author Arne Schöntag
  */
@@ -43,21 +43,19 @@ public class GitCommitListener extends SCMListener {
     public void onCheckout(final Run<?, ?> build, final SCM scm, final FilePath workspace,
             final TaskListener listener, final File changelogFile, final SCMRevisionState pollingBaseline)
             throws IOException, InterruptedException {
-        if (!(scm instanceof GitSCM)) {
-            return;
+        if (scm instanceof GitSCM) {
+            recordCommits(build, (GitSCM) scm, workspace, listener);
         }
-        recordCommits(build, (GitSCM) scm, workspace, listener);
     }
 
     /**
-     * Looking for the latest revision (Commit) on the previous build.
-     * If the previous build has no commits (f.e. manual triggered) then it will looked further
-     * in the past until one is found or there is no previous build.
+     * Looking for the latest revision (Commit) on the previous build. If the previous build has no commits (f.e. manual
+     * triggered) then it will looked further in the past until one is found or there is no previous build.
      */
     private void recordCommits(final Run<?, ?> build, final GitSCM scm, final FilePath workspace,
             final TaskListener listener) throws IOException, InterruptedException {
         String latestRevisionOfPreviousCommit = null;
-        Run previous = build.getPreviousBuild();
+        Run<?, ?> previous = build.getPreviousBuild();
         while (previous != null && latestRevisionOfPreviousCommit == null) {
             GitCommit gitCommit = previous.getAction(
                     GitCommit.class);
@@ -73,12 +71,12 @@ public class GitCommitListener extends SCMListener {
         }
 
         // Build Repo
-        GitSCM gitSCM = scm;
         EnvVars environment = build.getEnvironment(listener);
-        GitClient gitClient = gitSCM.createClient(listener, environment, build, workspace);
+        GitClient gitClient = scm.createClient(listener, environment, build, workspace);
 
         // Save new commits
-        GitCommit gitCommit = gitClient.withRepository(new GitCommitCall(build, latestRevisionOfPreviousCommit, gitSCM.getKey()));
+        GitCommit gitCommit = gitClient.withRepository(
+                new GitCommitCall(build, latestRevisionOfPreviousCommit, scm.getKey()));
         if (gitCommit != null) {
             build.addAction(gitCommit);
         }
