@@ -1,6 +1,24 @@
 package io.jenkins.plugins.forensics.git.reference;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.LogCommand;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevWalk;
+
 import edu.hm.hafner.util.FilteredLog;
+
+import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
@@ -11,22 +29,6 @@ import hudson.plugins.git.GitSCM;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.LogCommand;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.revwalk.RevWalk;
-import org.jenkinsci.plugins.gitclient.GitClient;
-import org.jenkinsci.plugins.gitclient.RepositoryCallback;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * Called on Checkout of a Git Repository in Jenkins. This Class determines the Commits since the last Build
@@ -37,16 +39,23 @@ import java.util.List;
 @Extension
 @SuppressWarnings("unused")
 public class GitCommitListener extends SCMListener {
-
     @Override
-    public void onCheckout(final Run<?, ?> build, final SCM scm, final FilePath workspace, final TaskListener listener, final File changelogFile, final SCMRevisionState pollingBaseline) throws Exception {
+    public void onCheckout(final Run<?, ?> build, final SCM scm, final FilePath workspace,
+            final TaskListener listener, final File changelogFile, final SCMRevisionState pollingBaseline)
+            throws IOException, InterruptedException {
         if (!(scm instanceof GitSCM)) {
             return;
         }
-        /* Looking for the latest revision (Commit) on the previous build.
-         * If the previous build has no commits (f.e. manual triggered) then it will looked further
-         * in the past until one is found or there is no previous build.
-         */
+        recordCommits(build, (GitSCM) scm, workspace, listener);
+    }
+
+    /**
+     * Looking for the latest revision (Commit) on the previous build.
+     * If the previous build has no commits (f.e. manual triggered) then it will looked further
+     * in the past until one is found or there is no previous build.
+     */
+    private void recordCommits(final Run<?, ?> build, final GitSCM scm, final FilePath workspace,
+            final TaskListener listener) throws IOException, InterruptedException {
         String latestRevisionOfPreviousCommit = null;
         Run previous = build.getPreviousBuild();
         while (previous != null && latestRevisionOfPreviousCommit == null) {
@@ -64,7 +73,7 @@ public class GitCommitListener extends SCMListener {
         }
 
         // Build Repo
-        GitSCM gitSCM = (GitSCM) scm;
+        GitSCM gitSCM = scm;
         EnvVars environment = build.getEnvironment(listener);
         GitClient gitClient = gitSCM.createClient(listener, environment, build, workspace);
 
@@ -107,7 +116,7 @@ public class GitCommitListener extends SCMListener {
                 // Determine new commits to log since last build
                 RevWalk walk = new RevWalk(repo);
                 ObjectId head = repo.resolve(Constants.HEAD);
-                ObjectId headCommit = walk.parseCommit(head);
+                RevCommit headCommit = walk.parseCommit(head);
                 LogCommand logCommand = git.log().add(headCommit);
                 Iterable<RevCommit> commits;
                 commits = logCommand.call();

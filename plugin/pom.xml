@@ -18,7 +18,7 @@
   <url>https://github.com/jenkinsci/git-forensics-plugin</url>
 
   <properties>
-    <revision>0.7.1</revision>
+    <revision>0.21.0-alpha</revision>
     <changelist>-SNAPSHOT</changelist>
 
     <module.name>${project.groupId}.git.forensics</module.name>
@@ -29,8 +29,8 @@
 
     <!-- Jenkins Plugin Dependencies Versions -->
     <plugin-util-api.version>1.2.2</plugin-util-api.version>
-    <data-tables-api.version>1.10.20-13</data-tables-api.version>
-    <forensics-api-plugin.version>0.7.0</forensics-api-plugin.version>
+    <data-tables-api.version>1.10.20-15</data-tables-api.version>
+    <forensics-api-plugin.version>0.21.0-alpha-SNAPSHOT</forensics-api-plugin.version>
 
     <git-plugin.version>4.2.2</git-plugin.version>
     <git-client.version>3.2.1</git-client.version>
@@ -99,6 +99,11 @@
       <version>${plugin-util-api.version}</version>
     </dependency>
 
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>branch-api</artifactId>
+      <version>1.11</version>
+    </dependency>
 
     <!-- Test Dependencies -->
     <dependency>
@@ -106,6 +111,26 @@
       <artifactId>forensics-api</artifactId>
       <version>${forensics-api-plugin.version}</version>
       <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Custom for Integration Test-->
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-basic-steps</artifactId>
+      <version>2.3</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-durable-task-step</artifactId>
+      <version>2.9</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkinsci.plugins</groupId>
+      <artifactId>pipeline-model-definition</artifactId>
+      <version>1.2</version>
       <scope>test</scope>
     </dependency>
 

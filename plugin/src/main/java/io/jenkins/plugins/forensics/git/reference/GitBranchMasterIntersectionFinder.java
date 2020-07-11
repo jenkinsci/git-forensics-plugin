@@ -1,9 +1,8 @@
 package io.jenkins.plugins.forensics.git.reference;
 
-import hudson.model.Run;
-import io.jenkins.plugins.forensics.reference.BranchMasterIntersectionFinder;
-
 import java.util.Optional;
+
+import hudson.model.Run;
 
 /**
  * This class tries to find the revision of the last shared Commit of the current Git branch and the master branch.

@@ -1,5 +1,12 @@
 package io.jenkins.plugins.forensics.git.reference;
 
+import java.util.Optional;
+
+import edu.hm.hafner.util.FilteredLog;
+import edu.umd.cs.findbugs.annotations.NonNull;
+
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.jenkinsci.Symbol;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -9,18 +16,10 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Publisher;
-import io.jenkins.plugins.forensics.reference.ReferenceRecorder;
-import edu.hm.hafner.util.FilteredLog;
-import io.jenkins.plugins.util.JenkinsFacade;
-import jenkins.model.Jenkins;
-import jenkins.tasks.SimpleBuildStep;
-import org.jenkinsci.Symbol;
-import org.kohsuke.stapler.DataBoundConstructor;
 import jenkins.branch.MultiBranchProject;
+import jenkins.tasks.SimpleBuildStep;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-
-import java.util.Optional;
+import io.jenkins.plugins.util.JenkinsFacade;
 
 /**
  * Recorder for finding reference Jobs and intersection Points in the git history.
