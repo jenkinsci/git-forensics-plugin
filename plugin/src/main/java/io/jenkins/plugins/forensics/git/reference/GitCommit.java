@@ -1,10 +1,17 @@
 package io.jenkins.plugins.forensics.git.reference;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
+import edu.hm.hafner.util.FilteredLog;
+
 import hudson.model.Run;
+import jenkins.model.RunAction2;
+
+import io.jenkins.plugins.util.JenkinsFacade;
 
 /**
  * Action, which writes the information of the revisions into GitCommitLogs.
@@ -12,57 +19,78 @@ import hudson.model.Run;
  * @author Arne Schöntag
  */
 @SuppressWarnings({"unused", "checkstyle:HiddenField"})
-public class GitCommit extends VCSCommit {
-
+public class GitCommit implements RunAction2, Serializable {
     private static final long serialVersionUID = 8994811233847179343L;
-    private transient Run<?, ?> run;
 
     private static final String NAME = "GitCommit";
+    private static JenkinsFacade jenkinsFacade = new JenkinsFacade();
+
+    private transient Run<?, ?> owner;
+
+    private final FilteredLog logger;
 
     /**
-     * hashCode of the repository. Needed to check if a GitCommit of the same Repository already exists in a build.
-     * (prevents duplicates)
+     * Key of the repository. The {@link GitCommitListener} ensures that a single action will be created for each
+     * repository. 
      */
     private final String repositoryId;
+    private final List<String> commits;
 
-    private final GitCommitLog gitCommitLog;
-
-    public GitCommit(final Run<?, ?> run, String repositoryId) {
+    public GitCommit(final Run<?, ?> owner, String repositoryId, final List<String> commits, final FilteredLog logger) {
         super();
-        this.run = run;
+        
+        this.owner = owner;
         this.repositoryId = repositoryId;
-        gitCommitLog = new GitCommitLog();
+        this.logger = logger;
+        this.commits =  new ArrayList<>(commits);
     }
 
-    public void addGitCommitLogs(final List<String> revisions) {
-        gitCommitLog.getRevisions().addAll(revisions);
+    public Run<?, ?> getOwner() {
+        return owner;
     }
 
-    public GitCommitLog getGitCommitLog() {
-        return gitCommitLog;
+    static void setJenkinsFacade(final JenkinsFacade facade) {
+        jenkinsFacade = facade;
+    }
+
+    public static GitCommit findVCSCommitFor(final Run<?, ?> run) {
+        return run.getAction(GitCommit.class);
+    }
+
+    private static List<GitCommit> findAllExtensions() {
+        return jenkinsFacade.getExtensionsFor(GitCommit.class);
+    }
+
+    public List<String> getGitCommitLog() {
+        return commits;
     }
 
     public String getSummary() {
-        return gitCommitLog.getRevisions().toString();
+        return commits.toString();
     }
 
-    public String getBuildName() {return run.getExternalizableId();}
+    public String getBuildName() {return owner.getExternalizableId();}
 
-    @Override
-    public Optional<String> getReferencePoint(final VCSCommit reference, final int maxLogs, final boolean skipUnknownCommits) {
+    /**
+         * Tries to find the reference point of the GitCommit of another build.
+         * @param reference the GitCommit of the other build
+         * @param maxLogs maximal amount of commits looked at.
+         * @return the build Id of the reference build or Optional.empty() if none found.
+         */
+    public Optional<String> getReferencePoint(final GitCommit reference, final int maxLogs, final boolean skipUnknownCommits) {
         if (reference == null || reference.getClass() != GitCommit.class) {
             // Incompatible version control types.
             // Wont happen if this build and the reference build are from the same VCS repository.
             return Optional.empty();
         }
         GitCommit referenceCommit = (GitCommit) reference;
-        List<String> branchCommits = new ArrayList<>(this.getGitCommitLog().getRevisions());
-        List<String> masterCommits = new ArrayList<>(referenceCommit.getGitCommitLog().getRevisions());
+        List<String> branchCommits = new ArrayList<>(this.getGitCommitLog());
+        List<String> masterCommits = new ArrayList<>(referenceCommit.getGitCommitLog());
 
         Optional<String> referencePoint = Optional.empty();
 
         // Fill branch commit list
-        Run<?, ?> tmp = run;
+        Run<?, ?> tmp = owner;
         while (branchCommits.size() < maxLogs && tmp != null) {
             GitCommit gitCommit = getGitCommitForRepository(tmp);
             if (gitCommit == null) {
@@ -70,12 +98,12 @@ public class GitCommit extends VCSCommit {
                 tmp = tmp.getPreviousBuild();
                 continue;
             }
-            branchCommits.addAll(gitCommit.getGitCommitLog().getRevisions());
+            branchCommits.addAll(gitCommit.getGitCommitLog());
             tmp = tmp.getPreviousBuild();
         }
 
         // Fill master commit list and check for intersection point
-        tmp = referenceCommit.run;
+        tmp = referenceCommit.owner;
         while (masterCommits.size() < maxLogs && tmp != null) {
             GitCommit gitCommit = getGitCommitForRepository(tmp);
             if (gitCommit == null) {
@@ -83,7 +111,7 @@ public class GitCommit extends VCSCommit {
                 tmp = tmp.getPreviousBuild();
                 continue;
             }
-            List<String> commits = gitCommit.getGitCommitLog().getRevisions();
+            List<String> commits = gitCommit.getGitCommitLog();
             if (skipUnknownCommits && !branchCommits.containsAll(commits)) {
                 // Skip build if it has unknown commits to current branch.
                 tmp = tmp.getPreviousBuild();
@@ -107,36 +135,24 @@ public class GitCommit extends VCSCommit {
      */
     private GitCommit getGitCommitForRepository(Run<?, ?> run) {
         List<GitCommit> list = run.getActions(GitCommit.class);
-        return list.stream().filter(gc -> this.getRepositoryId().equals(gc.getRepositoryId())).findFirst().orElse(null);
+        return list.stream().filter(gc -> this.getScmKey().equals(gc.getScmKey())).findFirst().orElse(null);
     }
 
-    public String getRepositoryId() {
+    public String getScmKey() {
         return repositoryId;
     }
 
-    @Override
     public String getLatestRevision() {
-        return getGitCommitLog().getRevisions().get(0);
+        return getGitCommitLog().get(0);
     }
 
-    @Override
     public List<String> getRevisions() {
-        return getGitCommitLog().getRevisions();
-    }
-
-    @Override
-    public void addRevisions(final List<String> list) {
-        gitCommitLog.addRevisions(list);
-    }
-
-    @Override
-    public void addRevision(final String rev) {
-        gitCommitLog.addRevision(rev);
+        return getGitCommitLog();
     }
 
     @Override
     public void onAttached(final Run<?, ?> run) {
-        this.run = run;
+        this.owner = run;
     }
 
     @Override
@@ -157,5 +173,24 @@ public class GitCommit extends VCSCommit {
     @Override
     public String getUrlName() {
         return null;
+    }
+
+    public String getLatestCommitName() {
+        if (isNotEmpty()) {
+            return getGitCommitLog().get(0);
+        }
+        throw new NoSuchElementException("This record contains no commits");
+    }
+
+    public boolean isNotEmpty() {
+        return !commits.isEmpty();
+    }
+
+    public List<String> getInfoMessages() {
+        return logger.getInfoMessages();
+    }
+
+    public List<String> getErrorMessages() {
+        return logger.getErrorMessages();
     }
 }

@@ -3,9 +3,9 @@ package io.jenkins.plugins.forensics.git.reference;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.LogCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -19,16 +19,17 @@ import edu.hm.hafner.util.FilteredLog;
 
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.RepositoryCallback;
-import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.model.listeners.SCMListener;
-import hudson.plugins.git.GitSCM;
 import hudson.remoting.VirtualChannel;
 import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
+
+import io.jenkins.plugins.forensics.git.util.GitRepositoryValidator;
+import io.jenkins.plugins.util.LogHandler;
 
 /**
  * Determines all commits since the last build and writes them into a {@link GitCommit} action to be accessed later.
@@ -43,99 +44,93 @@ public class GitCommitListener extends SCMListener {
     public void onCheckout(final Run<?, ?> build, final SCM scm, final FilePath workspace,
             final TaskListener listener, final File changelogFile, final SCMRevisionState pollingBaseline)
             throws IOException, InterruptedException {
-        if (scm instanceof GitSCM) {
-            recordCommits(build, (GitSCM) scm, workspace, listener);
+        FilteredLog logger = new FilteredLog("Git commit listener errors:");
+
+        List<GitCommit> gitCommits = build.getActions(GitCommit.class);
+        if (gitCommits.stream().noneMatch(gitCommit -> scm.getKey().equals(gitCommit.getScmKey()))) {
+            GitRepositoryValidator validator = new GitRepositoryValidator(scm, build, workspace, listener, logger);
+            if (validator.isGitRepository()) {
+                logger.logInfo("Recording commits of in working tree '%s'", workspace);
+                recordCommits(build, validator.createClient(), scm.getKey(), logger);
+            }
         }
+        else {
+            logger.logInfo("Skipping recording, since SCM `%s` already has been processed", scm.getKey());
+        }
+        LogHandler logHandler = new LogHandler(listener, "GitCommitsRecorder");
+        logHandler.log(logger);
+    }
+
+    private void recordCommits(final Run<?, ?> build, final GitClient gitClient, final String key,
+            final FilteredLog logger) throws IOException, InterruptedException {
+        String previousCommit = getPreviousCommit(build, logger);
+        List<String> commits = gitClient.withRepository(new GitCommitCall(previousCommit, logger));
+        logger.logInfo("-> Recorded %d new commits", commits.size());
+        GitCommit gitCommit = new GitCommit(build, key, commits, logger);
+        build.addAction(gitCommit);
     }
 
     /**
-     * Looking for the latest revision (Commit) on the previous build. If the previous build has no commits (f.e. manual
-     * triggered) then it will looked further in the past until one is found or there is no previous build.
+     * Determines the latest commit of the previous build. If the previous build has no commits (e.g., the build
+     * was manually triggered) then the history of builds is inspected until one is found (or no such build exists).
+     *
+     * @param currentBuild
+     *         the build to start the search with
+     * @param logger
+     *         logs the result
      */
-    private void recordCommits(final Run<?, ?> build, final GitSCM scm, final FilePath workspace,
-            final TaskListener listener) throws IOException, InterruptedException {
-        String latestRevisionOfPreviousCommit = null;
-        Run<?, ?> previous = build.getPreviousBuild();
-        while (previous != null && latestRevisionOfPreviousCommit == null) {
-            GitCommit gitCommit = previous.getAction(
-                    GitCommit.class);
-            if (gitCommit == null) {
-                break;
-            }
-            if (gitCommit.getRevisions().isEmpty()) {
-                previous = previous.getPreviousBuild();
-            }
-            else {
-                latestRevisionOfPreviousCommit = gitCommit.getLatestRevision();
+    private String getPreviousCommit(final Run<?, ?> currentBuild, final FilteredLog logger) {
+        for (Run<?, ?> build = currentBuild.getPreviousBuild(); build != null; build = build.getPreviousBuild()) {
+            GitCommit gitCommit = build.getAction(GitCommit.class);
+            if (gitCommit != null && gitCommit.isNotEmpty()) {
+                logger.logInfo("Found previous build `%s` that contains recorded Git commits", build);
+                String latestCommitName = gitCommit.getLatestCommitName();
+                logger.logInfo("-> Latest recorded commit SHA-1: %s", latestCommitName);
+                logger.logInfo("Starting recording of new commits");
+                return latestCommitName;
             }
         }
-
-        // Build Repo
-        EnvVars environment = build.getEnvironment(listener);
-        GitClient gitClient = scm.createClient(listener, environment, build, workspace);
-
-        // Save new commits
-        GitCommit gitCommit = gitClient.withRepository(
-                new GitCommitCall(build, latestRevisionOfPreviousCommit, scm.getKey()));
-        if (gitCommit != null) {
-            build.addAction(gitCommit);
-        }
+        logger.logInfo("Found no previous build with recorded Git commits - starting initial recording");
+        return StringUtils.EMPTY;
     }
 
     /**
      * Writes the Commits since last build into a GitCommit object.
      */
-    static class GitCommitCall implements RepositoryCallback<GitCommit> {
-
+    static class GitCommitCall implements RepositoryCallback<List<String>> {
         private static final long serialVersionUID = -5980402198857923793L;
-        private final transient Run<?, ?> build;
-        private final String latestRevisionOfPreviousCommit;
+        private static final int MAX_COMMITS = 200;
 
-        private final FilteredLog log = createLog();
-        private final String repositoryKey;
+        private final String latestRecordedCommit;
+        private final FilteredLog logger;
 
-        GitCommitCall(final Run<?, ?> build, final String latestRevisionOfPreviousCommit, String repositoryKey) {
-            this.build = build;
-            this.latestRevisionOfPreviousCommit = latestRevisionOfPreviousCommit;
-            this.repositoryKey = repositoryKey;
+        GitCommitCall(final String latestRecordedCommit, final FilteredLog logger) {
+            this.latestRecordedCommit = latestRecordedCommit;
+            this.logger = logger;
         }
 
         @Override
-        public GitCommit invoke(final Repository repo, final VirtualChannel channel) throws IOException {
-            // Check if GitCommit of Repository already Exists
-            List<GitCommit> gitCommits = build.getActions(GitCommit.class);
-            if (gitCommits.stream().anyMatch(gitCommit -> repositoryKey.equals(gitCommit.getRepositoryId()))) {
-                return null;
-            }
-
-            GitCommit result = new GitCommit(build, repositoryKey);
+        public List<String> invoke(final Repository repo, final VirtualChannel channel) throws IOException {
             List<String> newCommits = new ArrayList<>();
             try (Git git = new Git(repo)) {
                 // Determine new commits to log since last build
-                RevWalk walk = new RevWalk(repo);
                 ObjectId head = repo.resolve(Constants.HEAD);
+                RevWalk walk = new RevWalk(repo);
                 RevCommit headCommit = walk.parseCommit(head);
                 LogCommand logCommand = git.log().add(headCommit);
-                Iterable<RevCommit> commits;
-                commits = logCommand.call();
-                Iterator<RevCommit> iterator = commits.iterator();
-                RevCommit next;
-                while (iterator.hasNext()) {
-                    next = iterator.next();
-                    String commitId = next.getId().toString();
-                    // If latestRevisionOfPreviousCommit is null, all commits will be added.
-                    if (commitId.equals(latestRevisionOfPreviousCommit)) {
-                        break;
+                Iterable<RevCommit> commits = logCommand.call();
+                for (RevCommit commit : commits) {
+                    String commitId = commit.getName();
+                    if (commitId.equals(latestRecordedCommit) || newCommits.size() >= MAX_COMMITS) {
+                        return newCommits;
                     }
                     newCommits.add(commitId);
                 }
             }
             catch (GitAPIException e) {
-                log.logException(e, "Unable to call log command on git repository.");
+                logger.logException(e, "Unable to record commits of git repository.");
             }
-
-            result.getGitCommitLog().addRevisions(newCommits);
-            return result;
+            return newCommits;
         }
 
         private FilteredLog createLog() {

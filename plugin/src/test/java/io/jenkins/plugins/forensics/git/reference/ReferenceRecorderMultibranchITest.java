@@ -67,7 +67,7 @@ public class ReferenceRecorderMultibranchITest {
         // Check this plugin
         GitCommit gitCommit = b1.getAction(GitCommit.class);
         assertThat(gitCommit).isNotNull();
-        assertThat(gitCommit.getGitCommitLog().getRevisions()).hasSize(2);
+        assertThat(gitCommit.getGitCommitLog()).hasSize(2);
 
         sampleRepo.git("checkout", "-b", "feature");
         sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics()}");
@@ -84,7 +84,7 @@ public class ReferenceRecorderMultibranchITest {
         // Check this plugin
         gitCommit = b1.getAction(GitCommit.class);
         assertThat(gitCommit).isNotNull();
-        assertThat(gitCommit.getGitCommitLog().getRevisions()).hasSize(3);
+        assertThat(gitCommit.getGitCommitLog()).hasSize(3);
         // Found correct intersection?
         BranchMasterIntersectionFinder finder = b1.getAction(BranchMasterIntersectionFinder.class);
         assertThat(finder).isNotNull();
@@ -119,7 +119,7 @@ public class ReferenceRecorderMultibranchITest {
         // Check this plugin
         GitCommit gitCommit = b1.getAction(GitCommit.class);
         assertThat(gitCommit).isNotNull();
-        assertThat(gitCommit.getGitCommitLog().getRevisions()).hasSize(2);
+        assertThat(gitCommit.getGitCommitLog()).hasSize(2);
 
         sampleRepo.git("checkout", "-b", "feature");
         sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics()}");
@@ -150,7 +150,7 @@ public class ReferenceRecorderMultibranchITest {
         // Check this plugin
         gitCommit = b1.getAction(GitCommit.class);
         assertThat(gitCommit).isNotNull();
-        assertThat(gitCommit.getGitCommitLog().getRevisions()).hasSize(3);
+        assertThat(gitCommit.getGitCommitLog()).hasSize(3);
         // Found correct intersection?
         BranchMasterIntersectionFinder finder = b1.getAction(BranchMasterIntersectionFinder.class);
         assertThat(finder).isNotNull();
@@ -186,7 +186,7 @@ public class ReferenceRecorderMultibranchITest {
         // Check this plugin
         GitCommit gitCommit = b1.getAction(GitCommit.class);
         assertThat(gitCommit).isNotNull();
-        assertThat(gitCommit.getGitCommitLog().getRevisions()).hasSize(2);
+        assertThat(gitCommit.getGitCommitLog()).hasSize(2);
 
         sampleRepo.write("test.txt", "test");
         sampleRepo.git("add", "test.txt");
@@ -227,7 +227,7 @@ public class ReferenceRecorderMultibranchITest {
         gitCommit = b1.getAction(GitCommit.class);
         assertThat(gitCommit).isNotNull();
         // Only 1 Commit since the checkout is build as well
-        assertThat(gitCommit.getGitCommitLog().getRevisions()).hasSize(1);
+        assertThat(gitCommit.getGitCommitLog()).hasSize(1);
         // Found correct intersection?
         BranchMasterIntersectionFinder finder = b1.getAction(BranchMasterIntersectionFinder.class);
         assertThat(finder).isNotNull();
@@ -265,7 +265,7 @@ public class ReferenceRecorderMultibranchITest {
         // Check this plugin
         GitCommit gitCommit = b1.getAction(GitCommit.class);
         assertThat(gitCommit).isNotNull();
-        assertThat(gitCommit.getGitCommitLog().getRevisions()).hasSize(2);
+        assertThat(gitCommit.getGitCommitLog()).hasSize(2);
 
         sampleRepo.git("checkout", "-b", "feature");
         sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics maxCommits: 2}");
@@ -286,7 +286,7 @@ public class ReferenceRecorderMultibranchITest {
         // Check this plugin
         gitCommit = b1.getAction(GitCommit.class);
         assertThat(gitCommit).isNotNull();
-        assertThat(gitCommit.getGitCommitLog().getRevisions()).hasSize(4);
+        assertThat(gitCommit.getGitCommitLog()).hasSize(4);
         // Found correct intersection?
         BranchMasterIntersectionFinder finder = b1.getAction(BranchMasterIntersectionFinder.class);
         assertThat(finder).isNotNull();
@@ -322,7 +322,7 @@ public class ReferenceRecorderMultibranchITest {
         // Check this plugin
         GitCommit gitCommit = b1.getAction(GitCommit.class);
         assertThat(gitCommit).isNotNull();
-        assertThat(gitCommit.getGitCommitLog().getRevisions()).hasSize(2);
+        assertThat(gitCommit.getGitCommitLog()).hasSize(2);
 
         sampleRepo.write("test.txt", "test");
         sampleRepo.git("add", "test.txt");
@@ -356,7 +356,7 @@ public class ReferenceRecorderMultibranchITest {
         // Check this plugin
         gitCommit = b1.getAction(GitCommit.class);
         assertThat(gitCommit).isNotNull();
-        assertThat(gitCommit.getGitCommitLog().getRevisions()).hasSize(4);
+        assertThat(gitCommit.getGitCommitLog()).hasSize(4);
         // Found correct intersection?
         BranchMasterIntersectionFinder finder = b1.getAction(BranchMasterIntersectionFinder.class);
         assertThat(finder).isNotNull();
@@ -404,7 +404,7 @@ public class ReferenceRecorderMultibranchITest {
         // Check this plugin
         GitCommit gitCommit = b1.getAction(GitCommit.class);
         assertThat(gitCommit).isNotNull();
-        assertThat(gitCommit.getGitCommitLog().getRevisions()).hasSize(1);
+        assertThat(gitCommit.getGitCommitLog()).hasSize(1);
 
         sampleRepo.git("checkout", "-b", "feature");
         sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics maxCommits: 2, newestBuildIfNotFound: true}");
@@ -425,7 +425,7 @@ public class ReferenceRecorderMultibranchITest {
         // Check this plugin
         gitCommit = b1.getAction(GitCommit.class);
         assertThat(gitCommit).isNotNull();
-        assertThat(gitCommit.getGitCommitLog().getRevisions()).hasSize(5);
+        assertThat(gitCommit.getGitCommitLog()).hasSize(5);
         // Found correct intersection?
         BranchMasterIntersectionFinder finder = b1.getAction(BranchMasterIntersectionFinder.class);
         assertThat(finder).isNotNull();
@@ -461,7 +461,7 @@ public class ReferenceRecorderMultibranchITest {
         // Check this plugin
         GitCommit gitCommit = b1.getAction(GitCommit.class);
         assertThat(gitCommit).isNotNull();
-        assertThat(gitCommit.getGitCommitLog().getRevisions()).hasSize(2);
+        assertThat(gitCommit.getGitCommitLog()).hasSize(2);
 
         sampleRepo.git("checkout", "-b", "feature");
         sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics()}");
@@ -478,7 +478,7 @@ public class ReferenceRecorderMultibranchITest {
         // Check this plugin
         gitCommit = b1.getAction(GitCommit.class);
         assertThat(gitCommit).isNotNull();
-        assertThat(gitCommit.getGitCommitLog().getRevisions()).hasSize(3);
+        assertThat(gitCommit.getGitCommitLog()).hasSize(3);
 
         // Now the second branch
         sampleRepo.git("checkout", "-b", "feature2");
@@ -529,7 +529,7 @@ public class ReferenceRecorderMultibranchITest {
         // Check this plugin
         GitCommit gitCommit = toDelete.getAction(GitCommit.class);
         assertThat(gitCommit).isNotNull();
-        assertThat(gitCommit.getGitCommitLog().getRevisions()).hasSize(2);
+        assertThat(gitCommit.getGitCommitLog()).hasSize(2);
 
         sampleRepo.git("checkout", "-b", "feature");
         sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics()}");
@@ -553,7 +553,7 @@ public class ReferenceRecorderMultibranchITest {
         // Check this plugin
         gitCommit = b1.getAction(GitCommit.class);
         assertThat(gitCommit).isNotNull();
-        assertThat(gitCommit.getGitCommitLog().getRevisions()).hasSize(1);
+        assertThat(gitCommit.getGitCommitLog()).hasSize(1);
 
         // Now delete Build before the feature branch is build.
         WorkflowRun run = (WorkflowRun) Run.fromExternalizableId(toDeleteId);
@@ -570,7 +570,7 @@ public class ReferenceRecorderMultibranchITest {
         // Check this plugin
         gitCommit = b1.getAction(GitCommit.class);
         assertThat(gitCommit).isNotNull();
-                assertThat(gitCommit.getGitCommitLog().getRevisions()).hasSize(3);
+                assertThat(gitCommit.getGitCommitLog()).hasSize(3);
         // Found correct intersection?
         BranchMasterIntersectionFinder finder = b1.getAction(BranchMasterIntersectionFinder.class);
         assertThat(finder).isNotNull();
@@ -607,7 +607,7 @@ public class ReferenceRecorderMultibranchITest {
         // Check this plugin
         GitCommit gitCommit = toDelete.getAction(GitCommit.class);
         assertThat(gitCommit).isNotNull();
-        assertThat(gitCommit.getGitCommitLog().getRevisions()).hasSize(2);
+        assertThat(gitCommit.getGitCommitLog()).hasSize(2);
 
         sampleRepo.git("checkout", "-b", "feature");
         sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics newestBuildIfNotFound: true}");
@@ -631,7 +631,7 @@ public class ReferenceRecorderMultibranchITest {
         // Check this plugin
         gitCommit = b1.getAction(GitCommit.class);
         assertThat(gitCommit).isNotNull();
-        assertThat(gitCommit.getGitCommitLog().getRevisions()).hasSize(1);
+        assertThat(gitCommit.getGitCommitLog()).hasSize(1);
 
         // Now delete Build before the feature branch is build.
         WorkflowRun run = (WorkflowRun) Run.fromExternalizableId(toDeleteId);
@@ -648,7 +648,7 @@ public class ReferenceRecorderMultibranchITest {
         // Check this plugin
         gitCommit = b1.getAction(GitCommit.class);
         assertThat(gitCommit).isNotNull();
-                assertThat(gitCommit.getGitCommitLog().getRevisions()).hasSize(3);
+                assertThat(gitCommit.getGitCommitLog()).hasSize(3);
         // Found correct intersection?
         BranchMasterIntersectionFinder finder = b1.getAction(BranchMasterIntersectionFinder.class);
         assertThat(finder).isNotNull();
