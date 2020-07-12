@@ -7,6 +7,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import edu.hm.hafner.util.FilteredLog;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import hudson.model.Run;
 import jenkins.model.RunAction2;
@@ -18,7 +19,7 @@ import io.jenkins.plugins.util.JenkinsFacade;
  *
  * @author Arne Schöntag
  */
-@SuppressWarnings({"unused", "checkstyle:HiddenField"})
+@SuppressFBWarnings(value = "SE", justification = "transient field owner ist restored using a Jenkins callback")
 public class GitCommit implements RunAction2, Serializable {
     private static final long serialVersionUID = 8994811233847179343L;
 

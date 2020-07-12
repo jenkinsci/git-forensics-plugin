@@ -86,7 +86,7 @@ public class ReferenceRecorderMultibranchITest {
         assertThat(gitCommit).isNotNull();
         assertThat(gitCommit.getGitCommitLog()).hasSize(3);
         // Found correct intersection?
-        BranchMasterIntersectionFinder finder = b1.getAction(BranchMasterIntersectionFinder.class);
+        GitBranchMasterIntersectionFinder finder = b1.getAction(GitBranchMasterIntersectionFinder.class);
         assertThat(finder).isNotNull();
         assertThat("p/master#1").isEqualTo(finder.getBuildId());
     }
@@ -152,7 +152,7 @@ public class ReferenceRecorderMultibranchITest {
         assertThat(gitCommit).isNotNull();
         assertThat(gitCommit.getGitCommitLog()).hasSize(3);
         // Found correct intersection?
-        BranchMasterIntersectionFinder finder = b1.getAction(BranchMasterIntersectionFinder.class);
+        GitBranchMasterIntersectionFinder finder = b1.getAction(GitBranchMasterIntersectionFinder.class);
         assertThat(finder).isNotNull();
         assertThat("p/master#1").isEqualTo(finder.getBuildId());
     }
@@ -229,7 +229,7 @@ public class ReferenceRecorderMultibranchITest {
         // Only 1 Commit since the checkout is build as well
         assertThat(gitCommit.getGitCommitLog()).hasSize(1);
         // Found correct intersection?
-        BranchMasterIntersectionFinder finder = b1.getAction(BranchMasterIntersectionFinder.class);
+        GitBranchMasterIntersectionFinder finder = b1.getAction(GitBranchMasterIntersectionFinder.class);
         assertThat(finder).isNotNull();
         assertThat(finder.getBuildId()).isEqualTo("p/master#2");
     }
@@ -288,7 +288,7 @@ public class ReferenceRecorderMultibranchITest {
         assertThat(gitCommit).isNotNull();
         assertThat(gitCommit.getGitCommitLog()).hasSize(4);
         // Found correct intersection?
-        BranchMasterIntersectionFinder finder = b1.getAction(BranchMasterIntersectionFinder.class);
+        GitBranchMasterIntersectionFinder finder = b1.getAction(GitBranchMasterIntersectionFinder.class);
         assertThat(finder).isNotNull();
         assertThat(GitBranchMasterIntersectionFinder.NO_INTERSECTION_FOUND).isEqualTo(finder.getBuildId());
     }
@@ -358,7 +358,7 @@ public class ReferenceRecorderMultibranchITest {
         assertThat(gitCommit).isNotNull();
         assertThat(gitCommit.getGitCommitLog()).hasSize(4);
         // Found correct intersection?
-        BranchMasterIntersectionFinder finder = b1.getAction(BranchMasterIntersectionFinder.class);
+        GitBranchMasterIntersectionFinder finder = b1.getAction(GitBranchMasterIntersectionFinder.class);
         assertThat(finder).isNotNull();
         assertThat("p/master#1").isEqualTo(finder.getBuildId());
     }
@@ -427,7 +427,7 @@ public class ReferenceRecorderMultibranchITest {
         assertThat(gitCommit).isNotNull();
         assertThat(gitCommit.getGitCommitLog()).hasSize(5);
         // Found correct intersection?
-        BranchMasterIntersectionFinder finder = b1.getAction(BranchMasterIntersectionFinder.class);
+        GitBranchMasterIntersectionFinder finder = b1.getAction(GitBranchMasterIntersectionFinder.class);
         assertThat(finder).isNotNull();
         assertThat(finder.getBuildId()).isEqualTo("p/master#2");
     }
@@ -495,7 +495,7 @@ public class ReferenceRecorderMultibranchITest {
         r.assertLogContains("branch=feature2", b1);
 
         // Found correct intersection? (master and not the first feature branch)
-        BranchMasterIntersectionFinder finder = b1.getAction(BranchMasterIntersectionFinder.class);
+        GitBranchMasterIntersectionFinder finder = b1.getAction(GitBranchMasterIntersectionFinder.class);
         assertThat(finder).isNotNull();
         assertThat("p/master#1").isEqualTo(finder.getBuildId());
     }
@@ -572,7 +572,7 @@ public class ReferenceRecorderMultibranchITest {
         assertThat(gitCommit).isNotNull();
                 assertThat(gitCommit.getGitCommitLog()).hasSize(3);
         // Found correct intersection?
-        BranchMasterIntersectionFinder finder = b1.getAction(BranchMasterIntersectionFinder.class);
+        GitBranchMasterIntersectionFinder finder = b1.getAction(GitBranchMasterIntersectionFinder.class);
         assertThat(finder).isNotNull();
         assertThat(GitBranchMasterIntersectionFinder.NO_INTERSECTION_FOUND).isEqualTo(finder.getBuildId());
     }
@@ -650,7 +650,7 @@ public class ReferenceRecorderMultibranchITest {
         assertThat(gitCommit).isNotNull();
                 assertThat(gitCommit.getGitCommitLog()).hasSize(3);
         // Found correct intersection?
-        BranchMasterIntersectionFinder finder = b1.getAction(BranchMasterIntersectionFinder.class);
+        GitBranchMasterIntersectionFinder finder = b1.getAction(GitBranchMasterIntersectionFinder.class);
         assertThat(finder).isNotNull();
         assertThat(p.getLastBuild().getExternalizableId()).isEqualTo(finder.getBuildId());
     }

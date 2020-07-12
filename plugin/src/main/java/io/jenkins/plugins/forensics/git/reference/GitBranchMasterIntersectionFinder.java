@@ -1,8 +1,10 @@
 package io.jenkins.plugins.forensics.git.reference;
 
+import java.io.Serializable;
 import java.util.Optional;
 
 import hudson.model.Run;
+import jenkins.model.RunAction2;
 
 /**
  * This class tries to find the revision of the last shared Commit of the current Git branch and the master branch.
@@ -11,8 +13,8 @@ import hudson.model.Run;
  */
 // TODO Name to be Changed
 @SuppressWarnings({"PMD.DataClass", "checkstyle:HiddenField"})
-public class GitBranchMasterIntersectionFinder extends BranchMasterIntersectionFinder {
-
+public class GitBranchMasterIntersectionFinder implements RunAction2, Serializable {
+    public static final String NO_INTERSECTION_FOUND = "No intersection was found in master commits";
     private static final long serialVersionUID = -4549516129641755356L;
     private transient Run<?, ?> run;
 
@@ -31,8 +33,8 @@ public class GitBranchMasterIntersectionFinder extends BranchMasterIntersectionF
 
     private final boolean newestBuildIfNotFound;
 
-
-    public GitBranchMasterIntersectionFinder(final Run<?, ?> run, final int maxLogs, final boolean skipUnknownCommits, final boolean newestBuildIfNotFound, final Run<?, ?> reference) {
+    public GitBranchMasterIntersectionFinder(final Run<?, ?> run, final int maxLogs, final boolean skipUnknownCommits,
+            final boolean newestBuildIfNotFound, final Run<?, ?> reference) {
         super();
         this.run = run;
         this.maxLogs = maxLogs;
@@ -43,8 +45,10 @@ public class GitBranchMasterIntersectionFinder extends BranchMasterIntersectionF
     }
 
     /**
-     * Returns the build of the reference job which has the last intersection with the current build.
-     * @return build id.
+     * Method to determine the Revision of the last Commit which is shared with the master branch.
+     *
+     * @return the hash value (ObjectId) of the revision or null if an error occurred during evaluation or no
+     *         intersection was found (should not happen)
      */
     public Optional<String> findReferencePoint() {
         GitCommit thisCommit = run.getAction(GitCommit.class);
@@ -54,7 +58,8 @@ public class GitBranchMasterIntersectionFinder extends BranchMasterIntersectionF
         if (!buildId.isPresent()) {
             if (newestBuildIfNotFound) {
                 buildId = Optional.of(reference.getExternalizableId());
-            } else {
+            }
+            else {
                 buildId = Optional.of(NO_INTERSECTION_FOUND);
             }
         }
@@ -91,12 +96,10 @@ public class GitBranchMasterIntersectionFinder extends BranchMasterIntersectionF
         this.reference = reference;
     }
 
-    @Override
     public Run<?, ?> getRun() {
         return run;
     }
 
-    @Override
     public Optional<Run<?, ?>> getReferenceBuild() {
         if (buildId != null) {
             return Optional.of(Run.fromExternalizableId(buildId));
