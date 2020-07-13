@@ -128,14 +128,16 @@ public class GitRepositoryMiner extends RepositoryMiner {
         RepositoryStatistics analyze(final Repository repository, final Git git, final List<RevCommit> commits) {
             RepositoryStatistics statistics = new RepositoryStatistics();
             FileStatisticsBuilder builder = new FileStatisticsBuilder();
-            List<String> files;
+            List<String> files = new ArrayList<>();
             Map<String, FileStatistics> fileStatistics = new HashMap<>();
-            for (int i = 0; i < commits.size(); i++) {
-                if (i + 1 >= commits.size()) {
+            for (int i = commits.size() - 1; i >= 0 ; i--) {
+                if (i== commits.size()-1) {
                     files = getFilesToCommit(repository, git, null, commits.get(i).getName());
                 }
                 else {
-                    files = getFilesToCommit(repository, git, commits.get(i + 1).getName(), commits.get(i).getName());
+                    if(i > 0){
+                        files = getFilesToCommit(repository, git, commits.get(i).getName(), commits.get(i - 1).getName());
+                    }
                 }
                 int finalI = i;
                 files.forEach(f -> fileStatistics.computeIfAbsent(f, builder::build)
@@ -148,15 +150,17 @@ public class GitRepositoryMiner extends RepositoryMiner {
         private List<String> getFilesToCommit(final Repository repository, final Git git, final String oldCommit,
                 final String newCommit) {
             List<String> filePaths = new ArrayList<>();
+
             try {
+                Set<String> filesInHead = new FilesCollector(repository).findAllFor(repository.resolve(Constants.HEAD));
                 final List<DiffEntry> files = git.diff()
                         .setOldTree(getTreeParser(repository, oldCommit))
                         .setNewTree(getTreeParser(repository, newCommit))
                         .call();
 
                 return files.stream()
-                        .filter(entry -> !entry.getNewPath().equals(DiffEntry.DEV_NULL))
                         .map(DiffEntry::getNewPath)
+                        .filter(filesInHead::contains)
                         .collect(Collectors.toList());
             }
             catch (GitAPIException exception) {
