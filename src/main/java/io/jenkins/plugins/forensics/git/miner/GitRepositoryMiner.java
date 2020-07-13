@@ -1,19 +1,34 @@
 package io.jenkins.plugins.forensics.git.miner;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.diff.DiffEntry;
+import org.eclipse.jgit.errors.AmbiguousObjectException;
+import org.eclipse.jgit.errors.IncorrectObjectTypeException;
+import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.ObjectReader;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevTree;
+import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.treewalk.AbstractTreeIterator;
+import org.eclipse.jgit.treewalk.CanonicalTreeParser;
+import org.eclipse.jgit.treewalk.EmptyTreeIterator;
+
+import com.cloudbees.diff.Diff;
 
 import edu.hm.hafner.util.FilteredLog;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -89,8 +104,14 @@ public class GitRepositoryMiner extends RepositoryMiner {
                         logger.logError("Can't obtain HEAD of repository.");
                         return statistics;
                     }
-                    Set<String> files = new FilesCollector(repository).findAllFor(head);
-                    return analyze(repository, files);
+                    try (Git git = new Git(repository)) {
+                        List<RevCommit> commits = new CommitCollector(repository, git).findAllCommits();
+                        return analyze(repository, git, commits);
+                    }
+                    catch (GitAPIException exception) {
+                        //update log text.
+                        logger.logException(exception, "Can't analyze history of repository");
+                    }
                 }
                 return analyze(repository, paths);
             }
@@ -102,6 +123,68 @@ public class GitRepositoryMiner extends RepositoryMiner {
             finally {
                 repository.close();
             }
+        }
+
+        RepositoryStatistics analyze(final Repository repository, final Git git, final List<RevCommit> commits) {
+            RepositoryStatistics statistics = new RepositoryStatistics();
+            FileStatisticsBuilder builder = new FileStatisticsBuilder();
+            List<String> files;
+            Map<String, FileStatistics> fileStatistics = new HashMap<>();
+            for (int i = 0; i < commits.size(); i++) {
+                if (i + 1 >= commits.size()) {
+                    files = getFilesToCommit(repository, git, null, commits.get(i).getName());
+                }
+                else {
+                    files = getFilesToCommit(repository, git, commits.get(i + 1).getName(), commits.get(i).getName());
+                }
+                int finalI = i;
+                files.forEach(f -> fileStatistics.computeIfAbsent(f, builder::build)
+                        .inspectCommit(commits.get(finalI).getCommitTime(), getAuthor(commits.get(finalI))));
+            }
+            statistics.addAll(fileStatistics.values());
+            return statistics;
+        }
+
+        private List<String> getFilesToCommit(final Repository repository, final Git git, final String oldCommit,
+                final String newCommit) {
+            List<String> filePaths = new ArrayList<>();
+            try {
+                final List<DiffEntry> files = git.diff()
+                        .setOldTree(getTreeParser(repository, oldCommit))
+                        .setNewTree(getTreeParser(repository, newCommit))
+                        .call();
+
+                return files.stream()
+                        .filter(entry -> !entry.getNewPath().equals(DiffEntry.DEV_NULL))
+                        .map(DiffEntry::getNewPath)
+                        .collect(Collectors.toList());
+            }
+            catch (GitAPIException exception) {
+                logger.logException(exception, "Can't analyze files for commits.");
+            }
+            catch (IOException exception) {
+                logger.logException(exception, "Can't get treeParser.");
+            }
+            return filePaths;
+        }
+
+        private AbstractTreeIterator getTreeParser(final Repository repository, final String objectId)
+                throws IOException {
+            if (objectId == null) {
+                return new EmptyTreeIterator();
+            }
+            try (RevWalk walk = new RevWalk(repository)) {
+                RevCommit commit = walk.parseCommit(repository.resolve(objectId));
+                RevTree tree = walk.parseTree(commit.getTree().getId());
+
+                CanonicalTreeParser treeParser = new CanonicalTreeParser();
+                try (ObjectReader reader = repository.newObjectReader()) {
+                    treeParser.reset(reader, tree.getId());
+                }
+                walk.dispose();
+                return treeParser;
+            }
+
         }
 
         RepositoryStatistics analyze(final Repository repository, final Collection<String> files) {

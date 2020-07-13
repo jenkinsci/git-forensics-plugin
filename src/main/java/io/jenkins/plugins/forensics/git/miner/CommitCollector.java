@@ -3,6 +3,8 @@ package io.jenkins.plugins.forensics.git.miner;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 import org.eclipse.jgit.api.Git;
@@ -21,7 +23,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 public class CommitCollector {
     private final Repository repository;
     private final Git git;
-    //Assign later when incremental analysis is implemented.
+    //TODO Assign later when incremental analysis is implemented.
     private String latestRevisionOfPreviousCommit;
 
     CommitCollector(final Repository repository, final Git git) {
@@ -30,23 +32,22 @@ public class CommitCollector {
         latestRevisionOfPreviousCommit = null;
     }
 
-    ArrayList<String> findAllCommits() throws IOException, GitAPIException {
+    List<RevCommit> findAllCommits() throws IOException, GitAPIException {
         ObjectId headCommit = repository.resolve(Constants.HEAD);
         LogCommand logCommand = git.log().add(headCommit);
         Iterable<RevCommit> commits;
         commits = logCommand.call();
         Iterator<RevCommit> iterator = commits.iterator();
         RevCommit next;
-        ArrayList<String> newCommits = new ArrayList<>();
+        List<RevCommit> newCommits = new LinkedList<>();
         while (iterator.hasNext()) {
             next = iterator.next();
             String commitId = next.getId().getName();
             if (commitId.equals(latestRevisionOfPreviousCommit)) {
                 break;
             }
-            newCommits.add(commitId);
+            newCommits.add(next);
         }
-
         return newCommits;
     }
 }
