@@ -23,12 +23,6 @@ import static io.jenkins.plugins.forensics.assertions.Assertions.*;
  * @author Ullrich Hafner
  */
 public class GitMinerStepITest extends GitITest {
-    private static final String FILE = "File";
-    private static final String AUTHORS = "#Authors";
-    private static final String COMMITS = "#Commits";
-    private static final String LAST_COMMIT = "Last Commit";
-    private static final String ADDED = "Added";
-
     /** Verifies that the table contains two rows with the correct statistics. */
     @Test
     public void shouldFillTableDynamically() {
@@ -40,14 +34,18 @@ public class GitMinerStepITest extends GitITest {
         FreeStyleProject job = createJobWithMiner();
 
         Run<?, ?> build = buildSuccessfully(job);
-        ForensicsBuildAction action = build.getAction(ForensicsBuildAction.class);
-        TableModel forensics = ((ForensicsViewModel) action.getTarget()).getTableModel("forensics");
+        TableModel forensics = getTableModel(build);
         assertThat(forensics.getRows()).hasSize(2);
 
         assertThat(getRow(forensics, 0))
                 .hasFileName("source.txt").hasAuthorsSize(2).hasCommitsSize(4);
         assertThat(getRow(forensics, 1))
                 .hasFileName("file").hasAuthorsSize(1).hasCommitsSize(1);
+    }
+
+    private TableModel getTableModel(final Run<?, ?> build) {
+        ForensicsBuildAction forensicsBuildAction = build.getAction(ForensicsBuildAction.class);
+        return ((ForensicsViewModel) forensicsBuildAction.getTarget()).getTableModel("forensics");
     }
 
     private ForensicsRow getRow(final TableModel forensics, final int rowIndex) {
