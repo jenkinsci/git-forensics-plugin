@@ -4,17 +4,18 @@ import java.io.IOException;
 
 import org.junit.Test;
 
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
-
 import hudson.model.FreeStyleProject;
 import hudson.model.Run;
 import hudson.plugins.git.GitSCM;
 
-import io.jenkins.plugins.datatables.TablePageObject;
+import io.jenkins.plugins.datatables.TableModel;
 import io.jenkins.plugins.forensics.git.util.GitITest;
+import io.jenkins.plugins.forensics.miner.ForensicsBuildAction;
+import io.jenkins.plugins.forensics.miner.ForensicsTableModel.ForensicsRow;
+import io.jenkins.plugins.forensics.miner.ForensicsViewModel;
 import io.jenkins.plugins.forensics.miner.RepositoryMinerStep;
 
-import static org.assertj.core.api.Assertions.*;
+import static io.jenkins.plugins.forensics.assertions.Assertions.*;
 
 /**
  * Integration tests for the {@link RepositoryMinerStep} using a Git repository.
@@ -27,7 +28,7 @@ public class GitMinerStepITest extends GitITest {
     private static final String COMMITS = "#Commits";
     private static final String LAST_COMMIT = "Last Commit";
     private static final String ADDED = "Added";
-    
+
     /** Verifies that the table contains two rows with the correct statistics. */
     @Test
     public void shouldFillTableDynamically() {
@@ -39,18 +40,20 @@ public class GitMinerStepITest extends GitITest {
         FreeStyleProject job = createJobWithMiner();
 
         Run<?, ?> build = buildSuccessfully(job);
+        ForensicsBuildAction action = build.getAction(ForensicsBuildAction.class);
+        TableModel forensics = ((ForensicsViewModel) action.getTarget()).getTableModel("forensics");
+        assertThat(forensics.getRows()).hasSize(2);
 
-        HtmlPage forensicsPage = getWebPage(JavaScriptSupport.JS_ENABLED, build, "forensics");
+        assertThat(getRow(forensics, 0))
+                .hasFileName("source.txt").hasAuthorsSize(2).hasCommitsSize(4);
+        assertThat(getRow(forensics, 1))
+                .hasFileName("file").hasAuthorsSize(1).hasCommitsSize(1);
+    }
 
-        TablePageObject table = new TablePageObject(forensicsPage, "forensics");
-        assertThat(table.getRows()).hasSize(2);
-
-        assertThat(table.getRow(0).getValuesByColumnLabel())
-                .contains(entry(FILE, "file"), entry(AUTHORS, "1"), entry(COMMITS, "1"))
-                .containsKeys(LAST_COMMIT, ADDED); // value depends on the runtime and cannot be verified
-        assertThat(table.getRow(1).getValuesByColumnLabel())
-                .contains(entry(FILE, "source.txt"), entry(AUTHORS, "2"), entry(COMMITS, "4"))
-                .containsKeys(LAST_COMMIT, ADDED); // value depends on the runtime and cannot be verified
+    private ForensicsRow getRow(final TableModel forensics, final int rowIndex) {
+        Object actual = forensics.getRows().get(rowIndex);
+        assertThat(actual).isInstanceOf(ForensicsRow.class);
+        return (ForensicsRow) actual;
     }
 
     private FreeStyleProject createJobWithMiner() {
