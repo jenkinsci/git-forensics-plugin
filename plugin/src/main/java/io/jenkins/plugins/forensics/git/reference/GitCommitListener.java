@@ -64,6 +64,7 @@ public class GitCommitListener extends SCMListener {
     private void recordCommits(final Run<?, ?> build, final GitClient gitClient, final String key,
             final FilteredLog logger) throws IOException, InterruptedException {
         String previousCommit = getPreviousCommit(build, logger);
+        // FIXME: the first build with the action should record only the HEAD commit
         List<String> commits = gitClient.withRepository(new GitCommitCall(previousCommit, logger));
         logger.logInfo("-> Recorded %d new commits", commits.size());
         GitCommit gitCommit = new GitCommit(build, key, commits, logger);

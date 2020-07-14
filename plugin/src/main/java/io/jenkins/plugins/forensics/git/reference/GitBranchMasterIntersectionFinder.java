@@ -14,13 +14,11 @@ import jenkins.model.RunAction2;
 // TODO Name to be Changed
 @SuppressWarnings({"PMD.DataClass", "checkstyle:HiddenField"})
 public class GitBranchMasterIntersectionFinder implements RunAction2, Serializable {
-    public static final String NO_INTERSECTION_FOUND = "No intersection was found in master commits";
     private static final long serialVersionUID = -4549516129641755356L;
+    static final String NO_INTERSECTION_FOUND = "No intersection was found in master commits";
+
     private transient Run<?, ?> run;
-
     private transient Run<?, ?> reference;
-
-    private static final String NAME = "GitBranchMasterIntersectionFinder";
 
     private final String buildId;
 
@@ -102,7 +100,7 @@ public class GitBranchMasterIntersectionFinder implements RunAction2, Serializab
 
     public Optional<Run<?, ?>> getReferenceBuild() {
         if (buildId != null) {
-            return Optional.of(Run.fromExternalizableId(buildId));
+            return Optional.ofNullable(Run.fromExternalizableId(buildId));
         }
         return Optional.empty();
     }
@@ -114,7 +112,7 @@ public class GitBranchMasterIntersectionFinder implements RunAction2, Serializab
 
     @Override
     public String getDisplayName() {
-        return NAME;
+        return Messages.Action_DisplayName();
     }
 
     @Override

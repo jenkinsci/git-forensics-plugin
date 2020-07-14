@@ -165,7 +165,7 @@ public class ReferenceRecorderMultibranchITest {
     @Test
     public void shouldFindBuildWithMultipleCommitsInReferenceBuild() throws Exception {
         sampleRepo.init();
-        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file'); echo \"GitForensics\"; gitForensics newestBuildIfNotFound: false}");
+        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file'); echo \"GitForensics\"; gitForensics latestBuildIfNotFound: false}");
         sampleRepo.write("file", "initial content");
         sampleRepo.git("add", "Jenkinsfile");
         sampleRepo.git("commit", "--all", "--message=flow");
@@ -364,14 +364,14 @@ public class ReferenceRecorderMultibranchITest {
     }
 
     /**
-     * Checks the configuration newestBuildIfNotFound. If there is no intersection found (in this case due to insufficient maxCommits)
+     * Checks the configuration latestBuildIfNotFound. If there is no intersection found (in this case due to insufficient maxCommits)
      * then the newest Build of the master job should be taken as reference point.
      * @throws Exception
      */
     @Test
     public void shouldUseNewestBuildIfNewestBuildIfNotFoundIsEnabled() throws Exception {
         sampleRepo.init();
-        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file'); echo \"GitForensics\"; gitForensics maxCommits: 2, newestBuildIfNotFound: true}");
+        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file'); echo \"GitForensics\"; gitForensics maxCommits: 2, latestBuildIfNotFound: true}");
         sampleRepo.write("file", "initial content");
         sampleRepo.git("add", "Jenkinsfile");
         sampleRepo.git("commit", "--all", "--message=flow");
@@ -407,7 +407,7 @@ public class ReferenceRecorderMultibranchITest {
         assertThat(gitCommit.getGitCommitLog()).hasSize(1);
 
         sampleRepo.git("checkout", "-b", "feature");
-        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics maxCommits: 2, newestBuildIfNotFound: true}");
+        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics maxCommits: 2, latestBuildIfNotFound: true}");
         sampleRepo.write("file", "subsequent content");
         sampleRepo.git("commit", "--all", "--message=tweaked");
         // Second Commit
@@ -578,14 +578,14 @@ public class ReferenceRecorderMultibranchITest {
     }
 
     /**
-     * If the Intersection point is not found due to the build being deleted the newest master build should be taken with newestBuildIfNotFound enabled.
+     * If the Intersection point is not found due to the build being deleted the newest master build should be taken with latestBuildIfNotFound enabled.
      * @throws Exception
      */
     @Test
     @Ignore
     public void shouldTakeNewestMasterBuildIfBuildWasDeletedAndNewestBuildIfNotFoundIsEnabled() throws Exception {
         sampleRepo.init();
-        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file'); echo \"GitForensics\"; gitForensics newestBuildIfNotFound: true}");
+        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file'); echo \"GitForensics\"; gitForensics latestBuildIfNotFound: true}");
         sampleRepo.write("file", "initial content");
         sampleRepo.git("add", "Jenkinsfile");
         sampleRepo.git("commit", "--all", "--message=flow");
@@ -610,7 +610,7 @@ public class ReferenceRecorderMultibranchITest {
         assertThat(gitCommit.getGitCommitLog()).hasSize(2);
 
         sampleRepo.git("checkout", "-b", "feature");
-        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics newestBuildIfNotFound: true}");
+        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics latestBuildIfNotFound: true}");
         sampleRepo.write("file", "subsequent content");
         sampleRepo.git("commit", "--all", "--message=tweaked");
 
