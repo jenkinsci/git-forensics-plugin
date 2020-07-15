@@ -64,7 +64,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
             throws InterruptedException {
         try {
             long nano = System.nanoTime();
-            logger.logInfo("Analyzing the commit log of the Git repository '%s'", gitClient.getWorkTree());
+            logger.logInfo("TEST Analyzing the commit log of the Git repository '%s'", gitClient.getWorkTree());
             RepositoryStatistics statistics = gitClient.withRepository(
                     new RepositoryStatisticsCallback(absoluteFileNames, logger));
             logger.logInfo("-> created report for %d files in %d seconds", statistics.size(),
@@ -135,13 +135,13 @@ public class GitRepositoryMiner extends RepositoryMiner {
                 }
                 else {
                     if (i > 0) {
-                        files = getFilesFromCommit(repository, git, commits.get(i).getName(),
-                                commits.get(i - 1).getName());
+                        files = getFilesFromCommit(repository, git, commits.get(i + 1).getName(),
+                                commits.get(i).getName());
                     }
                 }
                 int finalI = i;
                 files.forEach(f -> fileStatistics.computeIfAbsent(f, builder::build)
-                        .inspectCommit(commits.get(finalI).getCommitTime(), getAuthor(commits.get(finalI))));
+                                .inspectCommit(commits.get(finalI).getCommitTime(), getAuthor(commits.get(finalI))));
             }
             fileStatistics.keySet().removeIf(f -> !filesInHead.contains(f));
             statistics.addAll(fileStatistics.values());
@@ -157,7 +157,6 @@ public class GitRepositoryMiner extends RepositoryMiner {
                         .setOldTree(getTreeParser(repository, oldCommit))
                         .setNewTree(getTreeParser(repository, newCommit))
                         .call();
-
 
                 filePaths = diffEntries.stream()
                         .map(DiffEntry::getNewPath)
