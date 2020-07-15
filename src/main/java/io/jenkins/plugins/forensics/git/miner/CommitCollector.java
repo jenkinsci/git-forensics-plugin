@@ -1,11 +1,9 @@
 package io.jenkins.plugins.forensics.git.miner;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.LogCommand;
@@ -24,7 +22,7 @@ public class CommitCollector {
     private final Repository repository;
     private final Git git;
     //TODO Assign later when incremental analysis is implemented.
-    private String latestRevisionOfPreviousCommit;
+    private final String latestRevisionOfPreviousCommit;
 
     CommitCollector(final Repository repository, final Git git) {
         this.repository = repository;

@@ -13,9 +13,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
-import org.eclipse.jgit.errors.AmbiguousObjectException;
-import org.eclipse.jgit.errors.IncorrectObjectTypeException;
-import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectReader;
@@ -110,7 +107,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
                     }
                     catch (GitAPIException exception) {
                         //update log text.
-                        logger.logException(exception, "Can't analyze history of repository");
+                        logger.logException(exception, "Can't obtain all commits for the repository.");
                     }
                 }
                 return analyze(repository, paths);
@@ -125,43 +122,49 @@ public class GitRepositoryMiner extends RepositoryMiner {
             }
         }
 
-        RepositoryStatistics analyze(final Repository repository, final Git git, final List<RevCommit> commits) {
+        RepositoryStatistics analyze(final Repository repository, final Git git, final List<RevCommit> commits)
+                throws IOException {
             RepositoryStatistics statistics = new RepositoryStatistics();
             FileStatisticsBuilder builder = new FileStatisticsBuilder();
             List<String> files = new ArrayList<>();
             Map<String, FileStatistics> fileStatistics = new HashMap<>();
-            for (int i = commits.size() - 1; i >= 0 ; i--) {
-                if (i== commits.size()-1) {
-                    files = getFilesToCommit(repository, git, null, commits.get(i).getName());
+            Set<String> filesInHead = new FilesCollector(repository).findAllFor(repository.resolve(Constants.HEAD));
+            for (int i = commits.size() - 1; i >= 0; i--) {
+                if (i == commits.size() - 1) {
+                    files = getFilesFromCommit(repository, git, null, commits.get(i).getName());
                 }
                 else {
-                    if(i > 0){
-                        files = getFilesToCommit(repository, git, commits.get(i).getName(), commits.get(i - 1).getName());
+                    if (i > 0) {
+                        files = getFilesFromCommit(repository, git, commits.get(i).getName(),
+                                commits.get(i - 1).getName());
                     }
                 }
                 int finalI = i;
                 files.forEach(f -> fileStatistics.computeIfAbsent(f, builder::build)
                         .inspectCommit(commits.get(finalI).getCommitTime(), getAuthor(commits.get(finalI))));
             }
+            fileStatistics.keySet().removeIf(f -> !filesInHead.contains(f));
             statistics.addAll(fileStatistics.values());
             return statistics;
         }
 
-        private List<String> getFilesToCommit(final Repository repository, final Git git, final String oldCommit,
+        private List<String> getFilesFromCommit(final Repository repository, final Git git, final String oldCommit,
                 final String newCommit) {
             List<String> filePaths = new ArrayList<>();
 
             try {
-                Set<String> filesInHead = new FilesCollector(repository).findAllFor(repository.resolve(Constants.HEAD));
-                final List<DiffEntry> files = git.diff()
+                final List<DiffEntry> diffEntries = git.diff()
                         .setOldTree(getTreeParser(repository, oldCommit))
                         .setNewTree(getTreeParser(repository, newCommit))
                         .call();
 
-                return files.stream()
+
+                filePaths = diffEntries.stream()
                         .map(DiffEntry::getNewPath)
-                        .filter(filesInHead::contains)
                         .collect(Collectors.toList());
+
+                filePaths.remove(DiffEntry.DEV_NULL);
+                return filePaths;
             }
             catch (GitAPIException exception) {
                 logger.logException(exception, "Can't analyze files for commits.");
@@ -188,7 +191,6 @@ public class GitRepositoryMiner extends RepositoryMiner {
                 walk.dispose();
                 return treeParser;
             }
-
         }
 
         RepositoryStatistics analyze(final Repository repository, final Collection<String> files) {
