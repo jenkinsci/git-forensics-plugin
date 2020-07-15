@@ -56,7 +56,8 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
 
         assertThat(gitRevision).isEqualTo("Revision: 28af63def44286729e3b19b03464d100fd1d0587\n"
                 + "detached");
-        assertThat(scmStatistics).isEqualTo("SCM Repository Statistics: 51 repository files");
+        assertThat(scmStatistics).isEqualTo("SCM Repository Statistics: 51 repository files\n"
+                + "Created report in 1 seconds");
     }
 
     /**
@@ -125,19 +126,19 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
         detailsTable.sortColumn(AUTHORS);
         detailsTable.sortColumn(AUTHORS);
         assertRow(detailsTable,
-                1,
-                "config.yml",
-                1,
-                1
+                0,
+                "pom.xml",
+                4,
+                298
         );
 
         detailsTable.sortColumn(COMMITS);
         detailsTable.sortColumn(COMMITS);
         assertRow(detailsTable,
-                0,
+                1,
                 "README.md",
                 1,
-                18
+                20
         );
 
         detailsTable.showTenEntries();
@@ -159,8 +160,8 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
         assertRow(detailsTable,
                 0,
                 "pom.xml",
-                2,
-                2
+                4,
+                298
         );
         detailsTable.clearSearch();
         assertThat(detailsTable.getTableRows().size()).isEqualTo(10);
