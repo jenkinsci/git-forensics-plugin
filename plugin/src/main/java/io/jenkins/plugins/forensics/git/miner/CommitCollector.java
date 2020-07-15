@@ -33,8 +33,7 @@ public class CommitCollector {
     List<RevCommit> findAllCommits() throws IOException, GitAPIException {
         ObjectId headCommit = repository.resolve(Constants.HEAD);
         LogCommand logCommand = git.log().add(headCommit);
-        Iterable<RevCommit> commits;
-        commits = logCommand.call();
+        Iterable<RevCommit> commits = logCommand.call();
         Iterator<RevCommit> iterator = commits.iterator();
         RevCommit next;
         List<RevCommit> newCommits = new LinkedList<>();

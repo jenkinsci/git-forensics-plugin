@@ -14,7 +14,6 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectReader;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Repository;
@@ -24,8 +23,6 @@ import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.treewalk.AbstractTreeIterator;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.EmptyTreeIterator;
-
-import com.cloudbees.diff.Diff;
 
 import edu.hm.hafner.util.FilteredLog;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -66,7 +63,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
             long nano = System.nanoTime();
             logger.logInfo("TEST Analyzing the commit log of the Git repository '%s'", gitClient.getWorkTree());
             RepositoryStatistics statistics = gitClient.withRepository(
-                    new RepositoryStatisticsCallback(absoluteFileNames, logger));
+                    new RepositoryStatisticsCallback(logger));
             logger.logInfo("-> created report for %d files in %d seconds", statistics.size(),
                     1 + (System.nanoTime() - nano) / 1_000_000_000L);
             return statistics;
@@ -81,45 +78,30 @@ public class GitRepositoryMiner extends RepositoryMiner {
     private static class RepositoryStatisticsCallback extends AbstractRepositoryCallback<RepositoryStatistics> {
         private static final long serialVersionUID = 7667073858514128136L;
 
-        private final Collection<String> paths;
         private final FilteredLog logger;
 
-        RepositoryStatisticsCallback(final Collection<String> paths, final FilteredLog logger) {
+        RepositoryStatisticsCallback(final FilteredLog logger) {
             super();
 
-            this.paths = paths;
             this.logger = logger;
         }
 
         @Override
         public RepositoryStatistics invoke(final Repository repository, final VirtualChannel channel) {
             try {
-                if (paths.isEmpty()) { // scan whole repository
-                    ObjectId head = repository.resolve(Constants.HEAD);
-                    if (head == null) {
-                        RepositoryStatistics statistics = new RepositoryStatistics();
-                        logger.logError("Can't obtain HEAD of repository.");
-                        return statistics;
-                    }
-                    try (Git git = new Git(repository)) {
-                        List<RevCommit> commits = new CommitCollector(repository, git).findAllCommits();
-                        return analyze(repository, git, commits);
-                    }
-                    catch (GitAPIException exception) {
-                        //update log text.
-                        logger.logException(exception, "Can't obtain all commits for the repository.");
-                    }
+                try (Git git = new Git(repository)) {
+                    List<RevCommit> commits = new CommitCollector(repository, git).findAllCommits();
+                    return analyze(repository, git, commits);
                 }
-                return analyze(repository, paths);
-            }
-            catch (IOException exception) {
-                RepositoryStatistics statistics = new RepositoryStatistics();
-                logger.logException(exception, "Can't obtain HEAD of repository.");
-                return statistics;
+                catch (GitAPIException | IOException exception) {
+                    logger.logException(exception, "Can't obtain all commits for the repository.");
+                }
             }
             finally {
                 repository.close();
             }
+
+            return new RepositoryStatistics();
         }
 
         RepositoryStatistics analyze(final Repository repository, final Git git, final List<RevCommit> commits)
@@ -141,7 +123,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
                 }
                 int finalI = i;
                 files.forEach(f -> fileStatistics.computeIfAbsent(f, builder::build)
-                                .inspectCommit(commits.get(finalI).getCommitTime(), getAuthor(commits.get(finalI))));
+                        .inspectCommit(commits.get(finalI).getCommitTime(), getAuthor(commits.get(finalI))));
             }
             fileStatistics.keySet().removeIf(f -> !filesInHead.contains(f));
             statistics.addAll(fileStatistics.values());
@@ -190,35 +172,6 @@ public class GitRepositoryMiner extends RepositoryMiner {
                 walk.dispose();
                 return treeParser;
             }
-        }
-
-        RepositoryStatistics analyze(final Repository repository, final Collection<String> files) {
-            RepositoryStatistics statistics = new RepositoryStatistics();
-            logger.logInfo("Invoking Git miner to create statistics for all available files");
-            logger.logInfo("Git working tree = '%s'", getWorkTree(repository));
-
-            FileStatisticsBuilder builder = new FileStatisticsBuilder();
-            List<FileStatistics> fileStatistics = files.stream()
-                    .map(builder::build)
-                    .map(file -> analyzeHistory(repository, file))
-                    .collect(Collectors.toList());
-            statistics.addAll(fileStatistics);
-
-            logger.logInfo("-> created statistics for %d files", statistics.size());
-
-            return statistics;
-        }
-
-        private FileStatistics analyzeHistory(final Repository repository, final FileStatistics fileStatistics) {
-            try (Git git = new Git(repository)) {
-                Iterable<RevCommit> commits = git.log().addPath(fileStatistics.getFileName()).call();
-                commits.forEach(c -> fileStatistics.inspectCommit(c.getCommitTime(), getAuthor(c)));
-                return fileStatistics;
-            }
-            catch (GitAPIException exception) {
-                logger.logException(exception, "Can't analyze history of file %s", fileStatistics.getFileName());
-            }
-            return fileStatistics;
         }
 
         @Nullable
