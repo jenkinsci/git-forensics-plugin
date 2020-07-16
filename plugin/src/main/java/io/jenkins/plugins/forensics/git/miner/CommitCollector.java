@@ -18,7 +18,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
  *
  * @author Giulia Del Bravo
  */
-public class CommitCollector {
+class CommitCollector {
     private final Repository repository;
     private final Git git;
     //TODO Assign later when incremental analysis is implemented.
