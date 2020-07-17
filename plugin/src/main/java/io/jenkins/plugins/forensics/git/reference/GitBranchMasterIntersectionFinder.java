@@ -49,8 +49,8 @@ public class GitBranchMasterIntersectionFinder implements RunAction2, Serializab
      *         intersection was found (should not happen)
      */
     public Optional<String> findReferencePoint() {
-        GitCommit thisCommit = run.getAction(GitCommit.class);
-        GitCommit referenceCommit = reference.getAction(GitCommit.class);
+        GitCommitsRecord thisCommit = run.getAction(GitCommitsRecord.class);
+        GitCommitsRecord referenceCommit = reference.getAction(GitCommitsRecord.class);
 
         Optional<String> buildId = thisCommit.getReferencePoint(referenceCommit, maxLogs, skipUnknownCommits);
         if (!buildId.isPresent()) {

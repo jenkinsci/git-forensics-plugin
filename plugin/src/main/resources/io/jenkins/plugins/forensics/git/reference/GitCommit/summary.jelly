@@ -1,9 +1,0 @@
-<?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:t="/lib/hudson">
-
-    <t:summary icon="/plugin/git-forensics/icons/commit-48x48.png">
-        Commits since last build: ${it.summary}
-        of Repository: ${it.repositoryId}
-    </t:summary>
-
-</j:jelly>

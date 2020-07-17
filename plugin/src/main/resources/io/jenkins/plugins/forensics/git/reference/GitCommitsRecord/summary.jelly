@@ -1,0 +1,22 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:t="/lib/hudson">
+
+  <t:summary icon="/plugin/git-forensics/icons/git-48x48.png">
+    SCM: ${it.scmKey}
+    <ul>
+      <j:choose>
+        <j:when test="${it.isFirstBuild()}">
+          <li>Initial recording of ${size(it)} commits</li>
+        </j:when>
+        <j:otherwise>
+          <li>Commits since last build: ${size(it)}</li>
+        </j:otherwise>
+
+      </j:choose>
+
+      <li>Latest commit: ${it.latestCommit}</li>
+    </ul>
+
+  </t:summary>
+
+</j:jelly>
