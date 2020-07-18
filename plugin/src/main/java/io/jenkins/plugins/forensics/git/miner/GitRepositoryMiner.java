@@ -108,22 +108,24 @@ public class GitRepositoryMiner extends RepositoryMiner {
                 throws IOException {
             RepositoryStatistics statistics = new RepositoryStatistics();
             FileStatisticsBuilder builder = new FileStatisticsBuilder();
-            List<String> files = new ArrayList<>();
             Map<String, FileStatistics> fileStatistics = new HashMap<>();
             Set<String> filesInHead = new FilesCollector(repository).findAllFor(repository.resolve(Constants.HEAD));
             for (int i = commits.size() - 1; i >= 0; i--) {
+                List<String> files = new ArrayList<>();
+                RevCommit newCommit = commits.get(i);
+
                 if (i == commits.size() - 1) {
-                    files = getFilesFromCommit(repository, git, null, commits.get(i).getName());
+                    files = getFilesFromCommit(repository, git, null, newCommit.getName());
                 }
                 else {
                     if (i > 0) {
-                        files = getFilesFromCommit(repository, git, commits.get(i + 1).getName(),
-                                commits.get(i).getName());
+                        RevCommit oldCommit = commits.get(i + 1);
+                        files = getFilesFromCommit(repository, git, oldCommit.getName(),
+                                newCommit.getName());
                     }
                 }
-                int finalI = i;
                 files.forEach(f -> fileStatistics.computeIfAbsent(f, builder::build)
-                        .inspectCommit(commits.get(finalI).getCommitTime(), getAuthor(commits.get(finalI))));
+                        .inspectCommit(newCommit.getCommitTime(), getAuthor(newCommit)));
             }
             fileStatistics.keySet().removeIf(f -> !filesInHead.contains(f));
             statistics.addAll(fileStatistics.values());
