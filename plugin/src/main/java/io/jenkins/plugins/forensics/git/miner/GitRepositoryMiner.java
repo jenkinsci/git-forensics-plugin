@@ -111,19 +111,10 @@ public class GitRepositoryMiner extends RepositoryMiner {
             Map<String, FileStatistics> fileStatistics = new HashMap<>();
             Set<String> filesInHead = new FilesCollector(repository).findAllFor(repository.resolve(Constants.HEAD));
             for (int i = commits.size() - 1; i >= 0; i--) {
-                List<String> files = new ArrayList<>();
                 RevCommit newCommit = commits.get(i);
+                String oldCommitName = i < commits.size() - 1 ? commits.get(i + 1).getName() : null;
+                List<String> files = getFilesFromCommit(repository, git, oldCommitName, newCommit.getName());
 
-                if (i == commits.size() - 1) {
-                    files = getFilesFromCommit(repository, git, null, newCommit.getName());
-                }
-                else {
-                    if (i > 0) {
-                        RevCommit oldCommit = commits.get(i + 1);
-                        files = getFilesFromCommit(repository, git, oldCommit.getName(),
-                                newCommit.getName());
-                    }
-                }
                 files.forEach(f -> fileStatistics.computeIfAbsent(f, builder::build)
                         .inspectCommit(newCommit.getCommitTime(), getAuthor(newCommit)));
             }
