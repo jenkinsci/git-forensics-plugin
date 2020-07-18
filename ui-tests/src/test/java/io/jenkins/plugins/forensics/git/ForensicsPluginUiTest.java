@@ -53,11 +53,10 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
         String scmStatistics = referenceBuild.getElement(
                 By.xpath("/html/body/div[4]/div[2]/table/tbody/tr[4]/td[2]"))
                 .getText();
-
+        String numberOfFiles = scmStatistics.split(" ")[3];
         assertThat(gitRevision).isEqualTo("Revision: 28af63def44286729e3b19b03464d100fd1d0587\n"
                 + "detached");
-        assertThat(scmStatistics).isEqualTo("SCM Repository Statistics: 51 repository files\n"
-                + "Created report in 1 seconds");
+        assertThat(numberOfFiles).isEqualTo("51");
     }
 
     /**
