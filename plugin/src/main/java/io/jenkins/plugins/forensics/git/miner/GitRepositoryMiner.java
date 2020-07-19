@@ -1,19 +1,28 @@
 package io.jenkins.plugins.forensics.git.miner;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.ObjectReader;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevTree;
+import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.treewalk.AbstractTreeIterator;
+import org.eclipse.jgit.treewalk.CanonicalTreeParser;
+import org.eclipse.jgit.treewalk.EmptyTreeIterator;
 
 import edu.hm.hafner.util.FilteredLog;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -54,7 +63,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
             long nano = System.nanoTime();
             logger.logInfo("Analyzing the commit log of the Git repository '%s'", gitClient.getWorkTree());
             RepositoryStatistics statistics = gitClient.withRepository(
-                    new RepositoryStatisticsCallback(absoluteFileNames, logger));
+                    new RepositoryStatisticsCallback(logger));
             logger.logInfo("-> created report for %d files in %d seconds", statistics.size(),
                     1 + (System.nanoTime() - nano) / 1_000_000_000L);
             return statistics;
@@ -69,68 +78,93 @@ public class GitRepositoryMiner extends RepositoryMiner {
     private static class RepositoryStatisticsCallback extends AbstractRepositoryCallback<RepositoryStatistics> {
         private static final long serialVersionUID = 7667073858514128136L;
 
-        private final Collection<String> paths;
         private final FilteredLog logger;
 
-        RepositoryStatisticsCallback(final Collection<String> paths, final FilteredLog logger) {
+        RepositoryStatisticsCallback(final FilteredLog logger) {
             super();
 
-            this.paths = paths;
             this.logger = logger;
         }
 
         @Override
         public RepositoryStatistics invoke(final Repository repository, final VirtualChannel channel) {
             try {
-                if (paths.isEmpty()) { // scan whole repository
-                    ObjectId head = repository.resolve(Constants.HEAD);
-                    if (head == null) {
-                        RepositoryStatistics statistics = new RepositoryStatistics();
-                        logger.logError("Can't obtain HEAD of repository.");
-                        return statistics;
-                    }
-                    Set<String> files = new FilesCollector(repository).findAllFor(head);
-                    return analyze(repository, files);
+                try (Git git = new Git(repository)) {
+                    List<RevCommit> commits = new CommitCollector(repository, git).findAllCommits();
+                    return analyze(repository, git, commits);
                 }
-                return analyze(repository, paths);
-            }
-            catch (IOException exception) {
-                RepositoryStatistics statistics = new RepositoryStatistics();
-                logger.logException(exception, "Can't obtain HEAD of repository.");
-                return statistics;
+                catch (GitAPIException | IOException exception) {
+                    logger.logException(exception, "Can't obtain all commits for the repository.");
+                }
             }
             finally {
                 repository.close();
             }
+
+            return new RepositoryStatistics();
         }
 
-        RepositoryStatistics analyze(final Repository repository, final Collection<String> files) {
+        RepositoryStatistics analyze(final Repository repository, final Git git, final List<RevCommit> commits)
+                throws IOException {
             RepositoryStatistics statistics = new RepositoryStatistics();
-            logger.logInfo("Invoking Git miner to create statistics for all available files");
-            logger.logInfo("Git working tree = '%s'", getWorkTree(repository));
-
             FileStatisticsBuilder builder = new FileStatisticsBuilder();
-            List<FileStatistics> fileStatistics = files.stream()
-                    .map(builder::build)
-                    .map(file -> analyzeHistory(repository, file))
-                    .collect(Collectors.toList());
-            statistics.addAll(fileStatistics);
+            Map<String, FileStatistics> fileStatistics = new HashMap<>();
+            Set<String> filesInHead = new FilesCollector(repository).findAllFor(repository.resolve(Constants.HEAD));
+            for (int i = commits.size() - 1; i >= 0; i--) {
+                RevCommit newCommit = commits.get(i);
+                String oldCommitName = i < commits.size() - 1 ? commits.get(i + 1).getName() : null;
+                List<String> files = getFilesFromCommit(repository, git, oldCommitName, newCommit.getName());
 
-            logger.logInfo("-> created statistics for %d files", statistics.size());
-
+                files.forEach(f -> fileStatistics.computeIfAbsent(f, builder::build)
+                        .inspectCommit(newCommit.getCommitTime(), getAuthor(newCommit)));
+            }
+            fileStatistics.keySet().removeIf(f -> !filesInHead.contains(f));
+            statistics.addAll(fileStatistics.values());
             return statistics;
         }
 
-        private FileStatistics analyzeHistory(final Repository repository, final FileStatistics fileStatistics) {
-            try (Git git = new Git(repository)) {
-                Iterable<RevCommit> commits = git.log().addPath(fileStatistics.getFileName()).call();
-                commits.forEach(c -> fileStatistics.inspectCommit(c.getCommitTime(), getAuthor(c)));
-                return fileStatistics;
+        private List<String> getFilesFromCommit(final Repository repository, final Git git, final String oldCommit,
+                final String newCommit) {
+            List<String> filePaths = new ArrayList<>();
+
+            try {
+                final List<DiffEntry> diffEntries = git.diff()
+                        .setOldTree(getTreeParser(repository, oldCommit))
+                        .setNewTree(getTreeParser(repository, newCommit))
+                        .call();
+
+                filePaths = diffEntries.stream()
+                        .map(DiffEntry::getNewPath)
+                        .collect(Collectors.toList());
+
+                filePaths.remove(DiffEntry.DEV_NULL);
+                return filePaths;
             }
             catch (GitAPIException exception) {
-                logger.logException(exception, "Can't analyze history of file %s", fileStatistics.getFileName());
+                logger.logException(exception, "Can't analyze files for commits.");
             }
-            return fileStatistics;
+            catch (IOException exception) {
+                logger.logException(exception, "Can't get treeParser.");
+            }
+            return filePaths;
+        }
+
+        private AbstractTreeIterator getTreeParser(final Repository repository, final String objectId)
+                throws IOException {
+            if (objectId == null) {
+                return new EmptyTreeIterator();
+            }
+            try (RevWalk walk = new RevWalk(repository)) {
+                RevCommit commit = walk.parseCommit(repository.resolve(objectId));
+                RevTree tree = walk.parseTree(commit.getTree().getId());
+
+                CanonicalTreeParser treeParser = new CanonicalTreeParser();
+                try (ObjectReader reader = repository.newObjectReader()) {
+                    treeParser.reset(reader, tree.getId());
+                }
+                walk.dispose();
+                return treeParser;
+            }
         }
 
         @Nullable
