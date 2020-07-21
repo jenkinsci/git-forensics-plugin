@@ -24,7 +24,7 @@
     <module.name>${project.groupId}.git.forensics</module.name>
 
     <!-- Library Dependencies Versions -->
-    <commons.lang.version>3.10</commons.lang.version>
+    <commons.lang.version>3.11</commons.lang.version>
     <eclipse-collections.version>9.2.0</eclipse-collections.version>
 
     <!-- Jenkins Plugin Dependencies Versions -->
