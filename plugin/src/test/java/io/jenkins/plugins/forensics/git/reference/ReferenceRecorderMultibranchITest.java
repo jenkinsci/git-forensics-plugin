@@ -1,5 +1,7 @@
 package io.jenkins.plugins.forensics.git.reference;
 
+import java.util.Objects;
+
 import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -13,6 +15,7 @@ import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import hudson.model.Run;
+import hudson.model.queue.QueueTaskFuture;
 import jenkins.branch.BranchProperty;
 import jenkins.branch.BranchSource;
 import jenkins.branch.DefaultBranchPropertyStrategy;
@@ -34,6 +37,8 @@ public class ReferenceRecorderMultibranchITest {
     private static final String JENKINS_FILE = "Jenkinsfile";
     private static final String SOURCE_FILE = "file";
     private static final String FEATURE = "feature";
+    private static final String MASTER = "master";
+    private static final String ADDITIONAL_SOURCE_FILE = "test.txt";
 
     @ClassRule
     public static BuildWatcher buildWatcher = new BuildWatcher();
@@ -56,14 +61,12 @@ public class ReferenceRecorderMultibranchITest {
         initializeGit();
 
         WorkflowMultiBranchProject mp = createMultiBranchPipeline();
-        buildMaster(mp);
+        WorkflowRun masterBuild = buildMaster(mp, 1);
+        verifyRecordSize(masterBuild, 2);
 
         createFeatureBranchAndAddCommits();
 
-        WorkflowRun featureBuild = buildBranch(mp, FEATURE);
-        assertThat(featureBuild.getNumber()).isEqualTo(1);
-        r.assertLogContains("SUBSEQUENT CONTENT", featureBuild);
-        r.assertLogContains("branch=feature", featureBuild);
+        WorkflowRun featureBuild = buildFeature(mp, 1);
 
         GitCommitsRecord featureRecord = featureBuild.getAction(GitCommitsRecord.class);
         assertThat(featureRecord).isNotNull();
@@ -72,6 +75,16 @@ public class ReferenceRecorderMultibranchITest {
         GitBranchMasterIntersectionFinder finder = featureBuild.getAction(GitBranchMasterIntersectionFinder.class);
         assertThat(finder).isNotNull();
         assertThat("p/master#1").isEqualTo(finder.getBuildId());
+    }
+
+    private WorkflowRun buildFeature(final WorkflowMultiBranchProject mp, final int buildNumber) throws Exception {
+        WorkflowRun featureBuild = buildBranch(mp, FEATURE);
+
+        assertThat(featureBuild.getNumber()).isEqualTo(buildNumber);
+        r.assertLogContains("SUBSEQUENT CONTENT", featureBuild);
+        r.assertLogContains("branch=feature", featureBuild);
+
+        return featureBuild;
     }
 
     private void initializeGit(final String... parameters) throws Exception {
@@ -83,8 +96,8 @@ public class ReferenceRecorderMultibranchITest {
 
     private WorkflowRun buildBranch(final WorkflowMultiBranchProject mp, final String feature) throws Exception {
         WorkflowJob p = scheduleAndFindBranchProject(mp, feature);
-        assertThat(mp.getItems()).hasSize(2);
         r.waitUntilNoActivity();
+
         return p.getLastBuild();
     }
 
@@ -100,15 +113,16 @@ public class ReferenceRecorderMultibranchITest {
     private void initializeGitRepository(final String jenkinsFileContent) throws Exception {
         sampleRepo.init();
         sampleRepo.write(JENKINS_FILE, jenkinsFileContent);
-        sampleRepo.write(SOURCE_FILE, "initial content");
+        sampleRepo.write(SOURCE_FILE, "master content");
         sampleRepo.git("add", JENKINS_FILE);
         sampleRepo.git("commit", "--all", "--message=flow");
     }
 
     private WorkflowMultiBranchProject createMultiBranchPipeline() throws java.io.IOException {
         WorkflowMultiBranchProject mp = r.jenkins.createProject(WorkflowMultiBranchProject.class, "p");
-        mp.getSourcesList()
-                .add(new BranchSource(new GitSCMSource(null, sampleRepo.toString(), "", "*", "", false),
+        mp.getSourcesList().add(
+                new BranchSource(new GitSCMSource(null, sampleRepo.toString(), "", "*",
+                        "", false),
                         new DefaultBranchPropertyStrategy(new BranchProperty[0])));
         for (SCMSource source : mp.getSCMSources()) {
             assertThat(mp).isEqualTo(source.getOwner());
@@ -125,24 +139,20 @@ public class ReferenceRecorderMultibranchITest {
         initializeGit();
 
         WorkflowMultiBranchProject mp = createMultiBranchPipeline();
-        buildMaster(mp);
+        WorkflowRun masterBuild = buildMaster(mp, 1);
+        verifyRecordSize(masterBuild, 2);
 
         createFeatureBranchAndAddCommits();
 
         // Add some new master commits
-        sampleRepo.git("checkout", "master");
-        sampleRepo.write("test.txt", "test");
-        sampleRepo.git("add", "test.txt");
+        sampleRepo.git("checkout", MASTER);
+        sampleRepo.write(ADDITIONAL_SOURCE_FILE, "test");
+        sampleRepo.git("add", ADDITIONAL_SOURCE_FILE);
         sampleRepo.git("commit", "--all", "--message=test");
 
-        WorkflowRun masterBuild = buildBranch(mp, "master");
-        assertThat(masterBuild.getNumber()).isEqualTo(2);
-        r.assertLogContains("branch=master", masterBuild);
-
-        WorkflowRun featureBuild = buildBranch(mp, FEATURE);
-        assertThat(featureBuild.getNumber()).isEqualTo(1);
-        r.assertLogContains("SUBSEQUENT CONTENT", featureBuild);
-        r.assertLogContains("branch=feature", featureBuild);
+        WorkflowRun nextMaster = buildMaster(mp, 2);
+        verifyRecordSize(nextMaster, 1);
+        WorkflowRun featureBuild = buildFeature(mp, 1);
 
         GitCommitsRecord featureRecord = featureBuild.getAction(GitCommitsRecord.class);
         assertThat(featureRecord).isNotNull();
@@ -153,21 +163,23 @@ public class ReferenceRecorderMultibranchITest {
         assertThat("p/master#1").isEqualTo(finder.getBuildId());
     }
 
-    private WorkflowRun buildMaster(final WorkflowMultiBranchProject mp) throws Exception {
-        WorkflowJob p = scheduleAndFindBranchProject(mp, "master");
-        assertThat(new GitBranchSCMHead("master")).isEqualTo(SCMHead.HeadByItem.findHead(p));
-        assertThat(mp.getItems()).hasSize(1);
+    private WorkflowRun buildMaster(final WorkflowMultiBranchProject mp, final int buildNumber) throws Exception {
+        WorkflowJob p = scheduleAndFindBranchProject(mp, MASTER);
+        assertThat(new GitBranchSCMHead(MASTER)).isEqualTo(SCMHead.HeadByItem.findHead(p));
         r.waitUntilNoActivity();
 
         WorkflowRun build = p.getLastBuild();
-        assertThat(build.getNumber()).isEqualTo(1);
-        r.assertLogContains("initial content", build);
+        assertThat(build.getNumber()).isEqualTo(buildNumber);
+        r.assertLogContains("master content", build);
         r.assertLogContains("branch=master", build);
 
-        GitCommitsRecord masterRecord = build.getAction(GitCommitsRecord.class);
-        assertThat(masterRecord).isNotNull().isNotEmpty().hasSize(2);
-
         return build;
+    }
+
+    private void verifyRecordSize(final WorkflowRun build, final int size) {
+        GitCommitsRecord masterRecord = build.getAction(GitCommitsRecord.class);
+
+        assertThat(masterRecord).isNotNull().isNotEmpty().hasSize(size);
     }
 
     /**
@@ -179,28 +191,24 @@ public class ReferenceRecorderMultibranchITest {
         initializeGit("latestBuildIfNotFound: false");
 
         WorkflowMultiBranchProject mp = createMultiBranchPipeline();
-        buildMaster(mp);
+        WorkflowRun masterBuild = buildMaster(mp, 1);
+        verifyRecordSize(masterBuild, 2);
 
-        sampleRepo.write("test.txt", "test");
-        sampleRepo.git("add", "test.txt");
+        sampleRepo.write(ADDITIONAL_SOURCE_FILE, "test");
+        sampleRepo.git("add", ADDITIONAL_SOURCE_FILE);
         sampleRepo.git("commit", "--all", "--message=test");
 
         // The Test will automatically build this new branch.
-        // For this scenario a new commit will be added later and
-        // build a second time.
+        // For this scenario a new commit will be added later and build a second time.
         sampleRepo.git("checkout", "-b", FEATURE);
 
         // new master commits
-        sampleRepo.git("checkout", "master");
-        sampleRepo.write("test.txt", "test edit");
+        sampleRepo.git("checkout", MASTER);
+        sampleRepo.write(ADDITIONAL_SOURCE_FILE, "test edit");
         sampleRepo.git("commit", "--all", "--message=edit-test");
 
-        WorkflowJob p = scheduleAndFindBranchProject(mp, "master");
-        assertThat(mp.getItems()).hasSize(2);
-        r.waitUntilNoActivity();
-        WorkflowRun b1 = p.getLastBuild();
-        assertThat(b1.getNumber()).isEqualTo(2);
-        r.assertLogContains("branch=master", b1);
+        WorkflowRun nextMaster = buildMaster(mp, 2);
+        verifyRecordSize(nextMaster, 2);
 
         // commits on feature branch
         sampleRepo.git("checkout", FEATURE);
@@ -209,21 +217,14 @@ public class ReferenceRecorderMultibranchITest {
         sampleRepo.write(SOURCE_FILE, "subsequent content");
         sampleRepo.git("commit", "--all", "--message=tweaked");
 
-        p = scheduleAndFindBranchProject(mp, FEATURE);
-        assertThat(mp.getItems()).hasSize(2);
-        r.waitUntilNoActivity();
-        b1 = p.getLastBuild();
-        assertThat(b1.getNumber()).isEqualTo(2);
-        r.assertLogContains("SUBSEQUENT CONTENT", b1);
-        r.assertLogContains("branch=feature", b1);
+        WorkflowRun featureBuild = buildFeature(mp, 2);
 
-        // Check this plugin
-        GitCommitsRecord gitCommit = b1.getAction(GitCommitsRecord.class);
+        GitCommitsRecord gitCommit = featureBuild.getAction(GitCommitsRecord.class);
         assertThat(gitCommit).isNotNull();
         // Only 1 Commit since the checkout is build as well
         assertThat(gitCommit.getCommits()).hasSize(1);
-        // Found correct intersection?
-        GitBranchMasterIntersectionFinder finder = b1.getAction(GitBranchMasterIntersectionFinder.class);
+
+        GitBranchMasterIntersectionFinder finder = featureBuild.getAction(GitBranchMasterIntersectionFinder.class);
         assertThat(finder).isNotNull();
         assertThat(finder.getBuildId()).isEqualTo("p/master#2");
     }
@@ -239,13 +240,8 @@ public class ReferenceRecorderMultibranchITest {
         initializeGit("maxCommits: 2");
 
         WorkflowMultiBranchProject mp = createMultiBranchPipeline();
-        WorkflowRun b1 = buildMaster(mp);
-        WorkflowJob p;
-
-        // Check this plugin
-        GitCommitsRecord gitCommit = b1.getAction(GitCommitsRecord.class);
-        assertThat(gitCommit).isNotNull();
-        assertThat(gitCommit.getCommits()).hasSize(2);
+        WorkflowRun masterBuild = buildMaster(mp, 1);
+        verifyRecordSize(masterBuild, 2);
 
         sampleRepo.git("checkout", "-b", FEATURE);
         sampleRepo.write(JENKINS_FILE,
@@ -253,23 +249,17 @@ public class ReferenceRecorderMultibranchITest {
         sampleRepo.write(SOURCE_FILE, "subsequent content");
         sampleRepo.git("commit", "--all", "--message=tweaked");
         // Second Commit
-        sampleRepo.write("test.txt", "Test");
-        sampleRepo.git("add", "test.txt");
+        sampleRepo.write(ADDITIONAL_SOURCE_FILE, "Test");
+        sampleRepo.git("add", ADDITIONAL_SOURCE_FILE);
         sampleRepo.git("commit", "--all", "--message=test");
-        p = scheduleAndFindBranchProject(mp, FEATURE);
-        assertThat(mp.getItems()).hasSize(2);
-        r.waitUntilNoActivity();
-        b1 = p.getLastBuild();
-        assertThat(b1.getNumber()).isEqualTo(1);
-        r.assertLogContains("SUBSEQUENT CONTENT", b1);
-        r.assertLogContains("branch=feature", b1);
 
-        // Check this plugin
-        gitCommit = b1.getAction(GitCommitsRecord.class);
+        WorkflowRun featureBuild = buildFeature(mp, 1);
+
+        GitCommitsRecord gitCommit = featureBuild.getAction(GitCommitsRecord.class);
         assertThat(gitCommit).isNotNull();
         assertThat(gitCommit.getCommits()).hasSize(4);
-        // Found correct intersection?
-        GitBranchMasterIntersectionFinder finder = b1.getAction(GitBranchMasterIntersectionFinder.class);
+
+        GitBranchMasterIntersectionFinder finder = featureBuild.getAction(GitBranchMasterIntersectionFinder.class);
         assertThat(finder).isNotNull();
         assertThat(GitBranchMasterIntersectionFinder.NO_INTERSECTION_FOUND).isEqualTo(finder.getBuildId());
     }
@@ -283,16 +273,11 @@ public class ReferenceRecorderMultibranchITest {
         initializeGit("skipUnknownCommits: true");
 
         WorkflowMultiBranchProject mp = createMultiBranchPipeline();
-        WorkflowRun b1 = buildMaster(mp);
-        WorkflowJob p;
+        WorkflowRun masterBuild = buildMaster(mp, 1);
+        verifyRecordSize(masterBuild, 2);
 
-        // Check this plugin
-        GitCommitsRecord gitCommit = b1.getAction(GitCommitsRecord.class);
-        assertThat(gitCommit).isNotNull();
-        assertThat(gitCommit.getCommits()).hasSize(2);
-
-        sampleRepo.write("test.txt", "test");
-        sampleRepo.git("add", "test.txt");
+        sampleRepo.write(ADDITIONAL_SOURCE_FILE, "test");
+        sampleRepo.git("add", ADDITIONAL_SOURCE_FILE);
         sampleRepo.git("commit", "--all", "--message=test");
 
         sampleRepo.git("checkout", "-b", FEATURE);
@@ -302,31 +287,20 @@ public class ReferenceRecorderMultibranchITest {
         sampleRepo.git("commit", "--all", "--message=tweaked");
 
         // new master commits
-        sampleRepo.git("checkout", "master");
-        sampleRepo.write("test.txt", "test edit");
+        sampleRepo.git("checkout", MASTER);
+        sampleRepo.write(ADDITIONAL_SOURCE_FILE, "test edit");
         sampleRepo.git("commit", "--all", "--message=edit-test");
 
-        p = scheduleAndFindBranchProject(mp, "master");
-        assertThat(mp.getItems()).hasSize(2);
-        r.waitUntilNoActivity();
-        b1 = p.getLastBuild();
-        assertThat(b1.getNumber()).isEqualTo(2);
-        r.assertLogContains("branch=master", b1);
+        WorkflowRun nextMaster = buildMaster(mp, 2);
+        verifyRecordSize(nextMaster, 2);
 
-        p = scheduleAndFindBranchProject(mp, FEATURE);
-        assertThat(mp.getItems()).hasSize(2);
-        r.waitUntilNoActivity();
-        b1 = p.getLastBuild();
-        assertThat(b1.getNumber()).isEqualTo(1);
-        r.assertLogContains("SUBSEQUENT CONTENT", b1);
-        r.assertLogContains("branch=feature", b1);
+        WorkflowRun featureBuild = buildFeature(mp, 1);
 
-        // Check this plugin
-        gitCommit = b1.getAction(GitCommitsRecord.class);
+        GitCommitsRecord gitCommit = featureBuild.getAction(GitCommitsRecord.class);
         assertThat(gitCommit).isNotNull();
         assertThat(gitCommit.getCommits()).hasSize(4);
-        // Found correct intersection?
-        GitBranchMasterIntersectionFinder finder = b1.getAction(GitBranchMasterIntersectionFinder.class);
+
+        GitBranchMasterIntersectionFinder finder = featureBuild.getAction(GitBranchMasterIntersectionFinder.class);
         assertThat(finder).isNotNull();
         assertThat("p/master#1").isEqualTo(finder.getBuildId());
     }
@@ -340,25 +314,15 @@ public class ReferenceRecorderMultibranchITest {
         initializeGit("maxCommits: 2", "latestBuildIfNotFound: true");
 
         WorkflowMultiBranchProject mp = createMultiBranchPipeline();
-        WorkflowRun b1 = buildMaster(mp);
-        WorkflowJob p;
+        WorkflowRun masterBuild = buildMaster(mp, 1);
+        verifyRecordSize(masterBuild, 2);
 
         sampleRepo.write("testfile.txt", "testfile");
         sampleRepo.git("add", "testfile.txt");
         sampleRepo.git("commit", "--all", "--message=testfile");
 
-        // Second master build
-        p = scheduleAndFindBranchProject(mp, "master");
-        assertThat(mp.getItems()).hasSize(1);
-        r.waitUntilNoActivity();
-        b1 = p.getLastBuild();
-        assertThat(b1.getNumber()).isEqualTo(2);
-        r.assertLogContains("branch=master", b1);
-
-        // Check this plugin
-        GitCommitsRecord gitCommit = b1.getAction(GitCommitsRecord.class);
-        assertThat(gitCommit).isNotNull();
-        assertThat(gitCommit.getCommits()).hasSize(1);
+        WorkflowRun nextMaster = buildMaster(mp, 2);
+        verifyRecordSize(nextMaster, 1);
 
         sampleRepo.git("checkout", "-b", FEATURE);
         sampleRepo.write(JENKINS_FILE,
@@ -366,23 +330,17 @@ public class ReferenceRecorderMultibranchITest {
         sampleRepo.write(SOURCE_FILE, "subsequent content");
         sampleRepo.git("commit", "--all", "--message=tweaked");
         // Second Commit
-        sampleRepo.write("test.txt", "Test");
-        sampleRepo.git("add", "test.txt");
+        sampleRepo.write(ADDITIONAL_SOURCE_FILE, "Test");
+        sampleRepo.git("add", ADDITIONAL_SOURCE_FILE);
         sampleRepo.git("commit", "--all", "--message=test");
-        p = scheduleAndFindBranchProject(mp, FEATURE);
-        assertThat(mp.getItems()).hasSize(2);
-        r.waitUntilNoActivity();
-        b1 = p.getLastBuild();
-        assertThat(b1.getNumber()).isEqualTo(1);
-        r.assertLogContains("SUBSEQUENT CONTENT", b1);
-        r.assertLogContains("branch=feature", b1);
 
-        // Check this plugin
-        gitCommit = b1.getAction(GitCommitsRecord.class);
+        WorkflowRun featureBuild = buildFeature(mp, 1);
+
+        GitCommitsRecord gitCommit = featureBuild.getAction(GitCommitsRecord.class);
         assertThat(gitCommit).isNotNull();
         assertThat(gitCommit.getCommits()).hasSize(5);
-        // Found correct intersection?
-        GitBranchMasterIntersectionFinder finder = b1.getAction(GitBranchMasterIntersectionFinder.class);
+
+        GitBranchMasterIntersectionFinder finder = featureBuild.getAction(GitBranchMasterIntersectionFinder.class);
         assertThat(finder).isNotNull();
         assertThat(finder.getBuildId()).isEqualTo("p/master#2");
     }
@@ -396,44 +354,28 @@ public class ReferenceRecorderMultibranchITest {
         initializeGit();
 
         WorkflowMultiBranchProject mp = createMultiBranchPipeline();
-        WorkflowRun b1 = buildMaster(mp);
-        WorkflowJob p;
-
-        // Check this plugin
-        GitCommitsRecord gitCommit = b1.getAction(GitCommitsRecord.class);
-        assertThat(gitCommit).isNotNull();
-        assertThat(gitCommit.getCommits()).hasSize(2);
+        WorkflowRun masterBuild = buildMaster(mp, 1);
+        verifyRecordSize(masterBuild, 2);
 
         createFeatureBranchAndAddCommits();
-        p = scheduleAndFindBranchProject(mp, FEATURE);
-        assertThat(mp.getItems()).hasSize(2);
-        r.waitUntilNoActivity();
-        b1 = p.getLastBuild();
-        assertThat(b1.getNumber()).isEqualTo(1);
-        r.assertLogContains("SUBSEQUENT CONTENT", b1);
-        r.assertLogContains("branch=feature", b1);
+
+        WorkflowRun featureBuild = buildFeature(mp, 1);
 
         // Check this plugin
-        gitCommit = b1.getAction(GitCommitsRecord.class);
+        GitCommitsRecord gitCommit = featureBuild.getAction(GitCommitsRecord.class);
         assertThat(gitCommit).isNotNull();
         assertThat(gitCommit.getCommits()).hasSize(3);
 
         // Now the second branch
         sampleRepo.git("checkout", "-b", "feature2");
-        sampleRepo.write("test.txt", "my second feature");
-        sampleRepo.git("add", "test.txt");
+        sampleRepo.write(ADDITIONAL_SOURCE_FILE, "my second feature");
+        sampleRepo.git("add", ADDITIONAL_SOURCE_FILE);
         sampleRepo.git("commit", "--all", "--message=secondFeature");
-        p = scheduleAndFindBranchProject(mp, "feature2");
-        assertThat(mp.getItems()).hasSize(3);
-        r.waitUntilNoActivity();
-        b1 = p.getLastBuild();
-        assertThat(b1.getNumber()).isEqualTo(1);
-        // should also contain the log from the first feature branch
-        r.assertLogContains("SUBSEQUENT CONTENT", b1);
-        r.assertLogContains("branch=feature2", b1);
+
+        WorkflowRun anotherBranch = buildBranch(mp, "feature2");
 
         // Found correct intersection? (master and not the first feature branch)
-        GitBranchMasterIntersectionFinder finder = b1.getAction(GitBranchMasterIntersectionFinder.class);
+        GitBranchMasterIntersectionFinder finder = anotherBranch.getAction(GitBranchMasterIntersectionFinder.class);
         assertThat(finder).isNotNull();
         assertThat("p/master#1").isEqualTo(finder.getBuildId());
     }
@@ -442,68 +384,45 @@ public class ReferenceRecorderMultibranchITest {
      * Tests if the Intersection point is not found if the build is deleted.
      */
     @Test
-    public void shouldNotFindIntersectionIfBuildWasDeleted() throws Exception {
+    public void shouldNotFindIntersectionIfBuildWasDeleted2() throws Exception {
         initializeGit();
 
         WorkflowMultiBranchProject mp = createMultiBranchPipeline();
 
-        WorkflowJob p = scheduleAndFindBranchProject(mp, "master");
-        assertThat(new GitBranchSCMHead("master")).isEqualTo(SCMHead.HeadByItem.findHead(p));
-        assertThat(mp.getItems()).hasSize(1);
-        r.waitUntilNoActivity();
-        WorkflowRun toDelete = p.getLastBuild();
+        WorkflowRun toDelete = buildMaster(mp, 1);
+        verifyRecordSize(toDelete, 2);
+
         String toDeleteId = toDelete.getExternalizableId();
         assertThat(toDelete.getNumber()).isEqualTo(1);
-        r.assertLogContains("initial content", toDelete);
-        r.assertLogContains("branch=master", toDelete);
-
-        // Check this plugin
-        GitCommitsRecord gitCommit = toDelete.getAction(GitCommitsRecord.class);
-        assertThat(gitCommit).isNotNull();
-        assertThat(gitCommit.getCommits()).hasSize(2);
 
         createFeatureBranchAndAddCommits();
 
         // New master commits
-        sampleRepo.git("checkout", "master");
+        sampleRepo.git("checkout", MASTER);
         sampleRepo.write("testfile.txt", "testfile");
         sampleRepo.git("add", "testfile.txt");
         sampleRepo.git("commit", "--all", "--message=testfile");
 
         // Second master build
-        p.scheduleBuild2(0).get();
-        assertThat(mp.getItems()).hasSize(1);
-        r.waitUntilNoActivity();
-        WorkflowRun b1 = p.getLastBuild();
-        assertThat(b1.getNumber()).isEqualTo(2);
-        r.assertLogContains("branch=master", b1);
-
-        // Check this plugin
-        gitCommit = b1.getAction(GitCommitsRecord.class);
-        assertThat(gitCommit).isNotNull();
-        assertThat(gitCommit.getCommits()).hasSize(1);
+        QueueTaskFuture<WorkflowRun> workflowRunQueueTaskFuture = toDelete.getParent().scheduleBuild2(0);
+        WorkflowRun nextMaster = workflowRunQueueTaskFuture.get();
+        verifyRecordSize(nextMaster, 1);
 
         // Now delete Build before the feature branch is build.
-        WorkflowRun run = (WorkflowRun) Run.fromExternalizableId(toDeleteId);
-        run.delete();
+        Objects.requireNonNull(Run.fromExternalizableId(toDeleteId)).delete();
 
-        p = scheduleAndFindBranchProject(mp, FEATURE);
-        assertThat(mp.getItems()).hasSize(2);
-        r.waitUntilNoActivity();
-        b1 = p.getLastBuild();
-        assertThat(b1.getNumber()).isEqualTo(1);
-        r.assertLogContains("SUBSEQUENT CONTENT", b1);
-        r.assertLogContains("branch=feature", b1);
+        WorkflowRun featureBuild = buildFeature(mp, 1);
 
-        // Check this plugin
-        gitCommit = b1.getAction(GitCommitsRecord.class);
+        GitCommitsRecord gitCommit = featureBuild.getAction(GitCommitsRecord.class);
         assertThat(gitCommit).isNotNull();
         assertThat(gitCommit.getCommits()).hasSize(3);
-        // Found correct intersection?
-        GitBranchMasterIntersectionFinder finder = b1.getAction(GitBranchMasterIntersectionFinder.class);
+
+        GitBranchMasterIntersectionFinder finder = featureBuild.getAction(GitBranchMasterIntersectionFinder.class);
         assertThat(finder).isNotNull();
-        assertThat(GitBranchMasterIntersectionFinder.NO_INTERSECTION_FOUND).isEqualTo(finder.getBuildId());
+        assertThat(finder.getBuildId()).isEqualTo(GitBranchMasterIntersectionFinder.NO_INTERSECTION_FOUND);
     }
+
+
 
     /**
      * If the Intersection point is not found due to the build being deleted the newest master build should be taken
@@ -513,18 +432,15 @@ public class ReferenceRecorderMultibranchITest {
     @Ignore
     public void shouldTakeNewestMasterBuildIfBuildWasDeletedAndNewestBuildIfNotFoundIsEnabled() throws Exception {
         initializeGitRepository("latestBuildIfNotFound: true");
+
         WorkflowMultiBranchProject mp = createMultiBranchPipeline();
-        WorkflowJob p = scheduleAndFindBranchProject(mp, "master");
-        assertThat(new GitBranchSCMHead("master")).isEqualTo(SCMHead.HeadByItem.findHead(p));
-        assertThat(mp.getItems()).hasSize(1);
-        r.waitUntilNoActivity();
-        WorkflowRun toDelete = p.getLastBuild();
+
+        WorkflowRun toDelete = buildMaster(mp, 1);
+        verifyRecordSize(toDelete, 2);
+
         String toDeleteId = toDelete.getExternalizableId();
         assertThat(toDelete.getNumber()).isEqualTo(1);
-        r.assertLogContains("initial content", toDelete);
-        r.assertLogContains("branch=master", toDelete);
 
-        // Check this plugin
         GitCommitsRecord gitCommit = toDelete.getAction(GitCommitsRecord.class);
         assertThat(gitCommit).isNotNull();
         assertThat(gitCommit.getCommits()).hasSize(2);
@@ -536,44 +452,33 @@ public class ReferenceRecorderMultibranchITest {
         sampleRepo.git("commit", "--all", "--message=tweaked");
 
         // New master commits
-        sampleRepo.git("checkout", "master");
+        sampleRepo.git("checkout", MASTER);
         sampleRepo.write("testfile.txt", "testfile");
         sampleRepo.git("add", "testfile.txt");
         sampleRepo.git("commit", "--all", "--message=testfile");
 
-        // Second master build
-        p.scheduleBuild2(0).get();
-        assertThat(mp.getItems()).hasSize(1);
-        r.waitUntilNoActivity();
-        WorkflowRun b1 = p.getLastBuild();
-        assertThat(b1.getNumber()).isEqualTo(2);
-        r.assertLogContains("branch=master", b1);
+        WorkflowRun nextMaster = buildMaster(mp, 2);
+        verifyRecordSize(nextMaster, 1);
 
         // Check this plugin
-        gitCommit = b1.getAction(GitCommitsRecord.class);
+        gitCommit = nextMaster.getAction(GitCommitsRecord.class);
         assertThat(gitCommit).isNotNull();
         assertThat(gitCommit.getCommits()).hasSize(1);
 
         // Now delete Build before the feature branch is build.
-        WorkflowRun run = (WorkflowRun) Run.fromExternalizableId(toDeleteId);
-        run.delete();
+        Objects.requireNonNull(Run.fromExternalizableId(toDeleteId)).delete();
 
-        WorkflowJob p2 = scheduleAndFindBranchProject(mp, FEATURE);
-        assertThat(mp.getItems()).hasSize(2);
-        r.waitUntilNoActivity();
-        b1 = p2.getLastBuild();
-        assertThat(b1.getNumber()).isEqualTo(1);
-        r.assertLogContains("SUBSEQUENT CONTENT", b1);
-        r.assertLogContains("branch=feature", b1);
+        WorkflowRun featureBuild = buildFeature(mp, 1);
 
         // Check this plugin
-        gitCommit = b1.getAction(GitCommitsRecord.class);
+        gitCommit = featureBuild.getAction(GitCommitsRecord.class);
         assertThat(gitCommit).isNotNull();
         assertThat(gitCommit.getCommits()).hasSize(3);
+
         // Found correct intersection?
-        GitBranchMasterIntersectionFinder finder = b1.getAction(GitBranchMasterIntersectionFinder.class);
+        GitBranchMasterIntersectionFinder finder = featureBuild.getAction(GitBranchMasterIntersectionFinder.class);
         assertThat(finder).isNotNull();
-        assertThat(p.getLastBuild().getExternalizableId()).isEqualTo(finder.getBuildId());
+        assertThat(finder.getBuildId()).isEqualTo(nextMaster.getExternalizableId());
     }
 
     public static WorkflowJob scheduleAndFindBranchProject(WorkflowMultiBranchProject mp, String name)
