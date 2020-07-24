@@ -177,6 +177,11 @@ public class GitCommitsRecord implements RunAction2, Serializable {
         return null;
     }
 
+    @Override
+    public String toString() {
+        return String.format("Commits in '%s': %d (latest: %s)", owner, size(), getLatestCommit());
+    }
+
     /**
      * Tries to find the reference point of the GitCommit of another build.
      *
@@ -244,9 +249,5 @@ public class GitCommitsRecord implements RunAction2, Serializable {
     private GitCommitsRecord getGitCommitForRepository(final Run<?, ?> run) {
         List<GitCommitsRecord> list = run.getActions(GitCommitsRecord.class);
         return list.stream().filter(gc -> this.getScmKey().equals(gc.getScmKey())).findFirst().orElse(null);
-    }
-
-    public String getLatestRevision() {
-        return getCommits().get(0);
     }
 }

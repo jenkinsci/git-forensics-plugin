@@ -26,32 +26,41 @@ import static io.jenkins.plugins.forensics.git.assertions.Assertions.*;
 
 /**
  * Integrationtest for finding the correct reference point for multibranch pipelines.
- * @author Arne Schöntag
- * also see https://github.com/jenkinsci/workflow-multibranch-plugin
+ *
+ * @author Arne Schöntag also see https://github.com/jenkinsci/workflow-multibranch-plugin
  */
 @SuppressWarnings("PMD.SignatureDeclareThrowsException")
 public class ReferenceRecorderMultibranchITest {
 
-    @ClassRule public static BuildWatcher buildWatcher = new BuildWatcher();
-    @Rule public JenkinsRule r = new JenkinsRule();
-        @Rule public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
-
+    @ClassRule
+    public static BuildWatcher buildWatcher = new BuildWatcher();
+    @Rule
+    public JenkinsRule r = new JenkinsRule();
+    @Rule
+    public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
 
     /**
-     * Builds a  multibranch-pipeline with a master and a feature branch, builds them and checks if the correct reference build is found.
-     * Mostly copied from https://github.com/jenkinsci/workflow-multibranch-plugin/blob/master/src/test/java/org/jenkinsci/plugins/workflow/multibranch/WorkflowMultiBranchProjectTest.java
+     * Builds a  multibranch-pipeline with a master and a feature branch, builds them and checks if the correct
+     * reference build is found.
+     *
      * @throws Exception
+     *         in case of an unexpected error during the tests
+     * @see <a href="https://github.com/jenkinsci/workflow-multibranch-plugin/blob/master/src/test/java/org/jenkinsci/plugins/workflow/multibranch/WorkflowMultiBranchProjectTest.java">Integration
+     *         tests for Pipelines</a>
      */
     @Test
     public void shouldFindCorrectBuildForMultibranchPipeline() throws Exception {
         sampleRepo.init();
-        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file'); echo \"GitForensics\"; gitForensics()}");
+        sampleRepo.write("Jenkinsfile",
+                "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file'); echo \"GitForensics\"; gitForensics()}");
         sampleRepo.write("file", "initial content");
         sampleRepo.git("add", "Jenkinsfile");
         sampleRepo.git("commit", "--all", "--message=flow");
 
         WorkflowMultiBranchProject mp = r.jenkins.createProject(WorkflowMultiBranchProject.class, "p");
-        mp.getSourcesList().add(new BranchSource(new GitSCMSource(null, sampleRepo.toString(), "", "*", "", false), new DefaultBranchPropertyStrategy(new BranchProperty[0])));
+        mp.getSourcesList()
+                .add(new BranchSource(new GitSCMSource(null, sampleRepo.toString(), "", "*", "", false),
+                        new DefaultBranchPropertyStrategy(new BranchProperty[0])));
         for (SCMSource source : mp.getSCMSources()) {
             assertThat(mp).isEqualTo(source.getOwner());
         }
@@ -70,7 +79,8 @@ public class ReferenceRecorderMultibranchITest {
         assertThat(gitCommit.getCommits()).hasSize(2);
 
         sampleRepo.git("checkout", "-b", "feature");
-        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics()}");
+        sampleRepo.write("Jenkinsfile",
+                "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics()}");
         sampleRepo.write("file", "subsequent content");
         sampleRepo.git("commit", "--all", "--message=tweaked");
         p = scheduleAndFindBranchProject(mp, "feature");
@@ -93,17 +103,20 @@ public class ReferenceRecorderMultibranchITest {
 
     /**
      * Checks if the intersectionpoint is found if the master is ahead of the feature branch.
-     * @throws Exception
      */
     @Test
-    public void shouldFindCorrectBuildForMultibranchPipelineWithExtraCommitsAfterBranchPointOnMaster() throws Exception {
+    public void shouldFindCorrectBuildForMultibranchPipelineWithExtraCommitsAfterBranchPointOnMaster()
+            throws Exception {
         sampleRepo.init();
-        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file'); echo \"GitForensics\"; gitForensics()}");
+        sampleRepo.write("Jenkinsfile",
+                "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file'); echo \"GitForensics\"; gitForensics()}");
         sampleRepo.write("file", "initial content");
         sampleRepo.git("add", "Jenkinsfile");
         sampleRepo.git("commit", "--all", "--message=flow");
         WorkflowMultiBranchProject mp = r.jenkins.createProject(WorkflowMultiBranchProject.class, "p");
-        mp.getSourcesList().add(new BranchSource(new GitSCMSource(null, sampleRepo.toString(), "", "*", "", false), new DefaultBranchPropertyStrategy(new BranchProperty[0])));
+        mp.getSourcesList()
+                .add(new BranchSource(new GitSCMSource(null, sampleRepo.toString(), "", "*", "", false),
+                        new DefaultBranchPropertyStrategy(new BranchProperty[0])));
         for (SCMSource source : mp.getSCMSources()) {
             assertThat(mp).isEqualTo(source.getOwner());
         }
@@ -122,7 +135,8 @@ public class ReferenceRecorderMultibranchITest {
         assertThat(gitCommit.getCommits()).hasSize(2);
 
         sampleRepo.git("checkout", "-b", "feature");
-        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics()}");
+        sampleRepo.write("Jenkinsfile",
+                "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics()}");
         sampleRepo.write("file", "subsequent content");
         sampleRepo.git("commit", "--all", "--message=tweaked");
 
@@ -160,17 +174,19 @@ public class ReferenceRecorderMultibranchITest {
     /**
      * Checks if the correct build is found even if the reference build has commits that the feature build does not.
      * This also checks the algorithm if the config skipUnknownCommits is disabled.
-     * @throws Exception
      */
     @Test
     public void shouldFindBuildWithMultipleCommitsInReferenceBuild() throws Exception {
         sampleRepo.init();
-        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file'); echo \"GitForensics\"; gitForensics latestBuildIfNotFound: false}");
+        sampleRepo.write("Jenkinsfile",
+                "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file'); echo \"GitForensics\"; gitForensics latestBuildIfNotFound: false}");
         sampleRepo.write("file", "initial content");
         sampleRepo.git("add", "Jenkinsfile");
         sampleRepo.git("commit", "--all", "--message=flow");
         WorkflowMultiBranchProject mp = r.jenkins.createProject(WorkflowMultiBranchProject.class, "p");
-        mp.getSourcesList().add(new BranchSource(new GitSCMSource(null, sampleRepo.toString(), "", "*", "", false), new DefaultBranchPropertyStrategy(new BranchProperty[0])));
+        mp.getSourcesList()
+                .add(new BranchSource(new GitSCMSource(null, sampleRepo.toString(), "", "*", "", false),
+                        new DefaultBranchPropertyStrategy(new BranchProperty[0])));
         for (SCMSource source : mp.getSCMSources()) {
             assertThat(mp).isEqualTo(source.getOwner());
         }
@@ -211,7 +227,8 @@ public class ReferenceRecorderMultibranchITest {
 
         // commits on feature branch
         sampleRepo.git("checkout", "feature");
-        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics()}");
+        sampleRepo.write("Jenkinsfile",
+                "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics()}");
         sampleRepo.write("file", "subsequent content");
         sampleRepo.git("commit", "--all", "--message=tweaked");
 
@@ -237,19 +254,21 @@ public class ReferenceRecorderMultibranchITest {
     // Testing the configs
 
     /**
-     * Check negative case if maxCommits is too low to find the reference Point
-     * Checks last 2 commits when 3 would be needed.
-     * @throws Exception
+     * Check negative case if maxCommits is too low to find the reference Point Checks last 2 commits when 3 would be
+     * needed.
      */
     @Test
     public void shouldNotFindBuildWithInsufficientMaxCommitsForMultibranchPipeline() throws Exception {
         sampleRepo.init();
-        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file'); echo \"GitForensics\"; gitForensics maxCommits: 2}");
+        sampleRepo.write("Jenkinsfile",
+                "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file'); echo \"GitForensics\"; gitForensics maxCommits: 2}");
         sampleRepo.write("file", "initial content");
         sampleRepo.git("add", "Jenkinsfile");
         sampleRepo.git("commit", "--all", "--message=flow");
         WorkflowMultiBranchProject mp = r.jenkins.createProject(WorkflowMultiBranchProject.class, "p");
-        mp.getSourcesList().add(new BranchSource(new GitSCMSource(null, sampleRepo.toString(), "", "*", "", false), new DefaultBranchPropertyStrategy(new BranchProperty[0])));
+        mp.getSourcesList()
+                .add(new BranchSource(new GitSCMSource(null, sampleRepo.toString(), "", "*", "", false),
+                        new DefaultBranchPropertyStrategy(new BranchProperty[0])));
         for (SCMSource source : mp.getSCMSources()) {
             assertThat(mp).isEqualTo(source.getOwner());
         }
@@ -268,7 +287,8 @@ public class ReferenceRecorderMultibranchITest {
         assertThat(gitCommit.getCommits()).hasSize(2);
 
         sampleRepo.git("checkout", "-b", "feature");
-        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics maxCommits: 2}");
+        sampleRepo.write("Jenkinsfile",
+                "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics maxCommits: 2}");
         sampleRepo.write("file", "subsequent content");
         sampleRepo.git("commit", "--all", "--message=tweaked");
         // Second Commit
@@ -294,19 +314,21 @@ public class ReferenceRecorderMultibranchITest {
     }
 
     /**
-     * Checks the Configuration skipUnknownCommits. If there are unknown commits in the master build the algorithm should
-     * skip the build in search for the reference point.
-     * @throws Exception
+     * Checks the Configuration skipUnknownCommits. If there are unknown commits in the master build the algorithm
+     * should skip the build in search for the reference point.
      */
     @Test
     public void shouldSkipBuildWithUnknownBuildsEnabled() throws Exception {
         sampleRepo.init();
-        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file'); echo \"GitForensics\"; gitForensics skipUnknownCommits: true}");
+        sampleRepo.write("Jenkinsfile",
+                "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file'); echo \"GitForensics\"; gitForensics skipUnknownCommits: true}");
         sampleRepo.write("file", "initial content");
         sampleRepo.git("add", "Jenkinsfile");
         sampleRepo.git("commit", "--all", "--message=flow");
         WorkflowMultiBranchProject mp = r.jenkins.createProject(WorkflowMultiBranchProject.class, "p");
-        mp.getSourcesList().add(new BranchSource(new GitSCMSource(null, sampleRepo.toString(), "", "*", "", false), new DefaultBranchPropertyStrategy(new BranchProperty[0])));
+        mp.getSourcesList()
+                .add(new BranchSource(new GitSCMSource(null, sampleRepo.toString(), "", "*", "", false),
+                        new DefaultBranchPropertyStrategy(new BranchProperty[0])));
         for (SCMSource source : mp.getSCMSources()) {
             assertThat(mp).isEqualTo(source.getOwner());
         }
@@ -329,7 +351,8 @@ public class ReferenceRecorderMultibranchITest {
         sampleRepo.git("commit", "--all", "--message=test");
 
         sampleRepo.git("checkout", "-b", "feature");
-        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics skipUnknownCommits: true}");
+        sampleRepo.write("Jenkinsfile",
+                "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics skipUnknownCommits: true}");
         sampleRepo.write("file", "subsequent content");
         sampleRepo.git("commit", "--all", "--message=tweaked");
 
@@ -364,19 +387,21 @@ public class ReferenceRecorderMultibranchITest {
     }
 
     /**
-     * Checks the configuration latestBuildIfNotFound. If there is no intersection found (in this case due to insufficient maxCommits)
-     * then the newest Build of the master job should be taken as reference point.
-     * @throws Exception
+     * Checks the configuration latestBuildIfNotFound. If there is no intersection found (in this case due to
+     * insufficient maxCommits) then the newest Build of the master job should be taken as reference point.
      */
     @Test
     public void shouldUseNewestBuildIfNewestBuildIfNotFoundIsEnabled() throws Exception {
         sampleRepo.init();
-        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file'); echo \"GitForensics\"; gitForensics maxCommits: 2, latestBuildIfNotFound: true}");
+        sampleRepo.write("Jenkinsfile",
+                "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file'); echo \"GitForensics\"; gitForensics maxCommits: 2, latestBuildIfNotFound: true}");
         sampleRepo.write("file", "initial content");
         sampleRepo.git("add", "Jenkinsfile");
         sampleRepo.git("commit", "--all", "--message=flow");
         WorkflowMultiBranchProject mp = r.jenkins.createProject(WorkflowMultiBranchProject.class, "p");
-        mp.getSourcesList().add(new BranchSource(new GitSCMSource(null, sampleRepo.toString(), "", "*", "", false), new DefaultBranchPropertyStrategy(new BranchProperty[0])));
+        mp.getSourcesList()
+                .add(new BranchSource(new GitSCMSource(null, sampleRepo.toString(), "", "*", "", false),
+                        new DefaultBranchPropertyStrategy(new BranchProperty[0])));
         for (SCMSource source : mp.getSCMSources()) {
             assertThat(mp).isEqualTo(source.getOwner());
         }
@@ -407,7 +432,8 @@ public class ReferenceRecorderMultibranchITest {
         assertThat(gitCommit.getCommits()).hasSize(1);
 
         sampleRepo.git("checkout", "-b", "feature");
-        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics maxCommits: 2, latestBuildIfNotFound: true}");
+        sampleRepo.write("Jenkinsfile",
+                "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics maxCommits: 2, latestBuildIfNotFound: true}");
         sampleRepo.write("file", "subsequent content");
         sampleRepo.git("commit", "--all", "--message=tweaked");
         // Second Commit
@@ -435,17 +461,19 @@ public class ReferenceRecorderMultibranchITest {
     /**
      * Checks if the correct intersection point is found when there are multiple feature branches and one is checked out
      * not from the master but from one of the other feature branches.
-     * @throws Exception
      */
     @Test
     public void shouldFindMasterReferenceIfBranchIsCheckedOutFromAnotherFeatureBranch() throws Exception {
         sampleRepo.init();
-        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file'); echo \"GitForensics\"; gitForensics()}");
+        sampleRepo.write("Jenkinsfile",
+                "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file'); echo \"GitForensics\"; gitForensics()}");
         sampleRepo.write("file", "initial content");
         sampleRepo.git("add", "Jenkinsfile");
         sampleRepo.git("commit", "--all", "--message=flow");
         WorkflowMultiBranchProject mp = r.jenkins.createProject(WorkflowMultiBranchProject.class, "p");
-        mp.getSourcesList().add(new BranchSource(new GitSCMSource(null, sampleRepo.toString(), "", "*", "", false), new DefaultBranchPropertyStrategy(new BranchProperty[0])));
+        mp.getSourcesList()
+                .add(new BranchSource(new GitSCMSource(null, sampleRepo.toString(), "", "*", "", false),
+                        new DefaultBranchPropertyStrategy(new BranchProperty[0])));
         for (SCMSource source : mp.getSCMSources()) {
             assertThat(mp).isEqualTo(source.getOwner());
         }
@@ -464,7 +492,8 @@ public class ReferenceRecorderMultibranchITest {
         assertThat(gitCommit.getCommits()).hasSize(2);
 
         sampleRepo.git("checkout", "-b", "feature");
-        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics()}");
+        sampleRepo.write("Jenkinsfile",
+                "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics()}");
         sampleRepo.write("file", "subsequent content");
         sampleRepo.git("commit", "--all", "--message=tweaked");
         p = scheduleAndFindBranchProject(mp, "feature");
@@ -502,17 +531,19 @@ public class ReferenceRecorderMultibranchITest {
 
     /**
      * Tests if the Intersection point is not found if the build is deleted.
-     * @throws Exception
      */
     @Test
     public void shouldNotFindIntersectionIfBuildWasDeleted() throws Exception {
         sampleRepo.init();
-        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file'); echo \"GitForensics\"; gitForensics()}");
+        sampleRepo.write("Jenkinsfile",
+                "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file'); echo \"GitForensics\"; gitForensics()}");
         sampleRepo.write("file", "initial content");
         sampleRepo.git("add", "Jenkinsfile");
         sampleRepo.git("commit", "--all", "--message=flow");
         WorkflowMultiBranchProject mp = r.jenkins.createProject(WorkflowMultiBranchProject.class, "p");
-        mp.getSourcesList().add(new BranchSource(new GitSCMSource(null, sampleRepo.toString(), "", "*", "", false), new DefaultBranchPropertyStrategy(new BranchProperty[0])));
+        mp.getSourcesList()
+                .add(new BranchSource(new GitSCMSource(null, sampleRepo.toString(), "", "*", "", false),
+                        new DefaultBranchPropertyStrategy(new BranchProperty[0])));
         for (SCMSource source : mp.getSCMSources()) {
             assertThat(mp).isEqualTo(source.getOwner());
         }
@@ -521,7 +552,7 @@ public class ReferenceRecorderMultibranchITest {
         assertThat(mp.getItems()).hasSize(1);
         r.waitUntilNoActivity();
         WorkflowRun toDelete = p.getLastBuild();
-        String toDeleteId =  toDelete.getExternalizableId();
+        String toDeleteId = toDelete.getExternalizableId();
         assertThat(toDelete.getNumber()).isEqualTo(1);
         r.assertLogContains("initial content", toDelete);
         r.assertLogContains("branch=master", toDelete);
@@ -532,7 +563,8 @@ public class ReferenceRecorderMultibranchITest {
         assertThat(gitCommit.getCommits()).hasSize(2);
 
         sampleRepo.git("checkout", "-b", "feature");
-        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics()}");
+        sampleRepo.write("Jenkinsfile",
+                "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics()}");
         sampleRepo.write("file", "subsequent content");
         sampleRepo.git("commit", "--all", "--message=tweaked");
 
@@ -570,7 +602,7 @@ public class ReferenceRecorderMultibranchITest {
         // Check this plugin
         gitCommit = b1.getAction(GitCommitsRecord.class);
         assertThat(gitCommit).isNotNull();
-                assertThat(gitCommit.getCommits()).hasSize(3);
+        assertThat(gitCommit.getCommits()).hasSize(3);
         // Found correct intersection?
         GitBranchMasterIntersectionFinder finder = b1.getAction(GitBranchMasterIntersectionFinder.class);
         assertThat(finder).isNotNull();
@@ -578,19 +610,22 @@ public class ReferenceRecorderMultibranchITest {
     }
 
     /**
-     * If the Intersection point is not found due to the build being deleted the newest master build should be taken with latestBuildIfNotFound enabled.
-     * @throws Exception
+     * If the Intersection point is not found due to the build being deleted the newest master build should be taken
+     * with latestBuildIfNotFound enabled.
      */
     @Test
     @Ignore
     public void shouldTakeNewestMasterBuildIfBuildWasDeletedAndNewestBuildIfNotFoundIsEnabled() throws Exception {
         sampleRepo.init();
-        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file'); echo \"GitForensics\"; gitForensics latestBuildIfNotFound: true}");
+        sampleRepo.write("Jenkinsfile",
+                "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file'); echo \"GitForensics\"; gitForensics latestBuildIfNotFound: true}");
         sampleRepo.write("file", "initial content");
         sampleRepo.git("add", "Jenkinsfile");
         sampleRepo.git("commit", "--all", "--message=flow");
         WorkflowMultiBranchProject mp = r.jenkins.createProject(WorkflowMultiBranchProject.class, "p");
-        mp.getSourcesList().add(new BranchSource(new GitSCMSource(null, sampleRepo.toString(), "", "*", "", false), new DefaultBranchPropertyStrategy(new BranchProperty[0])));
+        mp.getSourcesList()
+                .add(new BranchSource(new GitSCMSource(null, sampleRepo.toString(), "", "*", "", false),
+                        new DefaultBranchPropertyStrategy(new BranchProperty[0])));
         for (SCMSource source : mp.getSCMSources()) {
             assertThat(mp).isEqualTo(source.getOwner());
         }
@@ -599,7 +634,7 @@ public class ReferenceRecorderMultibranchITest {
         assertThat(mp.getItems()).hasSize(1);
         r.waitUntilNoActivity();
         WorkflowRun toDelete = p.getLastBuild();
-        String toDeleteId =  toDelete.getExternalizableId();
+        String toDeleteId = toDelete.getExternalizableId();
         assertThat(toDelete.getNumber()).isEqualTo(1);
         r.assertLogContains("initial content", toDelete);
         r.assertLogContains("branch=master", toDelete);
@@ -610,7 +645,8 @@ public class ReferenceRecorderMultibranchITest {
         assertThat(gitCommit.getCommits()).hasSize(2);
 
         sampleRepo.git("checkout", "-b", "feature");
-        sampleRepo.write("Jenkinsfile", "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics latestBuildIfNotFound: true}");
+        sampleRepo.write("Jenkinsfile",
+                "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics latestBuildIfNotFound: true}");
         sampleRepo.write("file", "subsequent content");
         sampleRepo.git("commit", "--all", "--message=tweaked");
 
@@ -648,19 +684,20 @@ public class ReferenceRecorderMultibranchITest {
         // Check this plugin
         gitCommit = b1.getAction(GitCommitsRecord.class);
         assertThat(gitCommit).isNotNull();
-                assertThat(gitCommit.getCommits()).hasSize(3);
+        assertThat(gitCommit.getCommits()).hasSize(3);
         // Found correct intersection?
         GitBranchMasterIntersectionFinder finder = b1.getAction(GitBranchMasterIntersectionFinder.class);
         assertThat(finder).isNotNull();
         assertThat(p.getLastBuild().getExternalizableId()).isEqualTo(finder.getBuildId());
     }
 
-    public static WorkflowJob scheduleAndFindBranchProject( WorkflowMultiBranchProject mp,  String name) throws Exception {
+    public static WorkflowJob scheduleAndFindBranchProject(WorkflowMultiBranchProject mp, String name)
+            throws Exception {
         mp.scheduleBuild2(0).getFuture().get();
         return findBranchProject(mp, name);
     }
 
-    public static  WorkflowJob findBranchProject( WorkflowMultiBranchProject mp,  String name) throws Exception {
+    public static WorkflowJob findBranchProject(WorkflowMultiBranchProject mp, String name) throws Exception {
         WorkflowJob p = mp.getItem(name);
         showIndexing(mp);
         if (p == null) {
@@ -669,7 +706,7 @@ public class ReferenceRecorderMultibranchITest {
         return p;
     }
 
-    static void showIndexing( WorkflowMultiBranchProject mp) throws Exception {
+    static void showIndexing(WorkflowMultiBranchProject mp) throws Exception {
         FolderComputation<?> indexing = mp.getIndexing();
         System.out.println("---%<--- " + indexing.getUrl());
         indexing.writeWholeLogTo(System.out);
