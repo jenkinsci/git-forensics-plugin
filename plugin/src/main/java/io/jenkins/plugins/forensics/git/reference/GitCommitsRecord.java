@@ -140,6 +140,10 @@ public class GitCommitsRecord implements RunAction2, Serializable {
         return commits.size();
     }
 
+    public int getSize() {
+        return size();
+    }
+
     public boolean isNotEmpty() {
         return !commits.isEmpty();
     }
