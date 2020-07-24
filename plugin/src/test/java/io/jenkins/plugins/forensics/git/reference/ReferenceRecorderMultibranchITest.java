@@ -53,9 +53,8 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
      */
     @Test
     public void shouldFindCorrectBuildForMultibranchPipeline() throws Exception {
-        initializeRepository();
+        WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject();
 
-        WorkflowMultiBranchProject project = createMultiBranchProject();
         WorkflowRun masterBuild = buildMaster(project, 1);
         verifyRecordSize(masterBuild, 2);
 
@@ -64,8 +63,7 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
         WorkflowRun featureBuild = buildFeature(project, 1);
         verifyRecordSize(featureBuild, 3);
 
-        GitBranchMasterIntersectionFinder finder = featureBuild.getAction(GitBranchMasterIntersectionFinder.class);
-        assertThat(finder).isNotNull()
+        assertThat(featureBuild.getAction(GitBranchMasterIntersectionFinder.class)).isNotNull()
                 .hasOwner(featureBuild)
                 .hasBuildId(masterBuild.getExternalizableId())
                 .hasReferenceBuild(Optional.of(masterBuild));
@@ -79,9 +77,8 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
      */
     @Test
     public void shouldHandleExtraCommitsAfterBranchPointOnMaster() throws Exception {
-        initializeRepository();
+        WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject();
 
-        WorkflowMultiBranchProject project = createMultiBranchProject();
         WorkflowRun masterBuild = buildMaster(project, 1);
         verifyRecordSize(masterBuild, 2);
 
@@ -97,13 +94,9 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
         verifyRecordSize(nextMaster, 1);
 
         WorkflowRun featureBuild = buildFeature(project, 1);
+        verifyRecordSize(featureBuild, 3);
 
-        GitCommitsRecord featureRecord = featureBuild.getAction(GitCommitsRecord.class);
-        assertThat(featureRecord).isNotNull();
-        assertThat(featureRecord.getCommits()).hasSize(3);
-
-        GitBranchMasterIntersectionFinder finder = featureBuild.getAction(GitBranchMasterIntersectionFinder.class);
-        assertThat(finder).isNotNull()
+        assertThat(featureBuild.getAction(GitBranchMasterIntersectionFinder.class)).isNotNull()
                 .hasOwner(featureBuild)
                 .hasBuildId(masterBuild.getExternalizableId())
                 .hasReferenceBuild(Optional.of(masterBuild));
@@ -111,13 +104,15 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
 
     /**
      * Checks if the correct build is found even if the reference build has commits that the feature build does not.
-     * This also checks the algorithm if the config skipUnknownCommits is disabled.
+     * This also checks the algorithm if the config {@code skipUnknownCommits} is disabled.
+     *
+     * @throws Exception
+     *         in case of an unexpected error during the tests
      */
     @Test
     public void shouldFindBuildWithMultipleCommitsInReferenceBuild() throws Exception {
-        initializeRepository("latestBuildIfNotFound: false");
+        WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject("latestBuildIfNotFound: false");
 
-        WorkflowMultiBranchProject project = createMultiBranchProject();
         WorkflowRun masterBuild = buildMaster(project, 1);
         verifyRecordSize(masterBuild, 2);
 
@@ -145,28 +140,27 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
         sampleRepo.git("commit", "--all", "--message=tweaked");
 
         WorkflowRun featureBuild = buildFeature(project, 2);
+        verifyRecordSize(featureBuild, 1);
 
         GitCommitsRecord gitCommit = featureBuild.getAction(GitCommitsRecord.class);
         assertThat(gitCommit).isNotNull();
-        // Only 1 Commit since the checkout is build as well
+        // Only 1 Commit since the checkout is built as well
         assertThat(gitCommit.getCommits()).hasSize(1);
 
-        GitBranchMasterIntersectionFinder finder = featureBuild.getAction(GitBranchMasterIntersectionFinder.class);
-        assertThat(finder).isNotNull()
+        assertThat(featureBuild.getAction(GitBranchMasterIntersectionFinder.class)).isNotNull()
                 .hasOwner(featureBuild)
                 .hasBuildId(nextMaster.getExternalizableId())
                 .hasReferenceBuild(Optional.of(nextMaster));
     }
 
     /**
-     * Check negative case if maxCommits is too low to find the reference Point Checks last 2 commits when 3 would be
+     * Check negative case if {@code maxCommits} is too low to find the reference point. Checks last 2 commits when 3 would be
      * needed.
      */
     @Test
     public void shouldNotFindBuildWithInsufficientMaxCommitsForMultibranchPipeline() throws Exception {
-        initializeRepository("maxCommits: 2");
+        WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject("maxCommits: 2");
 
-        WorkflowMultiBranchProject project = createMultiBranchProject();
         WorkflowRun masterBuild = buildMaster(project, 1);
         verifyRecordSize(masterBuild, 2);
 
@@ -182,14 +176,9 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
         sampleRepo.git("commit", "--all", "--message=test");
 
         WorkflowRun featureBuild = buildFeature(project, 1);
+        verifyRecordSize(featureBuild, 4);
 
-        GitCommitsRecord gitCommit = featureBuild.getAction(GitCommitsRecord.class);
-        assertThat(gitCommit).isNotNull();
-        assertThat(gitCommit.getCommits()).hasSize(4);
-
-        GitBranchMasterIntersectionFinder finder = featureBuild.getAction(GitBranchMasterIntersectionFinder.class);
-        assertThat(finder).isNotNull();
-        assertThat(finder).isNotNull()
+        assertThat(featureBuild.getAction(GitBranchMasterIntersectionFinder.class)).isNotNull()
                 .hasOwner(featureBuild)
                 .hasBuildId(GitBranchMasterIntersectionFinder.NO_INTERSECTION_FOUND)
                 .hasReferenceBuild(Optional.empty());
@@ -201,9 +190,8 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
      */
     @Test
     public void shouldSkipBuildWithUnknownBuildsEnabled() throws Exception {
-        initializeRepository("skipUnknownCommits: true");
+        WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject("skipUnknownCommits: true");
 
-        WorkflowMultiBranchProject project = createMultiBranchProject();
         WorkflowRun masterBuild = buildMaster(project, 1);
         verifyRecordSize(masterBuild, 2);
 
@@ -226,13 +214,9 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
         verifyRecordSize(nextMaster, 2);
 
         WorkflowRun featureBuild = buildFeature(project, 1);
+        verifyRecordSize(featureBuild, 4);
 
-        GitCommitsRecord gitCommit = featureBuild.getAction(GitCommitsRecord.class);
-        assertThat(gitCommit).isNotNull();
-        assertThat(gitCommit.getCommits()).hasSize(4);
-
-        GitBranchMasterIntersectionFinder finder = featureBuild.getAction(GitBranchMasterIntersectionFinder.class);
-        assertThat(finder).isNotNull()
+        assertThat(featureBuild.getAction(GitBranchMasterIntersectionFinder.class)).isNotNull()
                 .hasOwner(featureBuild)
                 .hasBuildId(masterBuild.getExternalizableId())
                 .hasReferenceBuild(Optional.of(masterBuild));
@@ -244,9 +228,9 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
      */
     @Test
     public void shouldUseNewestBuildIfNewestBuildIfNotFoundIsEnabled() throws Exception {
-        initializeRepository("maxCommits: 2", "latestBuildIfNotFound: true");
+        WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject(
+                "maxCommits: 2", "latestBuildIfNotFound: true");
 
-        WorkflowMultiBranchProject project = createMultiBranchProject();
         WorkflowRun masterBuild = buildMaster(project, 1);
         verifyRecordSize(masterBuild, 2);
 
@@ -268,13 +252,9 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
         sampleRepo.git("commit", "--all", "--message=test");
 
         WorkflowRun featureBuild = buildFeature(project, 1);
+        verifyRecordSize(featureBuild, 5);
 
-        GitCommitsRecord gitCommit = featureBuild.getAction(GitCommitsRecord.class);
-        assertThat(gitCommit).isNotNull();
-        assertThat(gitCommit.getCommits()).hasSize(5);
-
-        GitBranchMasterIntersectionFinder finder = featureBuild.getAction(GitBranchMasterIntersectionFinder.class);
-        assertThat(finder).isNotNull()
+        assertThat(featureBuild.getAction(GitBranchMasterIntersectionFinder.class)).isNotNull()
                 .hasOwner(featureBuild)
                 .hasBuildId(nextMaster.getExternalizableId())
                 .hasReferenceBuild(Optional.of(nextMaster));
@@ -286,20 +266,15 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
      */
     @Test
     public void shouldFindMasterReferenceIfBranchIsCheckedOutFromAnotherFeatureBranch() throws Exception {
-        initializeRepository();
+        WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject();
 
-        WorkflowMultiBranchProject project = createMultiBranchProject();
         WorkflowRun masterBuild = buildMaster(project, 1);
         verifyRecordSize(masterBuild, 2);
 
         createFeatureBranchAndAddCommits();
 
         WorkflowRun featureBuild = buildFeature(project, 1);
-
-        // Check this plugin
-        GitCommitsRecord gitCommit = featureBuild.getAction(GitCommitsRecord.class);
-        assertThat(gitCommit).isNotNull();
-        assertThat(gitCommit.getCommits()).hasSize(3);
+        verifyRecordSize(featureBuild, 3);
 
         // Now the second branch
         sampleRepo.git("checkout", "-b", "feature2");
@@ -308,10 +283,9 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
         sampleRepo.git("commit", "--all", "--message=secondFeature");
 
         WorkflowRun anotherBranch = buildBranch(project, "feature2");
+        verifyRecordSize(anotherBranch, 4);
 
-        // Found correct intersection? (master and not the first feature branch)
-        GitBranchMasterIntersectionFinder finder = anotherBranch.getAction(GitBranchMasterIntersectionFinder.class);
-        assertThat(finder).isNotNull()
+        assertThat(anotherBranch.getAction(GitBranchMasterIntersectionFinder.class)).isNotNull()
                 .hasOwner(anotherBranch)
                 .hasBuildId(masterBuild.getExternalizableId())
                 .hasReferenceBuild(Optional.of(masterBuild));
@@ -322,9 +296,7 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
      */
     @Test
     public void shouldNotFindIntersectionIfBuildWasDeleted2() throws Exception {
-        initializeRepository();
-
-        WorkflowMultiBranchProject project = createMultiBranchProject();
+        WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject();
 
         WorkflowRun toDelete = buildMaster(project, 1);
         verifyRecordSize(toDelete, 2);
@@ -349,16 +321,18 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
         Objects.requireNonNull(Run.fromExternalizableId(toDeleteId)).delete();
 
         WorkflowRun featureBuild = buildFeature(project, 1);
+        verifyRecordSize(featureBuild, 3);
 
-        GitCommitsRecord gitCommit = featureBuild.getAction(GitCommitsRecord.class);
-        assertThat(gitCommit).isNotNull();
-        assertThat(gitCommit.getCommits()).hasSize(3);
-
-        GitBranchMasterIntersectionFinder finder = featureBuild.getAction(GitBranchMasterIntersectionFinder.class);
-        assertThat(finder).isNotNull()
+        assertThat(featureBuild.getAction(GitBranchMasterIntersectionFinder.class)).isNotNull()
                 .hasOwner(featureBuild)
                 .hasBuildId(GitBranchMasterIntersectionFinder.NO_INTERSECTION_FOUND)
                 .hasReferenceBuild(Optional.empty());
+    }
+
+    private WorkflowMultiBranchProject initializeGitAndMultiBranchProject(final String... parameters) throws Exception {
+        initializeRepository(parameters);
+
+        return createMultiBranchProject();
     }
 
     private void initializeRepository(final String... parameters) throws Exception {
