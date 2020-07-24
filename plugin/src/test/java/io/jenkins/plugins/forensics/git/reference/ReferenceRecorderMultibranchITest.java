@@ -34,6 +34,7 @@ public class ReferenceRecorderMultibranchITest {
     private static final String DEFAULT_PIPELINE = "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file'); echo \"GitForensics\"; gitForensics()}";
     private static final String JENKINS_FILE = "Jenkinsfile";
     private static final String SOURCE_FILE = "file";
+    private static final String FEATURE = "feature";
 
     @ClassRule
     public static BuildWatcher buildWatcher = new BuildWatcher();
@@ -58,13 +59,9 @@ public class ReferenceRecorderMultibranchITest {
         WorkflowMultiBranchProject mp = createMultiBranchPipeline();
         buildMaster(mp);
 
-        checkoutFeatureBranchWithSomeCommits();
+        createFeatureBranchAndAddCommits();
 
-        WorkflowJob p = scheduleAndFindBranchProject(mp, "feature");
-        assertThat(mp.getItems()).hasSize(2);
-        r.waitUntilNoActivity();
-
-        WorkflowRun featureBuild = p.getLastBuild();
+        WorkflowRun featureBuild = buildBranch(mp, FEATURE);
         assertThat(featureBuild.getNumber()).isEqualTo(1);
         r.assertLogContains("SUBSEQUENT CONTENT", featureBuild);
         r.assertLogContains("branch=feature", featureBuild);
@@ -78,9 +75,16 @@ public class ReferenceRecorderMultibranchITest {
         assertThat("p/master#1").isEqualTo(finder.getBuildId());
     }
 
-    private void checkoutFeatureBranchWithSomeCommits() throws Exception {
+    private WorkflowRun buildBranch(final WorkflowMultiBranchProject mp, final String feature) throws Exception {
+        WorkflowJob p = scheduleAndFindBranchProject(mp, feature);
+        assertThat(mp.getItems()).hasSize(2);
+        r.waitUntilNoActivity();
+        return p.getLastBuild();
+    }
+
+    private void createFeatureBranchAndAddCommits() throws Exception {
         // Checkout a new feature branch and add a new commit
-        sampleRepo.git("checkout", "-b", "feature");
+        sampleRepo.git("checkout", "-b", FEATURE);
         sampleRepo.write(JENKINS_FILE,
                 "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics()}");
         sampleRepo.write(SOURCE_FILE, "subsequent content");
@@ -117,7 +121,7 @@ public class ReferenceRecorderMultibranchITest {
         WorkflowMultiBranchProject mp = createMultiBranchPipeline();
         buildMaster(mp);
 
-        checkoutFeatureBranchWithSomeCommits();
+        createFeatureBranchAndAddCommits();
 
         // Add some new master commits
         sampleRepo.git("checkout", "master");
@@ -125,19 +129,11 @@ public class ReferenceRecorderMultibranchITest {
         sampleRepo.git("add", "test.txt");
         sampleRepo.git("commit", "--all", "--message=test");
 
-        WorkflowJob p = scheduleAndFindBranchProject(mp, "master");
-        assertThat(mp.getItems()).hasSize(2);
-        r.waitUntilNoActivity();
-
-        WorkflowRun masterBuild = p.getLastBuild();
+        WorkflowRun masterBuild = buildBranch(mp, "master");
         assertThat(masterBuild.getNumber()).isEqualTo(2);
         r.assertLogContains("branch=master", masterBuild);
 
-        p = scheduleAndFindBranchProject(mp, "feature");
-        assertThat(mp.getItems()).hasSize(2);
-        r.waitUntilNoActivity();
-
-        WorkflowRun featureBuild = p.getLastBuild();
+        WorkflowRun featureBuild = buildBranch(mp, FEATURE);
         assertThat(featureBuild.getNumber()).isEqualTo(1);
         r.assertLogContains("SUBSEQUENT CONTENT", featureBuild);
         r.assertLogContains("branch=feature", featureBuild);
@@ -156,6 +152,7 @@ public class ReferenceRecorderMultibranchITest {
         assertThat(new GitBranchSCMHead("master")).isEqualTo(SCMHead.HeadByItem.findHead(p));
         assertThat(mp.getItems()).hasSize(1);
         r.waitUntilNoActivity();
+
         WorkflowRun build = p.getLastBuild();
         assertThat(build.getNumber()).isEqualTo(1);
         r.assertLogContains("initial content", build);
@@ -179,7 +176,6 @@ public class ReferenceRecorderMultibranchITest {
         WorkflowRun b1 = buildMaster(mp);
         WorkflowJob p;
 
-        // Check this plugin
         GitCommitsRecord gitCommit = b1.getAction(GitCommitsRecord.class);
         assertThat(gitCommit).isNotNull();
         assertThat(gitCommit.getCommits()).hasSize(2);
@@ -191,7 +187,7 @@ public class ReferenceRecorderMultibranchITest {
         // The Test will automatically build this new branch.
         // For this scenario a new commit will be added later and
         // build a second time.
-        sampleRepo.git("checkout", "-b", "feature");
+        sampleRepo.git("checkout", "-b", FEATURE);
 
         // new master commits
         sampleRepo.git("checkout", "master");
@@ -206,13 +202,13 @@ public class ReferenceRecorderMultibranchITest {
         r.assertLogContains("branch=master", b1);
 
         // commits on feature branch
-        sampleRepo.git("checkout", "feature");
+        sampleRepo.git("checkout", FEATURE);
         sampleRepo.write(JENKINS_FILE,
                 "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics()}");
         sampleRepo.write(SOURCE_FILE, "subsequent content");
         sampleRepo.git("commit", "--all", "--message=tweaked");
 
-        p = scheduleAndFindBranchProject(mp, "feature");
+        p = scheduleAndFindBranchProject(mp, FEATURE);
         assertThat(mp.getItems()).hasSize(2);
         r.waitUntilNoActivity();
         b1 = p.getLastBuild();
@@ -250,7 +246,7 @@ public class ReferenceRecorderMultibranchITest {
         assertThat(gitCommit).isNotNull();
         assertThat(gitCommit.getCommits()).hasSize(2);
 
-        sampleRepo.git("checkout", "-b", "feature");
+        sampleRepo.git("checkout", "-b", FEATURE);
         sampleRepo.write(JENKINS_FILE,
                 "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics maxCommits: 2}");
         sampleRepo.write(SOURCE_FILE, "subsequent content");
@@ -259,7 +255,7 @@ public class ReferenceRecorderMultibranchITest {
         sampleRepo.write("test.txt", "Test");
         sampleRepo.git("add", "test.txt");
         sampleRepo.git("commit", "--all", "--message=test");
-        p = scheduleAndFindBranchProject(mp, "feature");
+        p = scheduleAndFindBranchProject(mp, FEATURE);
         assertThat(mp.getItems()).hasSize(2);
         r.waitUntilNoActivity();
         b1 = p.getLastBuild();
@@ -298,7 +294,7 @@ public class ReferenceRecorderMultibranchITest {
         sampleRepo.git("add", "test.txt");
         sampleRepo.git("commit", "--all", "--message=test");
 
-        sampleRepo.git("checkout", "-b", "feature");
+        sampleRepo.git("checkout", "-b", FEATURE);
         sampleRepo.write(JENKINS_FILE,
                 "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics skipUnknownCommits: true}");
         sampleRepo.write(SOURCE_FILE, "subsequent content");
@@ -316,7 +312,7 @@ public class ReferenceRecorderMultibranchITest {
         assertThat(b1.getNumber()).isEqualTo(2);
         r.assertLogContains("branch=master", b1);
 
-        p = scheduleAndFindBranchProject(mp, "feature");
+        p = scheduleAndFindBranchProject(mp, FEATURE);
         assertThat(mp.getItems()).hasSize(2);
         r.waitUntilNoActivity();
         b1 = p.getLastBuild();
@@ -363,7 +359,7 @@ public class ReferenceRecorderMultibranchITest {
         assertThat(gitCommit).isNotNull();
         assertThat(gitCommit.getCommits()).hasSize(1);
 
-        sampleRepo.git("checkout", "-b", "feature");
+        sampleRepo.git("checkout", "-b", FEATURE);
         sampleRepo.write(JENKINS_FILE,
                 "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics maxCommits: 2, latestBuildIfNotFound: true}");
         sampleRepo.write(SOURCE_FILE, "subsequent content");
@@ -372,7 +368,7 @@ public class ReferenceRecorderMultibranchITest {
         sampleRepo.write("test.txt", "Test");
         sampleRepo.git("add", "test.txt");
         sampleRepo.git("commit", "--all", "--message=test");
-        p = scheduleAndFindBranchProject(mp, "feature");
+        p = scheduleAndFindBranchProject(mp, FEATURE);
         assertThat(mp.getItems()).hasSize(2);
         r.waitUntilNoActivity();
         b1 = p.getLastBuild();
@@ -407,8 +403,8 @@ public class ReferenceRecorderMultibranchITest {
         assertThat(gitCommit).isNotNull();
         assertThat(gitCommit.getCommits()).hasSize(2);
 
-        checkoutFeatureBranchWithSomeCommits();
-        p = scheduleAndFindBranchProject(mp, "feature");
+        createFeatureBranchAndAddCommits();
+        p = scheduleAndFindBranchProject(mp, FEATURE);
         assertThat(mp.getItems()).hasSize(2);
         r.waitUntilNoActivity();
         b1 = p.getLastBuild();
@@ -466,7 +462,7 @@ public class ReferenceRecorderMultibranchITest {
         assertThat(gitCommit).isNotNull();
         assertThat(gitCommit.getCommits()).hasSize(2);
 
-        checkoutFeatureBranchWithSomeCommits();
+        createFeatureBranchAndAddCommits();
 
         // New master commits
         sampleRepo.git("checkout", "master");
@@ -491,7 +487,7 @@ public class ReferenceRecorderMultibranchITest {
         WorkflowRun run = (WorkflowRun) Run.fromExternalizableId(toDeleteId);
         run.delete();
 
-        p = scheduleAndFindBranchProject(mp, "feature");
+        p = scheduleAndFindBranchProject(mp, FEATURE);
         assertThat(mp.getItems()).hasSize(2);
         r.waitUntilNoActivity();
         b1 = p.getLastBuild();
@@ -534,7 +530,7 @@ public class ReferenceRecorderMultibranchITest {
         assertThat(gitCommit).isNotNull();
         assertThat(gitCommit.getCommits()).hasSize(2);
 
-        sampleRepo.git("checkout", "-b", "feature");
+        sampleRepo.git("checkout", "-b", FEATURE);
         sampleRepo.write(JENKINS_FILE,
                 "echo \"branch=${env.BRANCH_NAME}\"; node {checkout scm; echo readFile('file').toUpperCase(); echo \"GitForensics\"; gitForensics latestBuildIfNotFound: true}");
         sampleRepo.write(SOURCE_FILE, "subsequent content");
@@ -563,7 +559,7 @@ public class ReferenceRecorderMultibranchITest {
         WorkflowRun run = (WorkflowRun) Run.fromExternalizableId(toDeleteId);
         run.delete();
 
-        WorkflowJob p2 = scheduleAndFindBranchProject(mp, "feature");
+        WorkflowJob p2 = scheduleAndFindBranchProject(mp, FEATURE);
         assertThat(mp.getItems()).hasSize(2);
         r.waitUntilNoActivity();
         b1 = p2.getLastBuild();
