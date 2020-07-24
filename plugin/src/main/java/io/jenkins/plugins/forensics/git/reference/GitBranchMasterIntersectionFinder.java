@@ -3,6 +3,8 @@ package io.jenkins.plugins.forensics.git.reference;
 import java.io.Serializable;
 import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
+
 import hudson.model.Run;
 import jenkins.model.RunAction2;
 
@@ -17,7 +19,7 @@ public class GitBranchMasterIntersectionFinder implements RunAction2, Serializab
     private static final long serialVersionUID = -4549516129641755356L;
     static final String NO_INTERSECTION_FOUND = "No intersection was found in master commits";
 
-    private transient Run<?, ?> run;
+    private transient Run<?, ?> owner;
     private transient Run<?, ?> reference;
 
     private final String buildId;
@@ -31,10 +33,10 @@ public class GitBranchMasterIntersectionFinder implements RunAction2, Serializab
 
     private final boolean newestBuildIfNotFound;
 
-    public GitBranchMasterIntersectionFinder(final Run<?, ?> run, final int maxLogs, final boolean skipUnknownCommits,
+    public GitBranchMasterIntersectionFinder(final Run<?, ?> owner, final int maxLogs, final boolean skipUnknownCommits,
             final boolean newestBuildIfNotFound, final Run<?, ?> reference) {
         super();
-        this.run = run;
+        this.owner = owner;
         this.maxLogs = maxLogs;
         this.skipUnknownCommits = skipUnknownCommits;
         this.newestBuildIfNotFound = newestBuildIfNotFound;
@@ -49,7 +51,7 @@ public class GitBranchMasterIntersectionFinder implements RunAction2, Serializab
      *         intersection was found (should not happen)
      */
     public Optional<String> findReferencePoint() {
-        GitCommitsRecord thisCommit = run.getAction(GitCommitsRecord.class);
+        GitCommitsRecord thisCommit = owner.getAction(GitCommitsRecord.class);
         GitCommitsRecord referenceCommit = reference.getAction(GitCommitsRecord.class);
 
         Optional<String> buildId = thisCommit.getReferencePoint(referenceCommit, maxLogs, skipUnknownCommits);
@@ -78,7 +80,7 @@ public class GitBranchMasterIntersectionFinder implements RunAction2, Serializab
 
     @Override
     public void onAttached(final Run<?, ?> r) {
-        this.run = r;
+        this.owner = r;
     }
 
     @Override
@@ -94,12 +96,13 @@ public class GitBranchMasterIntersectionFinder implements RunAction2, Serializab
         this.reference = reference;
     }
 
-    public Run<?, ?> getRun() {
-        return run;
+    public Run<?, ?> getOwner() {
+        return owner;
     }
 
     public Optional<Run<?, ?>> getReferenceBuild() {
-        if (buildId != null) {
+        // FIXME: this makes no sense is never null
+        if (buildId != null && !StringUtils.equals(NO_INTERSECTION_FOUND, buildId)) {
             return Optional.ofNullable(Run.fromExternalizableId(buildId));
         }
         return Optional.empty();
