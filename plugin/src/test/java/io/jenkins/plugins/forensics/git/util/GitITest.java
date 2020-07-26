@@ -120,6 +120,41 @@ public class GitITest extends IntegrationTestWithJenkinsPerSuite {
         }
     }
 
+    protected void checkout(final String branch) {
+        try {
+            sampleRepo.git("checkout", branch);
+        }
+        catch (Exception exception) {
+            throw new AssertionError(exception);
+        }
+    }
+
+    protected void checkoutNewBranch(final String branch) {
+        try {
+            sampleRepo.git("checkout", "-b", branch);
+        }
+        catch (Exception exception) {
+            throw new AssertionError(exception);
+        }
+    }
+
+    protected void addFile(final String additionalSourceFile) {
+        try {
+            sampleRepo.git("add", additionalSourceFile);
+        }
+        catch (Exception exception) {
+            throw new AssertionError(exception);
+        }
+    }
+
+    protected void commit(final String message) {
+        try {
+            sampleRepo.git("commit", "--all", "--message=" + message);
+        }
+        catch (Exception exception) {
+            throw new AssertionError(exception);
+        }
+    }
     /**
      * Writes a file to repository.
      *
@@ -195,21 +230,5 @@ public class GitITest extends IntegrationTestWithJenkinsPerSuite {
         catch (IOException | InterruptedException exception) {
             throw new AssertionError(exception);
         }
-    }
-
-    protected void checkout(final String branch) throws Exception {
-        sampleRepo.git("checkout", branch);
-    }
-
-    protected void checkoutNewBranch(final String branch) throws Exception {
-        sampleRepo.git("checkout", "-b", branch);
-    }
-
-    protected void addFile(final String additionalSourceFile) throws Exception {
-        sampleRepo.git("add", additionalSourceFile);
-    }
-
-    protected void commit(final String message) throws Exception {
-        sampleRepo.git("commit", "--all", "--message=" + message);
     }
 }
