@@ -14,7 +14,6 @@ import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import hudson.model.Run;
-import hudson.model.queue.QueueTaskFuture;
 import jenkins.branch.BranchProperty;
 import jenkins.branch.BranchSource;
 import jenkins.branch.DefaultBranchPropertyStrategy;
@@ -93,8 +92,8 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
     @Test
     public void shouldHandleExtraCommitsAfterBranchPointOnMaster() throws Exception {
         WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject();
-        buildProject(project);
 
+        buildProject(project);
         WorkflowRun masterBuild = verifyMasterBuild(project, 1);
         verifyRecordSize(masterBuild, 2);
 
@@ -102,7 +101,8 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
 
         addAdditionalFileTo(MASTER);
 
-        WorkflowRun nextMaster = buildMaster(project, 2);
+        buildProject(project);
+        WorkflowRun nextMaster = verifyMasterBuild(project, 2);
         verifyRecordSize(nextMaster, 1);
 
         buildProject(project);
@@ -195,7 +195,8 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
 
         changeContentOfAdditionalFile(MASTER, CHANGED_CONTENT);
 
-        WorkflowRun nextMaster = buildMaster(project, 2);
+        buildProject(project);
+        WorkflowRun nextMaster = verifyMasterBuild(project, 2);
         verifyRecordSize(nextMaster, 2);
 
         buildProject(project);
@@ -225,8 +226,8 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
     @Test
     public void shouldNotFindBuildWithInsufficientMaxCommitsForMultibranchPipeline() throws Exception {
         WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject();
-        buildProject(project);
 
+        buildProject(project);
         WorkflowRun masterBuild = verifyMasterBuild(project, 1);
         verifyRecordSize(masterBuild, 2);
 
@@ -261,14 +262,15 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
     @Test
     public void shouldUseNewestBuildIfNewestBuildIfNotFoundIsEnabled() throws Exception {
         WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject();
-        buildProject(project);
 
+        buildProject(project);
         WorkflowRun masterBuild = verifyMasterBuild(project, 1);
         verifyRecordSize(masterBuild, 2);
 
         addAdditionalFileTo(MASTER);
 
-        WorkflowRun nextMaster = buildMaster(project, 2);
+        buildProject(project);
+        WorkflowRun nextMaster = verifyMasterBuild(project, 2);
         verifyRecordSize(nextMaster, 1);
 
         createFeatureBranchAndAddCommits("maxCommits: 2", "latestBuildIfNotFound: true");
@@ -304,8 +306,8 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
     @Test
     public void shouldFindMasterReferenceIfBranchIsCheckedOutFromAnotherFeatureBranch() throws Exception {
         WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject();
-        buildProject(project);
 
+        buildProject(project);
         WorkflowRun masterBuild = verifyMasterBuild(project, 1);
         verifyRecordSize(masterBuild, 2);
 
@@ -323,7 +325,7 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
         addAdditionalFileTo("feature2");
 
         buildProject(project);
-        WorkflowRun anotherBranch = getLatestBuildFor(project, "feature2");
+        WorkflowRun anotherBranch = findBranchProject(project, "feature2").getLastBuild();
         verifyRecordSize(anotherBranch, 4);
 
         assertThat(anotherBranch.getAction(GitBranchMasterIntersectionFinder.class)).isNotNull()
@@ -348,8 +350,8 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
     @Test
     public void shouldNotFindIntersectionIfBuildWasDeleted() throws Exception {
         WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject();
-        buildProject(project);
 
+        buildProject(project);
         WorkflowRun toDelete = verifyMasterBuild(project, 1);
         verifyRecordSize(toDelete, 2);
 
@@ -361,8 +363,8 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
         addAdditionalFileTo(MASTER);
 
         // Second master build TODO: method
-        QueueTaskFuture<WorkflowRun> workflowRunQueueTaskFuture = toDelete.getParent().scheduleBuild2(0);
-        WorkflowRun nextMaster = workflowRunQueueTaskFuture.get();
+        WorkflowRun nextMaster = buildAgain(toDelete.getParent());
+        verifyMasterBuild(project, 2);
         verifyRecordSize(nextMaster, 1);
 
         // Now delete Build before the feature branch is build.
@@ -394,8 +396,8 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
     @Test
     public void shouldTakeNewestMasterBuildIfBuildWasDeletedAndNewestBuildIfNotFoundIsEnabled() throws Exception {
         WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject();
-        buildProject(project);
 
+        buildProject(project);
         WorkflowRun toDelete = verifyMasterBuild(project, 1);
         verifyRecordSize(toDelete, 2);
 
@@ -410,7 +412,8 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
 
         addAdditionalFileTo(MASTER);
 
-        WorkflowRun nextMaster = buildMaster(project, 2);
+        buildProject(project);
+        WorkflowRun nextMaster = verifyMasterBuild(project, 2);
         verifyRecordSize(nextMaster, 1);
 
         changeContentOfAdditionalFile(FEATURE, CHANGED_CONTENT);
@@ -488,16 +491,8 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
         getJenkins().assertLogContains(value, featureBuild);
     }
 
-    private WorkflowRun buildMaster(final WorkflowMultiBranchProject project, final int buildNumber) throws Exception {
-        buildProject(project);
-        return verifyMasterBuild(project, buildNumber);
-    }
-
-    private WorkflowRun getLatestBuildFor(final WorkflowMultiBranchProject project, final String feature) throws Exception {
-        WorkflowJob p = findBranchProject(project, feature);
-        getJenkins().waitUntilNoActivity();
-
-        return p.getLastBuild();
+    private WorkflowRun buildAgain(final WorkflowJob build) throws Exception {
+        return Objects.requireNonNull(build.scheduleBuild2(0)).get();
     }
 
     private void buildProject(final WorkflowMultiBranchProject project) throws Exception {
@@ -524,16 +519,16 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
         assertThat(masterRecord).isNotNull().isNotEmpty().hasSize(size);
     }
 
-    public WorkflowJob findBranchProject(final WorkflowMultiBranchProject project, final String name) throws Exception {
+    private WorkflowJob findBranchProject(final WorkflowMultiBranchProject project, final String name) throws Exception {
         WorkflowJob p = project.getItem(name);
-        showIndexing(project);
         if (p == null) {
             fail(name + " project not found");
         }
+        showIndexing(project);
         return p;
     }
 
-    void showIndexing(final WorkflowMultiBranchProject project) throws Exception {
+    private void showIndexing(final WorkflowMultiBranchProject project) throws Exception {
         FolderComputation<?> indexing = project.getIndexing();
         System.out.println("---%<--- " + indexing.getUrl());
         indexing.writeWholeLogTo(System.out);
