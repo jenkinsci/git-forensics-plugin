@@ -14,8 +14,8 @@ import hudson.scm.SCM;
 import jenkins.model.RunAction2;
 
 /**
- * Stores all commits for a given build and provides a link to the latest commit. For each {@link SCM} repository
- * a unique {@link GitCommitsRecord} instance will be used.
+ * Stores all commits for a given build and provides a link to the latest commit. For each {@link SCM} repository a
+ * unique {@link GitCommitsRecord} instance will be used.
  *
  * @author Arne Schöntag
  */
@@ -55,7 +55,8 @@ public class GitCommitsRecord implements RunAction2, Serializable {
      *         the latest commit (either the head of the new commits or the latest commit from the previous build)
      * @param commits
      *         the new commits in this build (since the previous build)
-     * @param recordingType the recording type that indicates if the number of commits is
+     * @param recordingType
+     *         the recording type that indicates if the number of commits is
      */
     GitCommitsRecord(final Run<?, ?> owner, final String scmKey,
             final FilteredLog logger, final String latestCommit, final List<String> commits,
@@ -187,71 +188,57 @@ public class GitCommitsRecord implements RunAction2, Serializable {
     }
 
     /**
-     * Tries to find the reference point of the GitCommit of another build.
+     * Tries to find a reference build using the specified {@link GitCommitsRecord} of the reference job as a starting
+     * point.
      *
-     * @param reference
-     *         the GitCommit of the other build
-     * @param maxLogs
-     *         maximal amount of commits looked at.
+     * @param referenceCommits
+     *         the recorded commits of the build of the reference job that should be used as a starting point for the
+     *         search
+     * @param maxCommits
+     *         maximal number of commits to look at
+     * @param skipUnknownCommits
+     *         determines whether a build with unknown commits should be skipped or not
      *
      * @return the build Id of the reference build or Optional.empty() if none found.
      */
-    public Optional<String> getReferencePoint(final GitCommitsRecord reference,
-            final int maxLogs, final boolean skipUnknownCommits) {
-        List<String> branchCommits = new ArrayList<>(this.getCommits());
-        List<String> masterCommits = new ArrayList<>(reference.getCommits());
+    public Optional<String> getReferencePoint(final GitCommitsRecord referenceCommits,
+            final int maxCommits, final boolean skipUnknownCommits) {
+        List<String> branchCommits = collectBranchCommits(maxCommits);
 
-        Optional<String> referencePoint;
-
-        // Fill branch commit list
-        Run<?, ?> tmp = owner;
-        while (branchCommits.size() < maxLogs && tmp != null) {
-            GitCommitsRecord gitCommit = getGitCommitForRepository(tmp);
-            if (gitCommit == null) {
-                // Skip build if it has no GitCommit Action.
-                tmp = tmp.getPreviousBuild();
-                continue;
-            }
-            branchCommits.addAll(gitCommit.getCommits());
-            tmp = tmp.getPreviousBuild();
-        }
-
-        // Fill master commit list and check for intersection point
-        tmp = reference.owner;
-        while (masterCommits.size() < maxLogs && tmp != null) {
-            GitCommitsRecord gitCommit = getGitCommitForRepository(tmp);
-            if (gitCommit == null) {
-                // Skip build if it has no GitCommit Action.
-                tmp = tmp.getPreviousBuild();
-                continue;
-            }
-            List<String> commits = gitCommit.getCommits();
-            if (skipUnknownCommits && !branchCommits.containsAll(commits)) {
+        Run<?, ?> build = referenceCommits.owner;
+        List<String> masterCommits = new ArrayList<>(referenceCommits.getCommits());
+        while (masterCommits.size() < maxCommits && build != null) {
+            List<String> additionalCommits = getCommitsForRepository(build);
+            if (skipUnknownCommits && !branchCommits.containsAll(additionalCommits)) {
                 // Skip build if it has unknown commits to current branch.
-                tmp = tmp.getPreviousBuild();
+                build = build.getPreviousBuild();
                 continue;
             }
-            masterCommits.addAll(commits);
-            referencePoint = branchCommits.stream().filter(masterCommits::contains).findFirst();
+            masterCommits.addAll(additionalCommits);
+            Optional<String> referencePoint = branchCommits.stream().filter(masterCommits::contains).findFirst();
             // If an intersection is found the buildId in Jenkins will be saved
             if (referencePoint.isPresent()) {
-                return Optional.of(tmp.getExternalizableId());
+                return Optional.of(build.getExternalizableId());
             }
-            tmp = tmp.getPreviousBuild();
+            build = build.getPreviousBuild();
         }
         return Optional.empty();
     }
 
-    /**
-     * If multiple Repositorys are in a build this GitCommit will only look a the ones with the same repositoryId.
-     *
-     * @param run
-     *         the bulid to get the Actions from
-     *
-     * @return the correct GitCommit if present. Or else null.
-     */
-    private GitCommitsRecord getGitCommitForRepository(final Run<?, ?> run) {
-        List<GitCommitsRecord> list = run.getActions(GitCommitsRecord.class);
-        return list.stream().filter(gc -> this.getScmKey().equals(gc.getScmKey())).findFirst().orElse(null);
+    private List<String> collectBranchCommits(final int maxCommits) {
+        List<String> branchCommits = new ArrayList<>(this.getCommits());
+        for (Run<?, ?> build = owner; branchCommits.size() < maxCommits && build != null; build = build.getPreviousBuild()) {
+            branchCommits.addAll(getCommitsForRepository(build));
+        }
+        return branchCommits;
+    }
+
+    private List<String> getCommitsForRepository(final Run<?, ?> run) {
+        return run.getActions(GitCommitsRecord.class)
+                .stream()
+                .filter(gc -> this.getScmKey().equals(gc.getScmKey()))
+                .findAny()
+                .map(GitCommitsRecord::getCommits)
+                .orElse(Collections.emptyList());
     }
 }

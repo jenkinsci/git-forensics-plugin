@@ -34,13 +34,13 @@ public class GitBranchMasterIntersectionFinder implements RunAction2, Serializab
     private final boolean newestBuildIfNotFound;
 
     public GitBranchMasterIntersectionFinder(final Run<?, ?> owner, final int maxLogs, final boolean skipUnknownCommits,
-            final boolean newestBuildIfNotFound, final Run<?, ?> reference) {
+            final boolean newestBuildIfNotFound, final Run<?, ?> lastCompletedReference) {
         super();
         this.owner = owner;
         this.maxLogs = maxLogs;
         this.skipUnknownCommits = skipUnknownCommits;
         this.newestBuildIfNotFound = newestBuildIfNotFound;
-        this.reference = reference;
+        this.reference = lastCompletedReference;
         this.buildId = findReferencePoint().get();
     }
 

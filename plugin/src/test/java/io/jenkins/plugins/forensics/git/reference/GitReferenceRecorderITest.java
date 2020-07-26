@@ -32,7 +32,7 @@ import static io.jenkins.plugins.forensics.git.assertions.Assertions.*;
  *         tests are based on the integration tests for the multi-branch pipeleine plugin</a>
  */
 @SuppressWarnings("PMD.SignatureDeclareThrowsException")
-public class ReferenceRecorderMultibranchITest extends GitITest {
+public class GitReferenceRecorderITest extends GitITest {
     private static final String JENKINS_FILE = "Jenkinsfile";
     private static final String SOURCE_FILE = "file";
     private static final String FEATURE = "feature";
