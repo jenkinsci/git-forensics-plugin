@@ -429,9 +429,26 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
     }
 
     private WorkflowMultiBranchProject initializeGitAndMultiBranchProject() throws Exception {
-        initializeRepository();
+        writeFile(JENKINS_FILE, "echo \"branch=${env.BRANCH_NAME}\"; "
+                + "node {checkout scm; echo readFile('file'); "
+                + "echo \"GitForensics\"; "
+                + "gitForensics()}");
+        writeFile(SOURCE_FILE, "master content");
+        addFile(JENKINS_FILE);
+        commit("initial content");
 
         return createMultiBranchProject();
+    }
+
+    private void createFeatureBranchAndAddCommits(final String... parameters) throws Exception {
+        checkoutNewBranch(FEATURE);
+        writeFile(JENKINS_FILE,
+                String.format("echo \"branch=${env.BRANCH_NAME}\";"
+                        + "node {checkout scm; echo readFile('file').toUpperCase(); "
+                        + "echo \"GitForensics\"; "
+                        + "gitForensics(%s)}", String.join(",", parameters)));
+        writeFile(SOURCE_FILE, "feature content");
+        commit("feature changes");
     }
 
     private void addAdditionalFileTo(final String branch) throws Exception {
@@ -445,35 +462,26 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
         commit("Add additional file");
     }
 
-    private void initializeRepository() throws Exception {
-        initializeGitRepository("echo \"branch=${env.BRANCH_NAME}\"; "
-                + "node {checkout scm; echo readFile('file'); "
-                + "echo \"GitForensics\"; "
-                + "gitForensics()}");
-    }
-
     private WorkflowRun verifyMasterBuild(final WorkflowMultiBranchProject project, final int buildNumber)
             throws Exception {
-        WorkflowJob p = findBranchProject(project, MASTER);
-
-        WorkflowRun build = p.getLastBuild();
-        assertThat(build.getNumber()).isEqualTo(buildNumber);
-        assertThatLogContains(build, "master content");
-        assertThatLogContains(build, "branch=master");
-
-        return build;
+        return verifyBuild(project, buildNumber, MASTER, "master content");
     }
 
     private WorkflowRun verifyFeatureBuild(final WorkflowMultiBranchProject project, final int buildNumber)
             throws Exception {
-        WorkflowJob p = findBranchProject(project, FEATURE);
+        return verifyBuild(project, buildNumber, FEATURE, FEATURE.toUpperCase() + " CONTENT");
+    }
 
-        WorkflowRun featureBuild = p.getLastBuild();
-        assertThat(featureBuild.getNumber()).isEqualTo(buildNumber);
-        assertThatLogContains(featureBuild, "SUBSEQUENT CONTENT");
-        assertThatLogContains(featureBuild, "branch=feature");
+    private WorkflowRun verifyBuild(final WorkflowMultiBranchProject project, final int buildNumber,
+            final String master, final String branch) throws Exception {
+        WorkflowJob p = findBranchProject(project, master);
 
-        return featureBuild;
+        WorkflowRun build = p.getLastBuild();
+        assertThat(build.getNumber()).isEqualTo(buildNumber);
+        assertThatLogContains(build, branch);
+        assertThatLogContains(build, "branch=" + master);
+
+        return build;
     }
 
     private void assertThatLogContains(final WorkflowRun featureBuild, final String value) throws IOException {
@@ -481,52 +489,21 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
     }
 
     private WorkflowRun buildMaster(final WorkflowMultiBranchProject project, final int buildNumber) throws Exception {
-        WorkflowRun build = buildBranch(project, MASTER);
-
-        assertThat(build.getNumber()).isEqualTo(buildNumber);
-        assertThatLogContains(build, "master content");
-        assertThatLogContains(build, "branch=master");
-
-        return build;
-    }
-
-    private WorkflowRun buildBranch(final WorkflowMultiBranchProject project, final String feature) throws Exception {
-        project.scheduleBuild2(0).getFuture().get();
-        return getLatestBuildFor(project, feature);
+        buildProject(project);
+        return verifyMasterBuild(project, buildNumber);
     }
 
     private WorkflowRun getLatestBuildFor(final WorkflowMultiBranchProject project, final String feature) throws Exception {
         WorkflowJob p = findBranchProject(project, feature);
-        waitUntilNoctivity();
+        getJenkins().waitUntilNoActivity();
 
         return p.getLastBuild();
     }
 
-    private void waitUntilNoctivity() throws Exception {
-        getJenkins().waitUntilNoActivity();
-    }
-
     private void buildProject(final WorkflowMultiBranchProject project) throws Exception {
-        project.scheduleBuild2(0).getFuture().get();
-        waitUntilNoctivity();
-    }
+        Objects.requireNonNull(project.scheduleBuild2(0)).getFuture().get();
 
-    private void createFeatureBranchAndAddCommits(final String... parameters) throws Exception {
-        sampleRepo.git("checkout", "-b", FEATURE);
-        sampleRepo.write(JENKINS_FILE,
-                String.format("echo \"branch=${env.BRANCH_NAME}\";"
-                        + "node {checkout scm; echo readFile('file').toUpperCase(); "
-                        + "echo \"GitForensics\"; "
-                        + "gitForensics(%s)}", String.join(",", parameters)));
-        writeFile(SOURCE_FILE, "subsequent content");
-        sampleRepo.git("commit", "--all", "--message=tweaked");
-    }
-
-    private void initializeGitRepository(final String jenkinsFileContent) throws Exception {
-        writeFile(JENKINS_FILE, jenkinsFileContent);
-        writeFile(SOURCE_FILE, "master content");
-        addFile(JENKINS_FILE);
-        sampleRepo.git("commit", "--all", "--message=flow");
+        getJenkins().waitUntilNoActivity();
     }
 
     private WorkflowMultiBranchProject createMultiBranchProject() {
