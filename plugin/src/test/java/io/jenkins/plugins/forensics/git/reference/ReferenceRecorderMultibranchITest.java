@@ -45,8 +45,13 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
 
     /**
      * Builds a  multibranch-pipeline with a master and a feature branch, builds them and checks if the correct
-     * reference build is found.
-     *
+     * reference build will be found.
+     * <pre>
+     * {@code
+     * M - 1
+     *    \
+     *   F - 1}
+     * </pre>
      * @throws Exception
      *         in case of an unexpected error during the tests
      */
@@ -69,8 +74,14 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
     }
 
     /**
-     * Checks if the intersection point is found if the master is one commit and build ahead of the feature branch.
+     * Checks if the reference build will be found if the master is one commit and build ahead of the feature branch.
      *
+     * <pre>
+     * {@code
+     * M - 1 - 2
+     *    \
+     *   F - 1}
+     * </pre>
      * @throws Exception
      *         in case of an unexpected error during the tests
      */
