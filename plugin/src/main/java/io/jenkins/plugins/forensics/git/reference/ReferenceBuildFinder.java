@@ -19,7 +19,7 @@ public class ReferenceBuildFinder {
      * @return the reference build, if found
      */
     public Optional<Run<?, ?>> find(final Run<?, ?> run) {
-        GitBranchMasterIntersectionFinder action = run.getAction(GitBranchMasterIntersectionFinder.class);
+        GitReferenceBuild action = run.getAction(GitReferenceBuild.class);
         if (action == null) {
             // TODO: try to find a reference build for Multi Branch pipelines
             return Optional.empty();

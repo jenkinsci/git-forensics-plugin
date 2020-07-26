@@ -184,10 +184,10 @@ public class GitReferenceRecorder extends Recorder implements SimpleBuildStep {
                 log.logInfo("-> no completed build found");
             }
             else {
-                GitBranchMasterIntersectionFinder action = new GitBranchMasterIntersectionFinder(run, getMaxCommits(),
+                GitReferenceBuild action = new GitReferenceBuild(run, getMaxCommits(),
                         isSkipUnknownCommits(), isLatestBuildIfNotFound(), lastCompletedBuild);
                 run.addAction(action);
-                log.logInfo("-> found `%s`", action.getBuildId());
+                log.logInfo("-> found `%s`", action.getReferenceBuildId());
             }
         }
         else {

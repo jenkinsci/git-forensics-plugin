@@ -205,29 +205,27 @@ public class GitCommitsRecord implements RunAction2, Serializable {
             final int maxCommits, final boolean skipUnknownCommits) {
         List<String> branchCommits = collectBranchCommits(maxCommits);
 
-        Run<?, ?> build = referenceCommits.owner;
         List<String> masterCommits = new ArrayList<>(referenceCommits.getCommits());
-        while (masterCommits.size() < maxCommits && build != null) {
+        for (Run<?, ?> build = referenceCommits.owner;
+             masterCommits.size() < maxCommits && build != null;
+             build = build.getPreviousBuild()) {
             List<String> additionalCommits = getCommitsForRepository(build);
-            if (skipUnknownCommits && !branchCommits.containsAll(additionalCommits)) {
-                // Skip build if it has unknown commits to current branch.
-                build = build.getPreviousBuild();
-                continue;
+            if (!skipUnknownCommits || branchCommits.containsAll(additionalCommits)) {
+                masterCommits.addAll(additionalCommits);
+                Optional<String> referencePoint = branchCommits.stream().filter(masterCommits::contains).findFirst();
+                if (referencePoint.isPresent()) {
+                    return Optional.of(build.getExternalizableId());
+                }
             }
-            masterCommits.addAll(additionalCommits);
-            Optional<String> referencePoint = branchCommits.stream().filter(masterCommits::contains).findFirst();
-            // If an intersection is found the buildId in Jenkins will be saved
-            if (referencePoint.isPresent()) {
-                return Optional.of(build.getExternalizableId());
-            }
-            build = build.getPreviousBuild();
         }
         return Optional.empty();
     }
 
     private List<String> collectBranchCommits(final int maxCommits) {
         List<String> branchCommits = new ArrayList<>(this.getCommits());
-        for (Run<?, ?> build = owner; branchCommits.size() < maxCommits && build != null; build = build.getPreviousBuild()) {
+        for (Run<?, ?> build = owner;
+             branchCommits.size() < maxCommits && build != null;
+             build = build.getPreviousBuild()) {
             branchCommits.addAll(getCommitsForRepository(build));
         }
         return branchCommits;
