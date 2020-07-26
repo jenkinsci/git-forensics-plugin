@@ -349,7 +349,6 @@ public class GitReferenceRecorderITest extends GitITest {
 
         addAdditionalFileTo(MASTER);
 
-        // Second master build TODO: method
         WorkflowRun nextMaster = buildAgain(toDelete.getParent());
         verifyMasterBuild(project, 2);
         verifyRecordSize(nextMaster, 1);
@@ -403,7 +402,6 @@ public class GitReferenceRecorderITest extends GitITest {
 
         changeContentOfAdditionalFile(FEATURE, CHANGED_CONTENT);
 
-        // Now delete build before the feature branch is build again
         delete(toDeleteId);
 
         buildProject(project);
@@ -518,6 +516,7 @@ public class GitReferenceRecorderITest extends GitITest {
         }
     }
 
+    @SuppressWarnings("deprecation")
     private WorkflowMultiBranchProject createMultiBranchProject() {
         try {
             WorkflowMultiBranchProject project = createProject(WorkflowMultiBranchProject.class);
