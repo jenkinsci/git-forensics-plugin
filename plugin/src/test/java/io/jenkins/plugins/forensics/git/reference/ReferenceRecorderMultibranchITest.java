@@ -39,6 +39,7 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
     private static final String FEATURE = "feature";
     private static final String MASTER = "master";
     private static final String ADDITIONAL_SOURCE_FILE = "test.txt";
+    private static final String CHANGED_CONTENT = "changed content";
 
     @ClassRule
     public static BuildWatcher buildWatcher = new BuildWatcher();
@@ -99,11 +100,7 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
 
         createFeatureBranchAndAddCommits();
 
-        // Add some new master commits
-        checkout(MASTER);
-        writeFile(ADDITIONAL_SOURCE_FILE, "test");
-        addFile(ADDITIONAL_SOURCE_FILE);
-        commit("test");
+        addAdditionalFileTo(MASTER);
 
         WorkflowRun nextMaster = buildMaster(project, 2);
         verifyRecordSize(nextMaster, 1);
@@ -140,16 +137,11 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
         WorkflowRun masterBuild = verifyMasterBuild(project, 1);
         verifyRecordSize(masterBuild, 2);
 
-        writeFile(ADDITIONAL_SOURCE_FILE, "test");
-        addFile(ADDITIONAL_SOURCE_FILE);
-        commit("test");
+        addAdditionalFileTo(MASTER);
 
         createFeatureBranchAndAddCommits("latestBuildIfNotFound: false");
 
-        // new master commits
-        checkout(MASTER);
-        writeFile(ADDITIONAL_SOURCE_FILE, "test edit");
-        commit("edit-test");
+        changeContentOfAdditionalFile(MASTER, CHANGED_CONTENT);
 
         buildProject(project);
         WorkflowRun nextMaster = verifyMasterBuild(project, 2);
@@ -163,11 +155,7 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
                 .hasBuildId(nextMaster.getExternalizableId())
                 .hasReferenceBuild(Optional.of(nextMaster));
 
-        // New feature commits
-        checkout(FEATURE);
-        writeFile("testfile.txt", "testfile");
-        addFile("testfile.txt");
-        sampleRepo.git("commit", "--all", "--message=testfile");
+        changeContentOfAdditionalFile(FEATURE, "feature content");
 
         buildProject(project);
         WorkflowRun featureBuild = verifyFeatureBuild(project, 2);
@@ -201,16 +189,11 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
         WorkflowRun masterBuild = verifyMasterBuild(project, 1);
         verifyRecordSize(masterBuild, 2);
 
-        writeFile(ADDITIONAL_SOURCE_FILE, "test");
-        addFile(ADDITIONAL_SOURCE_FILE);
-        commit("test");
+        addAdditionalFileTo(MASTER);
 
         createFeatureBranchAndAddCommits("skipUnknownCommits: true");
 
-        // new master commits
-        checkout(MASTER);
-        writeFile(ADDITIONAL_SOURCE_FILE, "test edit");
-        commit("edit-test");
+        changeContentOfAdditionalFile(MASTER, CHANGED_CONTENT);
 
         WorkflowRun nextMaster = buildMaster(project, 2);
         verifyRecordSize(nextMaster, 2);
@@ -249,10 +232,7 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
 
         createFeatureBranchAndAddCommits("maxCommits: 2");
 
-        // Second Commit
-        writeFile(ADDITIONAL_SOURCE_FILE, "Test");
-        addFile(ADDITIONAL_SOURCE_FILE);
-        commit("test");
+        addAdditionalFileTo(FEATURE);
 
         buildProject(project);
         WorkflowRun featureBuild = verifyFeatureBuild(project, 1);
@@ -286,19 +266,14 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
         WorkflowRun masterBuild = verifyMasterBuild(project, 1);
         verifyRecordSize(masterBuild, 2);
 
-        writeFile("testfile.txt", "testfile");
-        addFile("testfile.txt");
-        sampleRepo.git("commit", "--all", "--message=testfile");
+        addAdditionalFileTo(MASTER);
 
         WorkflowRun nextMaster = buildMaster(project, 2);
         verifyRecordSize(nextMaster, 1);
 
         createFeatureBranchAndAddCommits("maxCommits: 2", "latestBuildIfNotFound: true");
 
-        // Second Commit in feature
-        writeFile(ADDITIONAL_SOURCE_FILE, "Test");
-        addFile(ADDITIONAL_SOURCE_FILE);
-        commit("test");
+        changeContentOfAdditionalFile(FEATURE, CHANGED_CONTENT);
 
         buildProject(project);
         WorkflowRun featureBuild = verifyFeatureBuild(project, 1);
@@ -344,11 +319,8 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
                 .hasBuildId(masterBuild.getExternalizableId())
                 .hasReferenceBuild(Optional.of(masterBuild));
 
-        // Now the second branch
         checkoutNewBranch("feature2");
-        writeFile(ADDITIONAL_SOURCE_FILE, "my second feature");
-        addFile(ADDITIONAL_SOURCE_FILE);
-        commit("secondFeature");
+        addAdditionalFileTo("feature2");
 
         buildProject(project);
         WorkflowRun anotherBranch = getLatestBuildFor(project, "feature2");
@@ -386,11 +358,7 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
 
         createFeatureBranchAndAddCommits();
 
-        // New master commits
-        checkout(MASTER);
-        writeFile("testfile.txt", "testfile");
-        addFile("testfile.txt");
-        commit("testfile");
+        addAdditionalFileTo(MASTER);
 
         // Second master build TODO: method
         QueueTaskFuture<WorkflowRun> workflowRunQueueTaskFuture = toDelete.getParent().scheduleBuild2(0);
@@ -440,20 +408,12 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
         WorkflowRun firstFeature = verifyFeatureBuild(project, 1);
         verifyRecordSize(firstFeature, 3);
 
-        // New master commits
-        checkout(MASTER);
-        writeFile("testfile.txt", "testfile");
-        addFile("testfile.txt");
-        commit("testfile");
+        addAdditionalFileTo(MASTER);
 
         WorkflowRun nextMaster = buildMaster(project, 2);
         verifyRecordSize(nextMaster, 1);
 
-        // New feature commits
-        checkout(FEATURE);
-        writeFile("testfile.txt", "testfile");
-        addFile("testfile.txt");
-        commit("testfile");
+        changeContentOfAdditionalFile(FEATURE, CHANGED_CONTENT);
 
         // Now delete build before the feature branch is build again
         Objects.requireNonNull(Run.fromExternalizableId(toDeleteId)).delete();
@@ -472,6 +432,17 @@ public class ReferenceRecorderMultibranchITest extends GitITest {
         initializeRepository();
 
         return createMultiBranchProject();
+    }
+
+    private void addAdditionalFileTo(final String branch) throws Exception {
+        changeContentOfAdditionalFile(branch, "test");
+    }
+
+    private void changeContentOfAdditionalFile(final String branch, final String content) throws Exception {
+        checkout(branch);
+        writeFile(ADDITIONAL_SOURCE_FILE, content);
+        addFile(ADDITIONAL_SOURCE_FILE);
+        commit("Add additional file");
     }
 
     private void initializeRepository() throws Exception {
