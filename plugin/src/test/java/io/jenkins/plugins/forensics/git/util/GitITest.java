@@ -196,4 +196,20 @@ public class GitITest extends IntegrationTestWithJenkinsPerSuite {
             throw new AssertionError(exception);
         }
     }
+
+    protected void checkout(final String branch) throws Exception {
+        sampleRepo.git("checkout", branch);
+    }
+
+    protected void checkoutNewBranch(final String branch) throws Exception {
+        sampleRepo.git("checkout", "-b", branch);
+    }
+
+    protected void addFile(final String additionalSourceFile) throws Exception {
+        sampleRepo.git("add", additionalSourceFile);
+    }
+
+    protected void commit(final String message) throws Exception {
+        sampleRepo.git("commit", "--all", "--message=" + message);
+    }
 }
