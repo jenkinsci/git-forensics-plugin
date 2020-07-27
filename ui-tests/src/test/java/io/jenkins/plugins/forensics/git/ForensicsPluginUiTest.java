@@ -2,6 +2,7 @@ package io.jenkins.plugins.forensics.git;
 
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.openqa.selenium.By;
 
@@ -26,7 +27,7 @@ import static org.assertj.core.api.Assertions.*;
  *
  * @author Ullrich Hafner
  */
-@WithPlugins({"forensics-api", "git-forensics", "git"})
+@WithPlugins({"forensics-api", "git-forensics", "git"}) @Ignore("Deactivated until the forensics-api is published")
 public class ForensicsPluginUiTest extends AbstractJUnitTest {
 
     private static final String REPOSITORY_URL = "https://github.com/jenkinsci/git-forensics-plugin.git";
