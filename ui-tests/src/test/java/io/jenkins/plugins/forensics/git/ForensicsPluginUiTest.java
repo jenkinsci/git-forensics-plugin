@@ -56,7 +56,7 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
 
         assertThat(gitRevision).isEqualTo("Revision: 28af63def44286729e3b19b03464d100fd1d0587\n"
                 + "detached");
-        assertThat(scmStatistics).isEqualTo("SCM Repository Statistics: 51 repository files");
+        assertThat(scmStatistics).contains("SCM Repository Statistics: 51 repository files");
     }
 
     /**
