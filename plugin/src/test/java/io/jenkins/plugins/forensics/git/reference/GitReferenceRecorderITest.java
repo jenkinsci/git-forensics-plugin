@@ -23,6 +23,7 @@ import jenkins.scm.api.SCMSource;
 import io.jenkins.plugins.forensics.git.util.GitITest;
 
 import static io.jenkins.plugins.forensics.git.assertions.Assertions.*;
+import static org.jvnet.hudson.test.JenkinsRule.*;
 
 /**
  * Integration tests for finding the correct reference point for multibranch pipelines.
@@ -125,10 +126,10 @@ public class GitReferenceRecorderITest extends GitITest {
      * </pre>
      */
     @Test
-    public void shouldFindBuildWithMultipleCommitsInReferenceBuild() {
+    public void shouldFindBuildWithMultipleCommitsInReferenceBuild() throws IOException {
         WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject();
-        buildProject(project);
 
+        buildProject(project);
         WorkflowRun masterBuild = verifyMasterBuild(project, 1);
         verifyRecordSize(masterBuild, 2);
 
@@ -145,7 +146,7 @@ public class GitReferenceRecorderITest extends GitITest {
         WorkflowRun firstFeature = verifyFeatureBuild(project, 1);
         verifyRecordSize(firstFeature, 4);
 
-        assertThat(firstFeature.getAction(GitReferenceBuild.class)).isNotNull()
+        assertThat(firstFeature.getAction(GitReferenceBuild.class)).as(getLog(firstFeature)).isNotNull()
                 .hasOwner(firstFeature)
                 .hasReferenceBuildId(nextMaster.getExternalizableId())
                 .hasSummary(nextMaster.getExternalizableId())
