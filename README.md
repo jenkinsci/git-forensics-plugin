@@ -17,8 +17,8 @@ The following services are provided by this plugin:
   - creation time
   - last modification time
 
-[![Jenkins](https://ci.jenkins.io/job/Plugins/job/git-forensics-plugin/job/master/badge/icon)](https://ci.jenkins.io/job/Plugins/job/git-forensics-plugin/job/master/)
-[![GitHub Actions](https://github.com/jenkinsci/git-forensics-plugin/workflows/CI%20on%20all%20platforms/badge.svg?branch=master)](https://github.com/jenkinsci/git-forensics-plugin/actions)
+[![Jenkins](https://ci.jenkins.io/job/Plugins/job/git-forensics-plugin/job/master/badge/icon?subject=Jenkins%20CI)](https://ci.jenkins.io/job/Plugins/job/git-forensics-plugin/job/master/)
+[![GitHub Actions](https://github.com/jenkinsci/git-forensics-plugin/workflows/GitHub%20CI/badge.svg?branch=master)](https://github.com/jenkinsci/git-forensics-plugin/actions)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/1999b59401394431a1c2fea2923a919d)](https://www.codacy.com/app/uhafner/git-forensics-plugin?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=jenkinsci/git-forensics-plugin&amp;utm_campaign=Badge_Grade)
 [![Codecov](https://codecov.io/gh/jenkinsci/git-forensics-plugin/branch/master/graph/badge.svg)](https://codecov.io/gh/jenkinsci/git-forensics-plugin)
 [![GitHub pull requests](https://img.shields.io/github/issues-pr/jenkinsci/git-forensics-plugin.svg)](https://github.com/jenkinsci/git-forensics-plugin/pulls)
