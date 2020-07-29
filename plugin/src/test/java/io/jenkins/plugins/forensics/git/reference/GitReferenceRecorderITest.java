@@ -21,6 +21,7 @@ import jenkins.plugins.git.GitSCMSource;
 import jenkins.scm.api.SCMSource;
 
 import io.jenkins.plugins.forensics.git.util.GitITest;
+import io.jenkins.plugins.forensics.reference.ReferenceBuild;
 
 import static io.jenkins.plugins.forensics.git.assertions.Assertions.*;
 import static org.jvnet.hudson.test.JenkinsRule.*;
@@ -234,7 +235,7 @@ public class GitReferenceRecorderITest extends GitITest {
 
         assertThat(featureBuild.getAction(GitReferenceBuild.class)).isNotNull()
                 .hasOwner(featureBuild)
-                .hasReferenceBuildId(GitReferenceBuild.NO_REFERENCE_BUILD)
+                .hasReferenceBuildId(ReferenceBuild.NO_REFERENCE_BUILD)
                 .hasSummary(Messages.No_Reference_Build())
                 .hasReferenceBuild(Optional.empty());
     }
