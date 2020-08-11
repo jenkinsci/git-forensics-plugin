@@ -49,11 +49,17 @@ public class GitRepositoryMiner extends RepositoryMiner {
     private static final long serialVersionUID = 1157958118716013983L;
 
     private final GitClient gitClient;
+    private final String latestCommitId;
 
-    GitRepositoryMiner(final GitClient gitClient) {
+    GitRepositoryMiner(final GitClient gitClient){
+        this(gitClient, null);
+    }
+
+    GitRepositoryMiner(final GitClient gitClient, final String latestCommitId) {
         super();
 
         this.gitClient = gitClient;
+        this.latestCommitId = latestCommitId;
     }
 
     @Override
@@ -63,7 +69,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
             long nano = System.nanoTime();
             logger.logInfo("Analyzing the commit log of the Git repository '%s'", gitClient.getWorkTree());
             RepositoryStatistics statistics = gitClient.withRepository(
-                    new RepositoryStatisticsCallback(logger));
+                    new RepositoryStatisticsCallback(logger, latestCommitId));
             logger.logInfo("-> created report for %d files in %d seconds", statistics.size(),
                     1 + (System.nanoTime() - nano) / 1_000_000_000L);
             return statistics;
@@ -79,18 +85,20 @@ public class GitRepositoryMiner extends RepositoryMiner {
         private static final long serialVersionUID = 7667073858514128136L;
 
         private final FilteredLog logger;
+        private final String latestCommitId;
 
-        RepositoryStatisticsCallback(final FilteredLog logger) {
+        RepositoryStatisticsCallback(final FilteredLog logger, final String latestCommitId) {
             super();
 
             this.logger = logger;
+            this.latestCommitId = latestCommitId;
         }
 
         @Override
         public RepositoryStatistics invoke(final Repository repository, final VirtualChannel channel) {
             try {
                 try (Git git = new Git(repository)) {
-                    List<RevCommit> commits = new CommitCollector(repository, git).findAllCommits();
+                    List<RevCommit> commits = new CommitCollector(repository, git, latestCommitId).findAllCommits();
                     return analyze(repository, git, commits);
                 }
                 catch (GitAPIException | IOException exception) {
@@ -106,7 +114,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
 
         RepositoryStatistics analyze(final Repository repository, final Git git, final List<RevCommit> commits)
                 throws IOException {
-            RepositoryStatistics statistics = new RepositoryStatistics();
+            RepositoryStatistics statistics = new RepositoryStatistics(repository.resolve(Constants.HEAD).getName());
             FileStatisticsBuilder builder = new FileStatisticsBuilder();
             Map<String, FileStatistics> fileStatistics = new HashMap<>();
             Set<String> filesInHead = new FilesCollector(repository).findAllFor(repository.resolve(Constants.HEAD));
