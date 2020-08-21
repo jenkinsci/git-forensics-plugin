@@ -14,6 +14,7 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectReader;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Repository;
@@ -23,6 +24,8 @@ import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.treewalk.AbstractTreeIterator;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.EmptyTreeIterator;
+
+import com.sun.org.apache.regexp.internal.RE;
 
 import edu.hm.hafner.util.FilteredLog;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -49,17 +52,11 @@ public class GitRepositoryMiner extends RepositoryMiner {
     private static final long serialVersionUID = 1157958118716013983L;
 
     private final GitClient gitClient;
-    private final String latestCommitId;
 
-    GitRepositoryMiner(final GitClient gitClient){
-        this(gitClient, null);
-    }
-
-    GitRepositoryMiner(final GitClient gitClient, final String latestCommitId) {
+    GitRepositoryMiner(final GitClient gitClient) {
         super();
 
         this.gitClient = gitClient;
-        this.latestCommitId = latestCommitId;
     }
 
     @Override
@@ -69,12 +66,30 @@ public class GitRepositoryMiner extends RepositoryMiner {
             long nano = System.nanoTime();
             logger.logInfo("Analyzing the commit log of the Git repository '%s'", gitClient.getWorkTree());
             RepositoryStatistics statistics = gitClient.withRepository(
-                    new RepositoryStatisticsCallback(logger, latestCommitId));
+                    new RepositoryStatisticsCallback(logger, null));
             logger.logInfo("-> created report for %d files in %d seconds", statistics.size(),
                     1 + (System.nanoTime() - nano) / 1_000_000_000L);
             return statistics;
         }
         catch (IOException exception) {
+            RepositoryStatistics statistics = new RepositoryStatistics();
+            logger.logException(exception, "Exception occurred while mining the Git repository using GitClient");
+            return statistics;
+        }
+    }
+
+    @Override
+    public RepositoryStatistics mine(final RepositoryStatistics repositoryStatistics, final FilteredLog logger) {
+        try {
+            long nano = System.nanoTime();
+            logger.logInfo("Analyzing the commit log of the Git repository '%s'", gitClient.getWorkTree());
+            RepositoryStatistics statistics = gitClient.withRepository(
+                    new RepositoryStatisticsCallback(logger, repositoryStatistics.getLatestCommitId()));
+            logger.logInfo("-> created report for %d files in %d seconds", statistics.size(),
+                    1 + (System.nanoTime() - nano) / 1_000_000_000L);
+            return statistics;
+        }
+        catch (IOException | InterruptedException exception) {
             RepositoryStatistics statistics = new RepositoryStatistics();
             logger.logException(exception, "Exception occurred while mining the Git repository using GitClient");
             return statistics;
@@ -114,7 +129,9 @@ public class GitRepositoryMiner extends RepositoryMiner {
 
         RepositoryStatistics analyze(final Repository repository, final Git git, final List<RevCommit> commits)
                 throws IOException {
-            RepositoryStatistics statistics = new RepositoryStatistics(repository.resolve(Constants.HEAD).getName());
+            ObjectId headId = repository.resolve(Constants.HEAD);
+            RepositoryStatistics statistics =
+                    headId == null ? new RepositoryStatistics() : new RepositoryStatistics(headId.getName());
             FileStatisticsBuilder builder = new FileStatisticsBuilder();
             Map<String, FileStatistics> fileStatistics = new HashMap<>();
             Set<String> filesInHead = new FilesCollector(repository).findAllFor(repository.resolve(Constants.HEAD));
