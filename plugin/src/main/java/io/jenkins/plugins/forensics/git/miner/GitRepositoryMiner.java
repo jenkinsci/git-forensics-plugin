@@ -2,7 +2,6 @@ package io.jenkins.plugins.forensics.git.miner;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +56,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
     }
 
     @Override
-    public RepositoryStatistics mine(final Collection<String> absoluteFileNames, final FilteredLog logger)
+    public RepositoryStatistics mine(final RepositoryStatistics repositoryStatistics, final FilteredLog logger)
             throws InterruptedException {
         try {
             long nano = System.nanoTime();

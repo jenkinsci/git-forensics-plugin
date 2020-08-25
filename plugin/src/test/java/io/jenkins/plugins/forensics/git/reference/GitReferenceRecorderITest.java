@@ -23,7 +23,7 @@ import jenkins.scm.api.SCMSource;
 import io.jenkins.plugins.forensics.git.util.GitITest;
 import io.jenkins.plugins.forensics.reference.ReferenceBuild;
 
-import static io.jenkins.plugins.forensics.git.assertions.Assertions.*;
+import static io.jenkins.plugins.forensics.assertions.Assertions.*;
 import static org.jvnet.hudson.test.JenkinsRule.*;
 
 /**
@@ -71,7 +71,7 @@ public class GitReferenceRecorderITest extends GitITest {
         WorkflowRun featureBuild = verifyFeatureBuild(project, 1);
         verifyRecordSize(featureBuild, 3);
 
-        assertThat(featureBuild.getAction(GitReferenceBuild.class)).isNotNull()
+        assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(masterBuild.getExternalizableId())
                 .hasSummary(masterBuild.getExternalizableId())
@@ -108,7 +108,7 @@ public class GitReferenceRecorderITest extends GitITest {
         WorkflowRun featureBuild = verifyFeatureBuild(project, 1);
         verifyRecordSize(featureBuild, 3);
 
-        assertThat(featureBuild.getAction(GitReferenceBuild.class)).isNotNull()
+        assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(masterBuild.getExternalizableId())
                 .hasSummary(masterBuild.getExternalizableId())
@@ -147,7 +147,7 @@ public class GitReferenceRecorderITest extends GitITest {
         WorkflowRun firstFeature = verifyFeatureBuild(project, 1);
         verifyRecordSize(firstFeature, 4);
 
-        assertThat(firstFeature.getAction(GitReferenceBuild.class)).as(getLog(firstFeature)).isNotNull()
+        assertThat(firstFeature.getAction(ReferenceBuild.class)).as(getLog(firstFeature)).isNotNull()
                 .hasOwner(firstFeature)
                 .hasReferenceBuildId(nextMaster.getExternalizableId())
                 .hasSummary(nextMaster.getExternalizableId())
@@ -159,7 +159,7 @@ public class GitReferenceRecorderITest extends GitITest {
         WorkflowRun featureBuild = verifyFeatureBuild(project, 2);
         verifyRecordSize(featureBuild, 1);
 
-        assertThat(featureBuild.getAction(GitReferenceBuild.class)).isNotNull()
+        assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(nextMaster.getExternalizableId())
                 .hasSummary(nextMaster.getExternalizableId())
@@ -199,7 +199,7 @@ public class GitReferenceRecorderITest extends GitITest {
         WorkflowRun featureBuild = verifyFeatureBuild(project, 1);
         verifyRecordSize(featureBuild, 4);
 
-        assertThat(featureBuild.getAction(GitReferenceBuild.class)).isNotNull()
+        assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(masterBuild.getExternalizableId())
                 .hasSummary(masterBuild.getExternalizableId())
@@ -233,7 +233,7 @@ public class GitReferenceRecorderITest extends GitITest {
         WorkflowRun featureBuild = verifyFeatureBuild(project, 1);
         verifyRecordSize(featureBuild, 4);
 
-        assertThat(featureBuild.getAction(GitReferenceBuild.class)).isNotNull()
+        assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(ReferenceBuild.NO_REFERENCE_BUILD)
                 .hasSummary(Messages.No_Reference_Build())
@@ -273,7 +273,7 @@ public class GitReferenceRecorderITest extends GitITest {
         WorkflowRun featureBuild = verifyFeatureBuild(project, 1);
         verifyRecordSize(featureBuild, 5);
 
-        assertThat(featureBuild.getAction(GitReferenceBuild.class)).isNotNull()
+        assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(nextMaster.getExternalizableId())
                 .hasSummary(nextMaster.getExternalizableId())
@@ -306,7 +306,7 @@ public class GitReferenceRecorderITest extends GitITest {
         buildProject(project);
         WorkflowRun featureBuild = verifyFeatureBuild(project, 1);
         verifyRecordSize(featureBuild, 3);
-        assertThat(featureBuild.getAction(GitReferenceBuild.class)).isNotNull()
+        assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(masterBuild.getExternalizableId())
                 .hasSummary(masterBuild.getExternalizableId())
@@ -319,7 +319,7 @@ public class GitReferenceRecorderITest extends GitITest {
         WorkflowRun anotherBranch = findBranchProject(project, "feature2").getLastBuild();
         verifyRecordSize(anotherBranch, 4);
 
-        assertThat(anotherBranch.getAction(GitReferenceBuild.class)).isNotNull()
+        assertThat(anotherBranch.getAction(ReferenceBuild.class)).isNotNull()
                 .hasOwner(anotherBranch)
                 .hasReferenceBuildId(masterBuild.getExternalizableId())
                 .hasSummary(masterBuild.getExternalizableId())
@@ -362,9 +362,9 @@ public class GitReferenceRecorderITest extends GitITest {
         WorkflowRun featureBuild = verifyFeatureBuild(project, 1);
         verifyRecordSize(featureBuild, 3);
 
-        assertThat(featureBuild.getAction(GitReferenceBuild.class)).isNotNull()
+        assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
                 .hasOwner(featureBuild)
-                .hasReferenceBuildId(GitReferenceBuild.NO_REFERENCE_BUILD)
+                .hasReferenceBuildId(ReferenceBuild.NO_REFERENCE_BUILD)
                 .hasSummary(Messages.No_Reference_Build())
                 .hasReferenceBuild(Optional.empty());
     }
@@ -410,7 +410,7 @@ public class GitReferenceRecorderITest extends GitITest {
         WorkflowRun featureBuild = verifyFeatureBuild(project, 2);
         verifyRecordSize(nextMaster, 1);
 
-        assertThat(featureBuild.getAction(GitReferenceBuild.class)).isNotNull()
+        assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(nextMaster.getExternalizableId())
                 .hasReferenceBuild(Optional.of(nextMaster));
@@ -539,7 +539,7 @@ public class GitReferenceRecorderITest extends GitITest {
     private void verifyRecordSize(final WorkflowRun build, final int size) {
         GitCommitsRecord masterRecord = build.getAction(GitCommitsRecord.class);
 
-        assertThat(masterRecord).isNotNull().isNotEmpty().hasSize(size);
+        GitCommitsRecordAssert.assertThat(masterRecord).isNotNull().isNotEmpty().hasSize(size);
     }
 
     private WorkflowJob findBranchProject(final WorkflowMultiBranchProject project, final String name) {

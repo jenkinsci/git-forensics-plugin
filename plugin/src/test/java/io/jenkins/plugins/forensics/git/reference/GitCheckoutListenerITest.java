@@ -103,7 +103,7 @@ public class GitCheckoutListenerITest extends IntegrationTestWithJenkinsPerSuite
 
         assertThat(second.getReferencePoint(first, 10, false))
                 .isPresent()
-                .hasValue(first.getOwner().getExternalizableId());
+                .hasValue(first.getOwner());
     }
 
     private void createAndCommitFile(final String fileName, final String content) throws Exception {

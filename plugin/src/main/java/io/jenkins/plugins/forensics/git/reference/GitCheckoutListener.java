@@ -39,7 +39,6 @@ import io.jenkins.plugins.util.LogHandler;
  * @author Arne Schöntag
  */
 @Extension
-@SuppressWarnings("unused")
 public class GitCheckoutListener extends SCMListener {
     @Override
     public void onCheckout(final Run<?, ?> build, final SCM scm, final FilePath workspace,
@@ -48,6 +47,7 @@ public class GitCheckoutListener extends SCMListener {
 
         String scmKey = scm.getKey();
         if (hasRecordForScm(build, scmKey)) {
+            // TODO: verify how Jenkins checks out a PR: there are two SCM checkouts used
             logger.logInfo("Skipping recording, since SCM '%s' already has been processed", scmKey);
         }
         else {

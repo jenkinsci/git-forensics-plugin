@@ -199,9 +199,9 @@ public class GitCommitsRecord implements RunAction2, Serializable {
      * @param skipUnknownCommits
      *         determines whether a build with unknown commits should be skipped or not
      *
-     * @return the build Id of the reference build or Optional.empty() if none found.
+     * @return the found reference build or empty if none has been found
      */
-    public Optional<String> getReferencePoint(final GitCommitsRecord referenceCommits,
+    public Optional<Run<?, ?>> getReferencePoint(final GitCommitsRecord referenceCommits,
             final int maxCommits, final boolean skipUnknownCommits) {
         List<String> branchCommits = collectBranchCommits(maxCommits);
 
@@ -214,7 +214,7 @@ public class GitCommitsRecord implements RunAction2, Serializable {
                 masterCommits.addAll(additionalCommits);
                 Optional<String> referencePoint = branchCommits.stream().filter(masterCommits::contains).findFirst();
                 if (referencePoint.isPresent()) {
-                    return Optional.of(build.getExternalizableId());
+                    return Optional.of(build);
                 }
             }
         }

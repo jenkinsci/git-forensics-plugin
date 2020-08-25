@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jvnet.hudson.plugins</groupId>
     <artifactId>analysis-pom</artifactId>
-    <version>4.0.0</version>
+    <version>4.1.0</version>
     <relativePath />
   </parent>
 
@@ -102,12 +102,6 @@
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>plugin-util-api</artifactId>
       <version>${plugin-util-api.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>branch-api</artifactId>
-      <version>1.11</version>
     </dependency>
 
     <!-- Test Dependencies -->
