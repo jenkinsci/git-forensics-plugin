@@ -176,6 +176,7 @@
             <package>io.jenkins.plugins.forensics.git</package>
           </packages>
           <excludes combine.children="append">
+            <exclude>.*Recorder</exclude>
           </excludes>
           <entryPointClassPackage>io.jenkins.plugins.forensics.git.assertions</entryPointClassPackage>
         </configuration>
