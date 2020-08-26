@@ -1,7 +1,7 @@
 #!/usr/bin/env groovy
 import org.codehaus.groovy.runtime.DefaultGroovyMethods
 
-    Map params = [:])
+    Map params = [:]
     // Faster build and reduces IO needs
     properties([
         durabilityHint('PERFORMANCE_OPTIMIZED'),
