@@ -38,7 +38,7 @@ public class DetailsTableRow {
      * @return name of the File
      */
     public String getFileName() {
-        List<String> cellContent = Arrays.asList(getCellContent(FILE).split(FILE_SEPARATOR));
+        List<String> cellContent = Arrays.asList(getCellContent(FILE_NAME).split(FILE_SEPARATOR));
         return cellContent.get(cellContent.size() - 1);
     }
 

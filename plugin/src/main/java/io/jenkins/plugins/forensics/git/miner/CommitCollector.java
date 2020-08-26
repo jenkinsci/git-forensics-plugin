@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.LogCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -21,13 +22,16 @@ import org.eclipse.jgit.revwalk.RevCommit;
 class CommitCollector {
     private final Repository repository;
     private final Git git;
-    //TODO Assign later when incremental analysis is implemented.
     private final String latestRevisionOfPreviousCommit;
 
-    CommitCollector(final Repository repository, final Git git) {
+    CommitCollector(final Repository repository, final Git git, final String latestRevisionOfPreviousCommit) {
         this.repository = repository;
         this.git = git;
-        latestRevisionOfPreviousCommit = null;
+        this.latestRevisionOfPreviousCommit = latestRevisionOfPreviousCommit;
+    }
+
+    CommitCollector(final Repository repository, final Git git) {
+        this(repository, git, StringUtils.EMPTY);
     }
 
     List<RevCommit> findAllCommits() throws IOException, GitAPIException {

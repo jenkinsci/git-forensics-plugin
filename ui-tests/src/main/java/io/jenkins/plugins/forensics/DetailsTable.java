@@ -15,11 +15,10 @@ import org.openqa.selenium.WebElement;
  * @author Mitja Oldenbourg
  */
 public class DetailsTable {
-
     /**
      * name of file table head.
      */
-    public static final String FILE = "File";
+    public static final String FILE_NAME = "File";
 
     /**
      * name of number of authors table head.
@@ -43,7 +42,7 @@ public class DetailsTable {
 
     private final List<DetailsTableRow> tableRows = new ArrayList<>();
     private final List<String> headers;
-    private final WebElement detailsTable;
+    private final WebElement page;
 
     /**
      * constructor for DetailsTable.
@@ -52,8 +51,8 @@ public class DetailsTable {
      *         reference to the parent scmForensics Page.
      */
     public DetailsTable(final ScmForensics scmForensics) {
-        detailsTable = scmForensics.find(By.id("forensics_wrapper"));
-        headers = detailsTable.findElements(By.xpath(".//thead/tr/th"))
+        page = scmForensics.find(By.id("forensics_wrapper"));
+        headers = page.findElements(By.xpath(".//thead/tr/th"))
                 .stream()
                 .map(WebElement::getText)
                 .collect(Collectors.toList());
@@ -104,18 +103,18 @@ public class DetailsTable {
      * @return forensics info string.
      */
     public String getForensicsInfo() {
-        return detailsTable.findElement(By.id("forensics_info")).getText();
+        return page.findElement(By.id("forensics_info")).getText();
     }
 
     /**
      * click on pagination button. If param is greater than amount of Pages, click on last Page.
      *
-     * @param page
+     * @param paginationNumber
      *         page number we want to click on.
      */
-    public void clickOnPagination(final int page) {
-        List<WebElement> pages = detailsTable.findElements(By.xpath(".//ul/li"));
-        int pageNumber = pages.size() >= page ? page - 1 : pages.size() - 1;
+    public void clickOnPagination(final int paginationNumber) {
+        List<WebElement> pages = this.page.findElements(By.xpath(".//ul/li"));
+        int pageNumber = pages.size() >= paginationNumber ? paginationNumber - 1 : pages.size() - 1;
         pages.get(pageNumber).click();
         updateTableRows();
     }
@@ -127,7 +126,7 @@ public class DetailsTable {
      *         entry we want to search for.
      */
     public void searchTable(final String searchString) {
-        WebElement searchBar = detailsTable.findElement(By.tagName("input"));
+        WebElement searchBar = page.findElement(By.tagName("input"));
         searchBar.sendKeys(searchString);
         updateTableRows();
     }
@@ -136,7 +135,7 @@ public class DetailsTable {
      * clears the search field.
      */
     public void clearSearch() {
-        WebElement searchBar = detailsTable.findElement(By.tagName("input"));
+        WebElement searchBar = page.findElement(By.tagName("input"));
         searchBar.clear();
         searchBar.sendKeys(Keys.ENTER);
         updateTableRows();
@@ -146,7 +145,7 @@ public class DetailsTable {
      * selects ten entries to be shown in the table.
      */
     public void showTenEntries() {
-        WebElement customSelect = detailsTable.findElement(By.tagName("select"));
+        WebElement customSelect = page.findElement(By.tagName("select"));
         customSelect.click();
         customSelect.findElement(By.xpath(".//option[1]")).click();
         updateTableRows();
@@ -156,7 +155,7 @@ public class DetailsTable {
      * selects fifty entries to be shown in the table.
      */
     public void showFiftyEntries() {
-        WebElement customSelect = detailsTable.findElement(By.tagName("select"));
+        WebElement customSelect = page.findElement(By.tagName("select"));
         customSelect.click();
         customSelect.findElement(By.xpath(".//option[3]")).click();
         updateTableRows();
@@ -176,11 +175,11 @@ public class DetailsTable {
 
     private void updateTableRows() {
         tableRows.clear();
-        List<WebElement> tableRowsAsWebElements = detailsTable.findElements(By.xpath(".//tbody/tr"));
+        List<WebElement> tableRowsAsWebElements = page.findElements(By.xpath(".//tbody/tr"));
         tableRowsAsWebElements.forEach(element -> tableRows.add(new DetailsTableRow(element, this)));
     }
 
     private WebElement getHeaderAsWebElement(final int option) {
-        return detailsTable.findElement(By.xpath(String.format(".//thead/tr/th[%d]", option)));
+        return page.findElement(By.xpath(String.format(".//thead/tr/th[%d]", option)));
     }
 }

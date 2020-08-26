@@ -19,7 +19,6 @@ import io.jenkins.plugins.forensics.DetailsTableRow;
 import io.jenkins.plugins.forensics.ForensicsPublisher;
 import io.jenkins.plugins.forensics.ScmForensics;
 
-import static io.jenkins.plugins.forensics.DetailsTable.FILE;
 import static io.jenkins.plugins.forensics.DetailsTable.*;
 import static org.assertj.core.api.Assertions.*;
 
@@ -30,7 +29,6 @@ import static org.assertj.core.api.Assertions.*;
  */
 @WithPlugins({"forensics-api", "git-forensics", "git"}) @Ignore("Deactivated until the forensics-api is published")
 public class ForensicsPluginUiTest extends AbstractJUnitTest {
-
     private static final String REPOSITORY_URL = "https://github.com/jenkinsci/git-forensics-plugin.git";
 
     /**
@@ -96,7 +94,7 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
         assertThat(detailsTable.getHeaderSize()).isEqualTo(5);
 
         List<String> tableHeaders = detailsTable.getHeaders();
-        assertThat(tableHeaders.get(0)).isEqualTo(FILE);
+        assertThat(tableHeaders.get(0)).isEqualTo(FILE_NAME);
         assertThat(tableHeaders.get(1)).isEqualTo(AUTHORS);
         assertThat(tableHeaders.get(2)).isEqualTo(COMMITS);
         assertThat(tableHeaders.get(3)).isEqualTo(LAST_COMMIT);
@@ -116,7 +114,7 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
         detailsTable.showFiftyEntries();
         assertThat(detailsTable.getNumberOfTableEntries()).isEqualTo(50);
 
-        detailsTable.sortColumn(FILE);
+        detailsTable.sortColumn(FILE_NAME);
         assertRow(detailsTable,
                 0,
                 "config.yml",
