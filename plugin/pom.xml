@@ -33,7 +33,7 @@
     <forensics-api-plugin.version>0.8.0-rc581.f8c26050c964</forensics-api-plugin.version>
 
     <git-plugin.version>4.2.2</git-plugin.version>
-    <git-client.version>3.2.1</git-client.version>
+    <git-client.version>3.4.1</git-client.version>
     <scm-api.version>2.6.3</scm-api.version>
 
   </properties>
