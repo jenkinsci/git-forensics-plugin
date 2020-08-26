@@ -53,7 +53,7 @@ public class GitCheckoutListener extends SCMListener {
         else {
             GitRepositoryValidator validator = new GitRepositoryValidator(scm, build, workspace, listener, logger);
             if (validator.isGitRepository()) {
-                recordNewCommits(build, validator.createClient(), validator.getHead(), scmKey, logger);
+                recordNewCommits(build, validator.createClient(), scmKey, logger);
             }
         }
 
@@ -70,7 +70,7 @@ public class GitCheckoutListener extends SCMListener {
                 .stream().filter(record -> scmKey.equals(record.getScmKey())).findAny();
     }
 
-    private void recordNewCommits(final Run<?, ?> build, final GitClient gitClient, final String head,
+    private void recordNewCommits(final Run<?, ?> build, final GitClient gitClient,
             final String scmKey, final FilteredLog logger) {
         logger.logInfo("Recording commits of '%s'", scmKey);
 

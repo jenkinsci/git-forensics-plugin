@@ -20,7 +20,7 @@ import io.jenkins.plugins.util.JenkinsFacade;
  * @author Arne Schöntag
  * @author Ullrich Hafner
  */
-@Extension(ordinal = 10_000)
+@Extension(ordinal = 10_000) @SuppressWarnings("PMD.DataClass")
 public class GitReferenceRecorder extends ReferenceRecorder {
     private int maxCommits = 100;
     private boolean skipUnknownCommits = false;

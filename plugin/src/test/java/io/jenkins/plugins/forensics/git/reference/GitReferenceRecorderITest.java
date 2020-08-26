@@ -36,6 +36,7 @@ import static org.jvnet.hudson.test.JenkinsRule.*;
 // TODO: add test case that merges with master
 // TODO: add freestyle tests
 // TODO: add test if a recorded reference build is deleted afterwards
+@SuppressWarnings("checkstyle:IllegalCatch")
 public class GitReferenceRecorderITest extends GitITest {
     private static final String JENKINS_FILE = "Jenkinsfile";
     private static final String SOURCE_FILE = "file";
@@ -475,17 +476,17 @@ public class GitReferenceRecorderITest extends GitITest {
     }
 
     private WorkflowRun verifyFeatureBuild(final WorkflowMultiBranchProject project, final int buildNumber) {
-        return verifyBuild(project, buildNumber, FEATURE, FEATURE.toUpperCase() + " CONTENT");
+        return verifyBuild(project, buildNumber, FEATURE, "FEATURE CONTENT");
     }
 
     private WorkflowRun verifyBuild(final WorkflowMultiBranchProject project, final int buildNumber,
-            final String master, final String branch) {
+            final String master, final String branchContent) {
         try {
             WorkflowJob p = findBranchProject(project, master);
 
             WorkflowRun build = p.getLastBuild();
             assertThat(build.getNumber()).isEqualTo(buildNumber);
-            assertThatLogContains(build, branch);
+            assertThatLogContains(build, branchContent);
             assertThatLogContains(build, "branch=" + master);
 
             return build;
@@ -545,17 +546,17 @@ public class GitReferenceRecorderITest extends GitITest {
 
     private WorkflowJob findBranchProject(final WorkflowMultiBranchProject project, final String name) {
         try {
-            WorkflowJob p = Objects.requireNonNull(project.getItem(name));
+            WorkflowJob job = Objects.requireNonNull(project.getItem(name));
             showIndexing(project);
-            return p;
+            return job;
         }
-        catch (Exception exception) {
+        catch (IOException | InterruptedException exception) {
             throw new AssertionError(exception);
         }
-
     }
 
-    private void showIndexing(final WorkflowMultiBranchProject project) throws Exception {
+    @SuppressWarnings("PMD.SystemPrintln")
+    private void showIndexing(final WorkflowMultiBranchProject project) throws IOException, InterruptedException {
         FolderComputation<?> indexing = project.getIndexing();
         System.out.println("---%<--- " + indexing.getUrl());
         indexing.writeWholeLogTo(System.out);

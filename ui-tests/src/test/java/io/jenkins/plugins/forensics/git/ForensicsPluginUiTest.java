@@ -19,6 +19,7 @@ import io.jenkins.plugins.forensics.DetailsTableRow;
 import io.jenkins.plugins.forensics.ForensicsPublisher;
 import io.jenkins.plugins.forensics.ScmForensics;
 
+import static io.jenkins.plugins.forensics.DetailsTable.FILE;
 import static io.jenkins.plugins.forensics.DetailsTable.*;
 import static org.assertj.core.api.Assertions.*;
 
@@ -45,7 +46,7 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
                 .url(REPOSITORY_URL)
                 .branch("28af63def44286729e3b19b03464d100fd1d0587");
         job.save();
-        Build referenceBuild = shouldBuildSuccessfully(job);
+        Build referenceBuild = buildSuccessfully(job);
         referenceBuild.open();
 
         String gitRevision = referenceBuild.getElement(
@@ -72,7 +73,7 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
                 .url(REPOSITORY_URL)
                 .branch("28af63def44286729e3b19b03464d100fd1d0587");
         job.save();
-        Build build = shouldBuildSuccessfully(job);
+        Build build = buildSuccessfully(job);
 
         ScmForensics scmForensics = new ScmForensics(build, "forensics");
         scmForensics.open();
@@ -95,7 +96,7 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
         assertThat(detailsTable.getHeaderSize()).isEqualTo(5);
 
         List<String> tableHeaders = detailsTable.getHeaders();
-        assertThat(tableHeaders.get(0)).isEqualTo(DetailsTable.FILE);
+        assertThat(tableHeaders.get(0)).isEqualTo(FILE);
         assertThat(tableHeaders.get(1)).isEqualTo(AUTHORS);
         assertThat(tableHeaders.get(2)).isEqualTo(COMMITS);
         assertThat(tableHeaders.get(3)).isEqualTo(LAST_COMMIT);
@@ -115,7 +116,7 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
         detailsTable.showFiftyEntries();
         assertThat(detailsTable.getNumberOfTableEntries()).isEqualTo(50);
 
-        detailsTable.sortColumn(DetailsTable.FILE);
+        detailsTable.sortColumn(FILE);
         assertRow(detailsTable,
                 0,
                 "config.yml",
@@ -180,13 +181,8 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
         assertThat(detailsTable.getForensicsInfo()).isEqualTo("Showing 51 to 51 of 51 entries");
     }
 
-    private void assertRow(
-            final DetailsTable detailsTable,
-            final int rowNum,
-            final String fileName,
-            final int numAuthors,
-            final int numCommits
-    ) {
+    private void assertRow(final DetailsTable detailsTable,
+            final int rowNum, final String fileName, final int numAuthors, final int numCommits) {
         DetailsTableRow secondRow = detailsTable.getTableRows().get(rowNum);
 
         assertThat(secondRow.getFileName()).isEqualTo(fileName);
@@ -203,7 +199,7 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
         return job;
     }
 
-    protected Build shouldBuildSuccessfully(final Job job) {
+    protected Build buildSuccessfully(final Job job) {
         return job.startBuild().waitUntilFinished().shouldSucceed();
     }
 }

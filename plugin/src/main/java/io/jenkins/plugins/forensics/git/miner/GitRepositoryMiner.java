@@ -44,6 +44,7 @@ import io.jenkins.plugins.forensics.miner.RepositoryStatistics;
  * @see FilesCollector
  */
 @SuppressFBWarnings(value = "SE", justification = "GitClient implementation is Serializable")
+@SuppressWarnings("PMD.ExcessiveImports")
 public class GitRepositoryMiner extends RepositoryMiner {
     private static final long serialVersionUID = 1157958118716013983L;
 
