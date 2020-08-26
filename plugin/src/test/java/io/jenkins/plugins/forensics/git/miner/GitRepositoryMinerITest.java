@@ -21,7 +21,7 @@ public class GitRepositoryMinerITest extends GitITest {
     private static final FilteredLog LOG = new FilteredLog(StringUtils.EMPTY);
 
     /**
-     * Verifies that the single file of the default initialization does have 1 commit and author. 
+     * Verifies that the single file of the default initialization does have 1 commit and author.
      *
      * @throws InterruptedException
      *         never thrown

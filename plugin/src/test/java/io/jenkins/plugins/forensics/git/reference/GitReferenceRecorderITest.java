@@ -44,8 +44,9 @@ public class GitReferenceRecorderITest extends GitITest {
     private static final String ADDITIONAL_SOURCE_FILE = "test.txt";
     private static final String CHANGED_CONTENT = "changed content";
 
+    /** Watches for build results. */
     @ClassRule
-    public static BuildWatcher buildWatcher = new BuildWatcher();
+    public static final BuildWatcher BUILD_WATCHER = new BuildWatcher();
 
     /**
      * Builds a  multibranch-pipeline with a master and a feature branch, builds them and checks if the correct

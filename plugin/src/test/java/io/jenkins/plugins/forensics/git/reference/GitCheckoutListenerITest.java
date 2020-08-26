@@ -73,8 +73,8 @@ public class GitCheckoutListenerITest extends IntegrationTestWithJenkinsPerSuite
     }
 
     /**
-     * Creates three builds: the first one is the starting point, then we have one additional commit for build #2 and #3.
-     * Then the reference point is queried for #3 which should return build #2.
+     * Creates three builds: the first one is the starting point, then we have one additional commit for build #2 and
+     * #3. Then the reference point is queried for #3 which should return build #2.
      *
      * @throws Exception
      *         in case of an IO exception

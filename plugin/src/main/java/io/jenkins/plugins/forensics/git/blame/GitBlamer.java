@@ -16,7 +16,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 
 import edu.hm.hafner.util.FilteredLog;
 import edu.hm.hafner.util.VisibleForTesting;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -157,8 +157,6 @@ class GitBlamer extends Blamer {
          *         the builder to use to create {@link FileBlame} instances
          * @param relativePath
          *         the file to get the blames for (relative path)
-         * @param relativePath
-         *         the file to get the blames for (relative path)
          * @param blameRunner
          *         the runner to invoke Git blame
          * @param lastCommitRunner
@@ -247,7 +245,7 @@ class GitBlamer extends Blamer {
             this.headCommit = headCommit;
         }
 
-        @Nullable
+        @CheckForNull
         BlameResult run(final String fileName) throws GitAPIException {
             BlameCommand blame = new BlameCommand(repo);
             blame.setFilePath(fileName);

@@ -207,8 +207,8 @@ public class GitCommitsRecord implements RunAction2, Serializable {
 
         List<String> masterCommits = new ArrayList<>(referenceCommits.getCommits());
         for (Run<?, ?> build = referenceCommits.owner;
-             masterCommits.size() < maxCommits && build != null;
-             build = build.getPreviousBuild()) {
+                masterCommits.size() < maxCommits && build != null;
+                build = build.getPreviousBuild()) {
             List<String> additionalCommits = getCommitsForRepository(build);
             if (!skipUnknownCommits || branchCommits.containsAll(additionalCommits)) {
                 masterCommits.addAll(additionalCommits);
@@ -224,8 +224,8 @@ public class GitCommitsRecord implements RunAction2, Serializable {
     private List<String> collectBranchCommits(final int maxCommits) {
         List<String> branchCommits = new ArrayList<>(this.getCommits());
         for (Run<?, ?> build = owner;
-             branchCommits.size() < maxCommits && build != null;
-             build = build.getPreviousBuild()) {
+                branchCommits.size() < maxCommits && build != null;
+                build = build.getPreviousBuild()) {
             branchCommits.addAll(getCommitsForRepository(build));
         }
         return branchCommits;

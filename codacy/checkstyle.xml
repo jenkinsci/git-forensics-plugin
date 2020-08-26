@@ -9,7 +9,7 @@
 <module name="Checker">
   <property name="severity" value="warning"/>
   <module name="TreeWalker">
-    <module name="SuppressWarningsHolder" />
+    <module name="SuppressWarningsHolder"/>
 
     <module name="OneStatementPerLine"/>
     <module name="OuterTypeFilename"/>
@@ -149,5 +149,5 @@
   <module name="FileLength">
     <property name="fileExtensions" value="jelly, java"/>
   </module>
-  <module name="SuppressWarningsFilter" />
+  <module name="SuppressWarningsFilter"/>
 </module>

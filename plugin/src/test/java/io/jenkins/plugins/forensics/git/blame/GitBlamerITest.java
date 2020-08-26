@@ -69,7 +69,8 @@ public class GitBlamerITest extends GitITest {
     /**
      * Verifies that the last committer of the whole file is used if no specific line number is given.
      */
-    @Test @Issue("JENKINS-59252")
+    @Test
+    @Issue("JENKINS-59252")
     public void shouldAssignLastCommitterIfNoLineNumberIsGiven() {
         create2RevisionsWithDifferentAuthors();
 

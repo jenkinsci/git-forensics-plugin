@@ -24,7 +24,7 @@ import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.EmptyTreeIterator;
 
 import edu.hm.hafner.util.FilteredLog;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -166,7 +166,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
             }
         }
 
-        @Nullable
+        @CheckForNull
         private String getAuthor(final RevCommit commit) {
             PersonIdent author = commit.getAuthorIdent();
             if (author != null) {
