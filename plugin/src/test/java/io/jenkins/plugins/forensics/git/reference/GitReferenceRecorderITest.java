@@ -76,7 +76,6 @@ public class GitReferenceRecorderITest extends GitITest {
         assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(masterBuild.getExternalizableId())
-                .hasSummary(masterBuild.getExternalizableId())
                 .hasReferenceBuild(Optional.of(masterBuild));
     }
 
@@ -113,7 +112,6 @@ public class GitReferenceRecorderITest extends GitITest {
         assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(masterBuild.getExternalizableId())
-                .hasSummary(masterBuild.getExternalizableId())
                 .hasReferenceBuild(Optional.of(masterBuild));
     }
 
@@ -152,7 +150,6 @@ public class GitReferenceRecorderITest extends GitITest {
         assertThat(firstFeature.getAction(ReferenceBuild.class)).as(getLog(firstFeature)).isNotNull()
                 .hasOwner(firstFeature)
                 .hasReferenceBuildId(nextMaster.getExternalizableId())
-                .hasSummary(nextMaster.getExternalizableId())
                 .hasReferenceBuild(Optional.of(nextMaster));
 
         changeContentOfAdditionalFile(FEATURE, "feature content");
@@ -164,7 +161,6 @@ public class GitReferenceRecorderITest extends GitITest {
         assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(nextMaster.getExternalizableId())
-                .hasSummary(nextMaster.getExternalizableId())
                 .hasReferenceBuild(Optional.of(nextMaster));
     }
 
@@ -204,7 +200,6 @@ public class GitReferenceRecorderITest extends GitITest {
         assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(masterBuild.getExternalizableId())
-                .hasSummary(masterBuild.getExternalizableId())
                 .hasReferenceBuild(Optional.of(masterBuild));
     }
 
@@ -238,7 +233,6 @@ public class GitReferenceRecorderITest extends GitITest {
         assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(ReferenceBuild.NO_REFERENCE_BUILD)
-                .hasSummary(Messages.No_Reference_Build())
                 .hasReferenceBuild(Optional.empty());
     }
 
@@ -278,7 +272,6 @@ public class GitReferenceRecorderITest extends GitITest {
         assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(nextMaster.getExternalizableId())
-                .hasSummary(nextMaster.getExternalizableId())
                 .hasReferenceBuild(Optional.of(nextMaster));
     }
 
@@ -311,7 +304,6 @@ public class GitReferenceRecorderITest extends GitITest {
         assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(masterBuild.getExternalizableId())
-                .hasSummary(masterBuild.getExternalizableId())
                 .hasReferenceBuild(Optional.of(masterBuild));
 
         checkoutNewBranch("feature2");
@@ -324,7 +316,6 @@ public class GitReferenceRecorderITest extends GitITest {
         assertThat(anotherBranch.getAction(ReferenceBuild.class)).isNotNull()
                 .hasOwner(anotherBranch)
                 .hasReferenceBuildId(masterBuild.getExternalizableId())
-                .hasSummary(masterBuild.getExternalizableId())
                 .hasReferenceBuild(Optional.of(masterBuild));
     }
 
@@ -367,7 +358,6 @@ public class GitReferenceRecorderITest extends GitITest {
         assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(ReferenceBuild.NO_REFERENCE_BUILD)
-                .hasSummary(Messages.No_Reference_Build())
                 .hasReferenceBuild(Optional.empty());
     }
 
