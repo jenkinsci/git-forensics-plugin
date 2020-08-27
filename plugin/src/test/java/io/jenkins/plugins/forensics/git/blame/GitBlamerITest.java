@@ -19,8 +19,6 @@ import static io.jenkins.plugins.forensics.assertions.Assertions.*;
  * @author Ullrich Hafner
  */
 public class GitBlamerITest extends GitITest {
-    FilteredLog LOG = new FilteredLog(StringUtils.EMPTY);
-
     /**
      * Verifies that the blames are empty if there are no requests defined.
      */
@@ -28,7 +26,7 @@ public class GitBlamerITest extends GitITest {
     public void shouldCreateEmptyBlamesIfRequestIsEmpty() {
         GitBlamer gitBlamer = createBlamer();
 
-        FilteredLog log = new FilteredLog(StringUtils.EMPTY);
+        FilteredLog log = createLog();
         Blames blames = gitBlamer.blame(new FileLocations(), log);
 
         assertThat(blames).isEmpty();
@@ -52,11 +50,12 @@ public class GitBlamerITest extends GitITest {
 
         GitBlamer gitBlamer = createBlamer();
 
-        Blames blames = gitBlamer.blame(locations, LOG);
+        FilteredLog log = createLog();
+        Blames blames = gitBlamer.blame(locations, log);
 
         assertThat(blames).hasOnlyFiles(absolutePath);
-        assertThat(LOG.getErrorMessages()).isEmpty();
-        assertThat(LOG.getInfoMessages()).contains("-> blamed authors of issues in 1 files");
+        assertThat(log.getErrorMessages()).isEmpty();
+        assertThat(log.getInfoMessages()).contains("-> blamed authors of issues in 1 files");
 
         FileBlame request = blames.getBlame(absolutePath);
         assertThat(request).hasFileName(absolutePath);
@@ -83,11 +82,12 @@ public class GitBlamerITest extends GitITest {
 
         GitBlamer gitBlamer = createBlamer();
 
-        Blames blames = gitBlamer.blame(locations, LOG);
+        FilteredLog log = createLog();
+        Blames blames = gitBlamer.blame(locations, log);
 
         assertThat(blames).hasOnlyFiles(absolutePath);
-        assertThat(LOG.getErrorMessages()).isEmpty();
-        assertThat(LOG.getInfoMessages()).contains("-> blamed authors of issues in 1 files");
+        assertThat(log.getErrorMessages()).isEmpty();
+        assertThat(log.getInfoMessages()).contains("-> blamed authors of issues in 1 files");
 
         FileBlame request = blames.getBlame(absolutePath);
         assertThat(request).hasFileName(absolutePath);
@@ -95,6 +95,10 @@ public class GitBlamerITest extends GitITest {
         assertThat(request.getName(0)).isEqualTo(GitITest.BAR_NAME);
         assertThat(request.getEmail(0)).isEqualTo(GitITest.BAR_EMAIL);
         assertThat(request.getCommit(0)).isEqualTo(getHead());
+    }
+
+    private FilteredLog createLog() {
+        return new FilteredLog(StringUtils.EMPTY);
     }
 
     private GitBlamer createBlamer() {
