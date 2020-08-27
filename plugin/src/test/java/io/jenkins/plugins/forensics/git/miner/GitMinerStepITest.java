@@ -2,11 +2,13 @@ package io.jenkins.plugins.forensics.git.miner;
 
 import java.io.IOException;
 
+import org.eclipse.jgit.lib.ObjectId;
 import org.junit.Test;
 
 import hudson.model.FreeStyleProject;
 import hudson.model.Run;
 import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.util.BuildData;
 
 import io.jenkins.plugins.datatables.TableModel;
 import io.jenkins.plugins.forensics.git.util.GitITest;
@@ -41,6 +43,34 @@ public class GitMinerStepITest extends GitITest {
                 .hasFileName("source.txt").hasAuthorsSize(2).hasCommitsSize(4);
         assertThat(getRow(forensics, 1))
                 .hasFileName("file").hasAuthorsSize(1).hasCommitsSize(1);
+    }
+
+    /** Verifies that the mining process is incremental. */
+    @Test
+    public void shouldMineRepositoryIncrementally() throws IOException {
+        writeFileAsAuthorFoo("First");
+
+        FreeStyleProject job = createJobWithMiner();
+        Run<?, ?> build = buildSuccessfully(job);
+
+        getJenkins().assertLogContains("created report for 2 files", build);
+
+        build = buildSuccessfully(job);
+
+        getJenkins().assertLogContains("created report for 0 files", build);
+    }
+
+    /** Verifies that the latest revision id is saved in the build result. */
+    @Test
+    public void shouldSaveLatestRevisionId() {
+        FreeStyleProject job = createJobWithMiner();
+        Run<?, ?> build = buildSuccessfully(job);
+
+        BuildData buildData = (BuildData)build.getAllActions().get(0);
+        String latestId = buildData.lastBuild.revision.getSha1().getName();
+        String savedId = build.getAction(ForensicsBuildAction.class).getResult().getLatestCommitId();
+
+        assertThat(savedId).isEqualTo(latestId);
     }
 
     private TableModel getTableModel(final Run<?, ?> build) {
