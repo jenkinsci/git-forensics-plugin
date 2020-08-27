@@ -33,7 +33,7 @@ import io.jenkins.plugins.forensics.git.util.GitRepositoryValidator;
 import io.jenkins.plugins.util.LogHandler;
 
 /**
- * Determines all commits since the last build and writes them into a {@link GitCommitsRecord} action to be accessed
+ * Tracks all commits since the last build and writes them into a {@link GitCommitsRecord} action to be accessed
  * later. This listener is called on every checkout of a Git Repository in a Jenkins build.
  *
  * @author Arne Schöntag
@@ -47,7 +47,6 @@ public class GitCheckoutListener extends SCMListener {
 
         String scmKey = scm.getKey();
         if (hasRecordForScm(build, scmKey)) {
-            // TODO: verify how Jenkins checks out a PR: there are two SCM checkouts used
             logger.logInfo("Skipping recording, since SCM '%s' already has been processed", scmKey);
         }
         else {
