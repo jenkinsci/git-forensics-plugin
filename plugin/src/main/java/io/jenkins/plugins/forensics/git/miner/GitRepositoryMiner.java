@@ -13,6 +13,7 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectReader;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Repository;
@@ -63,9 +64,8 @@ public class GitRepositoryMiner extends RepositoryMiner {
         try {
             long nano = System.nanoTime();
             logger.logInfo("Analyzing the commit log of the Git repository '%s'", gitClient.getWorkTree());
-
             RemoteResultWrapper<RepositoryStatistics> wrapped = gitClient.withRepository(
-                    new RepositoryStatisticsCallback());
+                    new RepositoryStatisticsCallback(repositoryStatistics.getLatestCommitId()));
             wrapped.getInfoMessages().forEach(logger::logInfo);
 
             RepositoryStatistics statistics = wrapped.getResult();
@@ -80,18 +80,27 @@ public class GitRepositoryMiner extends RepositoryMiner {
         }
     }
 
-    private static class RepositoryStatisticsCallback extends AbstractRepositoryCallback<RemoteResultWrapper<RepositoryStatistics>> {
+    private static class RepositoryStatisticsCallback
+            extends AbstractRepositoryCallback<RemoteResultWrapper<RepositoryStatistics>> {
         private static final long serialVersionUID = 7667073858514128136L;
 
+        private final String latestCommitId;
+
+        RepositoryStatisticsCallback(final String latestCommitId) {
+            super();
+
+            this.latestCommitId = latestCommitId;
+        }
+
         @Override
-        public RemoteResultWrapper<RepositoryStatistics> invoke(final Repository repository, final VirtualChannel channel) {
+        public RemoteResultWrapper<RepositoryStatistics> invoke(final Repository repository,
+                final VirtualChannel channel) {
             RemoteResultWrapper<RepositoryStatistics> result = new RemoteResultWrapper<>(
-                    new RepositoryStatistics(), "Errors while mining the Git repository:");
+                    createStatisticsFromHead(repository), "Errors while mining the Git repository:");
 
             try {
                 try (Git git = new Git(repository)) {
-                    List<RevCommit> commits = new CommitCollector(repository, git).findAllCommits();
-
+                    List<RevCommit> commits = new CommitCollector(repository, git, latestCommitId).findAllCommits();
                     Map<String, FileStatistics> fileStatistics = analyze(repository, git, commits, result);
                     result.getResult().addAll(fileStatistics.values());
                 }
@@ -104,6 +113,19 @@ public class GitRepositoryMiner extends RepositoryMiner {
             }
 
             return result;
+        }
+
+        private RepositoryStatistics createStatisticsFromHead(final Repository repository) {
+            try {
+                ObjectId headId = repository.resolve(Constants.HEAD);
+                if (headId != null) {
+                    return new RepositoryStatistics(headId.getName());
+                }
+            }
+            catch (IOException exception) {
+                exception.printStackTrace();
+            }
+            return new RepositoryStatistics();
         }
 
         Map<String, FileStatistics> analyze(final Repository repository, final Git git, final List<RevCommit> commits,
