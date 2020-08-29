@@ -132,7 +132,7 @@ class GitBlamerTest {
         Blames blames = new Blames();
         FileLocations blamerInput = new FileLocations();
         FilteredLog log = new FilteredLog(StringUtils.EMPTY);
-        BlameCallback callback = createCallback(blames, blamerInput, log);
+        BlameCallback callback = createCallback(blames, blamerInput);
 
         BlameRunner runner = Mockito.mock(BlameRunner.class);
         Mockito.when(runner.run(RELATIVE_PATH)).thenThrow(exception);
@@ -151,7 +151,7 @@ class GitBlamerTest {
 
         Blames blames = new Blames();
         FilteredLog log = new FilteredLog(StringUtils.EMPTY);
-        BlameCallback callback = createCallback(blames, locations, log);
+        BlameCallback callback = createCallback(blames, locations);
 
         BlameResult result = createResult(1);
 
@@ -174,7 +174,7 @@ class GitBlamerTest {
 
         Blames blames = new Blames();
         FilteredLog log = new FilteredLog(StringUtils.EMPTY);
-        BlameCallback callback = createCallback(blames, locations, log);
+        BlameCallback callback = createCallback(blames, locations);
 
         BlameResult result = createResult(2);
 
@@ -195,7 +195,7 @@ class GitBlamerTest {
         return gitClient;
     }
 
-    private BlameCallback createCallback(final Blames blames, final FileLocations blamerInput, final FilteredLog log) {
+    private BlameCallback createCallback(final Blames blames, final FileLocations blamerInput) {
         return new BlameCallback(blamerInput, blames, Mockito.mock(ObjectId.class));
     }
 
@@ -207,7 +207,7 @@ class GitBlamerTest {
 
         Blames blames = new Blames();
         FilteredLog log = new FilteredLog(StringUtils.EMPTY);
-        BlameCallback callback = createCallback(blames, locations, log);
+        BlameCallback callback = createCallback(blames, locations);
 
         BlameResult result = createResult(1);
         stubResultForIndex(result, 0);
@@ -236,7 +236,7 @@ class GitBlamerTest {
 
         Blames blames = new Blames();
         FilteredLog log = new FilteredLog(StringUtils.EMPTY);
-        BlameCallback callback = createCallback(blames, locations, log);
+        BlameCallback callback = createCallback(blames, locations);
 
         BlameResult result = createResult(1);
         Mockito.when(result.getSourceAuthor(0)).thenReturn(new PersonIdent(NAME, EMAIL));
@@ -257,7 +257,7 @@ class GitBlamerTest {
 
         Blames blames = new Blames();
         FilteredLog log = new FilteredLog(StringUtils.EMPTY);
-        BlameCallback callback = createCallback(blames, locations, log);
+        BlameCallback callback = createCallback(blames, locations);
 
         BlameResult result = createResult(1);
         RevCommit commit = createCommit();
@@ -279,7 +279,7 @@ class GitBlamerTest {
 
         Blames blames = new Blames();
         FilteredLog log = new FilteredLog(StringUtils.EMPTY);
-        BlameCallback callback = createCallback(blames, locations, log);
+        BlameCallback callback = createCallback(blames, locations);
 
         BlameResult result = createResult(1);
         RevCommit commit = createCommit(TIME + 1);

@@ -123,7 +123,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
                 }
             }
             catch (IOException exception) {
-                exception.printStackTrace();
+                // ignore
             }
             return new RepositoryStatistics();
         }

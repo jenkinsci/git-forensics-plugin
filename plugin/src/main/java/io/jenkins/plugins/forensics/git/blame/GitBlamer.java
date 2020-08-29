@@ -179,7 +179,7 @@ class GitBlamer extends Blamer {
                     for (int line : locations.getLines(relativePath)) {
                         FileBlame fileBlame = builder.build(relativePath);
                         if (line <= 0) {
-                            fillWithLastCommit(relativePath, fileBlame, lastCommitRunner, log);
+                            fillWithLastCommit(relativePath, fileBlame, lastCommitRunner);
                         }
                         else if (line <= blame.getResultContents().size()) {
                             fillWithBlameResult(relativePath, fileBlame, blame, line, log);
@@ -221,7 +221,7 @@ class GitBlamer extends Blamer {
         }
 
         private void fillWithLastCommit(final String relativePath, final FileBlame fileBlame,
-                final LastCommitRunner lastCommitRunner, final FilteredLog log) throws GitAPIException {
+                final LastCommitRunner lastCommitRunner) throws GitAPIException {
             Optional<RevCommit> commit = lastCommitRunner.run(relativePath);
             if (commit.isPresent()) {
                 RevCommit revCommit = commit.get();
