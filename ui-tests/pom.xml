@@ -71,7 +71,7 @@
     <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
     <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
-    <tag>${scmTag}</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <repositories>
@@ -91,17 +91,6 @@
       <activation>
         <os>
           <family>windows</family>
-        </os>
-      </activation>
-      <properties>
-        <maven.test.skip>true</maven.test.skip>
-      </properties>
-    </profile>
-    <profile>
-      <id>no-ui-tests-on-mac</id>
-      <activation>
-        <os>
-          <family>mac</family>
         </os>
       </activation>
       <properties>
@@ -130,13 +119,37 @@
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-resources</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>../plugin/target/test-classes/test-dependencies</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>../plugin/target/</directory>
+                  <includes>
+                    <include>git-forensics.hpi</include>
+                  </includes>
+                  <filtering>false</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <reuseForks>false</reuseForks>
           <environmentVariables>
-            <PLUGINS_DIR>../../docker/volumes/jenkins-home/plugins</PLUGINS_DIR>
+            <PLUGINS_DIR>../plugin/target/test-classes/test-dependencies</PLUGINS_DIR>
             <JENKINS_VERSION>${jenkins.version}</JENKINS_VERSION>
-            <LOCAL_JARS>../plugin/target/git-forensics.hpi</LOCAL_JARS>
             <BROWSER>firefox</BROWSER>
           </environmentVariables>
         </configuration>

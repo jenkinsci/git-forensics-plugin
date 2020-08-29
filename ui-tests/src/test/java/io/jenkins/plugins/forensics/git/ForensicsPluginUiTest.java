@@ -2,7 +2,6 @@ package io.jenkins.plugins.forensics.git;
 
 import java.util.List;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.openqa.selenium.By;
 
@@ -27,7 +26,7 @@ import static org.assertj.core.api.Assertions.*;
  *
  * @author Ullrich Hafner
  */
-@WithPlugins({"forensics-api", "git-forensics", "git"}) @Ignore("Deactivated until the forensics-api is published")
+@WithPlugins({"forensics-api", "git-forensics", "git"})
 public class ForensicsPluginUiTest extends AbstractJUnitTest {
     private static final String REPOSITORY_URL = "https://github.com/jenkinsci/git-forensics-plugin.git";
 
@@ -47,16 +46,21 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
         Build referenceBuild = buildSuccessfully(job);
         referenceBuild.open();
 
-        String gitRevision = referenceBuild.getElement(
-                By.xpath("/html/body/div[4]/div[2]/table/tbody/tr[3]/td[2]"))
-                .getText();
-        String scmStatistics = referenceBuild.getElement(
-                By.xpath("/html/body/div[4]/div[2]/table/tbody/tr[4]/td[2]"))
-                .getText();
+        assertThat(getSummaryText(referenceBuild, 3)).contains(
+                "Revision: 28af63def44286729e3b19b03464d100fd1d0587", "detached");
 
-        assertThat(gitRevision).isEqualTo("Revision: 28af63def44286729e3b19b03464d100fd1d0587\n"
-                + "detached");
-        assertThat(scmStatistics).contains("SCM Repository Statistics: 51 repository files");
+        assertThat(getSummaryText(referenceBuild, 4)).contains(
+                "SCM: git https://github.com/jenkinsci/git-forensics-plugin.git",
+                "Initial recording of 200 commits",
+                "Latest commit: 28af63def44286729e3b19b03464d100fd1d0587");
+
+        assertThat(getSummaryText(referenceBuild, 5)).contains(
+                "SCM Repository Statistics: 51 repository files");
+    }
+
+    private String getSummaryText(final Build referenceBuild, final int row) {
+        return referenceBuild.getElement(
+                By.xpath("/html/body/div[4]/div[2]/table/tbody/tr[" + row + "]/td[2]")).getText();
     }
 
     /**
