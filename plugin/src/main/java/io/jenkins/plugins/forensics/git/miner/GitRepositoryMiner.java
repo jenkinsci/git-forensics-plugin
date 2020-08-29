@@ -60,25 +60,6 @@ public class GitRepositoryMiner extends RepositoryMiner {
     }
 
     @Override
-    public RepositoryStatistics mine(final Collection<String> absoluteFileNames, final FilteredLog logger)
-            throws InterruptedException {
-        try {
-            long nano = System.nanoTime();
-            logger.logInfo("Analyzing the commit log of the Git repository '%s'", gitClient.getWorkTree());
-            RepositoryStatistics statistics = gitClient.withRepository(
-                    new RepositoryStatisticsCallback(logger, null));
-            logger.logInfo("-> created report for %d files in %d seconds", statistics.size(),
-                    1 + (System.nanoTime() - nano) / 1_000_000_000L);
-            return statistics;
-        }
-        catch (IOException exception) {
-            RepositoryStatistics statistics = new RepositoryStatistics();
-            logger.logException(exception, "Exception occurred while mining the Git repository using GitClient");
-            return statistics;
-        }
-    }
-
-    @Override
     public RepositoryStatistics mine(final RepositoryStatistics repositoryStatistics, final FilteredLog logger) {
         try {
             long nano = System.nanoTime();

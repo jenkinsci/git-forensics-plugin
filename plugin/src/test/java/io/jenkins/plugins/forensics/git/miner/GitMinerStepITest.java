@@ -58,6 +58,12 @@ public class GitMinerStepITest extends GitITest {
         build = buildSuccessfully(job);
 
         getJenkins().assertLogContains("created report for 0 files", build);
+
+        writeFileAsAuthorFoo("Second");
+
+        build = buildSuccessfully(job);
+
+        getJenkins().assertLogContains("created report for 2 files", build);
     }
 
     /** Verifies that the latest revision id is saved in the build result. */
@@ -66,11 +72,9 @@ public class GitMinerStepITest extends GitITest {
         FreeStyleProject job = createJobWithMiner();
         Run<?, ?> build = buildSuccessfully(job);
 
-        BuildData buildData = (BuildData)build.getAllActions().get(0);
-        String latestId = buildData.lastBuild.revision.getSha1().getName();
         String savedId = build.getAction(ForensicsBuildAction.class).getResult().getLatestCommitId();
 
-        assertThat(savedId).isEqualTo(latestId);
+        assertThat(savedId).isEqualTo(getHead());
     }
 
     private TableModel getTableModel(final Run<?, ?> build) {
