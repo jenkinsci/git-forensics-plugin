@@ -65,13 +65,13 @@ public class GitRepositoryValidator {
      */
     public boolean isGitRepository() {
         if (scm instanceof GitSCM) {
-            return createGitBlamer((GitSCM) scm);
+            return isValidGitRoot((GitSCM) scm);
         }
         logger.logInfo("SCM '%s' is not of type GitSCM", scm.getType());
         return false;
     }
 
-    private boolean createGitBlamer(final GitSCM git) {
+    private boolean isValidGitRoot(final GitSCM git) {
         if (isShallow(git)) {
             logger.logInfo(INFO_SHALLOW_CLONE);
 

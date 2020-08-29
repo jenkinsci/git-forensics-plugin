@@ -82,13 +82,15 @@ class GitMinerFactoryTest {
         Mockito.when(shallowCloneOption.isShallow()).thenReturn(true);
 
         GitSCM gitSCM = Mockito.mock(GitSCM.class);
-        Mockito.when(gitSCM.getExtensions()).thenReturn(new DescribableList<>(Saveable.NOOP, Lists.list(shallowCloneOption)));
+        Mockito.when(gitSCM.getExtensions())
+                .thenReturn(new DescribableList<>(Saveable.NOOP, Lists.list(shallowCloneOption)));
 
         FilteredLog logger = createLogger();
 
         GitMinerFactory gitChecker = new GitMinerFactory();
 
-        assertThat(gitChecker.createMiner(gitSCM, Mockito.mock(Run.class), createWorkTreeStub(), NULL_LISTENER, logger)).isEmpty();
+        assertThat(gitChecker.createMiner(gitSCM, Mockito.mock(Run.class), createWorkTreeStub(), NULL_LISTENER, logger))
+                .isEmpty();
         assertThat(logger.getInfoMessages()).contains(GitRepositoryValidator.INFO_SHALLOW_CLONE);
         assertThat(logger.getErrorMessages()).isEmpty();
     }
@@ -106,7 +108,8 @@ class GitMinerFactoryTest {
 
         assertThat(gitChecker.createMiner(gitSCM, run, createWorkTreeStub(), NULL_LISTENER, logger)).isEmpty();
         assertThat(logger.getErrorMessages()).isEmpty();
-        assertThat(logger.getInfoMessages()).contains("Exception while creating a GitClient instance for work tree '/'");
+        assertThat(logger.getInfoMessages()).contains(
+                "Exception while creating a GitClient instance for work tree '/'");
     }
 
     private FilePath createWorkTreeStub() {

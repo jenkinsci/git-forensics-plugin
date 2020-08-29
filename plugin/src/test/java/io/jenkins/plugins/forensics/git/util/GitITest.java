@@ -29,6 +29,7 @@ import static org.mockito.Mockito.*;
  *
  * @author Ullrich Hafner
  */
+@SuppressWarnings({"IllegalCatch", "PMD.SignatureDeclareThrowsException"})
 public class GitITest extends IntegrationTestWithJenkinsPerSuite {
     /** File name of a source file that will be modified by two authors. */
     protected static final String FILE_NAME = "source.txt";
@@ -52,7 +53,6 @@ public class GitITest extends IntegrationTestWithJenkinsPerSuite {
      *         if the initialization fails
      */
     @Before
-    @SuppressWarnings({"IllegalCatch", "PMD.SignatureDeclareThrowsException"})
     public void init() throws Exception {
         sampleRepo.init();
     }
@@ -62,7 +62,6 @@ public class GitITest extends IntegrationTestWithJenkinsPerSuite {
      *
      * @return the head commit
      */
-    @SuppressWarnings("IllegalCatch")
     protected ObjectId getHeadCommit() {
         try {
             return ObjectId.fromString(getHead());
@@ -77,7 +76,6 @@ public class GitITest extends IntegrationTestWithJenkinsPerSuite {
      *
      * @return the head commit (as String)
      */
-    @SuppressWarnings("IllegalCatch")
     protected String getHead() {
         try {
             return sampleRepo.head();
@@ -120,13 +118,48 @@ public class GitITest extends IntegrationTestWithJenkinsPerSuite {
         }
     }
 
+    protected void checkout(final String branch) {
+        try {
+            sampleRepo.git("checkout", branch);
+        }
+        catch (Exception exception) {
+            throw new AssertionError(exception);
+        }
+    }
+
+    protected void checkoutNewBranch(final String branch) {
+        try {
+            sampleRepo.git("checkout", "-b", branch);
+        }
+        catch (Exception exception) {
+            throw new AssertionError(exception);
+        }
+    }
+
+    protected void addFile(final String additionalSourceFile) {
+        try {
+            sampleRepo.git("add", additionalSourceFile);
+        }
+        catch (Exception exception) {
+            throw new AssertionError(exception);
+        }
+    }
+
+    protected void commit(final String message) {
+        try {
+            sampleRepo.git("commit", "--all", "--message=" + message);
+        }
+        catch (Exception exception) {
+            throw new AssertionError(exception);
+        }
+    }
+
     /**
      * Writes a file to repository.
      *
      * @param commands
      *         git commands and parameters
      */
-    @SuppressWarnings("IllegalCatch")
     protected void git(final String... commands) {
         try {
             sampleRepo.git(commands);

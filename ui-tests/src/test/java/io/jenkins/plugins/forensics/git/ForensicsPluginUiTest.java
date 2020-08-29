@@ -28,7 +28,6 @@ import static org.assertj.core.api.Assertions.*;
  */
 @WithPlugins({"forensics-api", "git-forensics", "git"})
 public class ForensicsPluginUiTest extends AbstractJUnitTest {
-
     private static final String REPOSITORY_URL = "https://github.com/jenkinsci/git-forensics-plugin.git";
 
     /**
@@ -44,19 +43,24 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
                 .url(REPOSITORY_URL)
                 .branch("28af63def44286729e3b19b03464d100fd1d0587");
         job.save();
-        Build referenceBuild = shouldBuildSuccessfully(job);
+        Build referenceBuild = buildSuccessfully(job);
         referenceBuild.open();
 
-        String gitRevision = referenceBuild.getElement(
-                By.xpath("/html/body/div[4]/div[2]/table/tbody/tr[3]/td[2]"))
-                .getText();
-        String scmStatistics = referenceBuild.getElement(
-                By.xpath("/html/body/div[4]/div[2]/table/tbody/tr[4]/td[2]"))
-                .getText();
-        String numberOfFiles = scmStatistics.split(" ")[3];
-        assertThat(gitRevision).isEqualTo("Revision: 28af63def44286729e3b19b03464d100fd1d0587\n"
-                + "detached");
-        assertThat(numberOfFiles).isEqualTo("51");
+        assertThat(getSummaryText(referenceBuild, 3)).contains(
+                "Revision: 28af63def44286729e3b19b03464d100fd1d0587", "detached");
+
+        assertThat(getSummaryText(referenceBuild, 4)).contains(
+                "SCM: git https://github.com/jenkinsci/git-forensics-plugin.git",
+                "Initial recording of 200 commits",
+                "Latest commit: 28af63def44286729e3b19b03464d100fd1d0587");
+
+        assertThat(getSummaryText(referenceBuild, 5)).contains(
+                "SCM Repository Statistics: 51 repository files");
+    }
+
+    private String getSummaryText(final Build referenceBuild, final int row) {
+        return referenceBuild.getElement(
+                By.xpath("/html/body/div[4]/div[2]/table/tbody/tr[" + row + "]/td[2]")).getText();
     }
 
     /**
@@ -71,7 +75,7 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
                 .url(REPOSITORY_URL)
                 .branch("28af63def44286729e3b19b03464d100fd1d0587");
         job.save();
-        Build build = shouldBuildSuccessfully(job);
+        Build build = buildSuccessfully(job);
 
         ScmForensics scmForensics = new ScmForensics(build, "forensics");
         scmForensics.open();
@@ -94,7 +98,7 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
         assertThat(detailsTable.getHeaderSize()).isEqualTo(5);
 
         List<String> tableHeaders = detailsTable.getHeaders();
-        assertThat(tableHeaders.get(0)).isEqualTo(DetailsTable.FILE);
+        assertThat(tableHeaders.get(0)).isEqualTo(FILE_NAME);
         assertThat(tableHeaders.get(1)).isEqualTo(AUTHORS);
         assertThat(tableHeaders.get(2)).isEqualTo(COMMITS);
         assertThat(tableHeaders.get(3)).isEqualTo(LAST_COMMIT);
@@ -114,7 +118,7 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
         detailsTable.showFiftyEntries();
         assertThat(detailsTable.getNumberOfTableEntries()).isEqualTo(50);
 
-        detailsTable.sortColumn(DetailsTable.FILE);
+        detailsTable.sortColumn(FILE_NAME);
         assertRow(detailsTable,
                 0,
                 "config.yml",
@@ -179,13 +183,8 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
         assertThat(detailsTable.getForensicsInfo()).isEqualTo("Showing 51 to 51 of 51 entries");
     }
 
-    private void assertRow(
-            final DetailsTable detailsTable,
-            final int rowNum,
-            final String fileName,
-            final int numAuthors,
-            final int numCommits
-    ) {
+    private void assertRow(final DetailsTable detailsTable,
+            final int rowNum, final String fileName, final int numAuthors, final int numCommits) {
         DetailsTableRow secondRow = detailsTable.getTableRows().get(rowNum);
 
         assertThat(secondRow.getFileName()).isEqualTo(fileName);
@@ -202,7 +201,7 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
         return job;
     }
 
-    protected Build shouldBuildSuccessfully(final Job job) {
+    protected Build buildSuccessfully(final Job job) {
         return job.startBuild().waitUntilFinished().shouldSucceed();
     }
 }

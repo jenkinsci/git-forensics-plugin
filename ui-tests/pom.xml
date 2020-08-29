@@ -16,7 +16,7 @@
   <name>UI Tests of Git Forensics Plugin</name>
 
   <properties>
-    <jenkins.version>2.204.6</jenkins.version>
+    <jenkins.version>2.235.1</jenkins.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <java.version>1.8</java.version>
     <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
@@ -71,7 +71,7 @@
     <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
     <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
-    <tag>${scmTag}</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <repositories>
@@ -80,11 +80,8 @@
       <url>https://repo.jenkins-ci.org/releases/</url>
     </repository>
     <repository>
-      <id>maven.jenkins-ci.org-sn</id>
-      <url>https://repo.jenkins-ci.org/snapshots/</url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
+      <id>incrementals.jenkins-ci.org</id>
+      <url>https://repo.jenkins-ci.org/incrementals/</url>
     </repository>
   </repositories>
 
@@ -133,13 +130,37 @@
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-resources</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>../plugin/target/test-classes/test-dependencies</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>../plugin/target/</directory>
+                  <includes>
+                    <include>git-forensics.hpi</include>
+                  </includes>
+                  <filtering>false</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <reuseForks>false</reuseForks>
           <environmentVariables>
-            <PLUGINS_DIR>../../docker/volumes/jenkins-home/plugins</PLUGINS_DIR>
+            <PLUGINS_DIR>../plugin/target/test-classes/test-dependencies</PLUGINS_DIR>
             <JENKINS_VERSION>${jenkins.version}</JENKINS_VERSION>
-            <LOCAL_JARS>../plugin/target/git-forensics.hpi</LOCAL_JARS>
             <BROWSER>firefox</BROWSER>
           </environmentVariables>
         </configuration>

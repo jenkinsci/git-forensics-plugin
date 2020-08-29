@@ -19,8 +19,6 @@ import static io.jenkins.plugins.forensics.assertions.Assertions.*;
  * @author Ullrich Hafner
  */
 public class GitBlamerITest extends GitITest {
-    private final FilteredLog log = new FilteredLog(StringUtils.EMPTY);
-
     /**
      * Verifies that the blames are empty if there are no requests defined.
      */
@@ -28,9 +26,12 @@ public class GitBlamerITest extends GitITest {
     public void shouldCreateEmptyBlamesIfRequestIsEmpty() {
         GitBlamer gitBlamer = createBlamer();
 
+        FilteredLog log = createLog();
         Blames blames = gitBlamer.blame(new FileLocations(), log);
 
         assertThat(blames).isEmpty();
+        assertThat(log.getInfoMessages()).contains("Git commit ID = '" + getHead() + "'");
+        assertThat(log.getInfoMessages()).contains("-> blamed authors of issues in 0 files");
     }
 
     /**
@@ -49,6 +50,7 @@ public class GitBlamerITest extends GitITest {
 
         GitBlamer gitBlamer = createBlamer();
 
+        FilteredLog log = createLog();
         Blames blames = gitBlamer.blame(locations, log);
 
         assertThat(blames).hasOnlyFiles(absolutePath);
@@ -69,7 +71,8 @@ public class GitBlamerITest extends GitITest {
     /**
      * Verifies that the last committer of the whole file is used if no specific line number is given.
      */
-    @Test @Issue("JENKINS-59252")
+    @Test
+    @Issue("JENKINS-59252")
     public void shouldAssignLastCommitterIfNoLineNumberIsGiven() {
         create2RevisionsWithDifferentAuthors();
 
@@ -79,6 +82,7 @@ public class GitBlamerITest extends GitITest {
 
         GitBlamer gitBlamer = createBlamer();
 
+        FilteredLog log = createLog();
         Blames blames = gitBlamer.blame(locations, log);
 
         assertThat(blames).hasOnlyFiles(absolutePath);
@@ -91,6 +95,10 @@ public class GitBlamerITest extends GitITest {
         assertThat(request.getName(0)).isEqualTo(GitITest.BAR_NAME);
         assertThat(request.getEmail(0)).isEqualTo(GitITest.BAR_EMAIL);
         assertThat(request.getCommit(0)).isEqualTo(getHead());
+    }
+
+    private FilteredLog createLog() {
+        return new FilteredLog(StringUtils.EMPTY);
     }
 
     private GitBlamer createBlamer() {

@@ -24,10 +24,10 @@ class CommitCollector {
     //TODO Assign later when incremental analysis is implemented.
     private final String latestRevisionOfPreviousCommit;
 
-    CommitCollector(final Repository repository, final Git git) {
+    CommitCollector(final Repository repository, final Git git, final String latestCommitId) {
         this.repository = repository;
         this.git = git;
-        latestRevisionOfPreviousCommit = null;
+        latestRevisionOfPreviousCommit = latestCommitId;
     }
 
     List<RevCommit> findAllCommits() throws IOException, GitAPIException {

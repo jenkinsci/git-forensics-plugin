@@ -16,7 +16,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 
 import edu.hm.hafner.util.FilteredLog;
 import edu.hm.hafner.util.VisibleForTesting;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -29,6 +29,7 @@ import io.jenkins.plugins.forensics.blame.FileBlame;
 import io.jenkins.plugins.forensics.blame.FileBlame.FileBlameBuilder;
 import io.jenkins.plugins.forensics.blame.FileLocations;
 import io.jenkins.plugins.forensics.git.util.AbstractRepositoryCallback;
+import io.jenkins.plugins.forensics.git.util.RemoteResultWrapper;
 
 /**
  * Assigns git blames to warnings. Based on the solution by John Gibson, see JENKINS-6748. This code is intended to run
@@ -82,9 +83,12 @@ class GitBlamer extends Blamer {
             }
 
             long nano = System.nanoTime();
-            Blames filledBlames = git.withRepository(new BlameCallback(locations, blames, headCommit, log));
+
+            RemoteResultWrapper<Blames> wrapped = git.withRepository(new BlameCallback(locations, blames, headCommit));
+            wrapped.getInfoMessages().forEach(log::logInfo);
+
             log.logInfo("Blaming of authors took %d seconds", 1 + (System.nanoTime() - nano) / 1_000_000_000L);
-            return filledBlames;
+            return wrapped.getResult();
         }
         catch (IOException exception) {
             log.logException(exception, BLAME_ERROR);
@@ -101,28 +105,27 @@ class GitBlamer extends Blamer {
     /**
      * Starts the blame commands.
      */
-    static class BlameCallback extends AbstractRepositoryCallback<Blames> {
+    static class BlameCallback extends AbstractRepositoryCallback<RemoteResultWrapper<Blames>> {
         private static final long serialVersionUID = 8794666938104738260L;
         private static final int WHOLE_FILE = 0;
 
         private final ObjectId headCommit;
-        private final FilteredLog log;
         private final FileLocations locations;
         private final Blames blames;
 
-        BlameCallback(final FileLocations locations, final Blames blames, final ObjectId headCommit,
-                final FilteredLog log) {
+        BlameCallback(final FileLocations locations, final Blames blames, final ObjectId headCommit) {
             super();
 
             this.locations = locations;
             this.blames = blames;
             this.headCommit = headCommit;
-            this.log = log;
         }
 
         @Override
-        public Blames invoke(final Repository repository, final VirtualChannel channel) throws InterruptedException {
+        public RemoteResultWrapper<Blames> invoke(final Repository repository, final VirtualChannel channel)
+                throws InterruptedException {
             try {
+                RemoteResultWrapper<Blames> log = new RemoteResultWrapper<>(blames, "Errors while running Git blame:");
                 log.logInfo("Git commit ID = '%s'", headCommit.getName());
                 log.logInfo("Git working tree = '%s'", getWorkTree(repository));
 
@@ -131,7 +134,7 @@ class GitBlamer extends Blamer {
 
                 FileBlameBuilder builder = new FileBlameBuilder();
                 for (String file : locations.getFiles()) {
-                    run(builder, file, blameRunner, lastCommitRunner);
+                    run(builder, file, blameRunner, lastCommitRunner, log);
 
                     if (Thread.interrupted()) { // Cancel request by user
                         String message = "Blaming has been interrupted while computing blame information";
@@ -143,7 +146,7 @@ class GitBlamer extends Blamer {
 
                 log.logInfo("-> blamed authors of issues in %d files", blames.size());
 
-                return blames;
+                return log;
             }
             finally {
                 repository.close();
@@ -157,16 +160,16 @@ class GitBlamer extends Blamer {
          *         the builder to use to create {@link FileBlame} instances
          * @param relativePath
          *         the file to get the blames for (relative path)
-         * @param relativePath
-         *         the file to get the blames for (relative path)
          * @param blameRunner
          *         the runner to invoke Git blame
          * @param lastCommitRunner
          *         the runner to find the last commit
+         * @param log
+         *         the log
          */
         @VisibleForTesting
         void run(final FileBlameBuilder builder, final String relativePath, final BlameRunner blameRunner,
-                final LastCommitRunner lastCommitRunner) {
+                final LastCommitRunner lastCommitRunner, final FilteredLog log) {
             try {
                 BlameResult blame = blameRunner.run(relativePath);
                 if (blame == null) {
@@ -179,7 +182,7 @@ class GitBlamer extends Blamer {
                             fillWithLastCommit(relativePath, fileBlame, lastCommitRunner);
                         }
                         else if (line <= blame.getResultContents().size()) {
-                            fillWithBlameResult(relativePath, fileBlame, blame, line);
+                            fillWithBlameResult(relativePath, fileBlame, blame, line, log);
                         }
                         blames.add(fileBlame);
                     }
@@ -193,7 +196,7 @@ class GitBlamer extends Blamer {
         }
 
         private void fillWithBlameResult(final String fileName, final FileBlame fileBlame, final BlameResult blame,
-                final int line) {
+                final int line, final FilteredLog log) {
             int lineIndex = line - 1; // first line is index 0
             PersonIdent who = blame.getSourceAuthor(lineIndex);
             if (who == null) {
@@ -247,7 +250,7 @@ class GitBlamer extends Blamer {
             this.headCommit = headCommit;
         }
 
-        @Nullable
+        @CheckForNull
         BlameResult run(final String fileName) throws GitAPIException {
             BlameCommand blame = new BlameCommand(repo);
             blame.setFilePath(fileName);

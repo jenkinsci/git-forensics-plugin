@@ -88,7 +88,8 @@ class GitBlamerFactoryTest {
         Mockito.when(shallowCloneOption.isShallow()).thenReturn(true);
 
         GitSCM gitSCM = Mockito.mock(GitSCM.class);
-        Mockito.when(gitSCM.getExtensions()).thenReturn(new DescribableList<>(Saveable.NOOP, Lists.list(shallowCloneOption)));
+        Mockito.when(gitSCM.getExtensions())
+                .thenReturn(new DescribableList<>(Saveable.NOOP, Lists.list(shallowCloneOption)));
 
         FilteredLog logger = createLogger();
 
@@ -112,7 +113,8 @@ class GitBlamerFactoryTest {
 
         assertThat(gitChecker.createBlamer(gitSCM, run, null, NULL_LISTENER, logger)).isEmpty();
         assertThat(logger.getErrorMessages()).isEmpty();
-        assertThat(logger.getInfoMessages()).contains("Exception while creating a GitClient instance for work tree 'null'");
+        assertThat(logger.getInfoMessages()).contains(
+                "Exception while creating a GitClient instance for work tree 'null'");
     }
 
     private FilteredLog createLogger() {
