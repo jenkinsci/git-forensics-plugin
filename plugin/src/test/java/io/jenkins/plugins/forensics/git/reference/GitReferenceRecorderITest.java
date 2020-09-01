@@ -123,7 +123,7 @@ public class GitReferenceRecorderITest extends GitITest {
      * {@code
      * M:  [M1]#1 - [M2, M3]#2
      *                \
-     *           F:  [F1]#1 - [F2]#2}
+     *    F:  [F1]#1 - [F2]#2}
      * </pre>
      */
     @Test
@@ -148,9 +148,7 @@ public class GitReferenceRecorderITest extends GitITest {
         verifyRecordSize(firstFeature, 4);
 
         assertThat(firstFeature.getAction(ReferenceBuild.class)).as(getLog(firstFeature)).isNotNull()
-                .hasOwner(firstFeature)
-                .hasReferenceBuildId(nextMaster.getExternalizableId())
-                .hasReferenceBuild(Optional.of(nextMaster));
+                .hasOwner(firstFeature); // we do not care about the reference of the first feature build
 
         changeContentOfAdditionalFile(FEATURE, "feature content");
 
