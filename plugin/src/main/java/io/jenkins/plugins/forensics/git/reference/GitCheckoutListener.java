@@ -96,9 +96,12 @@ public class GitCheckoutListener extends SCMListener {
     private GitCommitsRecord recordNewCommits(final Run<?, ?> build, final GitClient gitClient,
             final String scmKey, final FilteredLog logger, final String latestCommit) {
         List<String> commits = recordCommitsSincePreviousBuild(latestCommit, gitClient, scmKey, logger);
+        
+        final String parentCommit = findParentCommit(gitClient);
+        
         if (commits.isEmpty()) {
             logger.logInfo("-> No new commits found");
-            return new GitCommitsRecord(build, scmKey, logger, latestCommit);
+            return new GitCommitsRecord(build, scmKey, logger, latestCommit, parentCommit);
         }
         else {
             if (commits.size() == 1) {
@@ -107,7 +110,8 @@ public class GitCheckoutListener extends SCMListener {
             else {
                 logger.logInfo("-> Recorded %d new commits", commits.size());
             }
-            return new GitCommitsRecord(build, scmKey, logger, commits.get(0), commits, getRecordingType(latestCommit));
+            return new GitCommitsRecord(build, scmKey, logger, commits.get(0), parentCommit, 
+                    commits, getRecordingType(latestCommit));
         }
     }
 
@@ -137,6 +141,23 @@ public class GitCheckoutListener extends SCMListener {
             }
         }
         return Optional.empty();
+    }
+    
+    private String findParentCommit(final GitClient gitClient) {
+        try {
+            return gitClient.withRepository((repository, channel) -> {
+                RevCommit currentBuildCommit = getHead(repository);
+                if(currentBuildCommit.getParentCount() > 0) {
+                    return currentBuildCommit.getParent(0).getName();
+                }
+                return StringUtils.EMPTY;
+            });
+        } catch(IOException | InterruptedException e) {}
+        return StringUtils.EMPTY;
+    }
+    
+    private static RevCommit getHead(final Repository repo) throws IOException {
+        return new RevWalk(repo).parseCommit(repo.resolve(Constants.HEAD));
     }
 
     /**
@@ -169,10 +190,6 @@ public class GitCheckoutListener extends SCMListener {
                 throw new IOException("Unable to record commits of git repository.", e);
             }
             return newCommits;
-        }
-
-        private RevCommit getHead(final Repository repo) throws IOException {
-            return new RevWalk(repo).parseCommit(repo.resolve(Constants.HEAD));
         }
     }
 }
