@@ -502,6 +502,7 @@ public class GitReferenceRecorderITest extends GitITest {
     private void buildProject(final WorkflowMultiBranchProject project) {
         try {
             Objects.requireNonNull(project.scheduleBuild2(0)).getFuture().get();
+            showIndexing(project);
 
             getJenkins().waitUntilNoActivity();
         }
@@ -535,14 +536,7 @@ public class GitReferenceRecorderITest extends GitITest {
     }
 
     private WorkflowJob findBranchProject(final WorkflowMultiBranchProject project, final String name) {
-        try {
-            WorkflowJob job = Objects.requireNonNull(project.getItem(name));
-            showIndexing(project);
-            return job;
-        }
-        catch (IOException | InterruptedException exception) {
-            throw new AssertionError(exception);
-        }
+        return Objects.requireNonNull(project.getItem(name));
     }
 
     @SuppressWarnings("PMD.SystemPrintln")
