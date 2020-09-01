@@ -18,6 +18,13 @@ updates:
   - dependency-name: com.fasterxml.jackson.core:jackson-databind
     versions:
     - "> 2.11.1"
+  - dep: org.jenkinsci.plugins:pipeline-model-definition
+    - "> 1.2"
+  - dep: org.jenkins-ci.plugins.workflow:workflow-basic-steps
+    - "> 2.3"
+  - dep: org.jenkins-ci.plugins.workflow:workflow-durable-task-step
+    - "> 2.9"
+
 - package-ecosystem: "github-actions"
   directory: "/"
   schedule:
