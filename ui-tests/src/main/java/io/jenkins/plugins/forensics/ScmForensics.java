@@ -11,12 +11,11 @@ import org.jenkinsci.test.acceptance.po.Build;
 import org.jenkinsci.test.acceptance.po.PageObject;
 
 /**
- * {@link PageObject} representing the details page of the git-forensics tool results.
+ * {@link PageObject} representing the details page of the forensics miner results.
  *
  * @author Mitja Oldenbourg
  */
 public class ScmForensics extends PageObject {
-
     /**
      * Creates an instance of the page displaying the details of the issues for a specific tool.
      *

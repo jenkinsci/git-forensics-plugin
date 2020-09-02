@@ -8,7 +8,6 @@ import org.openqa.selenium.By;
 import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
 import org.jenkinsci.test.acceptance.junit.WithPlugins;
 import org.jenkinsci.test.acceptance.plugins.git.GitScm;
-import org.jenkinsci.test.acceptance.plugins.warnings_ng.ScrollerUtil;
 import org.jenkinsci.test.acceptance.po.Build;
 import org.jenkinsci.test.acceptance.po.FreeStyleJob;
 import org.jenkinsci.test.acceptance.po.Job;
@@ -17,6 +16,7 @@ import io.jenkins.plugins.forensics.DetailsTable;
 import io.jenkins.plugins.forensics.DetailsTableRow;
 import io.jenkins.plugins.forensics.ForensicsPublisher;
 import io.jenkins.plugins.forensics.ScmForensics;
+import io.jenkins.plugins.forensics.ScrollerUtil;
 
 import static io.jenkins.plugins.forensics.DetailsTable.*;
 import static org.assertj.core.api.Assertions.*;
