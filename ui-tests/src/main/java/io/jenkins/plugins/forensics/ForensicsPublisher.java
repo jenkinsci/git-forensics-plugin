@@ -1,13 +1,12 @@
 package io.jenkins.plugins.forensics;
 
-import org.jenkinsci.test.acceptance.plugins.warnings_ng.ScrollerUtil;
 import org.jenkinsci.test.acceptance.po.AbstractStep;
 import org.jenkinsci.test.acceptance.po.Describable;
 import org.jenkinsci.test.acceptance.po.Job;
 import org.jenkinsci.test.acceptance.po.PostBuildStep;
 
 /**
- * Page object for the IssuesRecorder of the warnings plugin (white mountains release).
+ * Page object for the ForensicsPublisher of the forensics API plugin.
  *
  * @author Ullrich Hafner
  */
