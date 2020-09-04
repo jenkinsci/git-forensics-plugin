@@ -7,10 +7,12 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
+import org.jboss.marshalling._private.GetReflectionFactoryAction;
 import org.jenkinsci.Symbol;
 import hudson.Extension;
 import hudson.model.Run;
-
+import hudson.util.ListBoxModel;
+import io.jenkins.plugins.forensics.git.util.ReferenceBuildFinderStrategy;
 import io.jenkins.plugins.forensics.reference.ReferenceRecorder;
 import io.jenkins.plugins.util.JenkinsFacade;
 
@@ -24,6 +26,8 @@ import io.jenkins.plugins.util.JenkinsFacade;
 public class GitReferenceRecorder extends ReferenceRecorder {
     private int maxCommits = 100;
     private boolean skipUnknownCommits = false;
+    private ReferenceBuildFinderStrategy referenceBuildFinderStrategy = 
+            ReferenceBuildFinderStrategy.PARENT_COMMIT_BUILD;
 
     /**
      * Creates a new instance of {@link GitReferenceRecorder}.
@@ -70,14 +74,57 @@ public class GitReferenceRecorder extends ReferenceRecorder {
     public boolean isSkipUnknownCommits() {
         return skipUnknownCommits;
     }
+    
+    /**
+     * Determines the reference build selection strategy, if
+     *  BEST_MATCH_BUILD: default reference point will be used
+     *  PARENT_COMMIT_BUILD: a reference build, which has built the parent commit of the current built revision
+     *  
+     * @param referenceBuildFinderStrategy         
+     */
+    @DataBoundSetter
+    public void setReferenceBuildFinderStrategy(ReferenceBuildFinderStrategy referenceBuildFinderStrategy) {
+        this.referenceBuildFinderStrategy = referenceBuildFinderStrategy;
+    }
+    
+    public ReferenceBuildFinderStrategy getReferenceBuildFinderStrategy() {
+        return referenceBuildFinderStrategy;
+    }
+    
+    /**
+     * Tries to find a reference build, which built the parent commit of the current build
+     * @param owner
+     *          the current build
+     * @param parentCommit
+     *          the parentCommit-SHA1, which was attached to the current build
+     *          
+     * @return reference build, if exists
+     */
+    private Optional<Run<?, ?>> findParentReferenceBuildFromCommit(final Run<?, ?> owner, 
+            final String parentCommit) {
+        for(Run<?, ?> run = owner.getPreviousBuild(); run != null; run = run.getPreviousBuild()) {
+            GitCommitsRecord record = run.getAction(GitCommitsRecord.class);
+            if(record != null && parentCommit.equals(record.getLatestCommit())) {
+                return Optional.of(run);
+            }
+        }
+        return Optional.empty();
+    }
 
     @Override
     protected Optional<Run<?, ?>> find(final Run<?, ?> owner, final Run<?, ?> lastCompletedBuildOfReferenceJob) {
         GitCommitsRecord thisCommit = owner.getAction(GitCommitsRecord.class);
-        GitCommitsRecord referenceCommit = lastCompletedBuildOfReferenceJob.getAction(GitCommitsRecord.class);
+        
+        if(referenceBuildFinderStrategy == ReferenceBuildFinderStrategy.BEST_MATCH_BUILD) {
+            GitCommitsRecord referenceCommit = lastCompletedBuildOfReferenceJob.getAction(GitCommitsRecord.class);
 
-        return thisCommit.getReferencePoint(referenceCommit, getMaxCommits(), isSkipUnknownCommits());
-    }
+            return thisCommit.getReferencePoint(referenceCommit, getMaxCommits(), isSkipUnknownCommits());
+        } else {
+            String parentCommit = thisCommit.getParentCommit();
+            
+            return findParentReferenceBuildFromCommit(owner, parentCommit);
+        }
+   }
 
     @Override
     @SuppressFBWarnings("BC")
@@ -92,6 +139,19 @@ public class GitReferenceRecorder extends ReferenceRecorder {
     @Symbol("gitForensics")
     // TODO: should the symbol be part of the API?
     public static class Descriptor extends ReferenceRecorderDescriptor {
-        // no special handling required for Git
+        
+        /**
+         * Returns the model with the possible reference build finder strategies.
+         *
+         * @return the model with the possible reference build finder strategies
+         */
+        public ListBoxModel doFillReferenceBuildFinderStrategyItems() {
+            ListBoxModel model = new ListBoxModel();
+            model.add(Messages.ReferenceBuildSelectionStrategy_PARENT_COMMIT_BUILD(), 
+                    ReferenceBuildFinderStrategy.PARENT_COMMIT_BUILD.name());
+            model.add(Messages.ReferenceBuildSelectionStrategy_BEST_MATCH_BUILD(), 
+                    ReferenceBuildFinderStrategy.BEST_MATCH_BUILD.name());
+            return model;
+        }
     }
 }
