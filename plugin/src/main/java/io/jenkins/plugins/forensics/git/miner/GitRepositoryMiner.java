@@ -1,28 +1,33 @@
 package io.jenkins.plugins.forensics.git.miner;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
+import org.eclipse.jgit.diff.DiffFormatter;
+import org.eclipse.jgit.diff.Edit;
+import org.eclipse.jgit.diff.EditList;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectReader;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.patch.FileHeader;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.treewalk.AbstractTreeIterator;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.EmptyTreeIterator;
+import org.eclipse.jgit.util.io.DisabledOutputStream;
 
 import edu.hm.hafner.util.FilteredLog;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -37,6 +42,7 @@ import io.jenkins.plugins.forensics.miner.FileStatistics;
 import io.jenkins.plugins.forensics.miner.FileStatistics.FileStatisticsBuilder;
 import io.jenkins.plugins.forensics.miner.RepositoryMiner;
 import io.jenkins.plugins.forensics.miner.RepositoryStatistics;
+import io.jenkins.plugins.forensics.util.LocChanges;
 
 /**
  * Mines a Git repository and creates statistics for all available files.
@@ -85,6 +91,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
         private static final long serialVersionUID = 7667073858514128136L;
 
         private final String latestCommitId;
+
 
         RepositoryStatisticsCallback(final String latestCommitId) {
             super();
@@ -137,40 +144,57 @@ public class GitRepositoryMiner extends RepositoryMiner {
             for (int i = commits.size() - 1; i >= 0; i--) {
                 RevCommit newCommit = commits.get(i);
                 String oldCommitName = i < commits.size() - 1 ? commits.get(i + 1).getName() : null;
-                List<String> files = getFilesFromCommit(repository, git, oldCommitName, newCommit.getName(),
+                Map<String, Integer> files = getFilesAndDiffEntriesFromCommit(repository, git,
+                        oldCommitName, newCommit.getName(),
                         result);
-
-                files.forEach(f -> fileStatistics.computeIfAbsent(f, builder::build)
-                        .inspectCommit(newCommit.getCommitTime(), getAuthor(newCommit)));
+                //TODO: LoC berechnen und zu Filestatistics hinzufügen
+                files.forEach((f, v) -> fileStatistics.computeIfAbsent(f, builder::build)
+                        .inspectCommit(newCommit.getCommitTime(), getAuthor(newCommit), v));
             }
             fileStatistics.keySet().removeIf(f -> !filesInHead.contains(f));
             return fileStatistics;
         }
 
-        private List<String> getFilesFromCommit(final Repository repository, final Git git, final String oldCommit,
+//v.getTotalLoc(), v.getCommitId(), v.getAddedLines(), v.getDeletedLines()
+        private Map<String, Integer> getFilesAndDiffEntriesFromCommit(final Repository repository,
+                final Git git, final String oldCommit,
                 final String newCommit, final FilteredLog logger) {
-            List<String> filePaths = new ArrayList<>();
-
-            try {
+            //Map<String, Map<String, EditList>> filePaths = new HashMap<>();
+            Map<String, Integer> filePaths = new HashMap<>();
+            OutputStream outputStream = DisabledOutputStream.INSTANCE;
+            ArrayList<FileHeader> fileHeaders = new ArrayList<>();
+            try (DiffFormatter formatter = new DiffFormatter((outputStream))) {
                 final List<DiffEntry> diffEntries = git.diff()
                         .setOldTree(getTreeParser(repository, oldCommit))
                         .setNewTree(getTreeParser(repository, newCommit))
                         .call();
-
-                filePaths = diffEntries.stream()
-                        .map(DiffEntry::getNewPath)
-                        .collect(Collectors.toList());
-
-                filePaths.remove(DiffEntry.DEV_NULL);
-                return filePaths;
+                formatter.setRepository(repository);
+                for (DiffEntry entry : diffEntries) {
+                    FileHeader fileHeader = formatter.toFileHeader(entry);
+                    fileHeaders.add(fileHeader);
+                    String filePath = entry.getNewPath();
+                    for (FileHeader fh : fileHeaders) {
+                        EditList temp = fh.toEditList();
+                        //Map<String, EditList> commitToEditList = new HashMap<>();
+                        //commitToEditList.put(newCommit, temp);
+                        filePaths.put(filePath, computeLinesOfCode(temp, newCommit));
+                    }
+                }
             }
-            catch (GitAPIException exception) {
-                logger.logException(exception, "Can't analyze files for commits.");
-            }
-            catch (IOException exception) {
-                logger.logException(exception, "Can't get treeParser.");
+            catch (IOException | GitAPIException exception) {
+                logger.logException(exception, "Can't get Files and DiffEntries.");
             }
             return filePaths;
+        }
+
+        private int computeLinesOfCode(final EditList edits, String currentCommitId) {
+//            LocChanges changes = new LocChanges(currentCommitId);
+            int totalLinesOfCode = 0;
+            for(Edit edit: edits){
+                totalLinesOfCode += edit.getLengthB();
+                totalLinesOfCode -= edit.getLengthA();
+            }
+            return totalLinesOfCode;
         }
 
         private AbstractTreeIterator getTreeParser(final Repository repository, final String objectId)
@@ -204,4 +228,5 @@ public class GitRepositoryMiner extends RepositoryMiner {
             return StringUtils.EMPTY;
         }
     }
+
 }
