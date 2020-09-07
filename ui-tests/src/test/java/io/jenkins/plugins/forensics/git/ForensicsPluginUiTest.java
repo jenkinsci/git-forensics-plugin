@@ -55,7 +55,7 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
                 "Latest commit: 28af63def44286729e3b19b03464d100fd1d0587");
 
         assertThat(getSummaryText(referenceBuild, 5)).contains(
-                "SCM Repository Statistics: 51 repository files");
+                "SCM Repository Statistics", "51 repository files");
     }
 
     private String getSummaryText(final Build referenceBuild, final int row) {
