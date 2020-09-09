@@ -42,7 +42,7 @@ public class GitBlamerITest extends GitITest {
         create2RevisionsWithDifferentAuthors();
 
         FileLocations locations = new FileLocations();
-        String absolutePath = GitITest.FILE_NAME;
+        String absolutePath = GitITest.ADDITIONAL_FILE;
         locations.addLine(absolutePath, 2);
         locations.addLine(absolutePath, 3);
         locations.addLine(absolutePath, 4);
@@ -77,7 +77,7 @@ public class GitBlamerITest extends GitITest {
         create2RevisionsWithDifferentAuthors();
 
         FileLocations locations = new FileLocations();
-        String absolutePath = GitITest.FILE_NAME;
+        String absolutePath = GitITest.ADDITIONAL_FILE;
         locations.addLine(absolutePath, 0);
 
         GitBlamer gitBlamer = createBlamer();
@@ -106,15 +106,15 @@ public class GitBlamerITest extends GitITest {
     }
 
     private void create2RevisionsWithDifferentAuthors() {
-        writeFile(GitITest.FILE_NAME, "OLD\nOLD\nOLD\nOLD\nOLD\nOLD\n");
-        git("add", GitITest.FILE_NAME);
+        writeFile(GitITest.ADDITIONAL_FILE, "OLD\nOLD\nOLD\nOLD\nOLD\nOLD\n");
+        git("add", GitITest.ADDITIONAL_FILE);
         git("config", "user.name", GitITest.FOO_NAME);
         git("config", "user.email", GitITest.FOO_EMAIL);
         git("commit", "--message=Init");
         git("rev-parse", "HEAD");
 
-        writeFile(GitITest.FILE_NAME, "OLD\nOLD\nNEW\nNEW\nOLD\nOLD\n");
-        git("add", GitITest.FILE_NAME);
+        writeFile(GitITest.ADDITIONAL_FILE, "OLD\nOLD\nNEW\nNEW\nOLD\nOLD\n");
+        git("add", GitITest.ADDITIONAL_FILE);
         git("config", "user.name", GitITest.BAR_NAME);
         git("config", "user.email", GitITest.BAR_EMAIL);
         git("commit", "--message=Change");

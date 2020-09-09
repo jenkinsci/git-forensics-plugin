@@ -48,11 +48,11 @@ public class GitRepositoryMinerITest extends GitITest {
 
         RepositoryStatistics statisticsPerFile = createRepositoryStatistics();
 
-        assertThat(statisticsPerFile).hasFiles(OTHER_FILE, GitITest.FILE_NAME);
+        assertThat(statisticsPerFile).hasFiles(OTHER_FILE, GitITest.ADDITIONAL_FILE);
 
         assertDefaultFileStatistics(statisticsPerFile);
 
-        FileStatistics fileStatistics = statisticsPerFile.get(GitITest.FILE_NAME);
+        FileStatistics fileStatistics = statisticsPerFile.get(GitITest.ADDITIONAL_FILE);
         assertThat(fileStatistics).hasNumberOfAuthors(1);
         assertThat(fileStatistics).hasNumberOfCommits(2);
     }
@@ -72,11 +72,11 @@ public class GitRepositoryMinerITest extends GitITest {
 
         RepositoryStatistics statisticsPerFile = createRepositoryStatistics();
 
-        assertThat(statisticsPerFile).hasFiles(OTHER_FILE, GitITest.FILE_NAME);
+        assertThat(statisticsPerFile).hasFiles(OTHER_FILE, GitITest.ADDITIONAL_FILE);
 
         assertDefaultFileStatistics(statisticsPerFile);
 
-        FileStatistics fileStatistics = statisticsPerFile.get(GitITest.FILE_NAME);
+        FileStatistics fileStatistics = statisticsPerFile.get(GitITest.ADDITIONAL_FILE);
         assertThat(fileStatistics).hasNumberOfAuthors(2);
         assertThat(fileStatistics).hasNumberOfCommits(4);
     }
