@@ -59,13 +59,14 @@ public class GitRepositoryMiner extends RepositoryMiner {
     }
 
     @Override
-    public RepositoryStatistics mine(final RepositoryStatistics repositoryStatistics, final FilteredLog logger)
+    public RepositoryStatistics mine(final RepositoryStatistics previousStatistics, final FilteredLog logger)
             throws InterruptedException {
         try {
             long nano = System.nanoTime();
             logger.logInfo("Analyzing the commit log of the Git repository '%s'", gitClient.getWorkTree());
             RemoteResultWrapper<RepositoryStatistics> wrapped = gitClient.withRepository(
-                    new RepositoryStatisticsCallback(repositoryStatistics.getLatestCommitId()));
+                    new RepositoryStatisticsCallback(previousStatistics));
+
             wrapped.getInfoMessages().forEach(logger::logInfo);
 
             RepositoryStatistics statistics = wrapped.getResult();
@@ -84,25 +85,25 @@ public class GitRepositoryMiner extends RepositoryMiner {
             extends AbstractRepositoryCallback<RemoteResultWrapper<RepositoryStatistics>> {
         private static final long serialVersionUID = 7667073858514128136L;
 
-        private final String latestCommitId;
+        private final RepositoryStatistics previousStatistics;
 
-        RepositoryStatisticsCallback(final String latestCommitId) {
+        RepositoryStatisticsCallback(final RepositoryStatistics previousStatistics) {
             super();
 
-            this.latestCommitId = latestCommitId;
+            this.previousStatistics = previousStatistics;
         }
 
         @Override
-        public RemoteResultWrapper<RepositoryStatistics> invoke(final Repository repository,
-                final VirtualChannel channel) {
+        public RemoteResultWrapper<RepositoryStatistics> invoke(
+                final Repository repository, final VirtualChannel channel) {
             RemoteResultWrapper<RepositoryStatistics> result = new RemoteResultWrapper<>(
                     createStatisticsFromHead(repository), "Errors while mining the Git repository:");
 
             try {
                 try (Git git = new Git(repository)) {
-                    List<RevCommit> commits = new CommitCollector(repository, git, latestCommitId).findAllCommits();
-                    Map<String, FileStatistics> fileStatistics = analyze(repository, git, commits, result);
-                    result.getResult().addAll(fileStatistics.values());
+                    List<RevCommit> commits = new CommitCollector(repository, git,
+                            previousStatistics.getLatestCommitId()).findAllCommits();
+                    analyze(repository, git, commits, result);
                 }
                 catch (GitAPIException | IOException exception) {
                     result.logException(exception, "Can't obtain all commits for the repository.");
@@ -128,11 +129,11 @@ public class GitRepositoryMiner extends RepositoryMiner {
             return new RepositoryStatistics();
         }
 
-        Map<String, FileStatistics> analyze(final Repository repository, final Git git, final List<RevCommit> commits,
+        private void analyze(final Repository repository, final Git git, final List<RevCommit> commits,
                 final RemoteResultWrapper<RepositoryStatistics> result)
                 throws IOException {
+            Map<String, FileStatistics> fileStatistics = new HashMap<>(result.getResult().getMapping());
             FileStatisticsBuilder builder = new FileStatisticsBuilder();
-            Map<String, FileStatistics> fileStatistics = new HashMap<>();
             Set<String> filesInHead = new FilesCollector(repository).findAllFor(repository.resolve(Constants.HEAD));
             for (int i = commits.size() - 1; i >= 0; i--) {
                 RevCommit newCommit = commits.get(i);
@@ -144,7 +145,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
                         .inspectCommit(newCommit.getCommitTime(), getAuthor(newCommit)));
             }
             fileStatistics.keySet().removeIf(f -> !filesInHead.contains(f));
-            return fileStatistics;
+            result.getResult().addAll(fileStatistics.values());
         }
 
         private List<String> getFilesFromCommit(final Repository repository, final Git git, final String oldCommit,
