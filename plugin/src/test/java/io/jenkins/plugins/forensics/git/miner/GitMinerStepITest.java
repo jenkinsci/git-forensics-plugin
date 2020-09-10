@@ -1,6 +1,7 @@
 package io.jenkins.plugins.forensics.git.miner;
 
 import java.io.IOException;
+import java.util.Objects;
 
 import org.junit.Test;
 
@@ -10,10 +11,12 @@ import hudson.plugins.git.GitSCM;
 
 import io.jenkins.plugins.datatables.TableModel;
 import io.jenkins.plugins.forensics.git.util.GitITest;
+import io.jenkins.plugins.forensics.miner.FileStatistics;
 import io.jenkins.plugins.forensics.miner.ForensicsBuildAction;
 import io.jenkins.plugins.forensics.miner.ForensicsTableModel.ForensicsRow;
 import io.jenkins.plugins.forensics.miner.ForensicsViewModel;
 import io.jenkins.plugins.forensics.miner.RepositoryMinerStep;
+import io.jenkins.plugins.forensics.miner.RepositoryStatistics;
 
 import static io.jenkins.plugins.forensics.assertions.Assertions.*;
 
@@ -34,13 +37,21 @@ public class GitMinerStepITest extends GitITest {
         FreeStyleProject job = createJobWithMiner();
 
         Run<?, ?> build = buildSuccessfully(job);
+
+        RepositoryStatistics statistics = getStatistics(build);
+        assertThat(statistics).hasFiles(INITIAL_FILE, ADDITIONAL_FILE);
+        assertThat(statistics).hasLatestCommitId(getHead());
+
+        verifyStatistics(statistics, INITIAL_FILE, 1, 1);
+        verifyStatistics(statistics, ADDITIONAL_FILE, 2, 4);
+
         TableModel forensics = getTableModel(build);
         assertThat(forensics.getRows()).hasSize(2);
 
         assertThat(getRow(forensics, 0))
-                .hasFileName("source.txt").hasAuthorsSize(2).hasCommitsSize(4);
+                .hasFileName(ADDITIONAL_FILE).hasAuthorsSize(2).hasCommitsSize(4);
         assertThat(getRow(forensics, 1))
-                .hasFileName("file").hasAuthorsSize(1).hasCommitsSize(1);
+                .hasFileName(INITIAL_FILE).hasAuthorsSize(1).hasCommitsSize(1);
     }
 
     /** Verifies that the mining process is incremental. */
@@ -53,31 +64,53 @@ public class GitMinerStepITest extends GitITest {
 
         getJenkins().assertLogContains("created report for 2 files", build);
 
+        RepositoryStatistics statistics = getStatistics(build);
+        assertThat(statistics).hasFiles(INITIAL_FILE, ADDITIONAL_FILE);
+        assertThat(statistics).hasLatestCommitId(getHead());
+
+        verifyStatistics(statistics, ADDITIONAL_FILE, 1, 1);
+
         build = buildSuccessfully(job);
 
         getJenkins().assertLogContains("created report for 0 files", build);
+        verifyStatistics(statistics, ADDITIONAL_FILE, 1, 1);
 
         writeFileAsAuthorFoo("Second");
 
         build = buildSuccessfully(job);
 
         getJenkins().assertLogContains("created report for 2 files", build);
+        verifyStatistics(statistics, ADDITIONAL_FILE, 1, 2);
+
+        writeFileAsAuthorBar("Another content");
+        build = buildSuccessfully(job);
+
+        getJenkins().assertLogContains("created report for 2 files", build);
+        verifyStatistics(statistics, ADDITIONAL_FILE, 2, 3);
+
     }
 
-    /** Verifies that the latest revision id is saved in the build result. */
-    @Test
-    public void shouldSaveLatestRevisionId() {
-        FreeStyleProject job = createJobWithMiner();
-        Run<?, ?> build = buildSuccessfully(job);
+    private void verifyStatistics(final RepositoryStatistics statistics, final String fileName,
+            final int authorsSize, final int commitsSize) {
+        FileStatistics additionalFileStatistics = statistics.get(fileName);
+        assertThat(additionalFileStatistics).hasFileName(fileName);
+        assertThat(additionalFileStatistics).hasNumberOfAuthors(authorsSize);
+        assertThat(additionalFileStatistics).hasNumberOfCommits(commitsSize);
+    }
 
-        String savedId = build.getAction(ForensicsBuildAction.class).getResult().getLatestCommitId();
-
-        assertThat(savedId).isEqualTo(getHead());
+    private RepositoryStatistics getStatistics(final Run<?, ?> build) {
+        return getAction(build).getResult();
     }
 
     private TableModel getTableModel(final Run<?, ?> build) {
-        ForensicsBuildAction forensicsBuildAction = build.getAction(ForensicsBuildAction.class);
+        ForensicsBuildAction forensicsBuildAction = getAction(build);
+
         return ((ForensicsViewModel) forensicsBuildAction.getTarget()).getTableModel("forensics");
+    }
+
+    private ForensicsBuildAction getAction(final Run<?, ?> build) {
+        return Objects.requireNonNull(build.getAction(ForensicsBuildAction.class),
+                "Build does not contain a ForensicsBuildAction: " + build);
     }
 
     private ForensicsRow getRow(final TableModel forensics, final int rowIndex) {
