@@ -40,6 +40,7 @@ class CommitCollector {
             next = iterator.next();
             String commitId = next.getId().getName();
             if (commitId.equals(latestRevisionOfPreviousCommit)) {
+                newCommits.add(next);
                 break;
             }
             newCommits.add(next);

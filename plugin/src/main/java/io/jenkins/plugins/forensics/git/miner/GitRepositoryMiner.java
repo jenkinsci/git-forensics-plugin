@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
@@ -65,13 +67,13 @@ public class GitRepositoryMiner extends RepositoryMiner {
     }
 
     @Override
-    public RepositoryStatistics mine(final RepositoryStatistics repositoryStatistics, final FilteredLog logger)
+    public RepositoryStatistics mine(final RepositoryStatistics previousStatistics, final FilteredLog logger)
             throws InterruptedException {
         try {
             long nano = System.nanoTime();
             logger.logInfo("Analyzing the commit log of the Git repository '%s'", gitClient.getWorkTree());
             RemoteResultWrapper<RepositoryStatistics> wrapped = gitClient.withRepository(
-                    new RepositoryStatisticsCallback(repositoryStatistics.getLatestCommitId()));
+                    new RepositoryStatisticsCallback(previousStatistics));
             wrapped.getInfoMessages().forEach(logger::logInfo);
 
             RepositoryStatistics statistics = wrapped.getResult();
@@ -90,13 +92,12 @@ public class GitRepositoryMiner extends RepositoryMiner {
             extends AbstractRepositoryCallback<RemoteResultWrapper<RepositoryStatistics>> {
         private static final long serialVersionUID = 7667073858514128136L;
 
-        private final String latestCommitId;
+        private final RepositoryStatistics previousStatistics;
 
-
-        RepositoryStatisticsCallback(final String latestCommitId) {
+        RepositoryStatisticsCallback(final RepositoryStatistics previousStatistics) {
             super();
 
-            this.latestCommitId = latestCommitId;
+            this.previousStatistics = previousStatistics;
         }
 
         @Override
@@ -107,9 +108,9 @@ public class GitRepositoryMiner extends RepositoryMiner {
 
             try {
                 try (Git git = new Git(repository)) {
-                    List<RevCommit> commits = new CommitCollector(repository, git, latestCommitId).findAllCommits();
-                    Map<String, FileStatistics> fileStatistics = analyze(repository, git, commits, result);
-                    result.getResult().addAll(fileStatistics.values());
+                    List<RevCommit> commits = new CommitCollector(repository, git,
+                            previousStatistics.getLatestCommitId()).findAllCommits();
+                    analyze(repository, git, commits, result);
                 }
                 catch (GitAPIException | IOException exception) {
                     result.logException(exception, "Can't obtain all commits for the repository.");
@@ -135,32 +136,40 @@ public class GitRepositoryMiner extends RepositoryMiner {
             return new RepositoryStatistics();
         }
 
-        Map<String, FileStatistics> analyze(final Repository repository, final Git git, final List<RevCommit> commits,
+        private void analyze(final Repository repository, final Git git, final List<RevCommit> commits,
                 final RemoteResultWrapper<RepositoryStatistics> result)
                 throws IOException {
             FileStatisticsBuilder builder = new FileStatisticsBuilder();
-            Map<String, FileStatistics> fileStatistics = new HashMap<>();
-            Set<String> filesInHead = new FilesCollector(repository).findAllFor(repository.resolve(Constants.HEAD));
-            for (int i = commits.size() - 1; i >= 0; i--) {
-                RevCommit newCommit = commits.get(i);
-                String oldCommitName = i < commits.size() - 1 ? commits.get(i + 1).getName() : null;
-                Map<String, Integer> files = getFilesAndDiffEntriesFromCommit(repository, git,
-                        oldCommitName, newCommit.getName(),
-                        result);
-                //TODO: LoC berechnen und zu Filestatistics hinzufügen
-                files.forEach((f, v) -> fileStatistics.computeIfAbsent(f, builder::build)
-                        .inspectCommit(newCommit.getCommitTime(), getAuthor(newCommit), v));
+            Map<String, FileStatistics> fileStatistics = previousStatistics.getFileStatistics()
+                    .stream()
+                    .collect(Collectors.toMap(FileStatistics::getFileName,
+                            Function.identity()));
+            if (commits.size() > 1) {
+                Set<String> filesInHead = new FilesCollector(repository).findAllFor(repository.resolve(Constants.HEAD));
+                for (int i = 0; i < commits.size(); i++) {
+                    RevCommit newCommit = commits.get(i);
+                    String oldCommitName = i + 1 >= commits.size() ? null : commits.get(i + 1).getName();
+                    if (oldCommitName == null && !previousStatistics.isEmpty()) {
+                        break;
+                    }
+                    Map<String, LocChanges> files = getFilesAndDiffEntriesFromCommit(repository, git,
+                            oldCommitName, newCommit.getName(),
+                            result);
+                    //TODO: LoC und Churn berechnen und zu Filestatistics hinzufügen
+                    files.forEach((f, v) -> fileStatistics.computeIfAbsent(f, builder::build)
+                            .inspectCommit(newCommit.getCommitTime(), getAuthor(newCommit), v.getTotalLoc(),
+                                    v.getCommitId(), v.getTotalAddedLines(), v.getDeletedLines()));
+
+                }
+                fileStatistics.keySet().removeIf(f -> !filesInHead.contains(f));
             }
-            fileStatistics.keySet().removeIf(f -> !filesInHead.contains(f));
-            return fileStatistics;
+            result.getResult().addAll(fileStatistics.values());
         }
 
-//v.getTotalLoc(), v.getCommitId(), v.getAddedLines(), v.getDeletedLines()
-        private Map<String, Integer> getFilesAndDiffEntriesFromCommit(final Repository repository,
+        private Map<String, LocChanges> getFilesAndDiffEntriesFromCommit(final Repository repository,
                 final Git git, final String oldCommit,
                 final String newCommit, final FilteredLog logger) {
-            //Map<String, Map<String, EditList>> filePaths = new HashMap<>();
-            Map<String, Integer> filePaths = new HashMap<>();
+            Map<String, LocChanges> filePaths = new HashMap<>();
             OutputStream outputStream = DisabledOutputStream.INSTANCE;
             ArrayList<FileHeader> fileHeaders = new ArrayList<>();
             try (DiffFormatter formatter = new DiffFormatter((outputStream))) {
@@ -175,8 +184,6 @@ public class GitRepositoryMiner extends RepositoryMiner {
                     String filePath = entry.getNewPath();
                     for (FileHeader fh : fileHeaders) {
                         EditList temp = fh.toEditList();
-                        //Map<String, EditList> commitToEditList = new HashMap<>();
-                        //commitToEditList.put(newCommit, temp);
                         filePaths.put(filePath, computeLinesOfCode(temp, newCommit));
                     }
                 }
@@ -187,14 +194,15 @@ public class GitRepositoryMiner extends RepositoryMiner {
             return filePaths;
         }
 
-        private int computeLinesOfCode(final EditList edits, String currentCommitId) {
-//            LocChanges changes = new LocChanges(currentCommitId);
-            int totalLinesOfCode = 0;
-            for(Edit edit: edits){
-                totalLinesOfCode += edit.getLengthB();
-                totalLinesOfCode -= edit.getLengthA();
+        private LocChanges computeLinesOfCode(final EditList edits, final String currentCommitId) {
+            LocChanges changes = new LocChanges(currentCommitId);
+//            int totalLinesOfCode = 0;
+            for (Edit edit : edits) {
+                changes.updateLocChanges(edit.getLengthB(), edit.getLengthA());
+//                totalLinesOfCode += edit.getLengthB();
+//                totalLinesOfCode -= edit.getLengthA();
             }
-            return totalLinesOfCode;
+            return changes;
         }
 
         private AbstractTreeIterator getTreeParser(final Repository repository, final String objectId)
