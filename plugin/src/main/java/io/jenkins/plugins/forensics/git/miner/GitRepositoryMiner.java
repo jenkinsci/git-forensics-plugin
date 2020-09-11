@@ -145,7 +145,8 @@ public class GitRepositoryMiner extends RepositoryMiner {
                     .collect(Collectors.toMap(FileStatistics::getFileName,
                             Function.identity()));
             List<String> filesThatChangedSinceLastBuild = new ArrayList<>();
-            if (commits.size() > 1 || (commits.size() == 1 && previousStatistics.getLatestCommitId().equals(StringUtils.EMPTY))) {
+            if (commits.size() > 1 || (commits.size() == 1 && previousStatistics.getLatestCommitId()
+                    .equals(StringUtils.EMPTY))) {
                 Set<String> filesInHead = new FilesCollector(repository).findAllFor(repository.resolve(Constants.HEAD));
                 for (int i = 0; i < commits.size(); i++) {
                     RevCommit newCommit = commits.get(i);
@@ -157,15 +158,14 @@ public class GitRepositoryMiner extends RepositoryMiner {
                             oldCommitName, newCommit.getName(),
                             result);
                     filesThatChangedSinceLastBuild.addAll(files.keySet());
-                    //TODO: LoC und Churn berechnen und zu Filestatistics hinzufügen
                     files.forEach((f, v) -> fileStatistics.computeIfAbsent(f, builder::build)
                             .inspectCommit(newCommit.getCommitTime(), getAuthor(newCommit), v.getTotalLoc(),
                                     v.getCommitId(), v.getTotalAddedLines(), v.getDeletedLines()));
-                    fileStatistics.values().stream().filter(f -> !filesThatChangedSinceLastBuild.contains(
-                            f.getFileName())).forEach(FileStatistics::resetChurn);
                 }
                 fileStatistics.keySet().removeIf(f -> !filesInHead.contains(f));
             }
+            fileStatistics.values().stream().filter(f -> !filesThatChangedSinceLastBuild.contains(
+                    f.getFileName())).forEach(FileStatistics::resetChurn);
             result.getResult().addAll(fileStatistics.values());
         }
 
@@ -199,11 +199,8 @@ public class GitRepositoryMiner extends RepositoryMiner {
 
         private LocChanges computeLinesOfCode(final EditList edits, final String currentCommitId) {
             LocChanges changes = new LocChanges(currentCommitId);
-//            int totalLinesOfCode = 0;
             for (Edit edit : edits) {
                 changes.updateLocChanges(edit.getLengthB(), edit.getLengthA());
-//                totalLinesOfCode += edit.getLengthB();
-//                totalLinesOfCode -= edit.getLengthA();
             }
             return changes;
         }
