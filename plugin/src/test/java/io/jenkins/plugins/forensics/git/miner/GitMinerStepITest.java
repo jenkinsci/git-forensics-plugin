@@ -69,10 +69,9 @@ public class GitMinerStepITest extends GitITest {
         assertThat(statistics).hasLatestCommitId(getHead());
 
         verifyStatistics(statistics, ADDITIONAL_FILE, 1, 1);
-
         build = buildSuccessfully(job);
 
-        getJenkins().assertLogContains("created report for 0 files", build);
+        getJenkins().assertLogContains("created report for 2 files", build);
         verifyStatistics(statistics, ADDITIONAL_FILE, 1, 1);
 
         writeFileAsAuthorFoo("Second");
@@ -90,12 +89,39 @@ public class GitMinerStepITest extends GitITest {
 
     }
 
+    /** Verifies the calculation of the #LOC and churn. */
+    @Test
+    public void shouldCalculateLocAndChurn() {
+        writeFileAsAuthorFoo("First");
+
+        FreeStyleProject job = createJobWithMiner();
+        Run<?, ?> build = buildSuccessfully(job);
+
+        verifyLocAndChurn(build, ADDITIONAL_FILE, 1, 1);
+
+        build = buildSuccessfully(job);
+
+        verifyLocAndChurn(build, ADDITIONAL_FILE, 0, 1);
+        writeFileAsAuthorFoo("\nSecond");
+
+        build = buildSuccessfully(job);
+        verifyLocAndChurn(build, ADDITIONAL_FILE, 3, 2);
+    }
+
     private void verifyStatistics(final RepositoryStatistics statistics, final String fileName,
             final int authorsSize, final int commitsSize) {
         FileStatistics additionalFileStatistics = statistics.get(fileName);
         assertThat(additionalFileStatistics).hasFileName(fileName);
         assertThat(additionalFileStatistics).hasNumberOfAuthors(authorsSize);
         assertThat(additionalFileStatistics).hasNumberOfCommits(commitsSize);
+    }
+
+    private void verifyLocAndChurn(final Run<?, ?> build, final String fileName, final int churn, final int linesOfCode) {
+        RepositoryStatistics statistics = getStatistics(build);
+        FileStatistics fileStatistics = statistics.get(fileName);
+
+        assertThat(fileStatistics.getChurn()).isEqualTo(churn);
+        assertThat(fileStatistics.getLinesOfCode()).isEqualTo(linesOfCode);
     }
 
     private RepositoryStatistics getStatistics(final Run<?, ?> build) {
