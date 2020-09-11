@@ -72,13 +72,15 @@ public class GitRepositoryMiner extends RepositoryMiner {
         try {
             long nano = System.nanoTime();
             logger.logInfo("Analyzing the commit log of the Git repository '%s'", gitClient.getWorkTree());
+            RepositoryStatisticsCallback callback =  new RepositoryStatisticsCallback(previousStatistics);
             RemoteResultWrapper<RepositoryStatistics> wrapped = gitClient.withRepository(
-                    new RepositoryStatisticsCallback(previousStatistics));
+                    callback);
             wrapped.getInfoMessages().forEach(logger::logInfo);
 
             RepositoryStatistics statistics = wrapped.getResult();
             logger.logInfo("-> created report for %d files in %d seconds", statistics.size(),
                     1 + (System.nanoTime() - nano) / 1_000_000_000L);
+            logger.logInfo("Analyzed %d new commits.", callback.getNumberOfNewCommitsAnalyzed());
             return statistics;
         }
         catch (IOException exception) {
@@ -93,6 +95,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
         private static final long serialVersionUID = 7667073858514128136L;
 
         private final RepositoryStatistics previousStatistics;
+        private int numberOfNewCommitsAnalyzed;
 
         RepositoryStatisticsCallback(final RepositoryStatistics previousStatistics) {
             super();
@@ -154,6 +157,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
                     if (oldCommitName == null && !previousStatistics.isEmpty()) {
                         break;
                     }
+                    numberOfNewCommitsAnalyzed++;
                     Map<String, LocChanges> files = getFilesAndDiffEntriesFromCommit(repository, git,
                             oldCommitName, newCommit.getName(),
                             result);
@@ -234,6 +238,10 @@ public class GitRepositoryMiner extends RepositoryMiner {
                 return StringUtils.defaultString(committer.getEmailAddress(), committer.getName());
             }
             return StringUtils.EMPTY;
+        }
+
+        public int getNumberOfNewCommitsAnalyzed() {
+            return numberOfNewCommitsAnalyzed;
         }
     }
 

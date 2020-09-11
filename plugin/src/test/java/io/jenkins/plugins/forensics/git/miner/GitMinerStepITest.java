@@ -68,10 +68,12 @@ public class GitMinerStepITest extends GitITest {
         assertThat(statistics).hasFiles(INITIAL_FILE, ADDITIONAL_FILE);
         assertThat(statistics).hasLatestCommitId(getHead());
 
+        getJenkins().assertLogContains("Analyzed 2 new commits", build);
         verifyStatistics(statistics, ADDITIONAL_FILE, 1, 1);
         build = buildSuccessfully(job);
 
         getJenkins().assertLogContains("created report for 2 files", build);
+        getJenkins().assertLogContains("Analyzed 0 new commits", build);
         verifyStatistics(statistics, ADDITIONAL_FILE, 1, 1);
 
         writeFileAsAuthorFoo("Second");
@@ -79,6 +81,7 @@ public class GitMinerStepITest extends GitITest {
         build = buildSuccessfully(job);
 
         getJenkins().assertLogContains("created report for 2 files", build);
+        getJenkins().assertLogContains("Analyzed 1 new commits", build);
         verifyStatistics(statistics, ADDITIONAL_FILE, 1, 2);
 
         writeFileAsAuthorBar("Another content");
