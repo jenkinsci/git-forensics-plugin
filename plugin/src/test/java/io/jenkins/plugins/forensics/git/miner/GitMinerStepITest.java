@@ -48,10 +48,13 @@ public class GitMinerStepITest extends GitITest {
         TableModel forensics = getTableModel(build);
         assertThat(forensics.getRows()).hasSize(2);
 
+        String wrappedFileName = "<a href=\"fileName." + ADDITIONAL_FILE.hashCode() + "\">" + ADDITIONAL_FILE + "</a>";
+        String wrappedInitialFileName =  "<a href=\"fileName." + INITIAL_FILE.hashCode() + "\">" + INITIAL_FILE + "</a>";
+
         assertThat(getRow(forensics, 0))
-                .hasFileName(ADDITIONAL_FILE).hasAuthorsSize(2).hasCommitsSize(4);
+                .hasFileName(wrappedFileName).hasAuthorsSize(2).hasCommitsSize(4);
         assertThat(getRow(forensics, 1))
-                .hasFileName(INITIAL_FILE).hasAuthorsSize(1).hasCommitsSize(1);
+                .hasFileName(wrappedInitialFileName).hasAuthorsSize(1).hasCommitsSize(1);
     }
 
     /** Verifies that the mining process is incremental. */
