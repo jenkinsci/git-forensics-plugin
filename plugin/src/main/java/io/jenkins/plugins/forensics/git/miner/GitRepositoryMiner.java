@@ -67,12 +67,15 @@ public class GitRepositoryMiner extends RepositoryMiner {
     }
 
     @Override
-    public RepositoryStatistics mine(final RepositoryStatistics previousStatistics, final FilteredLog logger)
+    public RepositoryStatistics mine(final RepositoryStatistics previousStatistics,
+            final FilteredLog logger)
             throws InterruptedException {
         try {
             long nano = System.nanoTime();
-            logger.logInfo("Analyzing the commit log of the Git repository '%s'", gitClient.getWorkTree());
-            RepositoryStatisticsCallback callback =  new RepositoryStatisticsCallback(previousStatistics);
+            logger.logInfo("Analyzing the commit log of the Git repository '%s'",
+                    gitClient.getWorkTree());
+            RepositoryStatisticsCallback callback = new RepositoryStatisticsCallback(
+                    previousStatistics);
             RemoteResultWrapper<RepositoryStatistics> wrapped = gitClient.withRepository(
                     callback);
             wrapped.getInfoMessages().forEach(logger::logInfo);
@@ -85,7 +88,8 @@ public class GitRepositoryMiner extends RepositoryMiner {
         }
         catch (IOException exception) {
             RepositoryStatistics statistics = new RepositoryStatistics();
-            logger.logException(exception, "Exception occurred while mining the Git repository using GitClient");
+            logger.logException(exception,
+                    "Exception occurred while mining the Git repository using GitClient");
             return statistics;
         }
     }
@@ -107,7 +111,8 @@ public class GitRepositoryMiner extends RepositoryMiner {
         public RemoteResultWrapper<RepositoryStatistics> invoke(final Repository repository,
                 final VirtualChannel channel) {
             RemoteResultWrapper<RepositoryStatistics> result = new RemoteResultWrapper<>(
-                    createStatisticsFromHead(repository), "Errors while mining the Git repository:");
+                    createStatisticsFromHead(repository),
+                    "Errors while mining the Git repository:");
 
             try {
                 try (Git git = new Git(repository)) {
@@ -139,7 +144,8 @@ public class GitRepositoryMiner extends RepositoryMiner {
             return new RepositoryStatistics();
         }
 
-        private void analyze(final Repository repository, final Git git, final List<RevCommit> commits,
+        private void analyze(final Repository repository, final Git git,
+                final List<RevCommit> commits,
                 final RemoteResultWrapper<RepositoryStatistics> result)
                 throws IOException {
             FileStatisticsBuilder builder = new FileStatisticsBuilder();
@@ -150,20 +156,24 @@ public class GitRepositoryMiner extends RepositoryMiner {
             List<String> filesThatChangedSinceLastBuild = new ArrayList<>();
             if (commits.size() > 1 || (commits.size() == 1 && previousStatistics.getLatestCommitId()
                     .equals(StringUtils.EMPTY))) {
-                Set<String> filesInHead = new FilesCollector(repository).findAllFor(repository.resolve(Constants.HEAD));
+                Set<String> filesInHead = new FilesCollector(repository).findAllFor(
+                        repository.resolve(Constants.HEAD));
                 for (int i = 0; i < commits.size(); i++) {
                     RevCommit newCommit = commits.get(i);
-                    String oldCommitName = i + 1 >= commits.size() ? null : commits.get(i + 1).getName();
+                    String oldCommitName =
+                            i + 1 >= commits.size() ? null : commits.get(i + 1).getName();
                     if (oldCommitName == null && !previousStatistics.isEmpty()) {
                         break;
                     }
                     numberOfNewCommitsAnalyzed++;
-                    Map<String, LocChanges> files = getFilesAndDiffEntriesFromCommit(repository, git,
+                    Map<String, LocChanges> files = getFilesAndDiffEntriesFromCommit(repository,
+                            git,
                             oldCommitName, newCommit.getName(),
                             result);
                     filesThatChangedSinceLastBuild.addAll(files.keySet());
                     files.forEach((f, v) -> fileStatistics.computeIfAbsent(f, builder::build)
-                            .inspectCommit(newCommit.getCommitTime(), getAuthor(newCommit), v.getTotalLoc(),
+                            .inspectCommit(newCommit.getCommitTime(), getAuthor(newCommit),
+                                    v.getTotalLoc(),
                                     v.getCommitId(), v.getTotalAddedLines(), v.getDeletedLines()));
                 }
                 fileStatistics.keySet().removeIf(f -> !filesInHead.contains(f));
@@ -173,7 +183,8 @@ public class GitRepositoryMiner extends RepositoryMiner {
             result.getResult().addAll(fileStatistics.values());
         }
 
-        private Map<String, LocChanges> getFilesAndDiffEntriesFromCommit(final Repository repository,
+        private Map<String, LocChanges> getFilesAndDiffEntriesFromCommit(
+                final Repository repository,
                 final Git git, final String oldCommit,
                 final String newCommit, final FilteredLog logger) {
             Map<String, LocChanges> filePaths = new HashMap<>();
@@ -209,7 +220,8 @@ public class GitRepositoryMiner extends RepositoryMiner {
             return changes;
         }
 
-        private AbstractTreeIterator getTreeParser(final Repository repository, final String objectId)
+        private AbstractTreeIterator getTreeParser(final Repository repository,
+                final String objectId)
                 throws IOException {
             if (objectId == null) {
                 return new EmptyTreeIterator();
