@@ -3,6 +3,7 @@ package io.jenkins.plugins.forensics.git.miner;
 import java.io.IOException;
 import java.util.Objects;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import hudson.model.FreeStyleProject;
@@ -26,6 +27,16 @@ import static io.jenkins.plugins.forensics.assertions.Assertions.*;
  * @author Ullrich Hafner
  */
 public class GitMinerStepITest extends GitITest {
+
+    @Before
+    public void setUp(){
+        try {
+            Thread.sleep(2000L);
+        }
+        catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
     /** Verifies that the table contains two rows with the correct statistics. */
     @Test
     public void shouldFillTableDynamically() {
