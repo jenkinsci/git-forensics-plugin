@@ -153,7 +153,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
                     .stream()
                     .collect(Collectors.toMap(FileStatistics::getFileName,
                             Function.identity()));
-            List<String> filesThatChangedSinceLastBuild = new ArrayList<>();
+            fileStatistics.values().forEach(FileStatistics::resetChurn);
             if (commits.size() > 1 || (commits.size() == 1 && previousStatistics.getLatestCommitId()
                     .equals(StringUtils.EMPTY))) {
                 Set<String> filesInHead = new FilesCollector(repository).findAllFor(
@@ -170,7 +170,6 @@ public class GitRepositoryMiner extends RepositoryMiner {
                             git,
                             oldCommitName, newCommit.getName(),
                             result);
-                    filesThatChangedSinceLastBuild.addAll(files.keySet());
                     files.forEach((f, v) -> fileStatistics.computeIfAbsent(f, builder::build)
                             .inspectCommit(newCommit.getCommitTime(), getAuthor(newCommit),
                                     v.getTotalLoc(),
@@ -178,8 +177,6 @@ public class GitRepositoryMiner extends RepositoryMiner {
                 }
                 fileStatistics.keySet().removeIf(f -> !filesInHead.contains(f));
             }
-            fileStatistics.values().stream().filter(f -> !filesThatChangedSinceLastBuild.contains(
-                    f.getFileName())).forEach(FileStatistics::resetChurn);
             result.getResult().addAll(fileStatistics.values());
         }
 
