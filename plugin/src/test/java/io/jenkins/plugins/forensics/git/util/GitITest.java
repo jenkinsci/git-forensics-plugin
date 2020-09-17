@@ -20,7 +20,7 @@ import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
 import jenkins.plugins.git.GitSampleRepoRule;
 
-import io.jenkins.plugins.util.IntegrationTestWithJenkinsPerSuite;
+import io.jenkins.plugins.util.IntegrationTestWithJenkinsPerTest;
 
 import static org.mockito.Mockito.*;
 
@@ -30,7 +30,7 @@ import static org.mockito.Mockito.*;
  * @author Ullrich Hafner
  */
 @SuppressWarnings({"IllegalCatch", "PMD.SignatureDeclareThrowsException"})
-public class GitITest extends IntegrationTestWithJenkinsPerSuite {
+public class GitITest extends IntegrationTestWithJenkinsPerTest {
     /** File name of a source file that will be modified by two authors. */
     protected static final String ADDITIONAL_FILE = "source.txt";
 

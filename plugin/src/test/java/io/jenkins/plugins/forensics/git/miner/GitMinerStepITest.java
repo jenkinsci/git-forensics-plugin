@@ -28,15 +28,6 @@ import static io.jenkins.plugins.forensics.assertions.Assertions.*;
  */
 public class GitMinerStepITest extends GitITest {
 
-    @Before
-    public void setUp(){
-        try {
-            Thread.sleep(2000L);
-        }
-        catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
     /** Verifies that the table contains two rows with the correct statistics. */
     @Test
     public void shouldFillTableDynamically() {

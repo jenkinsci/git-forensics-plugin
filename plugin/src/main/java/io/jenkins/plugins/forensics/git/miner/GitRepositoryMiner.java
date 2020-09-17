@@ -186,7 +186,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
                 final String newCommit, final FilteredLog logger) {
             Map<String, LocChanges> filePaths = new HashMap<>();
             OutputStream outputStream = DisabledOutputStream.INSTANCE;
-            ArrayList<FileHeader> fileHeaders = new ArrayList<>();
+            List<FileHeader> fileHeaders = new ArrayList<>();
             try (DiffFormatter formatter = new DiffFormatter((outputStream))) {
                 final List<DiffEntry> diffEntries = git.diff()
                         .setOldTree(getTreeParser(repository, oldCommit))
