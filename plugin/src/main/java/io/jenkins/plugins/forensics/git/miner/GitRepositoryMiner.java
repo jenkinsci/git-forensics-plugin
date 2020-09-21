@@ -94,6 +94,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
         }
     }
 
+    @SuppressWarnings({"checkstyle:ClassDataAbstractionCoupling", "checkstyle:ClassFanOutComplexity"})
     private static class RepositoryStatisticsCallback
             extends AbstractRepositoryCallback<RemoteResultWrapper<RepositoryStatistics>> {
         private static final long serialVersionUID = 7667073858514128136L;
@@ -154,8 +155,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
                     .collect(Collectors.toMap(FileStatistics::getFileName,
                             Function.identity()));
             fileStatistics.values().forEach(FileStatistics::resetChurn);
-            if (commits.size() > 1 || (commits.size() == 1 && previousStatistics.getLatestCommitId()
-                    .equals(StringUtils.EMPTY))) {
+            if (commits.size() > 1 || isFirstRepositoryCommit(commits)) {
                 Set<String> filesInHead = new FilesCollector(repository).findAllFor(
                         repository.resolve(Constants.HEAD));
                 for (int i = 0; i < commits.size(); i++) {
@@ -180,6 +180,10 @@ public class GitRepositoryMiner extends RepositoryMiner {
             result.getResult().addAll(fileStatistics.values());
         }
 
+        private boolean isFirstRepositoryCommit(final List<RevCommit> commits) {
+            return commits.size() == 1 && StringUtils.isBlank(previousStatistics.getLatestCommitId());
+        }
+
         private Map<String, LocChanges> getFilesAndDiffEntriesFromCommit(
                 final Repository repository,
                 final Git git, final String oldCommit,
@@ -187,7 +191,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
             Map<String, LocChanges> filePaths = new HashMap<>();
             OutputStream outputStream = DisabledOutputStream.INSTANCE;
             List<FileHeader> fileHeaders = new ArrayList<>();
-            try (DiffFormatter formatter = new DiffFormatter((outputStream))) {
+            try (DiffFormatter formatter = new DiffFormatter(outputStream)) {
                 final List<DiffEntry> diffEntries = git.diff()
                         .setOldTree(getTreeParser(repository, oldCommit))
                         .setNewTree(getTreeParser(repository, newCommit))
