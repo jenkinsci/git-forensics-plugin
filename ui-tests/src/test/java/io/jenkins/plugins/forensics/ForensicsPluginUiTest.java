@@ -1,4 +1,4 @@
-package io.jenkins.plugins.forensics.git;
+package io.jenkins.plugins.forensics;
 
 import java.util.List;
 
@@ -11,12 +11,6 @@ import org.jenkinsci.test.acceptance.plugins.git.GitScm;
 import org.jenkinsci.test.acceptance.po.Build;
 import org.jenkinsci.test.acceptance.po.FreeStyleJob;
 import org.jenkinsci.test.acceptance.po.Job;
-
-import io.jenkins.plugins.forensics.DetailsTable;
-import io.jenkins.plugins.forensics.DetailsTableRow;
-import io.jenkins.plugins.forensics.ForensicsPublisher;
-import io.jenkins.plugins.forensics.ScmForensics;
-import io.jenkins.plugins.forensics.ScrollerUtil;
 
 import static io.jenkins.plugins.forensics.DetailsTable.*;
 import static org.assertj.core.api.Assertions.*;
@@ -95,7 +89,7 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
      *         detailsTable object we want to assert the headers for.
      */
     private void assertTableHeaders(final DetailsTable detailsTable) {
-        assertThat(detailsTable.getHeaderSize()).isEqualTo(5);
+        assertThat(detailsTable.getHeaderSize()).isEqualTo(7);
 
         List<String> tableHeaders = detailsTable.getHeaders();
         assertThat(tableHeaders.get(0)).isEqualTo(FILE_NAME);
@@ -103,6 +97,8 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
         assertThat(tableHeaders.get(2)).isEqualTo(COMMITS);
         assertThat(tableHeaders.get(3)).isEqualTo(LAST_COMMIT);
         assertThat(tableHeaders.get(4)).isEqualTo(ADDED);
+        assertThat(tableHeaders.get(5)).isEqualTo(LOC);
+        assertThat(tableHeaders.get(6)).isEqualTo(CHURN);
     }
 
     /**

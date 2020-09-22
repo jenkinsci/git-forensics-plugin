@@ -20,7 +20,7 @@ import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
 import jenkins.plugins.git.GitSampleRepoRule;
 
-import io.jenkins.plugins.util.IntegrationTestWithJenkinsPerSuite;
+import io.jenkins.plugins.util.IntegrationTestWithJenkinsPerTest;
 
 import static org.mockito.Mockito.*;
 
@@ -30,9 +30,13 @@ import static org.mockito.Mockito.*;
  * @author Ullrich Hafner
  */
 @SuppressWarnings({"IllegalCatch", "PMD.SignatureDeclareThrowsException"})
-public class GitITest extends IntegrationTestWithJenkinsPerSuite {
+public class GitITest extends IntegrationTestWithJenkinsPerTest {
     /** File name of a source file that will be modified by two authors. */
-    protected static final String FILE_NAME = "source.txt";
+    protected static final String ADDITIONAL_FILE = "source.txt";
+
+    /** Initial file in the Git repository. */
+    protected static final String INITIAL_FILE = "file";
+
     /** Author 1 name. */
     protected static final String FOO_NAME = "Foo";
     /** Author 1 email. */
@@ -176,8 +180,8 @@ public class GitITest extends IntegrationTestWithJenkinsPerSuite {
      *         the new content of the file
      */
     protected void writeFileAsAuthorFoo(final String content) {
-        writeFile(FILE_NAME, content);
-        git("add", FILE_NAME);
+        writeFile(ADDITIONAL_FILE, content);
+        git("add", ADDITIONAL_FILE);
         git("config", "user.name", FOO_NAME);
         git("config", "user.email", FOO_EMAIL);
         git("commit", "--message=Foo");
@@ -190,8 +194,8 @@ public class GitITest extends IntegrationTestWithJenkinsPerSuite {
      *         the new content of the file
      */
     protected void writeFileAsAuthorBar(final String content) {
-        writeFile(FILE_NAME, content);
-        git("add", FILE_NAME);
+        writeFile(ADDITIONAL_FILE, content);
+        git("add", ADDITIONAL_FILE);
         git("config", "user.name", BAR_NAME);
         git("config", "user.email", BAR_EMAIL);
         git("commit", "--message=Bar");

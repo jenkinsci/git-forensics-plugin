@@ -10,35 +10,18 @@ import org.openqa.selenium.WebElement;
 
 
 /**
- * Page for the DetailsTable on SCMForensics Page.
+ * Page object for the details table of the forensics view.
  *
  * @author Mitja Oldenbourg
  */
 public class DetailsTable {
-    /**
-     * name of file table head.
-     */
-    public static final String FILE_NAME = "File";
-
-    /**
-     * name of number of authors table head.
-     */
-    public static final String AUTHORS = "#Authors";
-
-    /**
-     * name of number of commits table head.
-     */
-    public static final String COMMITS = "#Commits";
-
-    /**
-     * name of last commit date table head.
-     */
-    public static final String LAST_COMMIT = "Last Commit";
-
-    /**
-     * name of date added Table Head.
-     */
-    public static final String ADDED = "Added";
+    static final String FILE_NAME = "File";
+    static final String AUTHORS = "#Authors";
+    static final String COMMITS = "#Commits";
+    static final String LAST_COMMIT = "Last Commit";
+    static final String ADDED = "Added";
+    static final String LOC = "#LoC";
+    static final String CHURN = "Churn";
 
     private final List<DetailsTableRow> tableRows = new ArrayList<>();
     private final List<String> headers;

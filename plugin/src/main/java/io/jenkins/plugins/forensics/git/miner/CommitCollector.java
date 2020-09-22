@@ -21,7 +21,6 @@ import org.eclipse.jgit.revwalk.RevCommit;
 class CommitCollector {
     private final Repository repository;
     private final Git git;
-    //TODO Assign later when incremental analysis is implemented.
     private final String latestRevisionOfPreviousCommit;
 
     CommitCollector(final Repository repository, final Git git, final String latestCommitId) {
@@ -41,6 +40,7 @@ class CommitCollector {
             next = iterator.next();
             String commitId = next.getId().getName();
             if (commitId.equals(latestRevisionOfPreviousCommit)) {
+                newCommits.add(next);
                 break;
             }
             newCommits.add(next);
