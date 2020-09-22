@@ -3,7 +3,6 @@ package io.jenkins.plugins.forensics.git.miner;
 import java.io.IOException;
 import java.util.Objects;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import hudson.model.FreeStyleProject;
@@ -75,11 +74,12 @@ public class GitMinerStepITest extends GitITest {
 
         getJenkins().assertLogContains("Analyzed 2 new commits", build);
         verifyStatistics(statistics, ADDITIONAL_FILE, 1, 1);
+
         build = buildSuccessfully(job);
 
         getJenkins().assertLogContains("created report for 2 files", build);
         getJenkins().assertLogContains("Analyzed 0 new commits", build);
-        verifyStatistics(statistics, ADDITIONAL_FILE, 1, 1);
+        verifyStatistics(getStatistics(build), ADDITIONAL_FILE, 1, 1);
 
         writeFileAsAuthorFoo("Second");
 
@@ -87,14 +87,13 @@ public class GitMinerStepITest extends GitITest {
 
         getJenkins().assertLogContains("created report for 2 files", build);
         getJenkins().assertLogContains("Analyzed 1 new commits", build);
-        verifyStatistics(statistics, ADDITIONAL_FILE, 1, 2);
+        verifyStatistics(getStatistics(build), ADDITIONAL_FILE, 1, 2);
 
         writeFileAsAuthorBar("Another content");
         build = buildSuccessfully(job);
 
         getJenkins().assertLogContains("created report for 2 files", build);
-        verifyStatistics(statistics, ADDITIONAL_FILE, 2, 3);
-
+        verifyStatistics(getStatistics(build), ADDITIONAL_FILE, 2, 3);
     }
 
     /** Verifies the calculation of the #LOC and churn. */
