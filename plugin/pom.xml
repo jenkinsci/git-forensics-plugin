@@ -32,8 +32,8 @@
     <data-tables-api.version>1.10.21-2</data-tables-api.version>
     <forensics-api-plugin.version>0.8.0-rc659.942931c6a1e4</forensics-api-plugin.version>
 
-    <git-plugin.version>4.4.2</git-plugin.version>
-    <git-client.version>3.4.2</git-client.version>
+    <git-plugin.version>4.4.3</git-plugin.version>
+    <git-client.version>3.5.0</git-client.version>
     <scm-api.version>2.6.3</scm-api.version>
 
   </properties>
@@ -64,6 +64,16 @@
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>jackson2-api</artifactId>
         <version>2.11.1</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>credentials</artifactId>
+        <version>2.3.11</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>script-security</artifactId>
+        <version>1.74</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -114,6 +124,13 @@
     </dependency>
 
     <!-- Custom for Integration Test-->
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>matrix-project</artifactId>
+      <version>1.17</version>
+      <scope>test</scope>
+    </dependency>
+
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-basic-steps</artifactId>
