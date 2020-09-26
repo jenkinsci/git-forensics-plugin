@@ -101,6 +101,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
 
         private final RepositoryStatistics previousStatistics;
         private int numberOfNewCommitsAnalyzed;
+        Map<String, FileStatistics> fileStatistics;
 
         RepositoryStatisticsCallback(final RepositoryStatistics previousStatistics) {
             super();
@@ -150,7 +151,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
                 final RemoteResultWrapper<RepositoryStatistics> result)
                 throws IOException {
             FileStatisticsBuilder builder = new FileStatisticsBuilder();
-            Map<String, FileStatistics> fileStatistics = previousStatistics.getFileStatistics()
+            fileStatistics = previousStatistics.getFileStatistics()
                     .stream()
                     .collect(Collectors.toMap(FileStatistics::getFileName,
                             Function.identity()));
@@ -161,9 +162,9 @@ public class GitRepositoryMiner extends RepositoryMiner {
                 for (int i = 0; i < commits.size(); i++) {
                     RevCommit newCommit = commits.get(i);
                     String oldCommitName =
-                            i + 1 >= commits.size() ? null : commits.get(i + 1).getName();
+                            i - 1 < 0 ? null : commits.get(i - 1).getName();
                     if (oldCommitName == null && !previousStatistics.isEmpty()) {
-                        break;
+                        continue;
                     }
                     numberOfNewCommitsAnalyzed++;
                     Map<String, LocChanges> files = getFilesAndDiffEntriesFromCommit(repository,
@@ -174,8 +175,8 @@ public class GitRepositoryMiner extends RepositoryMiner {
                             .inspectCommit(newCommit.getCommitTime(), getAuthor(newCommit),
                                     v.getTotalLoc(),
                                     v.getCommitId(), v.getTotalAddedLines(), v.getDeletedLines()));
+                    fileStatistics.keySet().removeIf(f -> !filesInHead.contains(f));
                 }
-                fileStatistics.keySet().removeIf(f -> !filesInHead.contains(f));
             }
             result.getResult().addAll(fileStatistics.values());
         }
@@ -201,9 +202,19 @@ public class GitRepositoryMiner extends RepositoryMiner {
                     FileHeader fileHeader = formatter.toFileHeader(entry);
                     fileHeaders.add(fileHeader);
                     String filePath = entry.getNewPath();
-                    for (FileHeader fh : fileHeaders) {
-                        EditList temp = fh.toEditList();
-                        filePaths.put(filePath, computeLinesOfCode(temp, newCommit));
+                    if (filePath.equals(DiffEntry.DEV_NULL)) {
+                        FileStatistics movedOrDeletedStatistic = fileStatistics.get(entry.getOldPath());
+                        filePaths.remove(entry.getOldPath());
+                        if (movedOrDeletedStatistic != null) {
+                            movedOrDeletedStatistic.resetLinesOfCode();
+                        }
+                    }
+                    else {
+                        for (FileHeader fh : fileHeaders) {
+                            EditList temp = fh.toEditList();
+                            filePaths.put(filePath, computeLinesOfCode(temp, newCommit));
+                        }
+//                    }
                     }
                 }
             }

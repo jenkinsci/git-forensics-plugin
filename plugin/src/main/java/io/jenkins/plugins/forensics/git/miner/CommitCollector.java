@@ -1,6 +1,7 @@
 package io.jenkins.plugins.forensics.git.miner;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -45,6 +46,7 @@ class CommitCollector {
             }
             newCommits.add(next);
         }
+        Collections.reverse(newCommits);
         return newCommits;
     }
 }
