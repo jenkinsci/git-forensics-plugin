@@ -101,7 +101,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
 
         private final RepositoryStatistics previousStatistics;
         private int numberOfNewCommitsAnalyzed;
-        Map<String, FileStatistics> fileStatistics;
+        private Map<String, FileStatistics> fileStatistics;
 
         RepositoryStatisticsCallback(final RepositoryStatistics previousStatistics) {
             super();
