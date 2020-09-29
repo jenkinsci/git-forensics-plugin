@@ -1,7 +1,6 @@
 package io.jenkins.plugins.forensics.git.miner;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,6 +24,7 @@ import org.eclipse.jgit.treewalk.EmptyTreeIterator;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
 
 import edu.hm.hafner.util.FilteredLog;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 
 import io.jenkins.plugins.forensics.miner.FileStatistics;
 
@@ -36,17 +36,16 @@ import io.jenkins.plugins.forensics.miner.FileStatistics;
 public class DiffsCollector {
     Map<String, CommitFileDelta> getFilesAndDiffEntriesFromCommit(
             final Repository repository, final Git git,
-            final String oldCommit, final String newCommit,
+            @CheckForNull final String oldCommit, final String newCommit,
             final FilteredLog logger, final Map<String, FileStatistics> fileStatistics) {
         Map<String, CommitFileDelta> filePaths = new HashMap<>();
-        OutputStream outputStream = DisabledOutputStream.INSTANCE;
         List<FileHeader> fileHeaders = new ArrayList<>();
-        try (DiffFormatter formatter = new DiffFormatter(outputStream)) {
-            final List<DiffEntry> diffEntries = git.diff()
+        try (DiffFormatter formatter = new DiffFormatter(DisabledOutputStream.INSTANCE)) {
+            formatter.setRepository(repository);
+            List<DiffEntry> diffEntries = git.diff()
                     .setOldTree(getTreeParser(repository, oldCommit))
                     .setNewTree(getTreeParser(repository, newCommit))
                     .call();
-            formatter.setRepository(repository);
             for (DiffEntry entry : diffEntries) {
                 FileHeader fileHeader = formatter.toFileHeader(entry);
                 fileHeaders.add(fileHeader);
@@ -75,12 +74,12 @@ public class DiffsCollector {
     private CommitFileDelta computeLinesOfCode(final EditList edits, final String currentCommitId) {
         CommitFileDelta changes = new CommitFileDelta(currentCommitId);
         for (Edit edit : edits) {
-            changes.updateDelta(edit.getLengthB(), edit.getLengthA()); // TODO: should be consider replacements?
+            changes.updateDelta(edit.getLengthB(), edit.getLengthA()); // TODO: should we consider replacements?
         }
         return changes;
     }
 
-    private AbstractTreeIterator getTreeParser(final Repository repository, final String objectId)
+    private AbstractTreeIterator getTreeParser(final Repository repository, @CheckForNull final String objectId)
             throws IOException {
         if (objectId == null) {
             return new EmptyTreeIterator();

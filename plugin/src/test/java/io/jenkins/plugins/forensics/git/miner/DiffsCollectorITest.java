@@ -97,4 +97,22 @@ public class DiffsCollectorITest extends GitITest {
                     .hasCommitId(head);
         });
     }
+
+    /** Verifies that deleting multiple non-overlapping line blocks in the same file works. */
+    @Test
+    public void shouldHandleMultipleSections() {
+        writeFileAsAuthorBar("1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n");
+        String secondCommit = getHead();
+        writeFileAsAuthorBar("1 =====\n3 =====\n5 =====\n");
+        String head = getHead();
+
+        runTest((repository, git) -> {
+            Map<String, CommitFileDelta> allDeltas = createDiff(repository, git, secondCommit, head);
+            assertThat(allDeltas).hasSize(1).containsKeys(ADDITIONAL_FILE);
+            assertThat(allDeltas.get(ADDITIONAL_FILE)).hasAddedLines(0)
+                    .hasDeletedLines(2)
+                    .hasTotalLoc(-2)
+                    .hasCommitId(getHead());
+        });
+    }
 }
