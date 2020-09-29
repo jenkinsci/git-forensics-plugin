@@ -43,18 +43,28 @@ public class GitRepositoryMinerITest extends GitITest {
      */
     @Test
     public void shouldCountNumberOfCommits() throws InterruptedException {
-        writeFileAsAuthorFoo("First");
-        writeFileAsAuthorFoo("Second");
+        writeFileAsAuthorFoo("First\n");
+        String firstCommit = getHead();
+        writeFileAsAuthorFoo("Second\nLine\n");
+        String head = getHead();
 
         RepositoryStatistics statisticsPerFile = createRepositoryStatistics();
 
-        assertThat(statisticsPerFile).hasFiles(OTHER_FILE, GitITest.ADDITIONAL_FILE);
+        assertThat(statisticsPerFile).hasFiles(OTHER_FILE, ADDITIONAL_FILE);
 
         assertDefaultFileStatistics(statisticsPerFile);
 
-        FileStatistics fileStatistics = statisticsPerFile.get(GitITest.ADDITIONAL_FILE);
-        assertThat(fileStatistics).hasNumberOfAuthors(1);
-        assertThat(fileStatistics).hasNumberOfCommits(2);
+        FileStatistics fileStatistics = statisticsPerFile.get(ADDITIONAL_FILE);
+        assertThat(fileStatistics).hasFileName(ADDITIONAL_FILE)
+                .hasCommits(firstCommit, head)
+                .hasNumberOfAuthors(1)
+                .hasNumberOfCommits(2)
+                .hasLinesOfCode(2);
+
+        assertThat(fileStatistics.getAddedLines(firstCommit)).isOne();
+        assertThat(fileStatistics.getDeletedLines(firstCommit)).isZero();
+        assertThat(fileStatistics.getAddedLines(head)).isEqualTo(2);
+        assertThat(fileStatistics.getDeletedLines(head)).isOne();
     }
 
     /**
@@ -72,11 +82,11 @@ public class GitRepositoryMinerITest extends GitITest {
 
         RepositoryStatistics statisticsPerFile = createRepositoryStatistics();
 
-        assertThat(statisticsPerFile).hasFiles(OTHER_FILE, GitITest.ADDITIONAL_FILE);
+        assertThat(statisticsPerFile).hasFiles(OTHER_FILE, ADDITIONAL_FILE);
 
         assertDefaultFileStatistics(statisticsPerFile);
 
-        FileStatistics fileStatistics = statisticsPerFile.get(GitITest.ADDITIONAL_FILE);
+        FileStatistics fileStatistics = statisticsPerFile.get(ADDITIONAL_FILE);
         assertThat(fileStatistics).hasNumberOfAuthors(2);
         assertThat(fileStatistics).hasNumberOfCommits(4);
     }
@@ -87,7 +97,10 @@ public class GitRepositoryMinerITest extends GitITest {
 
     private void assertDefaultFileStatistics(final RepositoryStatistics statistics) {
         FileStatistics fileStatistics = statistics.get(OTHER_FILE);
-        assertThat(fileStatistics).hasNumberOfAuthors(1);
-        assertThat(fileStatistics).hasNumberOfCommits(1);
+        assertThat(fileStatistics).hasFileName(OTHER_FILE)
+                .hasNumberOfAuthors(1)
+                .hasNumberOfCommits(1)
+                .hasLinesOfCode(0)
+                .hasChurn(0);
     }
 }
