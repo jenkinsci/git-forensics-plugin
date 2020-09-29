@@ -3,6 +3,7 @@ package io.jenkins.plugins.forensics.git.miner;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -50,7 +51,7 @@ public class CommitCollectorITest extends GitITest {
 
             List<RevCommit> actualCommits = collector.findAllCommits();
             assertThat(actualCommits).hasSize(2);
-            assertThat(actualCommits.stream().map(RevCommit::getId)).containsExactlyElementsOf(expectedCommits);
+            assertThat(extractCommitIds(actualCommits)).containsExactlyElementsOf(expectedCommits);
         });
 
         writeFileAsAuthorBar("Second");
@@ -61,7 +62,7 @@ public class CommitCollectorITest extends GitITest {
 
             List<RevCommit> actualCommits = collector.findAllCommits();
             assertThat(actualCommits).hasSize(3);
-            assertThat(actualCommits.stream().map(RevCommit::getId)).containsExactlyElementsOf(expectedCommits);
+            assertThat(extractCommitIds(actualCommits)).containsExactlyElementsOf(expectedCommits);
         });
     }
 
@@ -79,19 +80,19 @@ public class CommitCollectorITest extends GitITest {
             CommitCollector allCollector = new CommitCollector(repository, git, expectedCommits.get(0).getName());
             List<RevCommit> actualCommits = allCollector.findAllCommits();
             assertThat(actualCommits).hasSize(3);
-            assertThat(actualCommits.stream().map(RevCommit::getId)).containsExactlyElementsOf(expectedCommits);
+            assertThat(extractCommitIds(actualCommits)).containsExactlyElementsOf(expectedCommits);
 
             expectedCommits.remove(0); // remove first commit
             CommitCollector twoCollector = new CommitCollector(repository, git, expectedCommits.get(0).getName());
             List<RevCommit> twoCommits = twoCollector.findAllCommits();
             assertThat(twoCommits).hasSize(2);
-            assertThat(twoCommits.stream().map(RevCommit::getId)).containsExactlyElementsOf(expectedCommits);
+            assertThat(extractCommitIds(twoCommits)).containsExactlyElementsOf(expectedCommits);
 
             expectedCommits.remove(0); // remove second commit
             CommitCollector oneCollector = new CommitCollector(repository, git, expectedCommits.get(0).getName());
             List<RevCommit> oneCommits = oneCollector.findAllCommits();
             assertThat(oneCommits).hasSize(1);
-            assertThat(oneCommits.stream().map(RevCommit::getId)).containsExactlyElementsOf(expectedCommits);
+            assertThat(extractCommitIds(oneCommits)).containsExactlyElementsOf(expectedCommits);
         });
     }
 
@@ -108,12 +109,13 @@ public class CommitCollectorITest extends GitITest {
                 return null;
             });
         }
-        catch (IOException exception) {
+        catch (IOException | InterruptedException exception) {
             throw new AssertionError(exception);
         }
-        catch (InterruptedException exception) {
-            exception.printStackTrace();
-        }
+    }
+
+    private Stream<ObjectId> extractCommitIds(final List<RevCommit> actualCommits) {
+        return actualCommits.stream().map(RevCommit::getId);
     }
 
     @FunctionalInterface

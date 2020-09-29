@@ -44,7 +44,6 @@ import io.jenkins.plugins.forensics.miner.FileStatistics;
 import io.jenkins.plugins.forensics.miner.FileStatistics.FileStatisticsBuilder;
 import io.jenkins.plugins.forensics.miner.RepositoryMiner;
 import io.jenkins.plugins.forensics.miner.RepositoryStatistics;
-import io.jenkins.plugins.forensics.util.LocChanges;
 
 /**
  * Mines a Git repository and creates statistics for all available files.
@@ -186,9 +185,9 @@ public class GitRepositoryMiner extends RepositoryMiner {
         }
 
         private Map<String, LocChanges> getFilesAndDiffEntriesFromCommit(
-                final Repository repository,
-                final Git git, final String oldCommit,
-                final String newCommit, final FilteredLog logger) {
+                final Repository repository, final Git git,
+                final String oldCommit, final String newCommit,
+                final FilteredLog logger) {
             Map<String, LocChanges> filePaths = new HashMap<>();
             OutputStream outputStream = DisabledOutputStream.INSTANCE;
             List<FileHeader> fileHeaders = new ArrayList<>();
@@ -214,7 +213,6 @@ public class GitRepositoryMiner extends RepositoryMiner {
                             EditList temp = fh.toEditList();
                             filePaths.put(filePath, computeLinesOfCode(temp, newCommit));
                         }
-//                    }
                     }
                 }
             }
