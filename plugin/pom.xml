@@ -193,6 +193,7 @@
             <package>io.jenkins.plugins.forensics.git</package>
           </packages>
           <excludes combine.children="append">
+            <exclude>.*Test</exclude>
             <exclude>.*Recorder</exclude>
             <exclude>.*RemoteResultWrapper.*</exclude>
           </excludes>

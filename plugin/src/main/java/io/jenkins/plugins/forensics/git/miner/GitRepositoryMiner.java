@@ -1,9 +1,6 @@
 package io.jenkins.plugins.forensics.git.miner;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -13,23 +10,11 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.diff.DiffEntry;
-import org.eclipse.jgit.diff.DiffFormatter;
-import org.eclipse.jgit.diff.Edit;
-import org.eclipse.jgit.diff.EditList;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.ObjectReader;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.patch.FileHeader;
 import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.revwalk.RevTree;
-import org.eclipse.jgit.revwalk.RevWalk;
-import org.eclipse.jgit.treewalk.AbstractTreeIterator;
-import org.eclipse.jgit.treewalk.CanonicalTreeParser;
-import org.eclipse.jgit.treewalk.EmptyTreeIterator;
-import org.eclipse.jgit.util.io.DisabledOutputStream;
 
 import edu.hm.hafner.util.FilteredLog;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -53,7 +38,6 @@ import io.jenkins.plugins.forensics.miner.RepositoryStatistics;
  * @see FilesCollector
  */
 @SuppressFBWarnings(value = "SE", justification = "GitClient implementation is Serializable")
-@SuppressWarnings("PMD.ExcessiveImports")
 public class GitRepositoryMiner extends RepositoryMiner {
     private static final long serialVersionUID = 1157958118716013983L;
 
@@ -156,6 +140,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
                             Function.identity()));
             fileStatistics.values().forEach(FileStatistics::resetChurn);
             if (commits.size() > 1 || isFirstRepositoryCommit(commits)) {
+                DiffsCollector diffsCollector = new DiffsCollector();
                 Set<String> filesInHead = new FilesCollector(repository).findAllFor(
                         repository.resolve(Constants.HEAD));
                 for (int i = 0; i < commits.size(); i++) {
@@ -166,14 +151,12 @@ public class GitRepositoryMiner extends RepositoryMiner {
                         continue;
                     }
                     numberOfNewCommitsAnalyzed++;
-                    Map<String, LocChanges> files = getFilesAndDiffEntriesFromCommit(repository,
-                            git,
-                            oldCommitName, newCommit.getName(),
-                            result);
-                    files.forEach((f, v) -> fileStatistics.computeIfAbsent(f, builder::build)
+                    Map<String, CommitFileDelta> files = diffsCollector.getFilesAndDiffEntriesFromCommit(
+                            repository, git, oldCommitName, newCommit.getName(), result, fileStatistics);
+                    files.forEach((file, delta) -> fileStatistics.computeIfAbsent(file, builder::build)
                             .inspectCommit(newCommit.getCommitTime(), getAuthor(newCommit),
-                                    v.getTotalLoc(),
-                                    v.getCommitId(), v.getTotalAddedLines(), v.getDeletedLines()));
+                                    delta.getTotalLoc(), delta.getCommitId(),
+                                    delta.getAddedLines(), delta.getDeletedLines()));
                     fileStatistics.keySet().removeIf(f -> !filesInHead.contains(f));
                 }
             }
@@ -182,71 +165,6 @@ public class GitRepositoryMiner extends RepositoryMiner {
 
         private boolean isFirstRepositoryCommit(final List<RevCommit> commits) {
             return commits.size() == 1 && StringUtils.isBlank(previousStatistics.getLatestCommitId());
-        }
-
-        private Map<String, LocChanges> getFilesAndDiffEntriesFromCommit(
-                final Repository repository, final Git git,
-                final String oldCommit, final String newCommit,
-                final FilteredLog logger) {
-            Map<String, LocChanges> filePaths = new HashMap<>();
-            OutputStream outputStream = DisabledOutputStream.INSTANCE;
-            List<FileHeader> fileHeaders = new ArrayList<>();
-            try (DiffFormatter formatter = new DiffFormatter(outputStream)) {
-                final List<DiffEntry> diffEntries = git.diff()
-                        .setOldTree(getTreeParser(repository, oldCommit))
-                        .setNewTree(getTreeParser(repository, newCommit))
-                        .call();
-                formatter.setRepository(repository);
-                for (DiffEntry entry : diffEntries) {
-                    FileHeader fileHeader = formatter.toFileHeader(entry);
-                    fileHeaders.add(fileHeader);
-                    String filePath = entry.getNewPath();
-                    if (filePath.equals(DiffEntry.DEV_NULL)) {
-                        FileStatistics movedOrDeletedStatistic = fileStatistics.get(entry.getOldPath());
-                        filePaths.remove(entry.getOldPath());
-                        if (movedOrDeletedStatistic != null) {
-                            movedOrDeletedStatistic.resetLinesOfCode();
-                        }
-                    }
-                    else {
-                        for (FileHeader fh : fileHeaders) {
-                            EditList temp = fh.toEditList();
-                            filePaths.put(filePath, computeLinesOfCode(temp, newCommit));
-                        }
-                    }
-                }
-            }
-            catch (IOException | GitAPIException exception) {
-                logger.logException(exception, "Can't get Files and DiffEntries.");
-            }
-            return filePaths;
-        }
-
-        private LocChanges computeLinesOfCode(final EditList edits, final String currentCommitId) {
-            LocChanges changes = new LocChanges(currentCommitId);
-            for (Edit edit : edits) {
-                changes.updateLocChanges(edit.getLengthB(), edit.getLengthA());
-            }
-            return changes;
-        }
-
-        private AbstractTreeIterator getTreeParser(final Repository repository,
-                final String objectId)
-                throws IOException {
-            if (objectId == null) {
-                return new EmptyTreeIterator();
-            }
-            try (RevWalk walk = new RevWalk(repository)) {
-                RevCommit commit = walk.parseCommit(repository.resolve(objectId));
-                RevTree tree = walk.parseTree(commit.getTree().getId());
-
-                CanonicalTreeParser treeParser = new CanonicalTreeParser();
-                try (ObjectReader reader = repository.newObjectReader()) {
-                    treeParser.reset(reader, tree.getId());
-                }
-                walk.dispose();
-                return treeParser;
-            }
         }
 
         @CheckForNull

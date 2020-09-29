@@ -1,19 +1,12 @@
 package io.jenkins.plugins.forensics.git.miner;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.Test;
-
-import org.jenkinsci.plugins.gitclient.GitClient;
-import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 
 import io.jenkins.plugins.forensics.git.util.GitITest;
 
@@ -28,7 +21,7 @@ public class CommitCollectorITest extends GitITest {
     /** Verifies that the initial repository contains a single commit. */
     @Test
     public void shouldFindInitialCommits() {
-        runCollector((repository, git) -> {
+        runTest((repository, git) -> {
             CommitCollector collector = new CommitCollector(repository, git, "-");
 
             List<RevCommit> actualCommits = collector.findAllCommits();
@@ -46,7 +39,7 @@ public class CommitCollectorITest extends GitITest {
         writeFileAsAuthorFoo("First");
         expectedCommits.add(getHeadCommit());
 
-        runCollector((repository, git) -> {
+        runTest((repository, git) -> {
             CommitCollector collector = new CommitCollector(repository, git, "-");
 
             List<RevCommit> actualCommits = collector.findAllCommits();
@@ -57,7 +50,7 @@ public class CommitCollectorITest extends GitITest {
         writeFileAsAuthorBar("Second");
         expectedCommits.add(getHeadCommit());
 
-        runCollector((repository, git) -> {
+        runTest((repository, git) -> {
             CommitCollector collector = new CommitCollector(repository, git, "-");
 
             List<RevCommit> actualCommits = collector.findAllCommits();
@@ -76,7 +69,7 @@ public class CommitCollectorITest extends GitITest {
         writeFileAsAuthorBar("Second");
         expectedCommits.add(getHeadCommit());
 
-        runCollector((repository, git) -> {
+        runTest((repository, git) -> {
             CommitCollector allCollector = new CommitCollector(repository, git, expectedCommits.get(0).getName());
             List<RevCommit> actualCommits = allCollector.findAllCommits();
             assertThat(actualCommits).hasSize(3);
@@ -96,30 +89,8 @@ public class CommitCollectorITest extends GitITest {
         });
     }
 
-    private void runCollector(final GitTestCase testCase) {
-        try {
-            GitClient gitClient = createGitClient();
-            gitClient.withRepository((RepositoryCallback<Void>) (repository, virtualChannel) -> {
-                try (Git git = new Git(repository)) {
-                    testCase.run(repository, git);
-                }
-                catch (GitAPIException exception) {
-                    // ignore
-                }
-                return null;
-            });
-        }
-        catch (IOException | InterruptedException exception) {
-            throw new AssertionError(exception);
-        }
-    }
-
     private Stream<ObjectId> extractCommitIds(final List<RevCommit> actualCommits) {
         return actualCommits.stream().map(RevCommit::getId);
     }
 
-    @FunctionalInterface
-    private interface GitTestCase {
-        void run(Repository repository, Git git) throws GitAPIException, IOException;
-    }
 }
