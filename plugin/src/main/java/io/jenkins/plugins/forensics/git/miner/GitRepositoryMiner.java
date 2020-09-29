@@ -96,7 +96,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
         public RemoteResultWrapper<RepositoryStatistics> invoke(final Repository repository,
                 final VirtualChannel channel) {
             RemoteResultWrapper<RepositoryStatistics> result = new RemoteResultWrapper<>(
-                    createStatisticsFromHead(repository),
+                    createEmptyStatisticsFromHead(repository),
                     "Errors while mining the Git repository:");
 
             try {
@@ -116,7 +116,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
             return result;
         }
 
-        private RepositoryStatistics createStatisticsFromHead(final Repository repository) {
+        private RepositoryStatistics createEmptyStatisticsFromHead(final Repository repository) {
             try {
                 ObjectId headId = repository.resolve(Constants.HEAD);
                 if (headId != null) {
@@ -184,5 +184,4 @@ public class GitRepositoryMiner extends RepositoryMiner {
             return numberOfNewCommitsAnalyzed;
         }
     }
-
 }

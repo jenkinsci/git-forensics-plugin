@@ -17,6 +17,9 @@ import static io.jenkins.plugins.forensics.git.assertions.Assertions.*;
  * @author Ullrich Hafner
  */
 public class DiffsCollectorITest extends GitITest {
+
+    private static final String MOVED_FILE = "moved";
+
     /** Verifies that the initial repository contains a single commit. */
     @Test
     public void shouldInitializeCounter() {
@@ -113,6 +116,48 @@ public class DiffsCollectorITest extends GitITest {
                     .hasDeletedLines(2)
                     .hasTotalLoc(-2)
                     .hasCommitId(getHead());
+        });
+    }
+
+    /** Verifies that removing a file correctly identifies the deleted lines. */
+    @Test
+    public void shouldHandleRemovedFiles() {
+        writeFileAsAuthorBar("1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n");
+        String initialCommit = getHead();
+        git("rm", ADDITIONAL_FILE);
+        commit("Removed file");
+
+        runTest((repository, git) -> {
+            String head = getHead();
+            Map<String, CommitFileDelta> allDeltas = createDiff(repository, git, initialCommit, head);
+            assertThat(allDeltas).hasSize(1).containsKeys(ADDITIONAL_FILE);
+            assertThat(allDeltas.get(ADDITIONAL_FILE)).hasAddedLines(0)
+                    .hasDeletedLines(5)
+                    .hasTotalLoc(-5)
+                    .hasCommitId(head);
+        });
+    }
+
+    /** Verifies that moving a file correctly identifies the moved lines (old file: deleted, new file: added). */
+    @Test
+    public void shouldHandleMovedFiles() {
+        writeFileAsAuthorBar("1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n");
+        String initialCommit = getHead();
+        git("mv", ADDITIONAL_FILE, MOVED_FILE);
+        commit("Moved file");
+
+        runTest((repository, git) -> {
+            String head = getHead();
+            Map<String, CommitFileDelta> allDeltas = createDiff(repository, git, initialCommit, head);
+            assertThat(allDeltas).hasSize(2).containsKeys(ADDITIONAL_FILE, MOVED_FILE);
+            assertThat(allDeltas.get(ADDITIONAL_FILE)).hasAddedLines(0)
+                    .hasDeletedLines(5)
+                    .hasTotalLoc(-5)
+                    .hasCommitId(head);
+            assertThat(allDeltas.get(MOVED_FILE)).hasAddedLines(5)
+                    .hasDeletedLines(0)
+                    .hasTotalLoc(5)
+                    .hasCommitId(head);
         });
     }
 }
