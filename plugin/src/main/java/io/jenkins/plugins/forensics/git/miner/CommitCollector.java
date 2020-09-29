@@ -15,7 +15,8 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 
 /**
- * Collects all commits for a git repository.
+ * Collects all commits for a git repository up to a given commit ID. The collected commits will be sorted ascending,
+ * i.e. the list starts with the the given commit ID up to the current HEAD.
  *
  * @author Giulia Del Bravo
  */
