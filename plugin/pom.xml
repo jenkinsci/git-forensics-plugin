@@ -30,7 +30,7 @@
     <!-- Jenkins Plugin Dependencies Versions -->
     <plugin-util-api.version>1.2.5</plugin-util-api.version>
     <data-tables-api.version>1.10.21-2</data-tables-api.version>
-    <forensics-api-plugin.version>0.8.0-rc671.7f20249ec32f</forensics-api-plugin.version>
+    <forensics-api-plugin.version>0.8.0-SNAPSHOT</forensics-api-plugin.version>
 
     <git-plugin.version>4.4.3</git-plugin.version>
     <git-client.version>3.5.0</git-client.version>
@@ -96,7 +96,11 @@
       <artifactId>eclipse-collections</artifactId>
       <version>${eclipse-collections.version}</version>
     </dependency>
-
+    <dependency>
+      <groupId>one.util</groupId>
+      <artifactId>streamex</artifactId>
+      <version>0.7.3</version>
+    </dependency>
     <!-- Jenkins Plugin Dependencies -->
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>

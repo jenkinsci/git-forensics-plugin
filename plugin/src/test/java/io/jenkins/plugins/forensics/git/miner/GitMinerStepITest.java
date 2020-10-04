@@ -26,7 +26,6 @@ import static io.jenkins.plugins.forensics.assertions.Assertions.*;
  * @author Ullrich Hafner
  */
 public class GitMinerStepITest extends GitITest {
-
     /** Verifies that the table contains two rows with the correct statistics. */
     @Test
     public void shouldFillTableDynamically() {
@@ -50,56 +49,120 @@ public class GitMinerStepITest extends GitITest {
         assertThat(forensics.getRows()).hasSize(2);
 
         String wrappedFileName = "<a href=\"fileName." + ADDITIONAL_FILE.hashCode() + "\">" + ADDITIONAL_FILE + "</a>";
-        String wrappedInitialFileName =  "<a href=\"fileName." + INITIAL_FILE.hashCode() + "\">" + INITIAL_FILE + "</a>";
+        String wrappedInitialFileName = "<a href=\"fileName." + INITIAL_FILE.hashCode() + "\">" + INITIAL_FILE + "</a>";
 
         assertThat(getRow(forensics, 0))
-                .hasFileName(wrappedFileName).hasAuthorsSize(2).hasCommitsSize(4);
+                .hasFileName(wrappedFileName)
+                .hasAuthorsSize(2)
+                .hasCommitsSize(4)
+                .hasLinesOfCode(1)
+                .hasChurn(7);
         assertThat(getRow(forensics, 1))
-                .hasFileName(wrappedInitialFileName).hasAuthorsSize(1).hasCommitsSize(1);
+                .hasFileName(wrappedInitialFileName)
+                .hasAuthorsSize(1)
+                .hasCommitsSize(1)
+                .hasLinesOfCode(0)
+                .hasChurn(0);
     }
 
-    /** Verifies that the mining process is incremental. */
+    /** Verifies that the mining process is incremental and scans only new commits. */
     @Test
-    public void shouldMineRepositoryIncrementally() throws IOException {
-        writeFileAsAuthorFoo("First");
+    public void shouldMineRepositoryIncrementally() {
+        String firstCommit = getHead();
+        writeFileAsAuthorFoo("Second");
+        String secondCommit = getHead();
 
         FreeStyleProject job = createJobWithMiner();
-        Run<?, ?> build = buildSuccessfully(job);
+        Run<?, ?> firstBuild = buildSuccessfully(job);
 
-        getJenkins().assertLogContains("created report for 2 files", build);
-
-        RepositoryStatistics statistics = getStatistics(build);
+        RepositoryStatistics statistics = getStatistics(firstBuild);
         assertThat(statistics).hasFiles(INITIAL_FILE, ADDITIONAL_FILE);
         assertThat(statistics).hasLatestCommitId(getHead());
 
-        getJenkins().assertLogContains("Analyzed 2 new commits", build);
+        assertThat(getConsoleLog(firstBuild)).contains(
+                "created report for 2 files",
+                String.format("Analyzed commit '%s'", firstCommit),
+                String.format("Analyzed commit '%s'", secondCommit)
+        );
         verifyStatistics(statistics, ADDITIONAL_FILE, 1, 1);
 
-        build = buildSuccessfully(job);
+        Run<?, ?> secondBuild = buildSuccessfully(job);
 
-        getJenkins().assertLogContains("created report for 2 files", build);
-        getJenkins().assertLogContains("Analyzed 0 new commits", build);
-        verifyStatistics(getStatistics(build), ADDITIONAL_FILE, 1, 1);
+        assertThat(getConsoleLog(secondBuild)).contains(
+                "created report for 0 files",
+                String.format("No commits found since previous commit '%s'", secondCommit));
+        verifyStatistics(getStatistics(secondBuild), ADDITIONAL_FILE, 1, 1);
 
-        writeFileAsAuthorFoo("Second");
+        writeFileAsAuthorFoo("Third");
+        String thirdCommit = getHead();
 
-        build = buildSuccessfully(job);
+        Run<?, ?> thirdBuild = buildSuccessfully(job);
 
-        getJenkins().assertLogContains("created report for 2 files", build);
-        getJenkins().assertLogContains("Analyzed 1 new commits", build);
-        verifyStatistics(getStatistics(build), ADDITIONAL_FILE, 1, 2);
+        assertThat(getConsoleLog(thirdBuild)).contains(
+                "created report for 1 files",
+                String.format("Analyzed commit '%s'", thirdCommit));
+        verifyStatistics(getStatistics(thirdBuild), ADDITIONAL_FILE, 1, 2);
 
         writeFileAsAuthorBar("Another content");
-        build = buildSuccessfully(job);
+        Run<?, ?> build = buildSuccessfully(job);
 
-        getJenkins().assertLogContains("created report for 2 files", build);
+        assertThat(getConsoleLog(thirdBuild)).contains(
+                "created report for 1 files",
+                String.format("Analyzed commit '%s'", thirdCommit));
+        verifyStatistics(getStatistics(build), ADDITIONAL_FILE, 2, 3);
+    }
+
+    /** Verifies that the history of moved files will be preserved. */
+    @Test
+    public void shouldPreserveHistoryOfMovedFiles() {
+        String firstCommit = getHead();
+        writeFileAsAuthorFoo("Second");
+        String secondCommit = getHead();
+
+        FreeStyleProject job = createJobWithMiner();
+        Run<?, ?> firstBuild = buildSuccessfully(job);
+
+        RepositoryStatistics statistics = getStatistics(firstBuild);
+        assertThat(statistics).hasFiles(INITIAL_FILE, ADDITIONAL_FILE);
+        assertThat(statistics).hasLatestCommitId(getHead());
+
+        assertThat(getConsoleLog(firstBuild)).contains(
+                "created report for 2 files",
+                String.format("Analyzed commit '%s'", firstCommit),
+                String.format("Analyzed commit '%s'", secondCommit)
+        );
+        verifyStatistics(statistics, ADDITIONAL_FILE, 1, 1);
+
+        Run<?, ?> secondBuild = buildSuccessfully(job);
+
+        assertThat(getConsoleLog(secondBuild)).contains(
+                "created report for 0 files",
+                String.format("No commits found since previous commit '%s'", secondCommit));
+        verifyStatistics(getStatistics(secondBuild), ADDITIONAL_FILE, 1, 1);
+
+        writeFileAsAuthorFoo("Third");
+        String thirdCommit = getHead();
+
+        Run<?, ?> thirdBuild = buildSuccessfully(job);
+
+        assertThat(getConsoleLog(thirdBuild)).contains(
+                "created report for 1 files",
+                String.format("Analyzed commit '%s'", thirdCommit));
+        verifyStatistics(getStatistics(thirdBuild), ADDITIONAL_FILE, 1, 2);
+
+        writeFileAsAuthorBar("Another content");
+        Run<?, ?> build = buildSuccessfully(job);
+
+        assertThat(getConsoleLog(thirdBuild)).contains(
+                "created report for 1 files",
+                String.format("Analyzed commit '%s'", thirdCommit));
         verifyStatistics(getStatistics(build), ADDITIONAL_FILE, 2, 3);
     }
 
     /** Verifies the calculation of the #LOC and churn. */
     @Test
     public void shouldCalculateLocAndChurn() {
-        writeFileAsAuthorFoo("First");
+        writeFileAsAuthorFoo("First\n");
 
         FreeStyleProject job = createJobWithMiner();
         Run<?, ?> build = buildSuccessfully(job);
@@ -108,11 +171,11 @@ public class GitMinerStepITest extends GitITest {
 
         build = buildSuccessfully(job);
 
-        verifyLocAndChurn(build, ADDITIONAL_FILE, 0, 1);
-        writeFileAsAuthorFoo("\nSecond");
+        verifyLocAndChurn(build, ADDITIONAL_FILE, 1, 1);
+        writeFileAsAuthorFoo("Second\n");
 
         build = buildSuccessfully(job);
-        verifyLocAndChurn(build, ADDITIONAL_FILE, 3, 2);
+        verifyLocAndChurn(build, ADDITIONAL_FILE, 3, 1);
     }
 
     private void verifyStatistics(final RepositoryStatistics statistics, final String fileName,
@@ -123,11 +186,12 @@ public class GitMinerStepITest extends GitITest {
         assertThat(additionalFileStatistics).hasNumberOfCommits(commitsSize);
     }
 
-    private void verifyLocAndChurn(final Run<?, ?> build, final String fileName, final int churn, final int linesOfCode) {
+    private void verifyLocAndChurn(final Run<?, ?> build, final String fileName, final int churn,
+            final int linesOfCode) {
         RepositoryStatistics statistics = getStatistics(build);
         FileStatistics fileStatistics = statistics.get(fileName);
 
-        assertThat(fileStatistics.getChurn()).isEqualTo(churn);
+        assertThat(fileStatistics.getAbsoluteChurn()).isEqualTo(churn);
         assertThat(fileStatistics.getLinesOfCode()).isEqualTo(linesOfCode);
     }
 

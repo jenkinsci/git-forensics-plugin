@@ -1,6 +1,5 @@
 package io.jenkins.plugins.forensics.git.miner;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -22,9 +21,9 @@ public class CommitCollectorITest extends GitITest {
     @Test
     public void shouldFindInitialCommits() {
         runTest((repository, git) -> {
-            CommitCollector collector = new CommitCollector(repository, git, "-");
+            CommitCollector collector = new CommitCollector();
 
-            List<RevCommit> actualCommits = collector.findAllCommits();
+            List<RevCommit> actualCommits = collector.findAllCommits(repository, git, "-");
             assertThat(actualCommits).hasSize(1);
             assertThat(actualCommits.get(0).getId()).isEqualTo(getHeadCommit());
         });
@@ -33,64 +32,53 @@ public class CommitCollectorITest extends GitITest {
     /** Verifies that additional commits are recorded and sorted correctly. */
     @Test
     public void shouldFindAdditionalCommits() {
-        List<ObjectId> expectedCommits = new ArrayList<>();
-        expectedCommits.add(getHeadCommit());
-
-        writeFileAsAuthorFoo("First");
-        expectedCommits.add(getHeadCommit());
+        ObjectId start = getHeadCommit();
+        writeFileAsAuthorFoo("Middle");
+        ObjectId middle = getHeadCommit();
 
         runTest((repository, git) -> {
-            CommitCollector collector = new CommitCollector(repository, git, "-");
+            CommitCollector collector = new CommitCollector();
 
-            List<RevCommit> actualCommits = collector.findAllCommits();
+            List<RevCommit> actualCommits = collector.findAllCommits(repository, git, "-");
             assertThat(actualCommits).hasSize(2);
-            assertThat(extractCommitIds(actualCommits)).containsExactlyElementsOf(expectedCommits);
+            assertThat(extractCommitIds(actualCommits)).containsExactly(middle, start);
         });
 
         writeFileAsAuthorBar("Second");
-        expectedCommits.add(getHeadCommit());
+        ObjectId head = getHeadCommit();
 
         runTest((repository, git) -> {
-            CommitCollector collector = new CommitCollector(repository, git, "-");
+            CommitCollector collector = new CommitCollector();
 
-            List<RevCommit> actualCommits = collector.findAllCommits();
+            List<RevCommit> actualCommits = collector.findAllCommits(repository, git, "-");
             assertThat(actualCommits).hasSize(3);
-            assertThat(extractCommitIds(actualCommits)).containsExactlyElementsOf(expectedCommits);
+            assertThat(extractCommitIds(actualCommits)).containsExactly(head, middle, start);
         });
     }
 
     /** Verifies that commits are recorded only up to a given commit. */
     @Test
     public void shouldFindCommitsUpToGivenCommit() {
-        List<ObjectId> expectedCommits = new ArrayList<>();
-        expectedCommits.add(getHeadCommit());
-        writeFileAsAuthorFoo("First");
-        expectedCommits.add(getHeadCommit());
-        writeFileAsAuthorBar("Second");
-        expectedCommits.add(getHeadCommit());
+        ObjectId start = getHeadCommit();
+        writeFileAsAuthorFoo("Middle");
+        ObjectId middle = getHeadCommit();
+        writeFileAsAuthorBar("Head");
+        ObjectId head = getHeadCommit();
 
         runTest((repository, git) -> {
-            CommitCollector allCollector = new CommitCollector(repository, git, expectedCommits.get(0).getName());
-            List<RevCommit> actualCommits = allCollector.findAllCommits();
-            assertThat(actualCommits).hasSize(3);
-            assertThat(extractCommitIds(actualCommits)).containsExactlyElementsOf(expectedCommits);
+            CommitCollector upToHead = new CommitCollector();
+            List<RevCommit> upToHeadCommits = upToHead.findAllCommits(repository, git, start.getName());
+            assertThat(upToHeadCommits).hasSize(2);
+            assertThat(extractCommitIds(upToHeadCommits)).containsExactly(head, middle);
 
-            expectedCommits.remove(0); // remove first commit
-            CommitCollector twoCollector = new CommitCollector(repository, git, expectedCommits.get(0).getName());
-            List<RevCommit> twoCommits = twoCollector.findAllCommits();
-            assertThat(twoCommits).hasSize(2);
-            assertThat(extractCommitIds(twoCommits)).containsExactlyElementsOf(expectedCommits);
-
-            expectedCommits.remove(0); // remove second commit
-            CommitCollector oneCollector = new CommitCollector(repository, git, expectedCommits.get(0).getName());
-            List<RevCommit> oneCommits = oneCollector.findAllCommits();
-            assertThat(oneCommits).hasSize(1);
-            assertThat(extractCommitIds(oneCommits)).containsExactlyElementsOf(expectedCommits);
+            CommitCollector upToMiddle = new CommitCollector();
+            List<RevCommit> upToMiddleCommits = upToMiddle.findAllCommits(repository, git, middle.getName());
+            assertThat(upToMiddleCommits).hasSize(1);
+            assertThat(extractCommitIds(upToMiddleCommits)).containsExactly(head);
         });
     }
 
     private Stream<ObjectId> extractCommitIds(final List<RevCommit> actualCommits) {
         return actualCommits.stream().map(RevCommit::getId);
     }
-
 }

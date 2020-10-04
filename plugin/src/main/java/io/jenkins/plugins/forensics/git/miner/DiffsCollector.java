@@ -8,23 +8,17 @@ import java.util.Map;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
+import org.eclipse.jgit.diff.DiffEntry.ChangeType;
 import org.eclipse.jgit.diff.DiffFormatter;
 import org.eclipse.jgit.diff.Edit;
-import org.eclipse.jgit.diff.EditList;
-import org.eclipse.jgit.lib.ObjectReader;
+import org.eclipse.jgit.diff.RenameDetector;
 import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.revwalk.RevTree;
-import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.treewalk.AbstractTreeIterator;
-import org.eclipse.jgit.treewalk.CanonicalTreeParser;
-import org.eclipse.jgit.treewalk.EmptyTreeIterator;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
 
 import edu.hm.hafner.util.FilteredLog;
-import edu.umd.cs.findbugs.annotations.CheckForNull;
 
-import io.jenkins.plugins.forensics.miner.FileStatistics;
+import io.jenkins.plugins.forensics.miner.Commit;
 
 /**
  * Collects delta information (added and deleted lines of code) for all files that are part of a given commit.
@@ -32,20 +26,33 @@ import io.jenkins.plugins.forensics.miner.FileStatistics;
  * @author Ullrich Hafner
  */
 public class DiffsCollector {
-    Map<String, CommitFileDelta> getFilesAndDiffEntriesFromCommit(
+    Map<String, Commit> getFilesAndDiffEntriesForCommit(
             final Repository repository, final Git git,
-            @CheckForNull final String oldCommit, final String newCommit,
-            final FilteredLog logger, final Map<String, FileStatistics> fileStatistics) {
-        Map<String, CommitFileDelta> filePaths = new HashMap<>();
+            final Commit fromCommit, final AbstractTreeIterator toTree,
+            final FilteredLog logger) {
+        Map<String, Commit> filePaths = new HashMap<>();
         try (DiffFormatter formatter = new DiffFormatter(DisabledOutputStream.INSTANCE)) {
             formatter.setRepository(repository);
             List<DiffEntry> diffEntries = git.diff()
-                    .setOldTree(getTreeParser(repository, oldCommit))
-                    .setNewTree(getTreeParser(repository, newCommit))
+                    .setNewTree(CommitAnalyzer.createTreeIteratorFor(repository, fromCommit.getId()))
+                    .setOldTree(toTree)
                     .call();
-            for (DiffEntry entry : diffEntries) {
-                filePaths.put(resolvePath(entry),
-                        computeLinesOfCode(formatter.toFileHeader(entry).toEditList(), newCommit));
+            RenameDetector renames = new RenameDetector(repository);
+            renames.addAll(diffEntries);
+
+            for (DiffEntry entry : renames.compute()) {
+                Commit commit = new Commit(fromCommit);
+                if (entry.getChangeType() == ChangeType.RENAME) {
+                    commit.setOldPath(entry.getOldPath());
+                }
+                if (entry.getChangeType() == ChangeType.DELETE) {
+                    commit.markAsDeleted();
+                }
+                for (Edit edit : formatter.toFileHeader(entry).toEditList()) {
+                    commit.addLines(edit.getLengthB());
+                    commit.deleteLines(edit.getLengthA());
+                }
+                filePaths.put(resolvePath(entry), commit);
             }
         }
         catch (IOException | GitAPIException exception) {
@@ -64,29 +71,4 @@ public class DiffsCollector {
         }
     }
 
-    private CommitFileDelta computeLinesOfCode(final EditList edits, final String currentCommitId) {
-        CommitFileDelta changes = new CommitFileDelta(currentCommitId);
-        for (Edit edit : edits) {
-            changes.updateDelta(edit.getLengthB(), edit.getLengthA()); // TODO: should we handle replacements differently?
-        }
-        return changes;
-    }
-
-    private AbstractTreeIterator getTreeParser(final Repository repository, @CheckForNull final String objectId)
-            throws IOException {
-        if (objectId == null) {
-            return new EmptyTreeIterator();
-        }
-        try (RevWalk walk = new RevWalk(repository)) {
-            RevCommit commit = walk.parseCommit(repository.resolve(objectId));
-            RevTree tree = walk.parseTree(commit.getTree().getId());
-
-            CanonicalTreeParser treeParser = new CanonicalTreeParser();
-            try (ObjectReader reader = repository.newObjectReader()) {
-                treeParser.reset(reader, tree.getId());
-            }
-            walk.dispose();
-            return treeParser;
-        }
-    }
 }

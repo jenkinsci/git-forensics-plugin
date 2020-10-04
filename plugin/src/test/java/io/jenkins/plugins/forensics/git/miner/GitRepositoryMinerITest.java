@@ -55,16 +55,21 @@ public class GitRepositoryMinerITest extends GitITest {
         assertDefaultFileStatistics(statisticsPerFile);
 
         FileStatistics fileStatistics = statisticsPerFile.get(ADDITIONAL_FILE);
-        assertThat(fileStatistics).hasFileName(ADDITIONAL_FILE)
-                .hasCommits(firstCommit, head)
+        assertThat(fileStatistics)
+                .hasFileName(ADDITIONAL_FILE)
                 .hasNumberOfAuthors(1)
                 .hasNumberOfCommits(2)
                 .hasLinesOfCode(2);
 
-        assertThat(fileStatistics.getAddedLines(firstCommit)).isOne();
-        assertThat(fileStatistics.getDeletedLines(firstCommit)).isZero();
-        assertThat(fileStatistics.getAddedLines(head)).isEqualTo(2);
-        assertThat(fileStatistics.getDeletedLines(head)).isOne();
+        assertThat(fileStatistics.getCommits()).hasSize(2);
+        assertThat(fileStatistics.getCommits().get(0)).hasId(head)
+                .hasAuthor(FOO_EMAIL)
+                .hasTotalAddedLines(2)
+                .hasTotalDeletedLines(1);
+        assertThat(fileStatistics.getCommits().get(1)).hasId(firstCommit)
+                .hasAuthor(FOO_EMAIL)
+                .hasTotalAddedLines(1)
+                .hasTotalDeletedLines(0);
     }
 
     /**
@@ -87,8 +92,12 @@ public class GitRepositoryMinerITest extends GitITest {
         assertDefaultFileStatistics(statisticsPerFile);
 
         FileStatistics fileStatistics = statisticsPerFile.get(ADDITIONAL_FILE);
-        assertThat(fileStatistics).hasNumberOfAuthors(2);
-        assertThat(fileStatistics).hasNumberOfCommits(4);
+        assertThat(fileStatistics).hasFileName(ADDITIONAL_FILE)
+                .hasNumberOfAuthors(2)
+                .hasNumberOfCommits(4)
+                .hasLinesOfCode(1)
+                .hasAbsoluteChurn(7)
+                .hasNumberOfCommits(4);
     }
 
     private RepositoryStatistics createRepositoryStatistics() throws InterruptedException {
@@ -101,6 +110,6 @@ public class GitRepositoryMinerITest extends GitITest {
                 .hasNumberOfAuthors(1)
                 .hasNumberOfCommits(1)
                 .hasLinesOfCode(0)
-                .hasChurn(0);
+                .hasAbsoluteChurn(0);
     }
 }
