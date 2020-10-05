@@ -20,7 +20,6 @@ import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.EmptyTreeIterator;
 
 import edu.hm.hafner.util.FilteredLog;
-import edu.umd.cs.findbugs.annotations.CheckForNull;
 
 import io.jenkins.plugins.forensics.miner.Commit;
 
@@ -67,7 +66,6 @@ class CommitAnalyzer {
         return new Commit(newCommit.getName(), getAuthor(newCommit), newCommit.getCommitTime());
     }
 
-    @CheckForNull
     private String getAuthor(final RevCommit commit) {
         PersonIdent author = commit.getAuthorIdent();
         if (author != null) {
