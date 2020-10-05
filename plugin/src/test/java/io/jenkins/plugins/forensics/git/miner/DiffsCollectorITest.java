@@ -1,7 +1,7 @@
 package io.jenkins.plugins.forensics.git.miner;
 
 import java.io.IOException;
-import java.util.Map;
+import java.util.List;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.Repository;
@@ -31,9 +31,9 @@ public class DiffsCollectorITest extends GitITest {
     public void shouldInitializeCounter() {
         runTest((repository, git) -> {
             String head = getHead();
-            Map<String, Commit> actualCommits = createDiff(repository, git, head, NULL_ITERATOR);
-            assertThat(actualCommits).hasSize(1).containsKey(INITIAL_FILE);
-            assertThat(actualCommits.get(INITIAL_FILE))
+            List<Commit> actualCommits = createDiff(repository, git, head, NULL_ITERATOR);
+            assertThat(actualCommits).hasSize(1);
+            assertThat(actualCommits.get(0))
                     .hasTotalAddedLines(0)
                     .hasTotalDeletedLines(0)
                     .hasId(head)
@@ -52,28 +52,28 @@ public class DiffsCollectorITest extends GitITest {
         String head = getHead();
 
         runTest((repository, git) -> {
-            Map<String, Commit> allDeltas = createDiff(repository, git, head, NULL_ITERATOR);
-            assertThat(allDeltas).hasSize(2).containsKeys(INITIAL_FILE, ADDITIONAL_FILE);
-            assertThat(allDeltas.get(INITIAL_FILE)).hasTotalAddedLines(0).hasTotalDeletedLines(0);
-            assertThat(allDeltas.get(ADDITIONAL_FILE))
+            List<Commit> allDeltas = createDiff(repository, git, head, NULL_ITERATOR);
+            assertThat(allDeltas).hasSize(2);
+            assertThat(allDeltas.get(0)).hasTotalAddedLines(0).hasTotalDeletedLines(0);
+            assertThat(allDeltas.get(1))
                     .hasTotalAddedLines(3)
                     .hasTotalDeletedLines(0)
                     .hasId(head)
                     .hasAuthor(AUTHOR)
                     .hasTime(0);
 
-            Map<String, Commit> deltaFirstCommit = createDiff(repository, git, secondCommit, firstCommit);
-            assertThat(deltaFirstCommit).hasSize(1).containsKeys(ADDITIONAL_FILE);
-            assertThat(deltaFirstCommit.get(ADDITIONAL_FILE))
+            List<Commit> deltaFirstCommit = createDiff(repository, git, secondCommit, firstCommit);
+            assertThat(deltaFirstCommit).hasSize(1);
+            assertThat(deltaFirstCommit.get(0))
                     .hasTotalAddedLines(2)
                     .hasTotalDeletedLines(0)
                     .hasId(secondCommit)
                     .hasAuthor(AUTHOR)
                     .hasTime(0);
 
-            Map<String, Commit> deltaLastCommit = createDiff(repository, git, head, secondCommit);
-            assertThat(deltaLastCommit).hasSize(1).containsKeys(ADDITIONAL_FILE);
-            assertThat(deltaLastCommit.get(ADDITIONAL_FILE))
+            List<Commit> deltaLastCommit = createDiff(repository, git, head, secondCommit);
+            assertThat(deltaLastCommit).hasSize(1);
+            assertThat(deltaLastCommit.get(0))
                     .hasTotalAddedLines(1)
                     .hasTotalDeletedLines(0)
                     .hasId(head)
@@ -92,18 +92,18 @@ public class DiffsCollectorITest extends GitITest {
         String head = getHead();
 
         runTest((repository, git) -> {
-            Map<String, Commit> allDeltas = createDiff(repository, git, secondCommit, firstCommit);
-            assertThat(allDeltas).hasSize(1).containsKeys(ADDITIONAL_FILE);
-            assertThat(allDeltas.get(ADDITIONAL_FILE))
+            List<Commit> allDeltas = createDiff(repository, git, secondCommit, firstCommit);
+            assertThat(allDeltas).hasSize(1);
+            assertThat(allDeltas.get(0))
                     .hasTotalAddedLines(2)
                     .hasTotalDeletedLines(0)
                     .hasId(secondCommit)
                     .hasAuthor(AUTHOR)
                     .hasTime(0);
 
-            Map<String, Commit> deltaLastCommit = createDiff(repository, git, head, secondCommit);
-            assertThat(deltaLastCommit).hasSize(1).containsKeys(ADDITIONAL_FILE);
-            assertThat(deltaLastCommit.get(ADDITIONAL_FILE))
+            List<Commit> deltaLastCommit = createDiff(repository, git, head, secondCommit);
+            assertThat(deltaLastCommit).hasSize(1);
+            assertThat(deltaLastCommit.get(0))
                     .hasTotalAddedLines(0)
                     .hasTotalDeletedLines(1)
                     .hasId(head)
@@ -121,9 +121,9 @@ public class DiffsCollectorITest extends GitITest {
         String head = getHead();
 
         runTest((repository, git) -> {
-            Map<String, Commit> allDeltas = createDiff(repository, git, head, secondCommit);
-            assertThat(allDeltas).hasSize(1).containsKeys(ADDITIONAL_FILE);
-            assertThat(allDeltas.get(ADDITIONAL_FILE))
+            List<Commit> allDeltas = createDiff(repository, git, head, secondCommit);
+            assertThat(allDeltas).hasSize(1);
+            assertThat(allDeltas.get(0))
                     .hasTotalAddedLines(0)
                     .hasTotalDeletedLines(2)
                     .hasId(head)
@@ -142,9 +142,9 @@ public class DiffsCollectorITest extends GitITest {
 
         runTest((repository, git) -> {
             String head = getHead();
-            Map<String, Commit> allDeltas = createDiff(repository, git, head, initialCommit);
-            assertThat(allDeltas).hasSize(1).containsKeys(ADDITIONAL_FILE);
-            assertThat(allDeltas.get(ADDITIONAL_FILE))
+            List<Commit> allDeltas = createDiff(repository, git, head, initialCommit);
+            assertThat(allDeltas).hasSize(1);
+            assertThat(allDeltas.get(0))
                     .hasTotalAddedLines(0)
                     .hasTotalDeletedLines(5)
                     .hasId(head)
@@ -163,9 +163,9 @@ public class DiffsCollectorITest extends GitITest {
 
         runTest((repository, git) -> {
             String head = getHead();
-            Map<String, Commit> allDeltas = createDiff(repository, git, head, initialCommit);
-            assertThat(allDeltas).hasSize(1).containsKeys(MOVED_FILE);
-            assertThat(allDeltas.get(MOVED_FILE))
+            List<Commit> allDeltas = createDiff(repository, git, head, initialCommit);
+            assertThat(allDeltas).hasSize(1);
+            assertThat(allDeltas.get(0))
                     .hasTotalAddedLines(0)
                     .hasTotalDeletedLines(0)
                     .hasId(head)
@@ -201,9 +201,9 @@ public class DiffsCollectorITest extends GitITest {
     private void verifyMovedAndChangedFile(final String initialCommit) {
         runTest((repository, git) -> {
             String head = getHead();
-            Map<String, Commit> allDeltas = createDiff(repository, git, head, initialCommit);
-            assertThat(allDeltas).hasSize(1).containsKeys(MOVED_FILE);
-            assertThat(allDeltas.get(MOVED_FILE))
+            List<Commit> allDeltas = createDiff(repository, git, head, initialCommit);
+            assertThat(allDeltas).hasSize(1);
+            assertThat(allDeltas.get(0))
                     .hasTotalAddedLines(1)
                     .hasTotalDeletedLines(1)
                     .hasId(head)
@@ -212,16 +212,16 @@ public class DiffsCollectorITest extends GitITest {
         });
     }
 
-    private Map<String, Commit> createDiff(final Repository repository,
+    private List<Commit> createDiff(final Repository repository,
             final Git git, final String newCommit, final String oldCommit) throws IOException {
         AbstractTreeIterator toTree = CommitAnalyzer.createTreeIteratorFor(repository, oldCommit);
         return createDiff(repository, git, newCommit, toTree);
     }
 
-    private Map<String, Commit> createDiff(final Repository repository, final Git git, final String newCommit,
+    private List<Commit> createDiff(final Repository repository, final Git git, final String newCommit,
             final AbstractTreeIterator toTree) {
         DiffsCollector collector = new DiffsCollector();
-        return collector.getFilesAndDiffEntriesForCommit(repository, git,
+        return collector.getDiffsForCommit(repository, git,
                 new Commit(newCommit, AUTHOR, 0),
                 toTree, new FilteredLog("Errors")
         );

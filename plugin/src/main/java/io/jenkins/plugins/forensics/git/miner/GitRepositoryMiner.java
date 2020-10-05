@@ -1,11 +1,12 @@
 package io.jenkins.plugins.forensics.git.miner;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 
 import edu.hm.hafner.util.FilteredLog;
@@ -16,15 +17,18 @@ import hudson.remoting.VirtualChannel;
 
 import io.jenkins.plugins.forensics.git.util.AbstractRepositoryCallback;
 import io.jenkins.plugins.forensics.git.util.RemoteResultWrapper;
+import io.jenkins.plugins.forensics.miner.Commit;
 import io.jenkins.plugins.forensics.miner.RepositoryMiner;
 import io.jenkins.plugins.forensics.miner.RepositoryStatistics;
 
 /**
  * Mines a Git repository and creates statistics for all available files.
  *
+ * @author Giulia Del Bravo
  * @author Ullrich Hafner
+ * @see io.jenkins.plugins.forensics.miner.RepositoryStatistics
  * @see io.jenkins.plugins.forensics.miner.FileStatistics
- * @see FilesCollector
+ * @see Commit
  */
 @SuppressFBWarnings(value = "SE", justification = "GitClient implementation is Serializable")
 public class GitRepositoryMiner extends RepositoryMiner {
@@ -38,25 +42,34 @@ public class GitRepositoryMiner extends RepositoryMiner {
         this.gitClient = gitClient;
     }
 
+    // TODO: we need to create the new results separately to compute the added and deleted lines per build
     @Override
-    public RepositoryStatistics mine(final RepositoryStatistics previousStatistics, final FilteredLog logger)
+    public RepositoryStatistics mine(final RepositoryStatistics previous, final FilteredLog logger)
             throws InterruptedException {
         try {
             long nano = System.nanoTime();
             logger.logInfo("Analyzing the commit log of the Git repository '%s'",
                     gitClient.getWorkTree());
-            RepositoryStatisticsCallback callback = new RepositoryStatisticsCallback(
-                    previousStatistics.getLatestCommitId());
-            RemoteResultWrapper<RepositoryStatistics> wrapped = gitClient.withRepository(
-                    callback);
+            RemoteResultWrapper<ArrayList<Commit>> wrapped = gitClient.withRepository(
+                    new RepositoryStatisticsCallback(previous.getLatestCommitId()));
             wrapped.getInfoMessages().forEach(logger::logInfo);
 
-            RepositoryStatistics statistics = wrapped.getResult();
-            logger.logInfo("-> created report for %d files in %d seconds", statistics.size(),
-                    1 + (System.nanoTime() - nano) / 1_000_000_000L);
-            statistics.addAll(previousStatistics);
+            List<Commit> commits = wrapped.getResult();
+            logger.logInfo("-> created report in %d seconds", 1 + (System.nanoTime() - nano) / 1_000_000_000L);
+            Commit.logCommits(commits, logger);
 
-            return statistics;
+            String latestCommitId;
+            if (commits.isEmpty()) {
+                latestCommitId = previous.getLatestCommitId();
+            }
+            else {
+                latestCommitId = commits.get(0).getId();
+            }
+            RepositoryStatistics current = new RepositoryStatistics(latestCommitId);
+            current.addAll(previous);
+            Collections.reverse(commits); // make sure that we start with old commits to preserve the history
+            current.addAll(commits);
+            return current;
         }
         catch (IOException exception) {
             logger.logException(exception,
@@ -66,7 +79,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
     }
 
     private static class RepositoryStatisticsCallback
-            extends AbstractRepositoryCallback<RemoteResultWrapper<RepositoryStatistics>> {
+            extends AbstractRepositoryCallback<RemoteResultWrapper<ArrayList<Commit>>> {
         private static final long serialVersionUID = 7667073858514128136L;
 
         private final String previousCommitId;
@@ -78,16 +91,16 @@ public class GitRepositoryMiner extends RepositoryMiner {
         }
 
         @Override
-        public RemoteResultWrapper<RepositoryStatistics> invoke(
+        public RemoteResultWrapper<ArrayList<Commit>> invoke(
                 final Repository repository, final VirtualChannel channel) {
-            RepositoryStatistics currentStatistics = createEmptyStatisticsFromHead(repository);
-            RemoteResultWrapper<RepositoryStatistics> wrapper = new RemoteResultWrapper<>(
-                    currentStatistics, "Errors while mining the Git repository:");
+            ArrayList<Commit> commits = new ArrayList<>();
+            RemoteResultWrapper<ArrayList<Commit>> wrapper = new RemoteResultWrapper<>(
+                    commits, "Errors while mining the Git repository:");
 
             try {
                 try (Git git = new Git(repository)) {
                     CommitAnalyzer commitAnalyzer = new CommitAnalyzer();
-                    commitAnalyzer.run(repository, git, currentStatistics, previousCommitId, wrapper);
+                    commits.addAll(commitAnalyzer.run(repository, git, previousCommitId, wrapper));
                 }
                 catch (IOException | GitAPIException exception) {
                     wrapper.logException(exception,
@@ -99,19 +112,6 @@ public class GitRepositoryMiner extends RepositoryMiner {
             }
 
             return wrapper;
-        }
-
-        private RepositoryStatistics createEmptyStatisticsFromHead(final Repository repository) {
-            try {
-                ObjectId headId = repository.resolve(Constants.HEAD);
-                if (headId != null) {
-                    return new RepositoryStatistics(headId.getName());
-                }
-            }
-            catch (IOException exception) {
-                // ignore
-            }
-            return new RepositoryStatistics();
         }
     }
 }

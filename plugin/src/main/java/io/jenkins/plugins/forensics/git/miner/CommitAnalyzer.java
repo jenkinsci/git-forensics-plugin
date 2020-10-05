@@ -1,11 +1,9 @@
 package io.jenkins.plugins.forensics.git.miner;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.function.Function;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
@@ -25,50 +23,44 @@ import edu.hm.hafner.util.FilteredLog;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 
 import io.jenkins.plugins.forensics.miner.Commit;
-import io.jenkins.plugins.forensics.miner.FileStatistics;
-import io.jenkins.plugins.forensics.miner.FileStatistics.FileStatisticsBuilder;
-import io.jenkins.plugins.forensics.miner.RepositoryStatistics;
 
 /**
- * Analyzes new Git repository commits and creates {@link FileStatistics} instances for all affected files.
+ * Analyzes the new Git repository commits since a previous commit ID and and creates {@link Commit} instances for all
+ * changes.
  *
+ * @author Giulia Del Bravo
  * @author Ullrich Hafner
  */
-public class CommitAnalyzer {
-    // TODO: we need to create the new results separately to compute the added and deleted lines per build
-    // TODO: would it make sense to record the changed files as well
-    void run(final Repository repository, final Git git,
-            final RepositoryStatistics result, final String latestCommitOfPreviousBuild,
+class CommitAnalyzer {
+    private static final int MAX_COMMIT_TO_LOG = 7;
+
+    List<Commit> run(final Repository repository, final Git git,
+            final String latestCommitOfPreviousBuild,
             final FilteredLog logger) throws IOException, GitAPIException {
-        DiffsCollector diffsCollector = new DiffsCollector();
-        FileStatisticsBuilder builder = new FileStatisticsBuilder();
-
-        Map<String, FileStatistics> fileStatistics = new HashMap<>();
-
-        List<RevCommit> newCommits = new CommitCollector().findAllCommits(
-                repository, git, latestCommitOfPreviousBuild);
-        if (newCommits.isEmpty()) {
+        List<RevCommit> newRevCommits = new CommitCollector().findAllCommits(repository, git,
+                latestCommitOfPreviousBuild);
+        if (newRevCommits.isEmpty()) {
             logger.logInfo("No commits found since previous commit '%s'", latestCommitOfPreviousBuild);
         }
-
-        for (int i = 0; i < newCommits.size(); i++) {
-            AbstractTreeIterator toTree = createTreeIteratorToCompareTo(repository, newCommits, i, latestCommitOfPreviousBuild);
-            Commit commit = createFromRevCommit(newCommits.get(i));
-            Map<String, Commit> files = diffsCollector.getFilesAndDiffEntriesForCommit(repository, git,
-                    commit, toTree, logger);
-            logger.logInfo("Analyzed commit '%s' (authored by %s): %d files, %d lines added, %d lines deleted",
-                    commit.getId(), commit.getAuthor(), files.size(),
-                    count(files, Commit::getTotalAddedLines), count(files, Commit::getTotalDeletedLines));
-
-            files.forEach((file, statistics) ->
-                    fileStatistics.computeIfAbsent(file, builder::build).inspectCommit(statistics));
+        if (newRevCommits.size() >= MAX_COMMIT_TO_LOG) {
+            logger.logInfo("Found %d commits", newRevCommits.size());
         }
 
-        result.addAll(fileStatistics.values());
-    }
+        List<Commit> commitsOfBuild = new ArrayList<>();
+        for (int i = 0; i < newRevCommits.size(); i++) {
+            AbstractTreeIterator toTree = createTreeIteratorToCompareTo(repository, newRevCommits, i,
+                    latestCommitOfPreviousBuild);
+            Commit commit = createFromRevCommit(newRevCommits.get(i));
+            List<Commit> commits = new DiffsCollector().getDiffsForCommit(repository, git, commit, toTree, logger);
+            if (newRevCommits.size() < MAX_COMMIT_TO_LOG) {
+                logger.logInfo("Analyzed commit '%s' (authored by %s): %d files affected",
+                        commit.getId(), commit.getAuthor(), commits.size());
+                Commit.logCommits(commits, logger);
+            }
+            commitsOfBuild.addAll(commits);
+        }
 
-    private long count(final Map<String, Commit> files, final Function<Commit, Integer> property) {
-        return files.values().stream().map(property).count();
+        return commitsOfBuild;
     }
 
     private Commit createFromRevCommit(final RevCommit newCommit) {

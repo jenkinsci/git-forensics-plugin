@@ -1,9 +1,8 @@
 package io.jenkins.plugins.forensics.git.miner;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -23,14 +22,15 @@ import io.jenkins.plugins.forensics.miner.Commit;
 /**
  * Collects delta information (added and deleted lines of code) for all files that are part of a given commit.
  *
+ * @author Giulia Del Bravo
  * @author Ullrich Hafner
  */
 public class DiffsCollector {
-    Map<String, Commit> getFilesAndDiffEntriesForCommit(
+    List<Commit> getDiffsForCommit(
             final Repository repository, final Git git,
             final Commit fromCommit, final AbstractTreeIterator toTree,
             final FilteredLog logger) {
-        Map<String, Commit> filePaths = new HashMap<>();
+        List<Commit> commits = new ArrayList<>();
         try (DiffFormatter formatter = new DiffFormatter(DisabledOutputStream.INSTANCE)) {
             formatter.setRepository(repository);
             List<DiffEntry> diffEntries = git.diff()
@@ -42,33 +42,23 @@ public class DiffsCollector {
 
             for (DiffEntry entry : renames.compute()) {
                 Commit commit = new Commit(fromCommit);
+                commit.setNewPath(entry.getNewPath());
                 if (entry.getChangeType() == ChangeType.RENAME) {
                     commit.setOldPath(entry.getOldPath());
                 }
                 if (entry.getChangeType() == ChangeType.DELETE) {
-                    commit.markAsDeleted();
+                    commit.setOldPath(entry.getOldPath());
                 }
                 for (Edit edit : formatter.toFileHeader(entry).toEditList()) {
                     commit.addLines(edit.getLengthB());
                     commit.deleteLines(edit.getLengthA());
                 }
-                filePaths.put(resolvePath(entry), commit);
+                commits.add(commit);
             }
         }
         catch (IOException | GitAPIException exception) {
-            logger.logException(exception, "Can't get Files and DiffEntries.");
+            logger.logException(exception, "Can't compute diffs for commit " + fromCommit);
         }
-        return filePaths;
+        return commits;
     }
-
-    private String resolvePath(final DiffEntry entry) {
-        String newPath = entry.getNewPath();
-        if (newPath.equals(DiffEntry.DEV_NULL)) {
-            return entry.getOldPath();
-        }
-        else {
-            return newPath;
-        }
-    }
-
 }

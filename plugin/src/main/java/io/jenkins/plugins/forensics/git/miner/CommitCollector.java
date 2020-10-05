@@ -17,6 +17,7 @@ import one.util.streamex.StreamEx;
  * i.e. the list starts with the the given commit ID up to the current HEAD.
  *
  * @author Giulia Del Bravo
+ * @author Ullrich Hafner
  */
 class CommitCollector {
     List<RevCommit> findAllCommits(final Repository repository, final Git git, final String latestCommitId)

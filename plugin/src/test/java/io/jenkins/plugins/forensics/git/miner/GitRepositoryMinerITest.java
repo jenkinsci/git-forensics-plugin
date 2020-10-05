@@ -62,14 +62,14 @@ public class GitRepositoryMinerITest extends GitITest {
                 .hasLinesOfCode(2);
 
         assertThat(fileStatistics.getCommits()).hasSize(2);
-        assertThat(fileStatistics.getCommits().get(0)).hasId(head)
-                .hasAuthor(FOO_EMAIL)
-                .hasTotalAddedLines(2)
-                .hasTotalDeletedLines(1);
-        assertThat(fileStatistics.getCommits().get(1)).hasId(firstCommit)
+        assertThat(fileStatistics.getCommits().get(0)).hasId(firstCommit)
                 .hasAuthor(FOO_EMAIL)
                 .hasTotalAddedLines(1)
                 .hasTotalDeletedLines(0);
+        assertThat(fileStatistics.getCommits().get(1)).hasId(head)
+                .hasAuthor(FOO_EMAIL)
+                .hasTotalAddedLines(2)
+                .hasTotalDeletedLines(1);
     }
 
     /**
