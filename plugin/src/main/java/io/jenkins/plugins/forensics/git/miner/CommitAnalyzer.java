@@ -22,6 +22,7 @@ import org.eclipse.jgit.treewalk.EmptyTreeIterator;
 import edu.hm.hafner.util.FilteredLog;
 
 import io.jenkins.plugins.forensics.miner.Commit;
+import io.jenkins.plugins.forensics.miner.CommitStatistics;
 
 /**
  * Analyzes the new Git repository commits since a previous commit ID and and creates {@link Commit} instances for all
@@ -54,7 +55,7 @@ class CommitAnalyzer {
             if (newRevCommits.size() < MAX_COMMIT_TO_LOG) {
                 logger.logInfo("Analyzed commit '%s' (authored by %s): %d files affected",
                         commit.getId(), commit.getAuthor(), commits.size());
-                Commit.logCommits(commits, logger);
+                CommitStatistics.logCommits(commits, logger);
             }
             commitsOfBuild.addAll(commits);
         }

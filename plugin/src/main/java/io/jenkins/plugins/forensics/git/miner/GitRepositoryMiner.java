@@ -18,6 +18,7 @@ import hudson.remoting.VirtualChannel;
 import io.jenkins.plugins.forensics.git.util.AbstractRepositoryCallback;
 import io.jenkins.plugins.forensics.git.util.RemoteResultWrapper;
 import io.jenkins.plugins.forensics.miner.Commit;
+import io.jenkins.plugins.forensics.miner.CommitStatistics;
 import io.jenkins.plugins.forensics.miner.RepositoryMiner;
 import io.jenkins.plugins.forensics.miner.RepositoryStatistics;
 
@@ -56,7 +57,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
 
             List<Commit> commits = wrapped.getResult();
             logger.logInfo("-> created report in %d seconds", 1 + (System.nanoTime() - nano) / 1_000_000_000L);
-            Commit.logCommits(commits, logger);
+            CommitStatistics.logCommits(commits, logger);
 
             String latestCommitId;
             if (commits.isEmpty()) {

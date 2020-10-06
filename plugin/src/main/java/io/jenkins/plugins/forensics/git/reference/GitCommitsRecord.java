@@ -32,6 +32,7 @@ public class GitCommitsRecord implements RunAction2, Serializable {
     private final String scmKey;
     private final String latestCommit;
     private final RecordingType recordingType;
+    private final String latestCommitLink;
     private final List<String> commits;
     private final List<String> errorMessages;
     private final List<String> infoMessages;
@@ -53,22 +54,25 @@ public class GitCommitsRecord implements RunAction2, Serializable {
      *         the logger
      * @param latestCommit
      *         the latest commit (either the head of the new commits or the latest commit from the previous build)
+     * @param latestCommitLink
+     *         hyperlink to the latest commit
      * @param commits
      *         the new commits in this build (since the previous build)
      * @param recordingType
      *         the recording type that indicates if the number of commits is
      */
     GitCommitsRecord(final Run<?, ?> owner, final String scmKey,
-            final FilteredLog logger, final String latestCommit, final List<String> commits,
-            final RecordingType recordingType) {
+            final FilteredLog logger, final String latestCommit, final String latestCommitLink,
+            final List<String> commits, final RecordingType recordingType) {
         super();
 
         this.owner = owner;
         this.scmKey = scmKey;
         this.infoMessages = new ArrayList<>(logger.getInfoMessages());
         this.errorMessages = new ArrayList<>(logger.getErrorMessages());
-        this.commits = new ArrayList<>(commits);
         this.latestCommit = latestCommit;
+        this.latestCommitLink = latestCommitLink;
+        this.commits = new ArrayList<>(commits);
         this.recordingType = recordingType;
     }
 
@@ -83,12 +87,14 @@ public class GitCommitsRecord implements RunAction2, Serializable {
      *         the logger
      * @param latestCommit
      *         the latest commit (either the head of the new commits or the latest commit from the previous build)
+     * @param latestCommitLink
+     *         hyperlink to the latest commit
      * @param commits
      *         the new commits in this build (since the previous build)
      */
     GitCommitsRecord(final Run<?, ?> owner, final String scmKey,
-            final FilteredLog logger, final String latestCommit, final List<String> commits) {
-        this(owner, scmKey, logger, latestCommit, commits, RecordingType.INCREMENTAL);
+            final FilteredLog logger, final String latestCommit, final String latestCommitLink, final List<String> commits) {
+        this(owner, scmKey, logger, latestCommit, latestCommitLink, commits, RecordingType.INCREMENTAL);
     }
 
     /**
@@ -102,10 +108,12 @@ public class GitCommitsRecord implements RunAction2, Serializable {
      *         the logger
      * @param latestCommit
      *         the latest commit of the previous build
+     * @param latestCommitLink
+     *         hyperlink to the latest commit
      */
     GitCommitsRecord(final Run<?, ?> owner, final String scmKey,
-            final FilteredLog logger, final String latestCommit) {
-        this(owner, scmKey, logger, latestCommit, Collections.emptyList());
+            final FilteredLog logger, final String latestCommit, final String latestCommitLink) {
+        this(owner, scmKey, logger, latestCommit, latestCommitLink, Collections.emptyList());
     }
 
     public Run<?, ?> getOwner() {
@@ -122,6 +130,10 @@ public class GitCommitsRecord implements RunAction2, Serializable {
 
     public String getLatestCommit() {
         return latestCommit;
+    }
+
+    public String getLatestCommitLink() {
+        return latestCommitLink;
     }
 
     public List<String> getErrorMessages() {

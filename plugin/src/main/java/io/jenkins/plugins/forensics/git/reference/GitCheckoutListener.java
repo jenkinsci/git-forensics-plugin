@@ -29,7 +29,9 @@ import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
 
 import io.jenkins.plugins.forensics.git.reference.GitCommitsRecord.RecordingType;
+import io.jenkins.plugins.forensics.git.util.GitCommitDecoratorFactory;
 import io.jenkins.plugins.forensics.git.util.GitRepositoryValidator;
+import io.jenkins.plugins.forensics.util.CommitDecorator;
 import io.jenkins.plugins.util.LogHandler;
 
 /**
@@ -95,10 +97,13 @@ public class GitCheckoutListener extends SCMListener {
 
     private GitCommitsRecord recordNewCommits(final Run<?, ?> build, final GitClient gitClient,
             final String scmKey, final FilteredLog logger, final String latestCommit) {
+        CommitDecorator decorator = GitCommitDecoratorFactory.findCommitDecorator(build, logger);
+        String link = decorator.asLink(latestCommit);
+
         List<String> commits = recordCommitsSincePreviousBuild(latestCommit, gitClient, scmKey, logger);
         if (commits.isEmpty()) {
             logger.logInfo("-> No new commits found");
-            return new GitCommitsRecord(build, scmKey, logger, latestCommit);
+            return new GitCommitsRecord(build, scmKey, logger, latestCommit, link);
         }
         else {
             if (commits.size() == 1) {
@@ -107,7 +112,8 @@ public class GitCheckoutListener extends SCMListener {
             else {
                 logger.logInfo("-> Recorded %d new commits", commits.size());
             }
-            return new GitCommitsRecord(build, scmKey, logger, commits.get(0), commits, getRecordingType(latestCommit));
+            return new GitCommitsRecord(build, scmKey, logger, commits.get(0), decorator.asLink(commits.get(0)),
+                    commits, getRecordingType(latestCommit));
         }
     }
 

@@ -37,19 +37,33 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
                 .url(REPOSITORY_URL)
                 .branch("28af63def44286729e3b19b03464d100fd1d0587");
         job.save();
-        Build referenceBuild = buildSuccessfully(job);
-        referenceBuild.open();
+        Build build = buildSuccessfully(job);
 
-        assertThat(getSummaryText(referenceBuild, 3)).contains(
+        assertThat(build.getConsole()).contains(
+                "Found 428 commits",
+                "-> 16510 lines added",
+                "-> 10444 lines deleted");
+
+        build.open();
+        assertThat(getSummaryText(build, 3)).contains(
                 "Revision: 28af63def44286729e3b19b03464d100fd1d0587", "detached");
 
-        assertThat(getSummaryText(referenceBuild, 4)).contains(
+        // TODO: create page objects
+        assertThat(getSummaryText(build, 4)).contains(
                 "SCM: git https://github.com/jenkinsci/git-forensics-plugin.git",
                 "Initial recording of 200 commits",
-                "Latest commit: 28af63def44286729e3b19b03464d100fd1d0587");
+                "Latest commit: 28af63d");
 
-        assertThat(getSummaryText(referenceBuild, 5)).contains(
-                "SCM Repository Statistics", "51 repository files");
+        assertThat(getSummaryText(build, 5)).contains(
+                "SCM Statistics",
+                "51 repository files",
+                "total lines of code: 6066",
+                "total churn: 16966",
+                "New added lines: 16510",
+                "New deleted lines: 10444",
+                "New commits: 402",
+                "from 4 authors",
+                "in 131 files");
     }
 
     private String getSummaryText(final Build referenceBuild, final int row) {
@@ -135,9 +149,9 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
         detailsTable.sortColumn(COMMITS);
         assertRow(detailsTable,
                 1,
-                "README.md",
-                1,
-                20
+                "GitBlamer.java",
+                3,
+                46
         );
 
         detailsTable.showTenEntries();
@@ -151,7 +165,7 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
      */
     private void assertSearch(final DetailsTable detailsTable) {
         detailsTable.searchTable("ui-tests/pom.xml");
-        assertThat(detailsTable.getNumberOfTableEntries()).isEqualTo(2);
+        assertThat(detailsTable.getNumberOfTableEntries()).isEqualTo(1);
 
         detailsTable.sortColumn(AUTHORS);
         detailsTable.sortColumn(AUTHORS);
@@ -159,8 +173,8 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
         assertRow(detailsTable,
                 0,
                 "pom.xml",
-                4,
-                298
+                2,
+                2
         );
         detailsTable.clearSearch();
         assertThat(detailsTable.getTableRows().size()).isEqualTo(10);
