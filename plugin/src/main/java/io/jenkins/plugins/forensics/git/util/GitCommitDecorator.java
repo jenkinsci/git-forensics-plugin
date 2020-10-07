@@ -26,6 +26,8 @@ public class GitCommitDecorator extends CommitDecorator {
     private final GitRepositoryBrowser browser;
 
     GitCommitDecorator(final GitRepositoryBrowser browser) {
+        super();
+
         this.browser = browser;
     }
 
