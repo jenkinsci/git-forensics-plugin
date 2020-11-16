@@ -31,7 +31,7 @@ public class GitCommitsRecord implements RunAction2, Serializable {
      */
     private final String scmKey;
     private final String latestCommit;
-    private final String parentCommit;
+    private final List<String> parentCommits;
     private final RecordingType recordingType;
     private final List<String> commits;
     private final List<String> errorMessages;
@@ -60,8 +60,8 @@ public class GitCommitsRecord implements RunAction2, Serializable {
      *         the recording type that indicates if the number of commits is
      */
     GitCommitsRecord(final Run<?, ?> owner, final String scmKey,
-            final FilteredLog logger, final String latestCommit, final String parentCommit, 
-            final List<String> commits, final RecordingType recordingType) {
+            final FilteredLog logger, final String latestCommit,
+            final List<String> commits, final List<String> parentCommits, final RecordingType recordingType) {
         super();
 
         this.owner = owner;
@@ -70,7 +70,7 @@ public class GitCommitsRecord implements RunAction2, Serializable {
         this.errorMessages = new ArrayList<>(logger.getErrorMessages());
         this.commits = new ArrayList<>(commits);
         this.latestCommit = latestCommit;
-        this.parentCommit = parentCommit;
+        this.parentCommits = parentCommits;
         this.recordingType = recordingType;
     }
 
@@ -89,8 +89,8 @@ public class GitCommitsRecord implements RunAction2, Serializable {
      *         the new commits in this build (since the previous build)
      */
     GitCommitsRecord(final Run<?, ?> owner, final String scmKey,
-            final FilteredLog logger, final String latestCommit, final String parentCommit, final List<String> commits) {
-        this(owner, scmKey, logger, latestCommit, parentCommit, commits, RecordingType.INCREMENTAL);
+            final FilteredLog logger, final String latestCommit, final List<String> commits, final List<String> parentCommits) {
+        this(owner, scmKey, logger, latestCommit, commits, parentCommits, RecordingType.INCREMENTAL);
     }
 
     /**
@@ -106,8 +106,8 @@ public class GitCommitsRecord implements RunAction2, Serializable {
      *         the latest commit of the previous build
      */
     GitCommitsRecord(final Run<?, ?> owner, final String scmKey,
-            final FilteredLog logger, final String latestCommit, final String parentCommit) {
-        this(owner, scmKey, logger, latestCommit, parentCommit, Collections.emptyList());
+            final FilteredLog logger, final String latestCommit, final List<String> parentCommits) {
+        this(owner, scmKey, logger, latestCommit, Collections.emptyList(), parentCommits);
     }
 
     public Run<?, ?> getOwner() {
@@ -126,8 +126,8 @@ public class GitCommitsRecord implements RunAction2, Serializable {
         return latestCommit;
     }
     
-    public String getParentCommit() {
-        return parentCommit;
+    public List<String> getParentCommits() {
+        return parentCommits;
     }
 
     public List<String> getErrorMessages() {
