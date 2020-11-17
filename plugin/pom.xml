@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jvnet.hudson.plugins</groupId>
     <artifactId>analysis-pom</artifactId>
-    <version>4.3.0</version>
+    <version>4.5.0</version>
     <relativePath />
   </parent>
 
@@ -28,9 +28,9 @@
     <eclipse-collections.version>9.2.0</eclipse-collections.version>
 
     <!-- Jenkins Plugin Dependencies Versions -->
-    <plugin-util-api.version>1.2.5</plugin-util-api.version>
-    <data-tables-api.version>1.10.21-2</data-tables-api.version>
-    <forensics-api-plugin.version>0.8.0-rc696.ac258a4ceea7</forensics-api-plugin.version>
+    <plugin-util-api.version>1.4.0</plugin-util-api.version>
+    <data-tables-api.version>1.10.21-3</data-tables-api.version>
+    <forensics-api-plugin.version>0.8.0-rc710.f9a5c103b329</forensics-api-plugin.version>
 
     <git-plugin.version>4.4.3</git-plugin.version>
     <git-client.version>3.5.1</git-client.version>
