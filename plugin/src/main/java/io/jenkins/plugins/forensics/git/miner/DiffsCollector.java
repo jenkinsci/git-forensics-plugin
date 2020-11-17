@@ -16,8 +16,9 @@ import org.eclipse.jgit.treewalk.AbstractTreeIterator;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
 
 import edu.hm.hafner.util.FilteredLog;
+import edu.hm.hafner.util.TreeStringBuilder;
 
-import io.jenkins.plugins.forensics.miner.Commit;
+import io.jenkins.plugins.forensics.miner.CommitDiffItem;
 
 /**
  * Collects delta information (added and deleted lines of code) for all files that are part of a given commit.
@@ -26,11 +27,11 @@ import io.jenkins.plugins.forensics.miner.Commit;
  * @author Ullrich Hafner
  */
 public class DiffsCollector {
-    List<Commit> getDiffsForCommit(
+    List<CommitDiffItem> getDiffsForCommit(
             final Repository repository, final Git git,
-            final Commit fromCommit, final AbstractTreeIterator toTree,
-            final FilteredLog logger) {
-        List<Commit> commits = new ArrayList<>();
+            final CommitDiffItem fromCommit, final AbstractTreeIterator toTree,
+            final TreeStringBuilder fileNameBuilder, final FilteredLog logger) {
+        List<CommitDiffItem> commits = new ArrayList<>();
         try (DiffFormatter formatter = new DiffFormatter(DisabledOutputStream.INSTANCE)) {
             formatter.setRepository(repository);
             List<DiffEntry> diffEntries = git.diff()
@@ -41,13 +42,10 @@ public class DiffsCollector {
             renames.addAll(diffEntries);
 
             for (DiffEntry entry : renames.compute()) {
-                Commit commit = new Commit(fromCommit);
-                commit.setNewPath(entry.getNewPath());
-                if (entry.getChangeType() == ChangeType.RENAME) {
-                    commit.setOldPath(entry.getOldPath());
-                }
-                if (entry.getChangeType() == ChangeType.DELETE) {
-                    commit.setOldPath(entry.getOldPath());
+                CommitDiffItem commit = new CommitDiffItem(fromCommit);
+                commit.setNewPath(fileNameBuilder.intern(entry.getNewPath()));
+                if (isDeleteOrRename(entry)) {
+                    commit.setOldPath(fileNameBuilder.intern(entry.getOldPath()));
                 }
                 for (Edit edit : formatter.toFileHeader(entry).toEditList()) {
                     commit.addLines(edit.getLengthB());
@@ -60,5 +58,9 @@ public class DiffsCollector {
             logger.logException(exception, "Can't compute diffs for commit " + fromCommit);
         }
         return commits;
+    }
+
+    private boolean isDeleteOrRename(final DiffEntry entry) {
+        return entry.getChangeType() == ChangeType.RENAME || entry.getChangeType() == ChangeType.DELETE;
     }
 }

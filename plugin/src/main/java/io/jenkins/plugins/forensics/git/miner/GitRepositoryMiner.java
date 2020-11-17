@@ -17,7 +17,7 @@ import hudson.remoting.VirtualChannel;
 
 import io.jenkins.plugins.forensics.git.util.AbstractRepositoryCallback;
 import io.jenkins.plugins.forensics.git.util.RemoteResultWrapper;
-import io.jenkins.plugins.forensics.miner.Commit;
+import io.jenkins.plugins.forensics.miner.CommitDiffItem;
 import io.jenkins.plugins.forensics.miner.CommitStatistics;
 import io.jenkins.plugins.forensics.miner.RepositoryMiner;
 import io.jenkins.plugins.forensics.miner.RepositoryStatistics;
@@ -29,7 +29,7 @@ import io.jenkins.plugins.forensics.miner.RepositoryStatistics;
  * @author Ullrich Hafner
  * @see io.jenkins.plugins.forensics.miner.RepositoryStatistics
  * @see io.jenkins.plugins.forensics.miner.FileStatistics
- * @see Commit
+ * @see CommitDiffItem
  */
 @SuppressFBWarnings(value = "SE", justification = "GitClient implementation is Serializable")
 public class GitRepositoryMiner extends RepositoryMiner {
@@ -51,11 +51,11 @@ public class GitRepositoryMiner extends RepositoryMiner {
             long nano = System.nanoTime();
             logger.logInfo("Analyzing the commit log of the Git repository '%s'",
                     gitClient.getWorkTree());
-            RemoteResultWrapper<ArrayList<Commit>> wrapped = gitClient.withRepository(
+            RemoteResultWrapper<ArrayList<CommitDiffItem>> wrapped = gitClient.withRepository(
                     new RepositoryStatisticsCallback(previous.getLatestCommitId()));
             wrapped.getInfoMessages().forEach(logger::logInfo);
 
-            List<Commit> commits = wrapped.getResult();
+            List<CommitDiffItem> commits = wrapped.getResult();
             logger.logInfo("-> created report in %d seconds", 1 + (System.nanoTime() - nano) / 1_000_000_000L);
             CommitStatistics.logCommits(commits, logger);
 
@@ -80,7 +80,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
     }
 
     private static class RepositoryStatisticsCallback
-            extends AbstractRepositoryCallback<RemoteResultWrapper<ArrayList<Commit>>> {
+            extends AbstractRepositoryCallback<RemoteResultWrapper<ArrayList<CommitDiffItem>>> {
         private static final long serialVersionUID = 7667073858514128136L;
 
         private final String previousCommitId;
@@ -92,10 +92,10 @@ public class GitRepositoryMiner extends RepositoryMiner {
         }
 
         @Override
-        public RemoteResultWrapper<ArrayList<Commit>> invoke(
+        public RemoteResultWrapper<ArrayList<CommitDiffItem>> invoke(
                 final Repository repository, final VirtualChannel channel) {
-            ArrayList<Commit> commits = new ArrayList<>();
-            RemoteResultWrapper<ArrayList<Commit>> wrapper = new RemoteResultWrapper<>(
+            ArrayList<CommitDiffItem> commits = new ArrayList<>();
+            RemoteResultWrapper<ArrayList<CommitDiffItem>> wrapper = new RemoteResultWrapper<>(
                     commits, "Errors while mining the Git repository:");
 
             try {

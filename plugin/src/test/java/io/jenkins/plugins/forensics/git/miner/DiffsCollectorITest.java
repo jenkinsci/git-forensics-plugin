@@ -10,9 +10,10 @@ import org.eclipse.jgit.treewalk.EmptyTreeIterator;
 import org.junit.Test;
 
 import edu.hm.hafner.util.FilteredLog;
+import edu.hm.hafner.util.TreeStringBuilder;
 
 import io.jenkins.plugins.forensics.git.util.GitITest;
-import io.jenkins.plugins.forensics.miner.Commit;
+import io.jenkins.plugins.forensics.miner.CommitDiffItem;
 
 import static io.jenkins.plugins.forensics.assertions.Assertions.*;
 
@@ -31,7 +32,7 @@ public class DiffsCollectorITest extends GitITest {
     public void shouldInitializeCounter() {
         runTest((repository, git) -> {
             String head = getHead();
-            List<Commit> actualCommits = createDiff(repository, git, head, NULL_ITERATOR);
+            List<CommitDiffItem> actualCommits = createDiff(repository, git, head, NULL_ITERATOR);
             assertThat(actualCommits).hasSize(1);
             assertThat(actualCommits.get(0))
                     .hasTotalAddedLines(0)
@@ -52,7 +53,7 @@ public class DiffsCollectorITest extends GitITest {
         String head = getHead();
 
         runTest((repository, git) -> {
-            List<Commit> allDeltas = createDiff(repository, git, head, NULL_ITERATOR);
+            List<CommitDiffItem> allDeltas = createDiff(repository, git, head, NULL_ITERATOR);
             assertThat(allDeltas).hasSize(2);
             assertThat(allDeltas.get(0)).hasTotalAddedLines(0).hasTotalDeletedLines(0);
             assertThat(allDeltas.get(1))
@@ -62,7 +63,7 @@ public class DiffsCollectorITest extends GitITest {
                     .hasAuthor(AUTHOR)
                     .hasTime(0);
 
-            List<Commit> deltaFirstCommit = createDiff(repository, git, secondCommit, firstCommit);
+            List<CommitDiffItem> deltaFirstCommit = createDiff(repository, git, secondCommit, firstCommit);
             assertThat(deltaFirstCommit).hasSize(1);
             assertThat(deltaFirstCommit.get(0))
                     .hasTotalAddedLines(2)
@@ -71,7 +72,7 @@ public class DiffsCollectorITest extends GitITest {
                     .hasAuthor(AUTHOR)
                     .hasTime(0);
 
-            List<Commit> deltaLastCommit = createDiff(repository, git, head, secondCommit);
+            List<CommitDiffItem> deltaLastCommit = createDiff(repository, git, head, secondCommit);
             assertThat(deltaLastCommit).hasSize(1);
             assertThat(deltaLastCommit.get(0))
                     .hasTotalAddedLines(1)
@@ -92,7 +93,7 @@ public class DiffsCollectorITest extends GitITest {
         String head = getHead();
 
         runTest((repository, git) -> {
-            List<Commit> allDeltas = createDiff(repository, git, secondCommit, firstCommit);
+            List<CommitDiffItem> allDeltas = createDiff(repository, git, secondCommit, firstCommit);
             assertThat(allDeltas).hasSize(1);
             assertThat(allDeltas.get(0))
                     .hasTotalAddedLines(2)
@@ -101,7 +102,7 @@ public class DiffsCollectorITest extends GitITest {
                     .hasAuthor(AUTHOR)
                     .hasTime(0);
 
-            List<Commit> deltaLastCommit = createDiff(repository, git, head, secondCommit);
+            List<CommitDiffItem> deltaLastCommit = createDiff(repository, git, head, secondCommit);
             assertThat(deltaLastCommit).hasSize(1);
             assertThat(deltaLastCommit.get(0))
                     .hasTotalAddedLines(0)
@@ -121,7 +122,7 @@ public class DiffsCollectorITest extends GitITest {
         String head = getHead();
 
         runTest((repository, git) -> {
-            List<Commit> allDeltas = createDiff(repository, git, head, secondCommit);
+            List<CommitDiffItem> allDeltas = createDiff(repository, git, head, secondCommit);
             assertThat(allDeltas).hasSize(1);
             assertThat(allDeltas.get(0))
                     .hasTotalAddedLines(0)
@@ -142,7 +143,7 @@ public class DiffsCollectorITest extends GitITest {
 
         runTest((repository, git) -> {
             String head = getHead();
-            List<Commit> allDeltas = createDiff(repository, git, head, initialCommit);
+            List<CommitDiffItem> allDeltas = createDiff(repository, git, head, initialCommit);
             assertThat(allDeltas).hasSize(1);
             assertThat(allDeltas.get(0))
                     .hasTotalAddedLines(0)
@@ -163,7 +164,7 @@ public class DiffsCollectorITest extends GitITest {
 
         runTest((repository, git) -> {
             String head = getHead();
-            List<Commit> allDeltas = createDiff(repository, git, head, initialCommit);
+            List<CommitDiffItem> allDeltas = createDiff(repository, git, head, initialCommit);
             assertThat(allDeltas).hasSize(1);
             assertThat(allDeltas.get(0))
                     .hasTotalAddedLines(0)
@@ -201,7 +202,7 @@ public class DiffsCollectorITest extends GitITest {
     private void verifyMovedAndChangedFile(final String initialCommit) {
         runTest((repository, git) -> {
             String head = getHead();
-            List<Commit> allDeltas = createDiff(repository, git, head, initialCommit);
+            List<CommitDiffItem> allDeltas = createDiff(repository, git, head, initialCommit);
             assertThat(allDeltas).hasSize(1);
             assertThat(allDeltas.get(0))
                     .hasTotalAddedLines(1)
@@ -212,18 +213,18 @@ public class DiffsCollectorITest extends GitITest {
         });
     }
 
-    private List<Commit> createDiff(final Repository repository,
+    private List<CommitDiffItem> createDiff(final Repository repository,
             final Git git, final String newCommit, final String oldCommit) throws IOException {
         AbstractTreeIterator toTree = CommitAnalyzer.createTreeIteratorFor(repository, oldCommit);
         return createDiff(repository, git, newCommit, toTree);
     }
 
-    private List<Commit> createDiff(final Repository repository, final Git git, final String newCommit,
+    private List<CommitDiffItem> createDiff(final Repository repository, final Git git, final String newCommit,
             final AbstractTreeIterator toTree) {
         DiffsCollector collector = new DiffsCollector();
         return collector.getDiffsForCommit(repository, git,
-                new Commit(newCommit, AUTHOR, 0),
-                toTree, new FilteredLog("Errors")
+                new CommitDiffItem(newCommit, AUTHOR, 0),
+                toTree, new TreeStringBuilder(), new FilteredLog("Errors")
         );
     }
 }
