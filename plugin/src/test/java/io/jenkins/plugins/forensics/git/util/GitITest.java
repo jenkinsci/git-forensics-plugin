@@ -3,6 +3,8 @@ package io.jenkins.plugins.forensics.git.util;
 import java.io.IOException;
 import java.util.Collections;
 
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.RepositoryBuilder;
@@ -12,6 +14,7 @@ import org.junit.Rule;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.model.Job;
@@ -232,5 +235,49 @@ public class GitITest extends IntegrationTestWithJenkinsPerTest {
         catch (IOException | InterruptedException exception) {
             throw new AssertionError(exception);
         }
+    }
+
+    /**
+     * Runs the specified lambda as a test case in the context of the preconfigured Git repository.
+     *
+     * @param testCase the test case to run
+     */
+    protected void runTest(final GitTestCase testCase) {
+        try {
+            GitClient gitClient = createGitClient();
+            gitClient.withRepository((RepositoryCallback<Void>) (repository, virtualChannel) -> {
+                try (Git git = new Git(repository)) {
+                    testCase.run(repository, git);
+                }
+                catch (GitAPIException exception) {
+                    // ignore
+                }
+                return null; // not needed
+            });
+        }
+        catch (IOException | InterruptedException exception) {
+            throw new AssertionError(exception);
+        }
+    }
+
+    /**
+     * A test case that runs in the preconfigured Git repository of this integration test.
+     */
+    @FunctionalInterface
+    public interface GitTestCase {
+        /**
+         * Runs the test case.
+         *
+         * @param repository
+         *         the repository
+         * @param git
+         *         Git API wrapper
+         *
+         * @throws GitAPIException
+         *         in case of an error using the Git API
+         * @throws IOException
+         *         in case of an IO error
+         */
+        void run(Repository repository, Git git) throws GitAPIException, IOException;
     }
 }

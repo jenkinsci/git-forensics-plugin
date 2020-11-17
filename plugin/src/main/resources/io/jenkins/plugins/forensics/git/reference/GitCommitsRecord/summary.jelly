@@ -13,8 +13,7 @@
         </j:otherwise>
 
       </j:choose>
-
-      <li>Latest commit: ${it.latestCommit}</li>
+      <li>Latest commit: <j:out value="${it.latestCommitLink}"/></li>
     </ul>
 
   </t:summary>

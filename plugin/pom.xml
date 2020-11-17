@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jvnet.hudson.plugins</groupId>
     <artifactId>analysis-pom</artifactId>
-    <version>4.2.1</version>
+    <version>4.3.0</version>
     <relativePath />
   </parent>
 
@@ -30,11 +30,13 @@
     <!-- Jenkins Plugin Dependencies Versions -->
     <plugin-util-api.version>1.2.5</plugin-util-api.version>
     <data-tables-api.version>1.10.21-2</data-tables-api.version>
-    <forensics-api-plugin.version>0.8.0-rc659.942931c6a1e4</forensics-api-plugin.version>
+    <forensics-api-plugin.version>0.8.0-rc696.ac258a4ceea7</forensics-api-plugin.version>
 
     <git-plugin.version>4.4.3</git-plugin.version>
     <git-client.version>3.5.1</git-client.version>
     <scm-api.version>2.6.3</scm-api.version>
+    <j2html.version>1.4.0</j2html.version>
+    <streamex.version>0.7.3</streamex.version>
 
   </properties>
 
@@ -95,6 +97,16 @@
       <groupId>org.eclipse.collections</groupId>
       <artifactId>eclipse-collections</artifactId>
       <version>${eclipse-collections.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>one.util</groupId>
+      <artifactId>streamex</artifactId>
+      <version>${streamex.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.j2html</groupId>
+      <artifactId>j2html</artifactId>
+      <version>${j2html.version}</version>
     </dependency>
 
     <!-- Jenkins Plugin Dependencies -->
@@ -193,6 +205,7 @@
             <package>io.jenkins.plugins.forensics.git</package>
           </packages>
           <excludes combine.children="append">
+            <exclude>.*Test</exclude>
             <exclude>.*Recorder</exclude>
             <exclude>.*RemoteResultWrapper.*</exclude>
           </excludes>
