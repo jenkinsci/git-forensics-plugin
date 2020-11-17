@@ -1,6 +1,7 @@
 package io.jenkins.plugins.forensics.git.util;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import edu.hm.hafner.util.FilteredLog;
 
@@ -33,5 +34,22 @@ public class RemoteResultWrapper<T extends Serializable> extends FilteredLog {
 
     public T getResult() {
         return result;
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        RemoteResultWrapper<?> that = (RemoteResultWrapper<?>) o;
+        return Objects.equals(result, that.result);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(result);
     }
 }
