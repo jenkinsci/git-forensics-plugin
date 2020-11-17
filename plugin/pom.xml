@@ -33,7 +33,7 @@
     <forensics-api-plugin.version>0.8.0-rc696.ac258a4ceea7</forensics-api-plugin.version>
 
     <git-plugin.version>4.4.3</git-plugin.version>
-    <git-client.version>3.5.0</git-client.version>
+    <git-client.version>3.5.1</git-client.version>
     <scm-api.version>2.6.3</scm-api.version>
     <j2html.version>1.4.0</j2html.version>
     <streamex.version>0.7.3</streamex.version>
@@ -139,7 +139,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>matrix-project</artifactId>
-      <version>1.17</version>
+      <version>1.18</version>
       <scope>test</scope>
     </dependency>
 
