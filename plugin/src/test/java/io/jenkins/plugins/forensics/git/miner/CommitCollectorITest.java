@@ -1,11 +1,17 @@
 package io.jenkins.plugins.forensics.git.miner;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Stream;
 
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.Test;
+
+import edu.hm.hafner.util.FilteredLog;
 
 import io.jenkins.plugins.forensics.git.util.GitITest;
 
@@ -21,9 +27,8 @@ public class CommitCollectorITest extends GitITest {
     @Test
     public void shouldFindInitialCommits() {
         runTest((repository, git) -> {
-            CommitCollector collector = new CommitCollector();
+            List<RevCommit> actualCommits = findCommits(repository, git, "-");
 
-            List<RevCommit> actualCommits = collector.findAllCommits(repository, git, "-");
             assertThat(actualCommits).hasSize(1);
             assertThat(actualCommits.get(0).getId()).isEqualTo(getHeadCommit());
         });
@@ -37,9 +42,7 @@ public class CommitCollectorITest extends GitITest {
         ObjectId middle = getHeadCommit();
 
         runTest((repository, git) -> {
-            CommitCollector collector = new CommitCollector();
-
-            List<RevCommit> actualCommits = collector.findAllCommits(repository, git, "-");
+            List<RevCommit> actualCommits = findCommits(repository, git, "-");
             assertThat(actualCommits).hasSize(2);
             assertThat(extractCommitIds(actualCommits)).containsExactly(middle, start);
         });
@@ -48,9 +51,7 @@ public class CommitCollectorITest extends GitITest {
         ObjectId head = getHeadCommit();
 
         runTest((repository, git) -> {
-            CommitCollector collector = new CommitCollector();
-
-            List<RevCommit> actualCommits = collector.findAllCommits(repository, git, "-");
+            List<RevCommit> actualCommits = findCommits(repository, git, "-");
             assertThat(actualCommits).hasSize(3);
             assertThat(extractCommitIds(actualCommits)).containsExactly(head, middle, start);
         });
@@ -66,13 +67,11 @@ public class CommitCollectorITest extends GitITest {
         ObjectId head = getHeadCommit();
 
         runTest((repository, git) -> {
-            CommitCollector upToHead = new CommitCollector();
-            List<RevCommit> upToHeadCommits = upToHead.findAllCommits(repository, git, start.getName());
+            List<RevCommit> upToHeadCommits = findCommits(repository, git, start.getName());
             assertThat(upToHeadCommits).hasSize(2);
             assertThat(extractCommitIds(upToHeadCommits)).containsExactly(head, middle);
 
-            CommitCollector upToMiddle = new CommitCollector();
-            List<RevCommit> upToMiddleCommits = upToMiddle.findAllCommits(repository, git, middle.getName());
+            List<RevCommit> upToMiddleCommits = findCommits(repository, git, middle.getName());
             assertThat(upToMiddleCommits).hasSize(1);
             assertThat(extractCommitIds(upToMiddleCommits)).containsExactly(head);
         });
@@ -80,5 +79,12 @@ public class CommitCollectorITest extends GitITest {
 
     private Stream<ObjectId> extractCommitIds(final List<RevCommit> actualCommits) {
         return actualCommits.stream().map(RevCommit::getId);
+    }
+
+    private List<RevCommit> findCommits(final Repository repository, final Git git, final String lastCommitId)
+            throws IOException, GitAPIException {
+        CommitCollector collector = new CommitCollector();
+
+        return collector.findAllCommits(repository, git, lastCommitId, new FilteredLog("unused"));
     }
 }
