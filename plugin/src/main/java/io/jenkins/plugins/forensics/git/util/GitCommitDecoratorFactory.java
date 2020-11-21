@@ -5,6 +5,7 @@ import java.util.Optional;
 import edu.hm.hafner.util.FilteredLog;
 
 import hudson.Extension;
+import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.scm.RepositoryBrowser;
 import hudson.scm.SCM;
@@ -30,6 +31,10 @@ public class GitCommitDecoratorFactory extends CommitDecoratorFactory {
         }
         logger.logInfo(
                 "-> Git commit decorator could not be created for SCM '%s'", scm);
+        if (scm instanceof GitSCM) {
+            return Optional.of(new GitCommitTextDecorator());
+        }
         return Optional.empty();
     }
+
 }

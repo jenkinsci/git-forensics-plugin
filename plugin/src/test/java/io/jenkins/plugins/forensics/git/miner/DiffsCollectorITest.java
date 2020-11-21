@@ -215,7 +215,7 @@ public class DiffsCollectorITest extends GitITest {
 
     private List<CommitDiffItem> createDiff(final Repository repository,
             final Git git, final String newCommit, final String oldCommit) throws IOException {
-        AbstractTreeIterator toTree = CommitAnalyzer.createTreeIteratorFor(repository, oldCommit);
+        AbstractTreeIterator toTree = CommitAnalyzer.createTreeIteratorFor(oldCommit, repository, new FilteredLog("empty"));
         return createDiff(repository, git, newCommit, toTree);
     }
 

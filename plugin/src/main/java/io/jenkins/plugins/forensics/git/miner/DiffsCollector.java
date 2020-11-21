@@ -35,7 +35,7 @@ public class DiffsCollector {
         try (DiffFormatter formatter = new DiffFormatter(DisabledOutputStream.INSTANCE)) {
             formatter.setRepository(repository);
             List<DiffEntry> diffEntries = git.diff()
-                    .setNewTree(CommitAnalyzer.createTreeIteratorFor(repository, fromCommit.getId()))
+                    .setNewTree(CommitAnalyzer.createTreeIteratorFor(fromCommit.getId(), repository, logger))
                     .setOldTree(toTree)
                     .call();
             RenameDetector renames = new RenameDetector(repository);

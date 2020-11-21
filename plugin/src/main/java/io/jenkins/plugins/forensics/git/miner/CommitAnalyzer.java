@@ -3,7 +3,6 @@ package io.jenkins.plugins.forensics.git.miner;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
@@ -38,8 +37,8 @@ class CommitAnalyzer {
     List<CommitDiffItem> run(final Repository repository, final Git git,
             final String latestCommitOfPreviousBuild,
             final FilteredLog logger) throws IOException, GitAPIException {
-        List<RevCommit> newRevCommits = new CommitCollector().findAllCommits(repository, git,
-                latestCommitOfPreviousBuild);
+        List<RevCommit> newRevCommits = new CommitCollector().findAllCommits(
+                repository, git, latestCommitOfPreviousBuild, logger);
         if (newRevCommits.isEmpty()) {
             logger.logInfo("No commits found since previous commit '%s'", latestCommitOfPreviousBuild);
         }
@@ -50,8 +49,8 @@ class CommitAnalyzer {
         TreeStringBuilder fileNameBuilder = new TreeStringBuilder();
         List<CommitDiffItem> commitsOfBuild = new ArrayList<>();
         for (int i = 0; i < newRevCommits.size(); i++) {
-            AbstractTreeIterator toTree = createTreeIteratorToCompareTo(repository, newRevCommits, i,
-                    latestCommitOfPreviousBuild);
+            AbstractTreeIterator toTree = createTreeIteratorToCompareTo(
+                    repository, newRevCommits, i, latestCommitOfPreviousBuild, logger);
             CommitDiffItem commit = createFromRevCommit(newRevCommits.get(i));
             List<CommitDiffItem> commits = new DiffsCollector().getDiffsForCommit(repository, git, commit, toTree,
                     fileNameBuilder, logger);
@@ -84,24 +83,27 @@ class CommitAnalyzer {
     }
 
     private AbstractTreeIterator createTreeIteratorToCompareTo(final Repository repository,
-            final List<RevCommit> newCommits, final int index, final String latestCommitOfPreviousBuild)
+            final List<RevCommit> newCommits, final int index, final String latestCommitOfPreviousBuild,
+            final FilteredLog logger)
             throws IOException {
         int compareIndex = index + 1;
         if (compareIndex < newCommits.size()) { // compare with another commit in the list
-            return createTreeIteratorFor(repository, newCommits.get(compareIndex).getName());
+            return createTreeIteratorFor(newCommits.get(compareIndex).getName(), repository, logger);
         }
         if (StringUtils.isNotBlank(latestCommitOfPreviousBuild)) {
-            return createTreeIteratorFor(repository, latestCommitOfPreviousBuild);
+            return createTreeIteratorFor(latestCommitOfPreviousBuild, repository, logger);
         }
         return new EmptyTreeIterator();
     }
 
-    static AbstractTreeIterator createTreeIteratorFor(final Repository repository, final String commitId)
+    static AbstractTreeIterator createTreeIteratorFor(final String commitId, final Repository repository,
+            final FilteredLog logger)
             throws IOException {
         try (RevWalk walk = new RevWalk(repository)) {
             ObjectId resolve = repository.resolve(commitId);
             if (resolve == null) {
-                throw new NoSuchElementException("No commit found with ID " + commitId);
+                logger.logError("No commit found with ID " + commitId);
+                return new EmptyTreeIterator();
             }
             RevCommit commit = walk.parseCommit(resolve);
             RevTree tree = walk.parseTree(commit.getTree().getId());

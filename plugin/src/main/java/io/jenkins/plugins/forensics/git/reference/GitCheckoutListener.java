@@ -11,6 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
@@ -177,8 +178,12 @@ public class GitCheckoutListener extends SCMListener {
             return newCommits;
         }
 
-        private RevCommit getHead(final Repository repo) throws IOException {
-            return new RevWalk(repo).parseCommit(repo.resolve(Constants.HEAD));
+        private RevCommit getHead(final Repository repository) throws IOException {
+            ObjectId head = repository.resolve(Constants.HEAD);
+            if (head == null) {
+                throw new IOException("No HEAD commit found in " + repository);
+            }
+            return new RevWalk(repository).parseCommit(head);
         }
     }
 }
