@@ -21,7 +21,7 @@ public class DetailsTable {
     static final String LAST_COMMIT = "Last Commit";
     static final String ADDED = "Added";
     static final String LOC = "#LoC";
-    static final String CHURN = "Churn";
+    static final String CHURN = "Code Churn";
 
     private final List<DetailsTableRow> tableRows = new ArrayList<>();
     private final List<String> headers;
