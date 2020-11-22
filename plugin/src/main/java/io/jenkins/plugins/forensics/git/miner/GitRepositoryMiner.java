@@ -53,7 +53,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
                     gitClient.getWorkTree());
             RemoteResultWrapper<ArrayList<CommitDiffItem>> wrapped = gitClient.withRepository(
                     new RepositoryStatisticsCallback(previous.getLatestCommitId()));
-            wrapped.getInfoMessages().forEach(logger::logInfo);
+            logger.merge(wrapped);
 
             List<CommitDiffItem> commits = wrapped.getResult();
             logger.logInfo("-> created report in %d seconds", 1 + (System.nanoTime() - nano) / 1_000_000_000L);
