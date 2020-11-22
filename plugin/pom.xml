@@ -32,9 +32,9 @@
     <data-tables-api.version>1.10.21-3</data-tables-api.version>
     <forensics-api-plugin.version>0.8.0-rc719.d6b007b88023</forensics-api-plugin.version>
 
-    <git-plugin.version>4.4.3</git-plugin.version>
+    <git-plugin.version>4.4.5</git-plugin.version>
     <git-client.version>3.5.1</git-client.version>
-    <scm-api.version>2.6.3</scm-api.version>
+    <scm-api.version>2.6.4</scm-api.version>
     <j2html.version>1.4.0</j2html.version>
     <streamex.version>0.7.3</streamex.version>
 
