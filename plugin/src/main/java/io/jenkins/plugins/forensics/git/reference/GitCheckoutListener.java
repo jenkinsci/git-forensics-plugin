@@ -42,6 +42,7 @@ import io.jenkins.plugins.util.LogHandler;
  * @author Arne Schöntag
  */
 @Extension
+@SuppressWarnings("PMD.ExcessiveImports")
 public class GitCheckoutListener extends SCMListener {
     @Override
     public void onCheckout(final Run<?, ?> build, final SCM scm, final FilePath workspace,

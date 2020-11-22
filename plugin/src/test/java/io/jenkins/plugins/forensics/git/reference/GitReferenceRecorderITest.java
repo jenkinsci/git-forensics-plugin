@@ -411,7 +411,7 @@ public class GitReferenceRecorderITest extends GitITest {
             writeFile(JENKINS_FILE, "echo \"branch=${env.BRANCH_NAME}\"; "
                     + "node {checkout scm; echo readFile('file'); "
                     + "echo \"GitForensics\"; "
-                    + "gitForensics()}");
+                    + "discoverGitReferenceBuild()}");
             writeFile(SOURCE_FILE, "master content");
             addFile(JENKINS_FILE);
             commit("initial content");
@@ -430,7 +430,7 @@ public class GitReferenceRecorderITest extends GitITest {
                     String.format("echo \"branch=${env.BRANCH_NAME}\";"
                             + "node {checkout scm; echo readFile('file').toUpperCase(); "
                             + "echo \"GitForensics\"; "
-                            + "gitForensics(%s)}", String.join(",", parameters)));
+                            + "discoverGitReferenceBuild(%s)}", String.join(",", parameters)));
             writeFile(SOURCE_FILE, "feature content");
             commit("feature changes");
         }

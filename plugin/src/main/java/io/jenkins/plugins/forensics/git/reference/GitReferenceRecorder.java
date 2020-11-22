@@ -89,7 +89,7 @@ public class GitReferenceRecorder extends ReferenceRecorder {
      * Descriptor for this step: defines the symbol for the pipeline.
      */
     @Extension
-    @Symbol("gitForensics")
+    @Symbol("discoverGitReferenceBuild")
     // TODO: should the symbol be part of the API?
     public static class Descriptor extends ReferenceRecorderDescriptor {
         // no special handling required for Git
