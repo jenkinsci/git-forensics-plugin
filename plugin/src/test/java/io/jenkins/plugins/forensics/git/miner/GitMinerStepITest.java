@@ -87,7 +87,7 @@ public class GitMinerStepITest extends GitITest {
 
         assertThat(getConsoleLog(firstBuild)).contains(
                 "2 commits analyzed",
-                "2 MODIFY commits",
+                "2 MODIFY commit diff items",
                 String.format("Analyzed commit '%s'", firstCommit),
                 String.format("Analyzed commit '%s'", secondCommit)
         );
@@ -107,7 +107,7 @@ public class GitMinerStepITest extends GitITest {
 
         assertThat(getConsoleLog(thirdBuild)).contains(
                 "1 commits analyzed",
-                "1 MODIFY commits",
+                "1 MODIFY commit diff items",
                 String.format("Analyzed commit '%s'", thirdCommit));
         verifyStatistics(getStatistics(thirdBuild), ADDITIONAL_FILE, 1, 2);
 
@@ -116,7 +116,7 @@ public class GitMinerStepITest extends GitITest {
 
         assertThat(getConsoleLog(thirdBuild)).contains(
                 "1 commits analyzed",
-                "1 MODIFY commits",
+                "1 MODIFY commit diff items",
                 String.format("Analyzed commit '%s'", thirdCommit));
         verifyStatistics(getStatistics(build), ADDITIONAL_FILE, 2, 3);
     }
@@ -138,7 +138,7 @@ public class GitMinerStepITest extends GitITest {
 
         assertThat(getConsoleLog(build)).contains(
                 "1 commits analyzed",
-                "1 RENAME commits",
+                "1 RENAME commit diff items",
                 String.format("Analyzed commit '%s'", getHead())
         );
         verifyStatistics(statistics, moved, 2, 5);
@@ -176,7 +176,7 @@ public class GitMinerStepITest extends GitITest {
 
         assertThat(getConsoleLog(build)).contains(
                 "1 commits analyzed",
-                "1 DELETE commits",
+                "1 DELETE commit diff items",
                 String.format("Analyzed commit '%s'", getHead())
         );
 

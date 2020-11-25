@@ -109,6 +109,7 @@ public class GitReferenceRecorder extends ReferenceRecorder {
          *
          * @return the model with the possible reference jobs
          */
+        @Override
         public ComboBoxModel doFillReferenceJobItems() {
             return model.getAllJobs();
         }
@@ -121,6 +122,7 @@ public class GitReferenceRecorder extends ReferenceRecorder {
          *
          * @return the validation result
          */
+        @Override
         @SuppressWarnings("unused") // Used in jelly validation
         public FormValidation doCheckReferenceJob(@QueryParameter final String referenceJob) {
             return model.validateJob(referenceJob);
