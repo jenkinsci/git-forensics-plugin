@@ -3,13 +3,17 @@ package io.jenkins.plugins.forensics.git.reference;
 import java.util.Optional;
 
 import edu.hm.hafner.util.VisibleForTesting;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.QueryParameter;
 import org.jenkinsci.Symbol;
 import hudson.Extension;
 import hudson.model.Run;
+import hudson.util.ComboBoxModel;
+import hudson.util.FormValidation;
 
 import io.jenkins.plugins.forensics.reference.ReferenceRecorder;
 import io.jenkins.plugins.util.JenkinsFacade;
@@ -20,7 +24,8 @@ import io.jenkins.plugins.util.JenkinsFacade;
  * @author Arne Schöntag
  * @author Ullrich Hafner
  */
-@Extension(ordinal = 10_000) @SuppressWarnings("PMD.DataClass")
+@Extension(ordinal = 10_000)
+@SuppressWarnings("PMD.DataClass")
 public class GitReferenceRecorder extends ReferenceRecorder {
     private int maxCommits = 100;
     private boolean skipUnknownCommits = false;
@@ -90,8 +95,35 @@ public class GitReferenceRecorder extends ReferenceRecorder {
      */
     @Extension
     @Symbol("discoverGitReferenceBuild")
-    // TODO: should the symbol be part of the API?
-    public static class Descriptor extends ReferenceRecorderDescriptor {
-        // no special handling required for Git
+    public static class Descriptor extends SimpleReferenceRecorderDescriptor {
+        @NonNull
+        @Override
+        public String getDisplayName() {
+            return Messages.Recorder_DisplayName();
+        }
+
+        private final GitReferenceJobModelValidation model = new GitReferenceJobModelValidation();
+
+        /**
+         * Returns the model with the possible reference jobs.
+         *
+         * @return the model with the possible reference jobs
+         */
+        public ComboBoxModel doFillReferenceJobItems() {
+            return model.getAllJobs();
+        }
+
+        /**
+         * Performs on-the-fly validation of the reference job.
+         *
+         * @param referenceJob
+         *         the reference job
+         *
+         * @return the validation result
+         */
+        @SuppressWarnings("unused") // Used in jelly validation
+        public FormValidation doCheckReferenceJob(@QueryParameter final String referenceJob) {
+            return model.validateJob(referenceJob);
+        }
     }
 }
