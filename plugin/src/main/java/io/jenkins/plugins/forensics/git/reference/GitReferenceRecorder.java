@@ -9,6 +9,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.verb.POST;
 import org.jenkinsci.Symbol;
 import hudson.Extension;
 import hudson.model.Run;
@@ -123,6 +124,7 @@ public class GitReferenceRecorder extends ReferenceRecorder {
          * @return the validation result
          */
         @Override
+        @POST
         @SuppressWarnings("unused") // Used in jelly validation
         public FormValidation doCheckReferenceJob(@QueryParameter final String referenceJob) {
             return model.validateJob(referenceJob);
