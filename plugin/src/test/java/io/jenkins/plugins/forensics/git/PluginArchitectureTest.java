@@ -51,6 +51,9 @@ class PluginArchitectureTest {
     @ArchTest
     static final ArchRule USE_POST_FOR_VALIDATION_END_POINTS = PluginArchitectureRules.USE_POST_FOR_VALIDATION_END_POINTS;
 
+    @ArchTest
+    static final ArchRule USE_POST_FOR_LIST_AND_COMBOBOX_FILL = PluginArchitectureRules.USE_POST_FOR_LIST_AND_COMBOBOX_FILL;
+
     /** Test classes should not use Junit 4. */
     // TODO: see https://github.com/TNG/ArchUnit/issues/136
     @ArchTest

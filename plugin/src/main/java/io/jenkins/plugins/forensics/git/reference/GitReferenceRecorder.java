@@ -12,6 +12,7 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.verb.POST;
 import org.jenkinsci.Symbol;
 import hudson.Extension;
+import hudson.model.Item;
 import hudson.model.Run;
 import hudson.util.ComboBoxModel;
 import hudson.util.FormValidation;
@@ -110,9 +111,12 @@ public class GitReferenceRecorder extends ReferenceRecorder {
          *
          * @return the model with the possible reference jobs
          */
-        @Override
+        @Override @POST
         public ComboBoxModel doFillReferenceJobItems() {
-            return model.getAllJobs();
+            if (new JenkinsFacade().hasPermission(Item.CONFIGURE)) {
+                return model.getAllJobs();
+            }
+            return new ComboBoxModel();
         }
 
         /**
