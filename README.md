@@ -22,22 +22,10 @@ This Git Forensics Jenkins plugin mines and analyzes data from a Git repository.
   - last modification time
   - lines of code (from the commit details)
   - code churn (changed lines since created)
-- **Commit tracking**: Tracks all new commits that are part of a build. Using this information plugins can search for 
-  builds that contain a specific commit. The commits will be automatically tracked for each job that uses a Git SCM, no
-  user configuration is required.
-- **Reference build**: Several plugins that report build statistics (test results, code coverage, metrics, static 
-  analysis warnings) typically show their reports in two different ways: either as absolute report 
-  (e.g., total number of tests or warnings, overall code coverage) or as relative delta report (e.g., additional tests,
-  increased or decreased coverage, new or fixed warnings). In order to compute a relative delta report a plugin needs 
-  to carefully select the other build to compare the current results to (a so called *reference build*). 
-  For simple Jenkins jobs that build the main branch of an SCM the reference build will be selected from one of the 
-  previous builds of the same job. For more complex branch source projects (i.e., projects that build several branches 
-  and pull requests in a connected job hierarchy) it makes more sense to select a reference build from a job 
-  that builds the actual target branch (i.e., the branch the current changes will be merged into). Here one typically is
-  interested what changed in a branch or pull request with respect to the main branch (or any other 
-  target branch): e.g., how will the code coverage change if the team merges the changes. Selecting the correct reference
-  build is not that easy, since the main branch of a project will evolve more frequently than a specific feature or bugfix
-  branch.   
+- **Commit tracking**: Tracks all new commits that are part of a build. Using this information other plugins can search 
+  for builds that contain a specific commit.
+- **Reference build**: Discovers a reference build for a given build that can be used to compute relative results that
+  show what will be changed if the branch of the current build will be merged with the target branch.
 - **Repository Browser**: Provides a [RepositoryBrowser](https://javadoc.jenkins.io/hudson/scm/RepositoryBrowser.html)
   for commits. Since the original Jenkins interface has no API to generate links to simple
   commits, this decorator adds such a functionality. Note that this API does not only obtain such links, it also
@@ -73,7 +61,7 @@ commits, respectively. Additionally, you can see the individual statistics for a
 
 Use the filtering or sorting capabilities of the table to highlight the most important files in your project. 
 
-![Repository Details](doc/images/details.png)
+![Repository Details](doc/images/forensics-details.png)
 
 For all files an additional detail view is available, that shows the added and deleted lines by each commit. In this
 view you can see a chart on the top showing the added (green) and deleted lines (red) for each commit. A table
@@ -84,3 +72,47 @@ to the Git commit details of your repository (if configured correctly).
 
 ![GitHub Details 1](doc/images/github-title.png)
 ![GitHub Details 2](doc/images/github-details.png)
+
+## Commit tracking
+
+The Git Forensics plugin automatically tracks all new commits that are part of a build that uses a Git SCM. Using this 
+information other plugins can search for builds that contain a specific commit. You can see the results of this
+commit listener on the build status page:
+
+![Commits Summary](doc/images/commits-summary.png)
+
+You will see the number of new commits and a link to open the repository browser with the details of the latest commit. 
+
+## Reference build 
+
+Several plugins that report build statistics (test results, code coverage, metrics, static
+analysis warnings) typically show their reports in two different ways: either as absolute report
+(e.g., total number of tests or warnings, overall code coverage) or as relative delta report (e.g., additional tests,
+increased or decreased coverage, new or fixed warnings). In order to compute a relative delta report a plugin needs
+to carefully select the other build to compare the current results to (a so called *reference build*).
+For simple Jenkins jobs that build the main branch of an SCM the reference build will be selected from one of the
+previous builds of the same job. For more complex branch source projects (i.e., projects that build several branches
+and pull requests in a connected job hierarchy) it makes more sense to select a reference build from a job
+that builds the actual target branch (i.e., the branch the current changes will be merged into). Here one typically is
+interested what changed in a branch or pull request with respect to the main branch (or any other
+target branch): e.g., how will the code coverage change if the team merges the changes. Selecting the correct reference
+build is not that easy, since the main branch of a project will evolve more frequently than a specific feature or bugfix
+branch. 
+
+Up to now Jenkins plugins compute these reference builds on their own, which leads to different results or 
+duplicate code. The Git Forensics plugin tries to generalize these requirements and provides a new API for Jenkins plugins
+to obtain such a reference build. This functionality is available after enabling the post build step 
+*Discover Git Reference build* in your Freestyle project or by running the step `discoverGitReferenceBuild` in your 
+pipelines. 
+
+![Configure reference build](doc/images/configure-reference.png)
+
+Discovering the reference build can be configured with several properties. The most important option is the 
+`referenceJob`: The reference job determines the target branch of the project where all changes will be merged into. 
+Then other plugins can use the best fitting build of this job as baseline for relative build reports that show 
+the effects of a given change. In [multi branch pipelines](https://www.jenkins.io/doc/book/pipeline/multibranch/#creating-a-multibranch-pipeline) 
+this name will be automatically retrieved from the pipeline configuration.
+
+You can see the results of this computation (and the significant processing decisions) on the build details page: 
+
+![Summary reference build](doc/images/reference.png)
