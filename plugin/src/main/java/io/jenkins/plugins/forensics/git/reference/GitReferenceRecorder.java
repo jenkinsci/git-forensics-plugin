@@ -98,7 +98,6 @@ public class GitReferenceRecorder extends ReferenceRecorder {
     @Extension
     @Symbol("discoverGitReferenceBuild")
     public static class Descriptor extends SimpleReferenceRecorderDescriptor {
-
         private static final JenkinsFacade JENKINS = new JenkinsFacade();
 
         @NonNull
