@@ -98,6 +98,8 @@ public class GitReferenceRecorder extends ReferenceRecorder {
     @Extension
     @Symbol("discoverGitReferenceBuild")
     public static class Descriptor extends SimpleReferenceRecorderDescriptor {
+        private static final JenkinsFacade JENKINS = new JenkinsFacade();
+
         @NonNull
         @Override
         public String getDisplayName() {
@@ -113,7 +115,7 @@ public class GitReferenceRecorder extends ReferenceRecorder {
          */
         @Override @POST
         public ComboBoxModel doFillReferenceJobItems() {
-            if (new JenkinsFacade().hasPermission(Item.CONFIGURE)) {
+            if (JENKINS.hasPermission(Item.CONFIGURE)) {
                 return model.getAllJobs();
             }
             return new ComboBoxModel();
@@ -131,6 +133,9 @@ public class GitReferenceRecorder extends ReferenceRecorder {
         @POST
         @SuppressWarnings("unused") // Used in jelly validation
         public FormValidation doCheckReferenceJob(@QueryParameter final String referenceJob) {
+            if (!JENKINS.hasPermission(Item.CONFIGURE)) {
+                return FormValidation.ok();
+            }
             return model.validateJob(referenceJob);
         }
     }
