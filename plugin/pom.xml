@@ -33,7 +33,7 @@
     <forensics-api-plugin.version>0.8.0-rc726.219087c7c31a</forensics-api-plugin.version>
 
     <git-plugin.version>4.4.5</git-plugin.version>
-    <git-client.version>3.5.1</git-client.version>
+    <git-client.version>3.6.0</git-client.version>
     <scm-api.version>2.6.4</scm-api.version>
     <j2html.version>1.4.0</j2html.version>
     <streamex.version>0.7.3</streamex.version>
