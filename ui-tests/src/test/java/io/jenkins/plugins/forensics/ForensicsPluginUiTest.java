@@ -33,9 +33,8 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
         FreeStyleJob job = createFreeStyleJob();
         job.addPublisher(ForensicsPublisher.class);
 
-        job.useScm(GitScm.class)
-                .url(REPOSITORY_URL)
-                .branch("28af63def44286729e3b19b03464d100fd1d0587");
+        GitScm gitScm = createGitScm(job);
+        gitScm.url(REPOSITORY_URL).branch("28af63def44286729e3b19b03464d100fd1d0587");
         job.save();
         Build build = buildSuccessfully(job);
 
@@ -66,6 +65,12 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
                 "in 131 files");
     }
 
+    private GitScm createGitScm(final FreeStyleJob job) {
+        GitScm gitScm = job.useScm(GitScm.class);
+        gitScm.waitFor();
+        return gitScm;
+    }
+
     private String getSummaryText(final Build referenceBuild, final int row) {
         return referenceBuild.getElement(
                 By.xpath("/html/body/div[4]/div[2]/table/tbody/tr[" + row + "]/td[2]")).getText();
@@ -79,9 +84,8 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
         FreeStyleJob job = createFreeStyleJob();
         job.addPublisher(ForensicsPublisher.class);
 
-        job.useScm(GitScm.class)
-                .url(REPOSITORY_URL)
-                .branch("28af63def44286729e3b19b03464d100fd1d0587");
+        GitScm gitScm = createGitScm(job);
+        gitScm.url(REPOSITORY_URL).branch("28af63def44286729e3b19b03464d100fd1d0587");
         job.save();
         Build build = buildSuccessfully(job);
 
