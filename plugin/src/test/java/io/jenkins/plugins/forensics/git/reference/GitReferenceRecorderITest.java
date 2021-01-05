@@ -7,9 +7,11 @@ import java.util.Optional;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.BuildWatcher;
+import org.jvnet.hudson.test.Issue;
 
 import com.cloudbees.hudson.plugins.folder.computed.FolderComputation;
 
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
@@ -48,6 +50,24 @@ public class GitReferenceRecorderITest extends GitITest {
     /** Watches for build results. */
     @ClassRule
     public static final BuildWatcher BUILD_WATCHER = new BuildWatcher();
+
+    /**
+     * Runs a pipeline and verifies that the recorder does not break the build if Git is not configured.
+     *
+     * @see <a href="https://issues.jenkins-ci.org/browse/JENKINS-64545">Issue 64545</a>
+     */
+    @Test @Issue("JENKINS-64545")
+    public void shouldHandleJobsWithoutGitGracefully() {
+        WorkflowJob job = createPipeline();
+
+        job.setDefinition(new CpsFlowDefinition("node {}", true));
+        buildSuccessfully(job);
+
+        job.setDefinition(new CpsFlowDefinition("node {discoverGitReferenceBuild(referenceJob: 'test0')}", true));
+        buildSuccessfully(job);
+
+        assertThat(getConsoleLog(job.getLastBuild())).contains("No reference build found that contains matching commits");
+    }
 
     /**
      * Builds a  multibranch-pipeline with a master and a feature branch, builds them and checks if the correct

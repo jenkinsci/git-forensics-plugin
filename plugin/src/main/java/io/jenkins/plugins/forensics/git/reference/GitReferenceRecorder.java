@@ -1,5 +1,6 @@
 package io.jenkins.plugins.forensics.git.reference;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import edu.hm.hafner.util.VisibleForTesting;
@@ -80,8 +81,12 @@ public class GitReferenceRecorder extends ReferenceRecorder {
 
     @Override
     protected Optional<Run<?, ?>> find(final Run<?, ?> owner, final Run<?, ?> lastCompletedBuildOfReferenceJob) {
-        GitCommitsRecord thisCommit = owner.getAction(GitCommitsRecord.class);
         GitCommitsRecord referenceCommit = lastCompletedBuildOfReferenceJob.getAction(GitCommitsRecord.class);
+        if (referenceCommit == null) {
+            return Optional.empty();
+        }
+
+        GitCommitsRecord thisCommit = Objects.requireNonNull(owner.getAction(GitCommitsRecord.class));
 
         return thisCommit.getReferencePoint(referenceCommit, getMaxCommits(), isSkipUnknownCommits());
     }
