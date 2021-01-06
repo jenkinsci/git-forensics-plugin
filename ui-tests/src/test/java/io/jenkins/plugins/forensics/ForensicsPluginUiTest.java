@@ -72,7 +72,7 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
     private GitScm createGitScm(final FreeStyleJob job) {
         GitScm gitScm = job.useScm(GitScm.class);
 
-        WebDriverWait wait = new WebDriverWait(driver, 2, 100);
+        WebDriverWait wait = new WebDriverWait(driver, 10);
         WebElement url = gitScm.find(By.xpath(".//input[contains(@name, '_.url')]"));
         wait.withTimeout(Duration.ofSeconds(10)).until(ExpectedConditions.elementToBeClickable(url));
 
@@ -216,7 +216,7 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
 
     private FreeStyleJob createFreeStyleJob(final String... resourcesToCopy) {
         FreeStyleJob job = jenkins.getJobs().create(FreeStyleJob.class);
-        ScrollerUtil.hideScrollerTabBar(driver);
+        // ScrollerUtil.hideScrollerTabBar(driver);
         for (String resource : resourcesToCopy) {
             job.copyResource("/" + resource);
         }
