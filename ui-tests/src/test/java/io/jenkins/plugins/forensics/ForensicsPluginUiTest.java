@@ -1,9 +1,13 @@
 package io.jenkins.plugins.forensics;
 
+import java.time.Duration;
 import java.util.List;
 
 import org.junit.Test;
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
 import org.jenkinsci.test.acceptance.junit.WithPlugins;
@@ -67,7 +71,11 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
 
     private GitScm createGitScm(final FreeStyleJob job) {
         GitScm gitScm = job.useScm(GitScm.class);
-        gitScm.waitFor();
+
+        WebDriverWait wait = new WebDriverWait(driver, 2, 100);
+        WebElement url = gitScm.find(By.xpath(".//input[contains(@name, '_.url')]"));
+        wait.withTimeout(Duration.ofSeconds(10)).until(ExpectedConditions.elementToBeClickable(url));
+
         return gitScm;
     }
 
