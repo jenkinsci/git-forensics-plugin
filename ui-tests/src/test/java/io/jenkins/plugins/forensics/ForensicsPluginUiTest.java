@@ -1,9 +1,13 @@
 package io.jenkins.plugins.forensics;
 
+import java.time.Duration;
 import java.util.List;
 
 import org.junit.Test;
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
 import org.jenkinsci.test.acceptance.junit.WithPlugins;
@@ -33,9 +37,8 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
         FreeStyleJob job = createFreeStyleJob();
         job.addPublisher(ForensicsPublisher.class);
 
-        job.useScm(GitScm.class)
-                .url(REPOSITORY_URL)
-                .branch("28af63def44286729e3b19b03464d100fd1d0587");
+        GitScm gitScm = createGitScm(job);
+        gitScm.url(REPOSITORY_URL).branch("28af63def44286729e3b19b03464d100fd1d0587");
         job.save();
         Build build = buildSuccessfully(job);
 
@@ -66,6 +69,16 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
                 "in 131 files");
     }
 
+    private GitScm createGitScm(final FreeStyleJob job) {
+        GitScm gitScm = job.useScm(GitScm.class);
+
+        WebDriverWait wait = new WebDriverWait(driver, 10);
+        WebElement url = gitScm.find(By.xpath(".//input[contains(@name, '_.url')]"));
+        wait.withTimeout(Duration.ofSeconds(10)).until(ExpectedConditions.elementToBeClickable(url));
+
+        return gitScm;
+    }
+
     private String getSummaryText(final Build referenceBuild, final int row) {
         return referenceBuild.getElement(
                 By.xpath("/html/body/div[4]/div[2]/table/tbody/tr[" + row + "]/td[2]")).getText();
@@ -79,9 +92,8 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
         FreeStyleJob job = createFreeStyleJob();
         job.addPublisher(ForensicsPublisher.class);
 
-        job.useScm(GitScm.class)
-                .url(REPOSITORY_URL)
-                .branch("28af63def44286729e3b19b03464d100fd1d0587");
+        GitScm gitScm = createGitScm(job);
+        gitScm.url(REPOSITORY_URL).branch("28af63def44286729e3b19b03464d100fd1d0587");
         job.save();
         Build build = buildSuccessfully(job);
 
@@ -204,7 +216,7 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
 
     private FreeStyleJob createFreeStyleJob(final String... resourcesToCopy) {
         FreeStyleJob job = jenkins.getJobs().create(FreeStyleJob.class);
-        ScrollerUtil.hideScrollerTabBar(driver);
+        // ScrollerUtil.hideScrollerTabBar(driver);
         for (String resource : resourcesToCopy) {
             job.copyResource("/" + resource);
         }
