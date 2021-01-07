@@ -1,20 +1,15 @@
 package io.jenkins.plugins.forensics;
 
-import java.time.Duration;
 import java.util.List;
 
 import org.junit.Test;
 import org.openqa.selenium.By;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 
 import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
 import org.jenkinsci.test.acceptance.junit.WithPlugins;
-import org.jenkinsci.test.acceptance.plugins.git.GitScm;
 import org.jenkinsci.test.acceptance.po.Build;
-import org.jenkinsci.test.acceptance.po.FreeStyleJob;
 import org.jenkinsci.test.acceptance.po.Job;
+import org.jenkinsci.test.acceptance.po.WorkflowJob;
 
 import static io.jenkins.plugins.forensics.DetailsTable.*;
 import static org.assertj.core.api.Assertions.*;
@@ -24,22 +19,20 @@ import static org.assertj.core.api.Assertions.*;
  *
  * @author Ullrich Hafner
  */
-@WithPlugins({"forensics-api", "git-forensics", "git"})
+@WithPlugins({"forensics-api", "git-forensics", "git", "workflow-durable-task-step", "workflow-basic-steps"})
 public class ForensicsPluginUiTest extends AbstractJUnitTest {
     private static final String REPOSITORY_URL = "https://github.com/jenkinsci/git-forensics-plugin.git";
+    private static final int GIT_SUMMARY_ROW = 2;
+    private static final int COMMIT_RECORDER_ROW = 3;
+    private static final int MINER_ROW = 4;
 
     /**
-     * Tests the build overview page by running a Build with the forensics plugin analyzing a commit hash of the
-     * git-forensics-plugin repository. Checks the contents of the result summary.
+     * Verifies the Git miner by running a build with the forensics plugin analyzing a commit hash of the
+     * git-forensics-plugin repository. Checks the contents of the summary and details view.
      */
     @Test
     public void shouldAggregateToolsIntoSingleResult() {
-        FreeStyleJob job = createFreeStyleJob();
-        job.addPublisher(ForensicsPublisher.class);
-
-        GitScm gitScm = createGitScm(job);
-        gitScm.url(REPOSITORY_URL).branch("28af63def44286729e3b19b03464d100fd1d0587");
-        job.save();
+        WorkflowJob job = createJob();
         Build build = buildSuccessfully(job);
 
         assertThat(build.getConsole()).contains(
@@ -48,16 +41,16 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
                 "-> 10444 lines deleted");
 
         build.open();
-        assertThat(getSummaryText(build, 3)).contains(
+        assertThat(getSummaryText(build, GIT_SUMMARY_ROW)).contains(
                 "Revision: 28af63def44286729e3b19b03464d100fd1d0587", "detached");
 
         // TODO: create page objects
-        assertThat(getSummaryText(build, 4)).contains(
-                "SCM: git https://github.com/jenkinsci/git-forensics-plugin.git",
+        assertThat(getSummaryText(build, COMMIT_RECORDER_ROW)).contains(
+                "SCM: git " + REPOSITORY_URL,
                 "Initial recording of 200 commits",
                 "Latest commit: 28af63d");
 
-        assertThat(getSummaryText(build, 5)).contains(
+        assertThat(getSummaryText(build, MINER_ROW)).contains(
                 "SCM Statistics",
                 "51 repository files",
                 "total lines of code: 6066",
@@ -67,35 +60,6 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
                 "New commits: 402",
                 "from 4 authors",
                 "in 131 files");
-    }
-
-    private GitScm createGitScm(final FreeStyleJob job) {
-        GitScm gitScm = job.useScm(GitScm.class);
-
-        WebDriverWait wait = new WebDriverWait(driver, 10);
-        WebElement url = gitScm.find(By.xpath(".//input[contains(@name, '_.url')]"));
-        wait.withTimeout(Duration.ofSeconds(10)).until(ExpectedConditions.elementToBeClickable(url));
-
-        return gitScm;
-    }
-
-    private String getSummaryText(final Build referenceBuild, final int row) {
-        return referenceBuild.getElement(
-                By.xpath("/html/body/div[4]/div[2]/table/tbody/tr[" + row + "]/td[2]")).getText();
-    }
-
-    /**
-     * Tests the Details table on ScmForensics page.
-     */
-    @Test
-    public void shouldShowTableWithCompleteFunctionality() {
-        FreeStyleJob job = createFreeStyleJob();
-        job.addPublisher(ForensicsPublisher.class);
-
-        GitScm gitScm = createGitScm(job);
-        gitScm.url(REPOSITORY_URL).branch("28af63def44286729e3b19b03464d100fd1d0587");
-        job.save();
-        Build build = buildSuccessfully(job);
 
         ScmForensics scmForensics = new ScmForensics(build, "forensics");
         scmForensics.open();
@@ -106,6 +70,23 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
         assertTableEntriesAndSorting(detailsTable);
         assertSearch(detailsTable);
         assertPagination(detailsTable);
+    }
+
+    private WorkflowJob createJob() {
+        WorkflowJob job = jenkins.jobs.create(WorkflowJob.class);
+        job.sandbox.check();
+        job.script.set("node {\n"
+                + "  checkout([$class: 'GitSCM', branches: [[name: '28af63def44286729e3b19b03464d100fd1d0587' ]],\n"
+                + "     userRemoteConfigs: [[url: '" + REPOSITORY_URL + "']]])\n"
+                + "  mineRepository() \n"
+                + "} \n");
+        job.save();
+        return job;
+    }
+
+    private String getSummaryText(final Build referenceBuild, final int row) {
+        return referenceBuild.getElement(
+                By.xpath("/html/body/div[4]/div[2]/table/tbody/tr[" + row + "]/td[2]")).getText();
     }
 
     /**
@@ -212,15 +193,6 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
         assertThat(secondRow.getFileName()).isEqualTo(fileName);
         assertThat(secondRow.getNumberOfAuthors()).isEqualTo(numAuthors);
         assertThat(secondRow.getNumberOfCommits()).isEqualTo(numCommits);
-    }
-
-    private FreeStyleJob createFreeStyleJob(final String... resourcesToCopy) {
-        FreeStyleJob job = jenkins.getJobs().create(FreeStyleJob.class);
-        // ScrollerUtil.hideScrollerTabBar(driver);
-        for (String resource : resourcesToCopy) {
-            job.copyResource("/" + resource);
-        }
-        return job;
     }
 
     protected Build buildSuccessfully(final Job job) {

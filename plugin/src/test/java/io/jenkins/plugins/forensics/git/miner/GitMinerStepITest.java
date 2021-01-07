@@ -7,6 +7,7 @@ import java.util.Objects;
 
 import org.junit.Test;
 
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import hudson.model.FreeStyleProject;
 import hudson.model.Run;
 import hudson.plugins.git.BranchSpec;
@@ -29,6 +30,8 @@ import static io.jenkins.plugins.forensics.assertions.Assertions.*;
  * @author Ullrich Hafner
  */
 public class GitMinerStepITest extends GitITest {
+    private static final String REPOSITORY_URL = "https://github.com/jenkinsci/git-forensics-plugin.git";
+
     /** Verifies that the table contains two rows with the correct statistics. */
     @Test
     public void shouldFillTableDynamically() {
@@ -220,6 +223,20 @@ public class GitMinerStepITest extends GitITest {
         assertThat(statistics.getFiles()).hasSize(51);
     }
 
+    /** Run on existing project. */
+    @Test
+    public void shouldRunInPipelineOnExistingProject() {
+        WorkflowJob job = createPipeline();
+        job.setDefinition(asStage(
+                "checkout([$class: 'GitSCM', "
+                        + "branches: [[name: '28af63def44286729e3b19b03464d100fd1d0587' ]],\n"
+                        + "userRemoteConfigs: [[url: '" + REPOSITORY_URL + "']]])",
+                "mineRepository()"));
+        Run<?, ?> build = buildSuccessfully(job);
+        RepositoryStatistics statistics = getStatistics(build);
+        assertThat(statistics.getFiles()).hasSize(51);
+    }
+
     private void verifyStatistics(final RepositoryStatistics statistics, final String fileName,
             final int authorsSize, final int commitsSize) {
         FileStatistics additionalFileStatistics = statistics.get(fileName);
@@ -261,7 +278,7 @@ public class GitMinerStepITest extends GitITest {
     }
 
     private <T> int sort(final Object left, final Object right) {
-        return ((ForensicsRow)right).getFileName().compareTo(((ForensicsRow)left).getFileName());
+        return ((ForensicsRow) right).getFileName().compareTo(((ForensicsRow) left).getFileName());
     }
 
     private FreeStyleProject createJobWithMiner() {
