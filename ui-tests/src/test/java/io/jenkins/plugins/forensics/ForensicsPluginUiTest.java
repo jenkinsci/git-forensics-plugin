@@ -79,7 +79,7 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
                 + "  checkout([$class: 'GitSCM', branches: [[name: '28af63def44286729e3b19b03464d100fd1d0587' ]],\n"
                 + "     userRemoteConfigs: [[url: '" + REPOSITORY_URL + "']]])\n"
                 + "  mineRepository() \n"
-                + "} \n");
+                + "}");
         job.save();
         return job;
     }
