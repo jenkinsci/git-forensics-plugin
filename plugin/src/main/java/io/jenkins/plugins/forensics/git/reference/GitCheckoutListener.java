@@ -56,7 +56,7 @@ public class GitCheckoutListener extends SCMListener {
         else {
             GitRepositoryValidator validator = new GitRepositoryValidator(scm, build, workspace, listener, logger);
             if (validator.isGitRepository()) {
-                recordNewCommits(build, validator.createClient(), scmKey, logger);
+                recordNewCommits(build, scm, validator.createClient(), scmKey, logger);
             }
         }
 
@@ -73,17 +73,17 @@ public class GitCheckoutListener extends SCMListener {
                 .stream().filter(record -> scmKey.equals(record.getScmKey())).findAny();
     }
 
-    private void recordNewCommits(final Run<?, ?> build, final GitClient gitClient,
+    private void recordNewCommits(final Run<?, ?> build, final SCM scm, final GitClient gitClient,
             final String scmKey, final FilteredLog logger) {
         logger.logInfo("Recording commits of '%s'", scmKey);
 
-        String latestRecordedCommit = getLatestRecordedCommit(build, scmKey, logger);
-        GitCommitsRecord commitsRecord = recordNewCommits(build, gitClient, scmKey, logger, latestRecordedCommit);
+        String latestRecordedCommit = getLatestRecordedCommit(build, scm, scmKey, logger);
+        GitCommitsRecord commitsRecord = recordNewCommits(build, scm, gitClient, scmKey, logger, latestRecordedCommit);
         build.addAction(commitsRecord);
     }
 
-    private String getLatestRecordedCommit(final Run<?, ?> build, final String scmKey, final FilteredLog logger) {
-        Optional<GitCommitsRecord> record = getPreviousRecord(build, scmKey);
+    private String getLatestRecordedCommit(final Run<?, ?> build, final SCM scm, final String scmKey, final FilteredLog logger) {
+        Optional<GitCommitsRecord> record = getPreviousRecord(build, scm, scmKey);
         if (record.isPresent()) {
             GitCommitsRecord previous = record.get();
             logger.logInfo("Found previous build '%s' that contains recorded Git commits", previous.getOwner());
@@ -97,9 +97,9 @@ public class GitCheckoutListener extends SCMListener {
         }
     }
 
-    private GitCommitsRecord recordNewCommits(final Run<?, ?> build, final GitClient gitClient,
+    private GitCommitsRecord recordNewCommits(final Run<?, ?> build, final SCM scm, final GitClient gitClient,
             final String scmKey, final FilteredLog logger, final String latestCommit) {
-        CommitDecorator decorator = GitCommitDecoratorFactory.findCommitDecorator(build, logger);
+        CommitDecorator decorator = GitCommitDecoratorFactory.findCommitDecorator(build, scm, logger);
         String link = decorator.asLink(latestCommit);
 
         List<String> commits = recordCommitsSincePreviousBuild(latestCommit, gitClient, scmKey, logger);
@@ -137,7 +137,7 @@ public class GitCheckoutListener extends SCMListener {
         }
     }
 
-    private Optional<GitCommitsRecord> getPreviousRecord(final Run<?, ?> currentBuild, final String scmKey) {
+    private Optional<GitCommitsRecord> getPreviousRecord(final Run<?, ?> currentBuild, final SCM scm, final String scmKey) {
         for (Run<?, ?> build = currentBuild.getPreviousBuild(); build != null; build = build.getPreviousBuild()) {
             Optional<GitCommitsRecord> record = findRecordForScm(build, scmKey);
             if (record.isPresent()) {
