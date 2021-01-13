@@ -130,4 +130,22 @@ public class GitRepositoryValidator {
         }
         return HEAD;
     }
+
+    /**
+     * Returns the key for the associated SCM.
+     *
+     * @return the SCM key
+     */
+    public String getId() {
+        return scm.getKey();
+    }
+
+    /**
+     * Returns the associated SCM.
+     *
+     * @return the SCM
+     */
+    public SCM getScm() {
+        return scm;
+    }
 }

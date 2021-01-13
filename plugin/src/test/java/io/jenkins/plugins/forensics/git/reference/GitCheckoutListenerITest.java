@@ -112,7 +112,7 @@ public class GitCheckoutListenerITest extends IntegrationTestWithJenkinsPerSuite
 
     /** Run on existing project. */
     @Test
-    public void shouldMineSelectedRepository() {
+    public void shouldDecorateSeveralRepositories() {
         WorkflowJob job = createPipeline();
         job.setDefinition(asStage(
                 "checkout([$class: 'GitSCM', "
@@ -129,14 +129,17 @@ public class GitCheckoutListenerITest extends IntegrationTestWithJenkinsPerSuite
         List<GitCommitsRecord> actions = buildSuccessfully(job).getActions(GitCommitsRecord.class);
         assertThat(actions).hasSize(2);
 
-        assertThat(actions.get(0).getInfoMessages())
-                .contains("Recording commits of 'git https://github.com/jenkinsci/forensics-api-plugin.git'",
-                        "Git commit decorator successfully obtained",
-                        "Recorded 200 new commits");
-        assertThat(actions.get(1).getInfoMessages())
-                .contains("Recording commits of 'git https://github.com/jenkinsci/git-forensics-plugin.git'",
-                        "Git commit decorator successfully obtained",
-                        "Recorded 200 new commits");
+        verifyAction(actions.get(0), FORENSICS_API_URL);
+        verifyAction(actions.get(1), GIT_FORENSICS_URL);
+    }
+
+    private void verifyAction(final GitCommitsRecord record, final String repository) {
+        assertThat(record.getInfoMessages())
+                .contains("Recording commits of 'git " + repository + "'",
+                        "Found no previous build with recorded Git commits",
+                        "-> Recorded 200 new commits")
+                .anySatisfy(value -> assertThat(value)
+                        .startsWith("-> Git commit decorator successfully obtained 'hudson.plugins.git.browser.GithubWeb"));
     }
 
     private void createAndCommitFile(final String fileName, final String content) throws Exception {
