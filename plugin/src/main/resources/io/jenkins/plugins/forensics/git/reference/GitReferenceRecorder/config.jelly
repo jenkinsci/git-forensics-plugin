@@ -9,6 +9,10 @@
     <f:textbox/>
   </f:entry>
 
+  <f:entry title="${%title.scm}" field="scm" description="${%description.scm}">
+    <f:textbox/>
+  </f:entry>
+
   <f:entry title="${%title.maxCommits}" description="${%description.maxCommits}" field="maxCommits">
     <f:number default="100"/>
   </f:entry>

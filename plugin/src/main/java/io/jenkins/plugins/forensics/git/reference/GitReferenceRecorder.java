@@ -1,6 +1,5 @@
 package io.jenkins.plugins.forensics.git.reference;
 
-import java.util.Objects;
 import java.util.Optional;
 
 import edu.hm.hafner.util.VisibleForTesting;
@@ -81,14 +80,23 @@ public class GitReferenceRecorder extends ReferenceRecorder {
 
     @Override
     protected Optional<Run<?, ?>> find(final Run<?, ?> owner, final Run<?, ?> lastCompletedBuildOfReferenceJob) {
-        GitCommitsRecord referenceCommit = lastCompletedBuildOfReferenceJob.getAction(GitCommitsRecord.class);
-        if (referenceCommit == null) {
+        Optional<GitCommitsRecord> referenceCommit = getCommitsFor(lastCompletedBuildOfReferenceJob);
+        if (!referenceCommit.isPresent()) {
             return Optional.empty();
         }
 
-        GitCommitsRecord thisCommit = Objects.requireNonNull(owner.getAction(GitCommitsRecord.class));
+        Optional<GitCommitsRecord> thisCommit = getCommitsFor(owner);
+        if (thisCommit.isPresent()) {
+            return thisCommit.get().getReferencePoint(referenceCommit.get(), getMaxCommits(), isSkipUnknownCommits());
+        }
+        return Optional.empty();
+    }
 
-        return thisCommit.getReferencePoint(referenceCommit, getMaxCommits(), isSkipUnknownCommits());
+    private Optional<GitCommitsRecord> getCommitsFor(final Run<?, ?> lastCompletedBuildOfReferenceJob) {
+        return lastCompletedBuildOfReferenceJob.getActions(GitCommitsRecord.class)
+                .stream()
+                .filter(r -> r.getScmKey().contains(getScm()))
+                .findFirst();
     }
 
     @Override
@@ -118,7 +126,8 @@ public class GitReferenceRecorder extends ReferenceRecorder {
          *
          * @return the model with the possible reference jobs
          */
-        @Override @POST
+        @Override
+        @POST
         public ComboBoxModel doFillReferenceJobItems() {
             if (JENKINS.hasPermission(Item.CONFIGURE)) {
                 return model.getAllJobs();

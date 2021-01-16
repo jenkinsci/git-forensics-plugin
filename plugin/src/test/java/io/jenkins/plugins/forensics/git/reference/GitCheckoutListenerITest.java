@@ -110,7 +110,10 @@ public class GitCheckoutListenerITest extends IntegrationTestWithJenkinsPerSuite
                 .hasValue(first.getOwner());
     }
 
-    /** Run on existing project. */
+    /**
+     * Creates a pipeline that checks out two different repositories and verifies that the decorator correctly will
+     * be attached to both of them.
+     */
     @Test
     public void shouldDecorateSeveralRepositories() {
         WorkflowJob job = createPipeline();

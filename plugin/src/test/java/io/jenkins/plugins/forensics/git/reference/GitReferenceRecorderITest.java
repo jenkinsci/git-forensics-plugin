@@ -32,6 +32,7 @@ import static org.jvnet.hudson.test.JenkinsRule.*;
  * Integration tests for finding the correct reference point for multibranch pipelines.
  *
  * @author Arne Schöntag
+ * @author Ullrich Hafner
  * @see <a href="https://github.com/jenkinsci/workflow-multibranch-plugin/blob/master/src/test/java/org/jenkinsci/plugins/workflow/multibranch/WorkflowMultiBranchProjectTest.java">Most
  *         tests are based on the integration tests for the multi-branch pipeleine plugin</a>
  */
@@ -40,6 +41,8 @@ import static org.jvnet.hudson.test.JenkinsRule.*;
 // TODO: add test if a recorded reference build is deleted afterwards
 @SuppressWarnings("checkstyle:IllegalCatch")
 public class GitReferenceRecorderITest extends GitITest {
+    private static final String FORENSICS_API_URL = "https://github.com/jenkinsci/forensics-api-plugin.git";
+
     private static final String JENKINS_FILE = "Jenkinsfile";
     private static final String SOURCE_FILE = "file";
     private static final String FEATURE = "feature";
@@ -56,22 +59,144 @@ public class GitReferenceRecorderITest extends GitITest {
      *
      * @see <a href="https://issues.jenkins-ci.org/browse/JENKINS-64545">Issue 64545</a>
      */
-    @Test @Issue("JENKINS-64545")
+    @Test
+    @Issue("JENKINS-64545")
     public void shouldHandleJobsWithoutGitGracefully() {
-        WorkflowJob job = createPipeline();
+        WorkflowJob job = createPipeline("no-git");
 
         job.setDefinition(new CpsFlowDefinition("node {}", true));
         buildSuccessfully(job);
 
-        job.setDefinition(new CpsFlowDefinition("node {discoverGitReferenceBuild(referenceJob: 'test0')}", true));
+        job.setDefinition(new CpsFlowDefinition("node {discoverGitReferenceBuild(referenceJob: 'no-git')}", true));
         buildSuccessfully(job);
 
-        assertThat(getConsoleLog(job.getLastBuild())).contains("No reference build found that contains matching commits");
+        assertThat(getConsoleLog(job.getLastBuild())).contains(
+                "No reference build found that contains matching commits");
     }
 
     /**
-     * Builds a  multibranch-pipeline with a master and a feature branch, builds them and checks if the correct
-     * reference build will be found.
+     * Creates a pipeline for the master branch and another pipeline for the feature branch, builds them and checks if
+     * the correct reference build will be found.
+     * <pre>
+     * {@code
+     * M:  [M1]#1
+     *       \
+     *   F:  [F2]#1}
+     * </pre>
+     */
+    @Test
+    public void shouldFindCorrectBuildInPipelines() {
+        WorkflowJob mainBranch = createPipeline("main");
+        mainBranch.setDefinition(asStage(createLocalGitCheckout("master")));
+
+        Run<?, ?> masterBuild = buildSuccessfully(mainBranch);
+
+        createFeatureBranchAndAddCommits();
+
+        WorkflowJob featureBranch = createPipeline("feature");
+        featureBranch.setDefinition(asStage(createLocalGitCheckout("feature")));
+
+        verifyPipelineResult(masterBuild, featureBranch);
+    }
+
+    /**
+     * Creates a pipeline for the master branch and another pipeline for the feature branch, builds them and checks if
+     * the correct reference build will be found. The master branch contains an additional but unrelated SCM
+     * repository.
+     * <pre>
+     * {@code
+     * M:  [M1]#1
+     *       \
+     *   F:  [F2]#1}
+     * </pre>
+     *
+     * @see <a href="https://issues.jenkins.io/browse/JENKINS-64578">Issue 64578</a>
+     */
+    @Test
+    @Issue("JENKINS-64578")
+    public void shouldFindCorrectBuildInPipelinesWithMultipleReposInReference() {
+        WorkflowJob mainBranch = createPipeline("main");
+        mainBranch.setDefinition(asStage(
+                createForensicsCheckoutStep(),
+                createLocalGitCheckout("master")));
+
+        Run<?, ?> masterBuild = buildSuccessfully(mainBranch);
+
+        createFeatureBranchAndAddCommits();
+
+        WorkflowJob featureBranch = createPipeline("feature");
+        featureBranch.setDefinition(asStage(
+                createLocalGitCheckout("feature"),
+                "discoverGitReferenceBuild(referenceJob: 'main', scm: 'git file')"));
+
+        verifyPipelineResult(masterBuild, featureBranch);
+    }
+
+    /**
+     * Creates a pipeline for the master branch and another pipeline for the feature branch, builds them and checks if
+     * the correct reference build will be found. The master branch contains an additional but unrelated SCM
+     * repository.
+     * <pre>
+     * {@code
+     * M:  [M1]#1
+     *       \
+     *   F:  [F2]#1}
+     * </pre>
+     *
+     * @see <a href="https://issues.jenkins.io/browse/JENKINS-64578">Issue 64578</a>
+     */
+    @Test
+    @Issue("JENKINS-64578")
+    public void shouldFindCorrectBuildInPipelinesWithMultipleReposInFeature() {
+        WorkflowJob mainBranch = createPipeline("main");
+        mainBranch.setDefinition(asStage(
+                createLocalGitCheckout("master")));
+
+        Run<?, ?> masterBuild = buildSuccessfully(mainBranch);
+
+        createFeatureBranchAndAddCommits();
+
+        WorkflowJob featureBranch = createPipeline("feature");
+        featureBranch.setDefinition(asStage(
+                createForensicsCheckoutStep(),
+                createLocalGitCheckout("feature"),
+                "discoverGitReferenceBuild(referenceJob: 'main', scm: 'git file')"));
+
+        verifyPipelineResult(masterBuild, featureBranch);
+    }
+
+    private String createLocalGitCheckout(final String branch) {
+        return "checkout([$class: 'GitSCM', "
+                + "branches: [[name: '" + branch + "' ]],\n"
+                + getUrl()
+                + "extensions: [[$class: 'RelativeTargetDirectory', \n"
+                + "            relativeTargetDir: 'forensics-api']]])";
+    }
+
+    private String createForensicsCheckoutStep() {
+        return "checkout([$class: 'GitSCM', "
+                + "branches: [[name: 'a6d0ef09ab3c418e370449a884da99b8190ae950' ]],\n"
+                + "userRemoteConfigs: [[url: '" + FORENSICS_API_URL + "']],\n"
+                + "extensions: [[$class: 'RelativeTargetDirectory', \n"
+                + "            relativeTargetDir: 'forensics-api']]])";
+    }
+
+    private void verifyPipelineResult(final Run<?, ?> masterBuild, final WorkflowJob featureBranch) {
+        Run<?, ?> featureBuild = buildSuccessfully(featureBranch);
+        assertThat(featureBuild.getNumber()).isEqualTo(1);
+
+        assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
+                .hasOwner(featureBuild)
+                .hasReferenceBuildId(masterBuild.getExternalizableId())
+                .hasReferenceBuild(Optional.of(masterBuild));
+    }
+
+    private String getUrl() {
+        return "userRemoteConfigs: [[url: 'file://" + sampleRepo.toString() + "']],\n";
+    }
+
+    /**
+     * Creates two jobs with pipelines.
      * <pre>
      * {@code
      * M:  [M1]#1
