@@ -94,7 +94,8 @@ public class GitReferenceRecorderITest extends GitITest {
         createFeatureBranchAndAddCommits();
 
         WorkflowJob featureBranch = createPipeline("feature");
-        featureBranch.setDefinition(asStage(createLocalGitCheckout("feature")));
+        featureBranch.setDefinition(asStage(createLocalGitCheckout("feature"),
+                "discoverGitReferenceBuild(referenceJob: 'main')"));
 
         verifyPipelineResult(masterBuild, featureBranch);
     }
