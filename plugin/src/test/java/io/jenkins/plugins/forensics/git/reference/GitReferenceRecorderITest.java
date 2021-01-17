@@ -11,6 +11,8 @@ import org.jvnet.hudson.test.Issue;
 
 import com.cloudbees.hudson.plugins.folder.computed.FolderComputation;
 
+import edu.hm.hafner.util.PathUtil;
+
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -193,7 +195,7 @@ public class GitReferenceRecorderITest extends GitITest {
     }
 
     private String getUrl() {
-        return "userRemoteConfigs: [[url: 'file://" + sampleRepo.toString() + "']],\n";
+        return "userRemoteConfigs: [[url: 'file://" + new PathUtil().getAbsolutePath(sampleRepo.toString()) + "']],\n";
     }
 
     /**
