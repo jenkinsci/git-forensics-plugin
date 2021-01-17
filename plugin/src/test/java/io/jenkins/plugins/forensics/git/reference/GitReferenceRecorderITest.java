@@ -41,7 +41,7 @@ import static org.jvnet.hudson.test.JenkinsRule.*;
 // TODO: add test case that merges with master
 // TODO: add freestyle tests
 // TODO: add test if a recorded reference build is deleted afterwards
-@SuppressWarnings("checkstyle:IllegalCatch")
+@SuppressWarnings({"checkstyle:IllegalCatch", "PMD.GodClass"})
 public class GitReferenceRecorderITest extends GitITest {
     private static final String FORENSICS_API_URL = "https://github.com/jenkinsci/forensics-api-plugin.git";
 
