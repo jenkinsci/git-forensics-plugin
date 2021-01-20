@@ -77,6 +77,11 @@
         <artifactId>script-security</artifactId>
         <version>1.75</version>
       </dependency>
+      <dependency>
+        <groupId>io.jenkins.plugins</groupId>
+        <artifactId>echarts-api</artifactId>
+        <version>4.9.0-3</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
