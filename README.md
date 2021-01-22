@@ -36,7 +36,8 @@ This Git Forensics Jenkins plugin mines and analyzes data from a Git repository.
 The Git Forensics plugin will collect commit statistics for all repository files in the style of
 [Code as a Crime Scene](https://www.adamtornhill.com/articles/crimescene/codeascrimescene.htm)
 [Adam Tornhill, November 2013] if you enable the post build step *Mine SCM repository*. If you are using a pipeline,
-then you can start the repository mining using the `mineRepository` step. This step has no parameters up to now. Please
+then you can start the repository mining using the `mineRepository` step. This step has an `scm` parameter value that 
+can be used to filter the SCM(s) to use. Please
 note that the scanning of the repository might take some time if your Git repository is quite large. Mining of the
 repository is done incrementally, i.e., for new builds only additional commits will be analyzed making the overall 
 runtime much faster. 
@@ -81,7 +82,7 @@ commit listener on the build status page:
 
 ![Commits Summary](doc/images/commits-summary.png)
 
-You will see the number of new commits and a link to open the repository browser with the details of the latest commit. 
+There you will see the number of new commits and a link to open the repository browser with the details of the latest commit. 
 
 ## Reference build 
 
@@ -111,7 +112,8 @@ Discovering the reference build can be configured with several properties. The m
 `referenceJob`: The reference job determines the target branch of the project where all changes will be merged into. 
 Then other plugins can use the best fitting build of this job as baseline for relative build reports that show 
 the effects of a given change. In [multi branch pipelines](https://www.jenkins.io/doc/book/pipeline/multibranch/#creating-a-multibranch-pipeline) 
-this name will be automatically retrieved from the pipeline configuration.
+this name will be automatically retrieved from the pipeline configuration. If your pipeline uses more that one SCM you
+can select the correct SCM with the `scm` parameter.
 
 You can see the results of this computation (and the significant processing decisions) on the build details page: 
 
