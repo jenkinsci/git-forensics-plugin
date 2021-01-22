@@ -258,6 +258,27 @@ public class GitMinerStepITest extends GitITest {
     }
 
     /**
+     * Creates a pipeline that checks out the same repository twice and verifies that the repository is mined only once.
+     */
+    @Test
+    public void shouldSkipDuplicateRepository() {
+        WorkflowJob job = createPipeline();
+        job.setDefinition(asStage(
+                checkout(GIT_FORENSICS_COMMIT, GIT_FORENSICS_URL),
+                checkout(GIT_FORENSICS_COMMIT, GIT_FORENSICS_URL),
+                "mineRepository()"));
+
+        Run<?, ?> build = buildSuccessfully(job);
+        List<ForensicsBuildAction> actions = build.getActions(ForensicsBuildAction.class);
+
+        assertThat(actions).hasSize(1);
+        verifyGitForensics(actions.get(0));
+
+        assertThat(getConsoleLog(build)).contains(
+                "Skipping recording, since SCM 'git https://github.com/jenkinsci/git-forensics-plugin.git' already has been processed");
+    }
+
+    /**
      * Creates a pipeline that checks out two different repositories and verifies that both repositories will be mined.
      */
     @Test
