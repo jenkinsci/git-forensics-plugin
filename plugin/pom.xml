@@ -30,7 +30,7 @@
     <!-- Jenkins Plugin Dependencies Versions -->
     <plugin-util-api.version>1.6.1</plugin-util-api.version>
     <data-tables-api.version>1.10.21-3</data-tables-api.version>
-    <forensics-api-plugin.version>0.8.1</forensics-api-plugin.version>
+    <forensics-api-plugin.version>0.9.0</forensics-api-plugin.version>
 
     <git-plugin.version>4.4.5</git-plugin.version>
     <git-client.version>3.5.1</git-client.version>
@@ -76,6 +76,11 @@
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>script-security</artifactId>
         <version>1.75</version>
+      </dependency>
+      <dependency>
+        <groupId>io.jenkins.plugins</groupId>
+        <artifactId>echarts-api</artifactId>
+        <version>4.9.0-3</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

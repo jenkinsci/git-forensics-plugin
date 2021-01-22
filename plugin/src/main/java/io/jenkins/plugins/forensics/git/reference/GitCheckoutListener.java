@@ -18,7 +18,6 @@ import org.eclipse.jgit.revwalk.RevWalk;
 
 import edu.hm.hafner.util.FilteredLog;
 
-import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 import hudson.Extension;
 import hudson.FilePath;
@@ -33,6 +32,7 @@ import io.jenkins.plugins.forensics.git.reference.GitCommitsRecord.RecordingType
 import io.jenkins.plugins.forensics.git.util.GitCommitDecoratorFactory;
 import io.jenkins.plugins.forensics.git.util.GitRepositoryValidator;
 import io.jenkins.plugins.forensics.util.CommitDecorator;
+import io.jenkins.plugins.forensics.util.CommitDecorator.NullDecorator;
 import io.jenkins.plugins.util.LogHandler;
 
 /**
@@ -56,7 +56,7 @@ public class GitCheckoutListener extends SCMListener {
         else {
             GitRepositoryValidator validator = new GitRepositoryValidator(scm, build, workspace, listener, logger);
             if (validator.isGitRepository()) {
-                recordNewCommits(build, validator.createClient(), scmKey, logger);
+                recordNewCommits(build, validator, logger);
             }
         }
 
@@ -73,12 +73,13 @@ public class GitCheckoutListener extends SCMListener {
                 .stream().filter(record -> scmKey.equals(record.getScmKey())).findAny();
     }
 
-    private void recordNewCommits(final Run<?, ?> build, final GitClient gitClient,
-            final String scmKey, final FilteredLog logger) {
-        logger.logInfo("Recording commits of '%s'", scmKey);
+    private void recordNewCommits(final Run<?, ?> build, final GitRepositoryValidator gitRepository,
+            final FilteredLog logger) {
+        String id = gitRepository.getId();
+        logger.logInfo("Recording commits of '%s'", id);
 
-        String latestRecordedCommit = getLatestRecordedCommit(build, scmKey, logger);
-        GitCommitsRecord commitsRecord = recordNewCommits(build, gitClient, scmKey, logger, latestRecordedCommit);
+        String latestRecordedCommit = getLatestRecordedCommit(build, id, logger);
+        GitCommitsRecord commitsRecord = recordNewCommits(build, gitRepository, logger, latestRecordedCommit);
         build.addAction(commitsRecord);
     }
 
@@ -97,15 +98,15 @@ public class GitCheckoutListener extends SCMListener {
         }
     }
 
-    private GitCommitsRecord recordNewCommits(final Run<?, ?> build, final GitClient gitClient,
-            final String scmKey, final FilteredLog logger, final String latestCommit) {
-        CommitDecorator decorator = GitCommitDecoratorFactory.findCommitDecorator(build, logger);
-        String link = decorator.asLink(latestCommit);
+    private GitCommitsRecord recordNewCommits(final Run<?, ?> build, final GitRepositoryValidator gitRepository,
+            final FilteredLog logger, final String latestCommit) {
+        CommitDecorator decorator = getCommitDecorator(gitRepository, logger);
 
-        List<String> commits = recordCommitsSincePreviousBuild(latestCommit, gitClient, scmKey, logger);
+        List<String> commits = recordCommitsSincePreviousBuild(latestCommit, gitRepository, logger);
+        String id = gitRepository.getId();
         if (commits.isEmpty()) {
             logger.logInfo("-> No new commits found");
-            return new GitCommitsRecord(build, scmKey, logger, latestCommit, link);
+            return new GitCommitsRecord(build, id, logger, latestCommit, decorator.asLink(latestCommit));
         }
         else {
             if (commits.size() == 1) {
@@ -114,9 +115,14 @@ public class GitCheckoutListener extends SCMListener {
             else {
                 logger.logInfo("-> Recorded %d new commits", commits.size());
             }
-            return new GitCommitsRecord(build, scmKey, logger, commits.get(0), decorator.asLink(commits.get(0)),
+            return new GitCommitsRecord(build, id, logger, commits.get(0), decorator.asLink(commits.get(0)),
                     commits, getRecordingType(latestCommit));
         }
+    }
+
+    private CommitDecorator getCommitDecorator(final GitRepositoryValidator gitRepository, final FilteredLog logger) {
+        return new GitCommitDecoratorFactory().createCommitDecorator(gitRepository.getScm(), logger)
+                .orElse(new NullDecorator());
     }
 
     private RecordingType getRecordingType(final String latestCommit) {
@@ -126,13 +132,13 @@ public class GitCheckoutListener extends SCMListener {
         return RecordingType.INCREMENTAL;
     }
 
-    private List<String> recordCommitsSincePreviousBuild(final String latestCommitName, final GitClient gitClient,
-            final String scmKey, final FilteredLog logger) {
+    private List<String> recordCommitsSincePreviousBuild(final String latestCommitName,
+            final GitRepositoryValidator gitRepository, final FilteredLog logger) {
         try {
-            return gitClient.withRepository(new GitCommitsCollector(latestCommitName));
+            return gitRepository.createClient().withRepository(new GitCommitsCollector(latestCommitName));
         }
         catch (IOException | InterruptedException exception) {
-            logger.logException(exception, "Unable to record commits of git repository '%s'", scmKey);
+            logger.logException(exception, "Unable to record commits of git repository '%s'", gitRepository.getId());
             return Collections.emptyList();
         }
     }

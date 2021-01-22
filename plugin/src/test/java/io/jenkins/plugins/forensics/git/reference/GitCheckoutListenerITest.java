@@ -7,6 +7,7 @@ import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
 
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import hudson.model.FreeStyleProject;
 import hudson.plugins.git.GitSCM;
 import jenkins.plugins.git.GitSampleRepoRule;
@@ -23,6 +24,9 @@ import static io.jenkins.plugins.forensics.git.assertions.Assertions.*;
  */
 @SuppressWarnings("PMD.SignatureDeclareThrowsException")
 public class GitCheckoutListenerITest extends IntegrationTestWithJenkinsPerSuite {
+    private static final String GIT_FORENSICS_URL = "https://github.com/jenkinsci/git-forensics-plugin.git";
+    private static final String FORENSICS_API_URL = "https://github.com/jenkinsci/forensics-api-plugin.git";
+
     /** Provides the Git repository for the test. */
     @Rule
     public GitSampleRepoRule gitRepo = new GitSampleRepoRule();
@@ -104,6 +108,41 @@ public class GitCheckoutListenerITest extends IntegrationTestWithJenkinsPerSuite
         assertThat(second.getReferencePoint(first, 10, false))
                 .isPresent()
                 .hasValue(first.getOwner());
+    }
+
+    /**
+     * Creates a pipeline that checks out two different repositories and verifies that the decorator correctly will
+     * be attached to both of them.
+     */
+    @Test
+    public void shouldDecorateSeveralRepositories() {
+        WorkflowJob job = createPipeline();
+        job.setDefinition(asStage(
+                "checkout([$class: 'GitSCM', "
+                        + "branches: [[name: 'a6d0ef09ab3c418e370449a884da99b8190ae950' ]],\n"
+                        + "userRemoteConfigs: [[url: '" + FORENSICS_API_URL + "']],\n"
+                        + "extensions: [[$class: 'RelativeTargetDirectory', \n"
+                        + "            relativeTargetDir: 'forensics-api']]])",
+                "checkout([$class: 'GitSCM', "
+                        + "branches: [[name: '28af63def44286729e3b19b03464d100fd1d0587' ]],\n"
+                        + "userRemoteConfigs: [[url: '" + GIT_FORENSICS_URL + "']],\n"
+                        + "extensions: [[$class: 'RelativeTargetDirectory', \n"
+                        + "            relativeTargetDir: 'git-forensics']]])"));
+
+        List<GitCommitsRecord> actions = buildSuccessfully(job).getActions(GitCommitsRecord.class);
+        assertThat(actions).hasSize(2);
+
+        verifyAction(actions.get(0), FORENSICS_API_URL);
+        verifyAction(actions.get(1), GIT_FORENSICS_URL);
+    }
+
+    private void verifyAction(final GitCommitsRecord record, final String repository) {
+        assertThat(record.getInfoMessages())
+                .contains("Recording commits of 'git " + repository + "'",
+                        "Found no previous build with recorded Git commits",
+                        "-> Recorded 200 new commits")
+                .anySatisfy(value -> assertThat(value)
+                        .startsWith("-> Git commit decorator successfully obtained 'hudson.plugins.git.browser.GithubWeb"));
     }
 
     private void createAndCommitFile(final String fileName, final String content) throws Exception {

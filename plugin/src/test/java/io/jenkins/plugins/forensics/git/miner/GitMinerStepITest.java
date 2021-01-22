@@ -30,7 +30,12 @@ import static io.jenkins.plugins.forensics.assertions.Assertions.*;
  * @author Ullrich Hafner
  */
 public class GitMinerStepITest extends GitITest {
-    private static final String REPOSITORY_URL = "https://github.com/jenkinsci/git-forensics-plugin.git";
+    private static final String GIT_FORENSICS_URL = "https://github.com/jenkinsci/git-forensics-plugin.git";
+    private static final String FORENSICS_API_URL = "https://github.com/jenkinsci/forensics-api-plugin.git";
+    private static final String FORENSICS_API_COMMIT = "a6d0ef09ab3c418e370449a884da99b8190ae950";
+    private static final String GIT_FORENSICS_COMMIT = "86503e8bc0374e05e2cd32ed3bb8b4435d5fd757";
+    private static final int EXPECTED_FILES_GIT_FORENSICS = 90;
+    private static final int EXPECTED_FILES_FORENSICS_API = 121;
 
     /** Verifies that the table contains two rows with the correct statistics. */
     @Test
@@ -213,28 +218,113 @@ public class GitMinerStepITest extends GitITest {
     public void shouldRunOnExistingProject() throws IOException {
         FreeStyleProject job = createFreeStyleProject();
         GitSCM scm = new GitSCM(GitSCM.createRepoList("https://github.com/jenkinsci/git-forensics-plugin.git", null),
-                Collections.singletonList(new BranchSpec("28af63def44286729e3b19b03464d100fd1d0587")),
+                Collections.singletonList(new BranchSpec(GIT_FORENSICS_COMMIT)),
                 false, Collections.emptyList(), null, null, Collections.emptyList());
         job.setScm(scm);
         job.getPublishersList().add(new RepositoryMinerStep());
 
         Run<?, ?> build = buildSuccessfully(job);
         RepositoryStatistics statistics = getStatistics(build);
-        assertThat(statistics.getFiles()).hasSize(51);
+        assertThat(statistics.getFiles()).hasSize(EXPECTED_FILES_GIT_FORENSICS);
     }
 
     /** Run on existing project. */
     @Test
     public void shouldRunInPipelineOnExistingProject() {
         WorkflowJob job = createPipeline();
+        job.setDefinition(asStage(checkout(GIT_FORENSICS_COMMIT, GIT_FORENSICS_URL), "mineRepository()"));
+
+        assertThat(buildSuccessfully(job).getActions(ForensicsBuildAction.class))
+                .hasSize(1)
+                .element(0).satisfies(this::verifyGitForensics);
+    }
+
+    /**
+     * Creates a pipeline that checks out two different repositories and verifies that both repositories will be mined.
+     */
+    @Test
+    public void shouldMineMultipleRepositories() {
+        WorkflowJob job = createPipeline();
         job.setDefinition(asStage(
-                "checkout([$class: 'GitSCM', "
-                        + "branches: [[name: '28af63def44286729e3b19b03464d100fd1d0587' ]],\n"
-                        + "userRemoteConfigs: [[url: '" + REPOSITORY_URL + "']]])",
+                checkout(GIT_FORENSICS_COMMIT, GIT_FORENSICS_URL),
+                checkout(FORENSICS_API_COMMIT, FORENSICS_API_URL),
                 "mineRepository()"));
+
+        List<ForensicsBuildAction> actions = buildSuccessfully(job).getActions(ForensicsBuildAction.class);
+
+        assertThat(actions).hasSize(2);
+        verifyGitForensics(actions.get(0));
+        verifyForensicsApi(actions.get(1), "forensics-1");
+    }
+
+    /**
+     * Creates a pipeline that checks out the same repository twice and verifies that the repository is mined only once.
+     */
+    @Test
+    public void shouldSkipDuplicateRepository() {
+        WorkflowJob job = createPipeline();
+        job.setDefinition(asStage(
+                checkout(GIT_FORENSICS_COMMIT, GIT_FORENSICS_URL),
+                checkout(GIT_FORENSICS_COMMIT, GIT_FORENSICS_URL),
+                "mineRepository()"));
+
         Run<?, ?> build = buildSuccessfully(job);
-        RepositoryStatistics statistics = getStatistics(build);
-        assertThat(statistics.getFiles()).hasSize(51);
+        List<ForensicsBuildAction> actions = build.getActions(ForensicsBuildAction.class);
+
+        assertThat(actions).hasSize(1);
+        verifyGitForensics(actions.get(0));
+
+        assertThat(getConsoleLog(build)).contains(
+                "Skipping recording, since SCM 'git https://github.com/jenkinsci/git-forensics-plugin.git' already has been processed");
+    }
+
+    /**
+     * Creates a pipeline that checks out two different repositories and verifies that both repositories will be mined.
+     */
+    @Test
+    public void shouldMineSelectedRepository() {
+        WorkflowJob job = createPipeline();
+        job.setDefinition(asStage(
+                checkout(GIT_FORENSICS_COMMIT, GIT_FORENSICS_URL),
+                checkout(FORENSICS_API_COMMIT, FORENSICS_API_URL),
+                "mineRepository(scm: 'forensics-api')"));
+
+        List<ForensicsBuildAction> forensicsActions = buildSuccessfully(job).getActions(ForensicsBuildAction.class);
+
+        assertThat(forensicsActions).hasSize(1);
+        verifyForensicsApi(forensicsActions.get(0), "forensics");
+
+        job.setDefinition(asStage(
+                checkout(GIT_FORENSICS_COMMIT, GIT_FORENSICS_URL),
+                checkout(FORENSICS_API_COMMIT, FORENSICS_API_URL),
+                "mineRepository(scm: 'git-forensics')"));
+
+        List<ForensicsBuildAction> gitForensicsActions = buildSuccessfully(job).getActions(ForensicsBuildAction.class);
+
+        assertThat(gitForensicsActions).hasSize(1);
+        verifyGitForensics(gitForensicsActions.get(0));
+    }
+
+    private void verifyForensicsApi(final ForensicsBuildAction forensicsApi, final String expectedUrl) {
+        assertThat(forensicsApi.getUrlName()).isEqualTo(expectedUrl);
+        assertThat(forensicsApi.getNumberOfFiles()).isEqualTo(EXPECTED_FILES_FORENSICS_API);
+        assertThat(forensicsApi.getScmKey()).contains("forensics-api");
+        assertThat(forensicsApi.getResult()).hasLatestCommitId(FORENSICS_API_COMMIT);
+    }
+
+    private void verifyGitForensics(final ForensicsBuildAction gitForensics) {
+        assertThat(gitForensics.getUrlName()).isEqualTo("forensics");
+        assertThat(gitForensics.getNumberOfFiles()).isEqualTo(EXPECTED_FILES_GIT_FORENSICS);
+        assertThat(gitForensics.getScmKey()).contains("git-forensics");
+        assertThat(gitForensics.getResult()).hasLatestCommitId(GIT_FORENSICS_COMMIT);
+    }
+
+    private String checkout(final String commitId, final String repositoryUrl) {
+        return "checkout([$class: 'GitSCM', "
+                + "branches: [[name: '" + commitId + "' ]],\n"
+                + "userRemoteConfigs: [[url: '" + repositoryUrl + "']],\n"
+                + "extensions: [[$class: 'RelativeTargetDirectory', \n"
+                + "            relativeTargetDir: '" + commitId + "']]])";
     }
 
     private void verifyStatistics(final RepositoryStatistics statistics, final String fileName,
