@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import edu.hm.hafner.util.FilteredLog;
 
+import org.jenkinsci.plugins.gitclient.GitClient;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.model.Run;
@@ -26,9 +27,9 @@ public class GitBlamerFactory extends BlamerFactory {
             final FilePath workTree, final TaskListener listener, final FilteredLog logger) {
         GitRepositoryValidator validator = new GitRepositoryValidator(scm, build, workTree, listener, logger);
         if (validator.isGitRepository()) {
-            logger.logInfo("-> Git blamer successfully created in working tree '%s'", workTree);
-
-            return Optional.of(new GitBlamer(validator.createClient(), validator.getHead()));
+            GitClient client = validator.createClient();
+            logger.logInfo("-> Git blamer successfully created in working tree '%s'", client.getWorkTree());
+            return Optional.of(new GitBlamer(client, validator.getHead()));
         }
         logger.logInfo("-> Git blamer could not be created for SCM '%s' in working tree '%s'", scm, workTree);
         return Optional.empty();

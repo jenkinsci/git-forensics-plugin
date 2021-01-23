@@ -74,7 +74,7 @@ class GitBlamer extends Blamer {
         try {
             log.logInfo("Invoking Git blamer to create author and commit information for %d affected files",
                     locations.size());
-            log.logInfo("GIT_COMMIT env = '%s'", gitCommit);
+            log.logInfo("-> GIT_COMMIT env = '%s'", gitCommit);
 
             ObjectId headCommit = git.revParse(gitCommit);
             if (headCommit == null) {
@@ -126,8 +126,8 @@ class GitBlamer extends Blamer {
                 throws InterruptedException {
             try {
                 RemoteResultWrapper<Blames> log = new RemoteResultWrapper<>(blames, "Errors while running Git blame:");
-                log.logInfo("Git commit ID = '%s'", headCommit.getName());
-                log.logInfo("Git working tree = '%s'", getWorkTree(repository));
+                log.logInfo("-> Git commit ID = '%s'", headCommit.getName());
+                log.logInfo("-> Git working tree = '%s'", getWorkTree(repository));
 
                 BlameRunner blameRunner = new BlameRunner(repository, headCommit);
                 LastCommitRunner lastCommitRunner = new LastCommitRunner(repository);
