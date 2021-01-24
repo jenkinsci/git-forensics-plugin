@@ -30,7 +30,7 @@ public class GitBlamerITest extends GitITest {
         Blames blames = gitBlamer.blame(new FileLocations(), log);
 
         assertThat(blames).isEmpty();
-        assertThat(log.getInfoMessages()).contains("Git commit ID = '" + getHead() + "'");
+        assertThat(log.getInfoMessages()).contains("-> Git commit ID = '" + getHead() + "'");
         assertThat(log.getInfoMessages()).contains("-> blamed authors of issues in 0 files");
     }
 
