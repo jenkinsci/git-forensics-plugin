@@ -3,6 +3,7 @@ package io.jenkins.plugins.forensics.git.blame;
 import java.util.Optional;
 
 import edu.hm.hafner.util.FilteredLog;
+import edu.hm.hafner.util.PathUtil;
 
 import org.jenkinsci.plugins.gitclient.GitClient;
 import hudson.Extension;
@@ -28,7 +29,8 @@ public class GitBlamerFactory extends BlamerFactory {
         GitRepositoryValidator validator = new GitRepositoryValidator(scm, build, workTree, listener, logger);
         if (validator.isGitRepository()) {
             GitClient client = validator.createClient();
-            logger.logInfo("-> Git blamer successfully created in working tree '%s'", client.getWorkTree());
+            logger.logInfo("-> Git blamer successfully created in working tree '%s'",
+                    new PathUtil().getAbsolutePath(client.getWorkTree().getRemote()));
             return Optional.of(new GitBlamer(client, validator.getHead()));
         }
         logger.logInfo("-> Git blamer could not be created for SCM '%s' in working tree '%s'", scm, workTree);
