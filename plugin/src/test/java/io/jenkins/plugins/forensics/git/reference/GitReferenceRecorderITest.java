@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.BuildWatcher;
@@ -219,6 +220,39 @@ public class GitReferenceRecorderITest extends GitITest {
 
         buildProject(project);
         WorkflowRun featureBuild = verifyFeatureBuild(project, 1);
+        verifyRecordSize(featureBuild, 3);
+
+        assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
+                .hasOwner(featureBuild)
+                .hasReferenceBuildId(masterBuild.getExternalizableId())
+                .hasReferenceBuild(Optional.of(masterBuild));
+    }
+
+    /**
+     * Creates two jobs with pipelines. Uses complex branch names that contain slashes.
+     * <pre>
+     * {@code
+     * M:  [M1]#1
+     *       \
+     *   F:  [F2]#1}
+     * </pre>
+     */
+    @Test @Issue("JENKINS-64544")
+    public void shouldFindCorrectBuildForMultibranchPipelineWithComplexBranchNames() {
+        String target = "releases/warnings-2021";
+
+        checkoutNewBranch(target);
+        WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject();
+
+        buildProject(project);
+        WorkflowRun masterBuild = verifyBuild(project, 1, target, "master content");
+        verifyRecordSize(masterBuild, 2);
+
+        String feature = "bugfixes/hotfix-124";
+        createBranchAndAddCommits(feature, "defaultBranch: '" + target + "'");
+
+        buildProject(project);
+        WorkflowRun featureBuild = verifyBuild(project, 1, feature, StringUtils.upperCase(feature));
         verifyRecordSize(featureBuild, 3);
 
         assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
@@ -572,15 +606,19 @@ public class GitReferenceRecorderITest extends GitITest {
     }
 
     private void createFeatureBranchAndAddCommits(final String... parameters) {
+        createBranchAndAddCommits(FEATURE, parameters);
+    }
+
+    private void createBranchAndAddCommits(final String branch, final String... parameters) {
         try {
-            checkoutNewBranch(FEATURE);
+            checkoutNewBranch(branch);
             writeFile(JENKINS_FILE,
                     String.format("echo \"branch=${env.BRANCH_NAME}\";"
                             + "node {checkout scm; echo readFile('file').toUpperCase(); "
                             + "echo \"GitForensics\"; "
                             + "discoverGitReferenceBuild(%s)}", String.join(",", parameters)));
-            writeFile(SOURCE_FILE, "feature content");
-            commit("feature changes");
+            writeFile(SOURCE_FILE, branch + " content");
+            commit(branch + " changes");
         }
         catch (Exception exception) {
             throw new AssertionError(exception);
@@ -616,14 +654,14 @@ public class GitReferenceRecorderITest extends GitITest {
     }
 
     private WorkflowRun verifyBuild(final WorkflowMultiBranchProject project, final int buildNumber,
-            final String master, final String branchContent) {
+            final String branch, final String branchContent) {
         try {
-            WorkflowJob p = findBranchProject(project, master);
+            WorkflowJob p = findBranchProject(project, branch);
 
             WorkflowRun build = p.getLastBuild();
             assertThat(build.getNumber()).isEqualTo(buildNumber);
             assertThatLogContains(build, branchContent);
-            assertThatLogContains(build, "branch=" + master);
+            assertThatLogContains(build, "branch=" + branch);
 
             return build;
         }
@@ -632,8 +670,8 @@ public class GitReferenceRecorderITest extends GitITest {
         }
     }
 
-    private void assertThatLogContains(final WorkflowRun featureBuild, final String value) throws IOException {
-        getJenkins().assertLogContains(value, featureBuild);
+    private void assertThatLogContains(final WorkflowRun build, final String value) throws IOException {
+        getJenkins().assertLogContains(value, build);
     }
 
     private WorkflowRun buildAgain(final WorkflowJob build) {
