@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.junit.Test;
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
 
 import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
 import org.jenkinsci.test.acceptance.junit.WithPlugins;
@@ -80,7 +81,10 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
                 + "     userRemoteConfigs: [[url: '" + REPOSITORY_URL + "']]])\n"
                 + "  mineRepository() \n"
                 + "}");
-        job.save();
+//        job.save();
+        WebElement e = find(by.button("Save"));
+        e.click();
+
         return job;
     }
 
