@@ -51,7 +51,7 @@ public class GitCheckoutListener extends SCMListener {
 
         String scmKey = scm.getKey();
         if (hasRecordForScm(build, scmKey)) {
-            logger.logInfo("Skipping recording, since SCM '%s' already has been processed", scmKey);
+            logSkipping(logger, scmKey);
         }
         else {
             GitRepositoryValidator validator = new GitRepositoryValidator(scm, build, workspace, listener, logger);
@@ -62,6 +62,10 @@ public class GitCheckoutListener extends SCMListener {
 
         LogHandler logHandler = new LogHandler(listener, "GitCheckoutListener");
         logHandler.log(logger);
+    }
+
+    private void logSkipping(final FilteredLog logger, final String scmKey) {
+        logger.logInfo("Skipping recording, since SCM '%s' already has been processed", scmKey);
     }
 
     private boolean hasRecordForScm(final Run<?, ?> build, final String scmKey) {
@@ -80,7 +84,10 @@ public class GitCheckoutListener extends SCMListener {
 
         String latestRecordedCommit = getLatestRecordedCommit(build, id, logger);
         GitCommitsRecord commitsRecord = recordNewCommits(build, gitRepository, logger, latestRecordedCommit);
-        if (!hasRecordForScm(build, id)) { // In case a parallel step has added the same result in the meanwhile
+        if (hasRecordForScm(build, id)) { // In case a parallel step has added the same result in the meanwhile
+            logSkipping(logger, id);
+        }
+        else {
             build.addAction(commitsRecord);
         }
     }
