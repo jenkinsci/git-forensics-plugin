@@ -136,6 +136,30 @@ public class GitCheckoutListenerITest extends IntegrationTestWithJenkinsPerSuite
         verifyAction(actions.get(1), GIT_FORENSICS_URL);
     }
 
+    /**
+     * Creates a pipeline that checks out the same repository twice.
+     */
+    @Test
+    public void shouldSkipDuplicateRepositories() {
+        WorkflowJob job = createPipeline();
+        job.setDefinition(asStage(
+                "checkout([$class: 'GitSCM', "
+                        + "branches: [[name: 'a6d0ef09ab3c418e370449a884da99b8190ae950' ]],\n"
+                        + "userRemoteConfigs: [[url: '" + FORENSICS_API_URL + "']],\n"
+                        + "extensions: [[$class: 'RelativeTargetDirectory', \n"
+                        + "            relativeTargetDir: 'forensics-api']]])",
+                "checkout([$class: 'GitSCM', "
+                        + "branches: [[name: 'a6d0ef09ab3c418e370449a884da99b8190ae950' ]],\n"
+                        + "userRemoteConfigs: [[url: '" + FORENSICS_API_URL + "']],\n"
+                        + "extensions: [[$class: 'RelativeTargetDirectory', \n"
+                        + "            relativeTargetDir: 'forensics-api']]])"));
+
+        List<GitCommitsRecord> actions = buildSuccessfully(job).getActions(GitCommitsRecord.class);
+        assertThat(actions).hasSize(1);
+
+        verifyAction(actions.get(0), FORENSICS_API_URL);
+    }
+
     private void verifyAction(final GitCommitsRecord record, final String repository) {
         assertThat(record.getInfoMessages())
                 .contains("Recording commits of 'git " + repository + "'",

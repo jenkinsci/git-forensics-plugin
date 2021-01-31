@@ -80,7 +80,9 @@ public class GitCheckoutListener extends SCMListener {
 
         String latestRecordedCommit = getLatestRecordedCommit(build, id, logger);
         GitCommitsRecord commitsRecord = recordNewCommits(build, gitRepository, logger, latestRecordedCommit);
-        build.addAction(commitsRecord);
+        if (!hasRecordForScm(build, id)) { // In case a parallel step has added the same result in the meanwhile
+            build.addAction(commitsRecord);
+        }
     }
 
     private String getLatestRecordedCommit(final Run<?, ?> build, final String scmKey, final FilteredLog logger) {
