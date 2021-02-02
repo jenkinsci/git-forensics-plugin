@@ -80,7 +80,13 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
                 + "     userRemoteConfigs: [[url: '" + REPOSITORY_URL + "']]])\n"
                 + "  mineRepository() \n"
                 + "} \n");
-        job.save();
+        try {
+            System.out.println("Driver url before save is : " + driver.getCurrentUrl());
+            job.save();
+        } catch (Throwable t) {
+            System.out.println("Driver url after save is : " + driver.getCurrentUrl());
+            throw t;
+        }
         return job;
     }
 
