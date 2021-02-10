@@ -87,6 +87,11 @@
         <artifactId>bootstrap4-api</artifactId>
         <version>4.6.0-1</version>
       </dependency>
+      <dependency>
+        <groupId>io.jenkins.plugins</groupId>
+        <artifactId>font-awesome-api</artifactId>
+        <version>5.15.1-2</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
