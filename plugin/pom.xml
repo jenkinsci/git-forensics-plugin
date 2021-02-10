@@ -30,7 +30,7 @@
     <!-- Jenkins Plugin Dependencies Versions -->
     <plugin-util-api.version>1.7.0</plugin-util-api.version>
     <data-tables-api.version>1.10.21-3</data-tables-api.version>
-    <forensics-api-plugin.version>0.9.3</forensics-api-plugin.version>
+    <forensics-api-plugin.version>0.10.0</forensics-api-plugin.version>
 
     <git-plugin.version>4.4.5</git-plugin.version>
     <git-client.version>3.5.1</git-client.version>
@@ -86,6 +86,11 @@
         <groupId>io.jenkins.plugins</groupId>
         <artifactId>bootstrap4-api</artifactId>
         <version>4.6.0-1</version>
+      </dependency>
+      <dependency>
+        <groupId>io.jenkins.plugins</groupId>
+        <artifactId>font-awesome-api</artifactId>
+        <version>5.15.2-1</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
