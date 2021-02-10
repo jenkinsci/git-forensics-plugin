@@ -6,12 +6,14 @@ import edu.hm.hafner.util.VisibleForTesting;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.verb.POST;
 import org.jenkinsci.Symbol;
 import hudson.Extension;
+import hudson.model.AbstractProject;
 import hudson.model.Item;
 import hudson.model.Run;
 import hudson.util.ComboBoxModel;
@@ -124,11 +126,13 @@ public class GitReferenceRecorder extends ReferenceRecorder {
         /**
          * Returns the model with the possible reference jobs.
          *
+         * @param project
+         *         the project that is configured
          * @return the model with the possible reference jobs
          */
         @Override
         @POST
-        public ComboBoxModel doFillReferenceJobItems() {
+        public ComboBoxModel doFillReferenceJobItems(@AncestorInPath final AbstractProject<?, ?> project) {
             if (JENKINS.hasPermission(Item.CONFIGURE)) {
                 return model.getAllJobs();
             }
@@ -138,6 +142,8 @@ public class GitReferenceRecorder extends ReferenceRecorder {
         /**
          * Performs on-the-fly validation of the reference job.
          *
+         * @param project
+         *         the project that is configured
          * @param referenceJob
          *         the reference job
          *
@@ -146,7 +152,7 @@ public class GitReferenceRecorder extends ReferenceRecorder {
         @Override
         @POST
         @SuppressWarnings("unused") // Used in jelly validation
-        public FormValidation doCheckReferenceJob(@QueryParameter final String referenceJob) {
+        public FormValidation doCheckReferenceJob(@AncestorInPath final AbstractProject<?, ?> project, @QueryParameter final String referenceJob) {
             if (!JENKINS.hasPermission(Item.CONFIGURE)) {
                 return FormValidation.ok();
             }
