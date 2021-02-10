@@ -30,7 +30,7 @@
     <!-- Jenkins Plugin Dependencies Versions -->
     <plugin-util-api.version>1.7.0</plugin-util-api.version>
     <data-tables-api.version>1.10.21-3</data-tables-api.version>
-    <forensics-api-plugin.version>0.10.1-rc810.28e40c9a2b30</forensics-api-plugin.version>
+    <forensics-api-plugin.version>0.10.1</forensics-api-plugin.version>
 
     <git-plugin.version>4.4.5</git-plugin.version>
     <git-client.version>3.5.1</git-client.version>
