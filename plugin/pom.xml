@@ -28,7 +28,7 @@
     <eclipse-collections.version>9.2.0</eclipse-collections.version>
 
     <!-- Jenkins Plugin Dependencies Versions -->
-    <plugin-util-api.version>1.7.0</plugin-util-api.version>
+    <plugin-util-api.version>1.7.1</plugin-util-api.version>
     <data-tables-api.version>1.10.21-3</data-tables-api.version>
     <forensics-api-plugin.version>0.10.1</forensics-api-plugin.version>
 
