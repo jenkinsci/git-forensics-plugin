@@ -17,9 +17,6 @@
 
   <properties>
     <jenkins.version>2.263.3</jenkins.version>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <java.version>1.8</java.version>
-    <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
   </properties>
 
   <dependencies>
