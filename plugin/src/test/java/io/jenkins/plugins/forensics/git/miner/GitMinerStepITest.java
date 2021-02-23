@@ -217,9 +217,8 @@ public class GitMinerStepITest extends GitITest {
     @Test
     public void shouldRunOnExistingProject() throws IOException {
         FreeStyleProject job = createFreeStyleProject();
-        GitSCM scm = new GitSCM(GitSCM.createRepoList("https://github.com/jenkinsci/git-forensics-plugin.git", null),
-                Collections.singletonList(new BranchSpec(GIT_FORENSICS_COMMIT)),
-                false, Collections.emptyList(), null, null, Collections.emptyList());
+        GitSCM scm = createGitScm("https://github.com/jenkinsci/git-forensics-plugin.git",
+                Collections.singletonList(new BranchSpec(GIT_FORENSICS_COMMIT)));
         job.setScm(scm);
         job.getPublishersList().add(new RepositoryMinerStep());
 
