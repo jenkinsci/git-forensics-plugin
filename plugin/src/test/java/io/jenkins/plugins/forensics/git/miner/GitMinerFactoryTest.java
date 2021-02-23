@@ -7,8 +7,6 @@ import java.util.Optional;
 import org.assertj.core.util.Lists;
 import org.eclipse.jgit.lib.ObjectId;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentMatchers;
-import org.mockito.Mockito;
 
 import edu.hm.hafner.util.FilteredLog;
 
@@ -51,18 +49,18 @@ class GitMinerFactoryTest {
     @Test
     void shouldCreateBlamerForGit() throws IOException, InterruptedException {
         GitSCM gitSCM = mock(GitSCM.class);
-        Mockito.when(gitSCM.getExtensions()).thenReturn(new DescribableList<>(Saveable.NOOP));
+        when(gitSCM.getExtensions()).thenReturn(new DescribableList<>(Saveable.NOOP));
 
         Run<?, ?> run = mock(Run.class);
         EnvVars envVars = new EnvVars();
         envVars.put("GIT_COMMIT", "test_commit");
-        Mockito.when(run.getEnvironment(NULL_LISTENER)).thenReturn(envVars);
+        when(run.getEnvironment(NULL_LISTENER)).thenReturn(envVars);
 
         FilePath workspace = createWorkTreeStub();
         GitClient gitClient = mock(GitClient.class);
-        Mockito.when(gitSCM.createClient(NULL_LISTENER, envVars, run, workspace)).thenReturn(gitClient);
+        when(gitSCM.createClient(NULL_LISTENER, envVars, run, workspace)).thenReturn(gitClient);
         ObjectId commit = mock(ObjectId.class);
-        Mockito.when(gitClient.revParse(ArgumentMatchers.anyString())).thenReturn(commit);
+        when(gitClient.revParse(anyString())).thenReturn(commit);
 
         FilteredLog logger = createLogger();
 
@@ -77,11 +75,11 @@ class GitMinerFactoryTest {
     @Test
     void shouldCreateNullBlamerOnShallowGit() {
         CloneOption shallowCloneOption = mock(CloneOption.class);
-        Mockito.when(shallowCloneOption.isShallow()).thenReturn(true);
+        when(shallowCloneOption.isShallow()).thenReturn(true);
 
         GitSCM gitSCM = mock(GitSCM.class);
-        Mockito.when(gitSCM.getExtensions())
-                .thenReturn(new DescribableList<>(Saveable.NOOP, Lists.list(shallowCloneOption)));
+        when(gitSCM.getExtensions()).thenReturn(
+                new DescribableList<>(Saveable.NOOP, Lists.list(shallowCloneOption)));
 
         FilteredLog logger = createLogger();
 
@@ -96,7 +94,7 @@ class GitMinerFactoryTest {
     @Test
     void shouldCreateNullBlamerOnError() throws IOException, InterruptedException {
         Run<?, ?> run = mock(Run.class);
-        Mockito.when(run.getEnvironment(NULL_LISTENER)).thenThrow(new IOException());
+        when(run.getEnvironment(NULL_LISTENER)).thenThrow(new IOException());
 
         FilteredLog logger = createLogger();
 
@@ -113,7 +111,7 @@ class GitMinerFactoryTest {
 
     private FilePath createWorkTreeStub() {
         File mock = mock(File.class);
-        Mockito.when(mock.getPath()).thenReturn("/");
+        when(mock.getPath()).thenReturn("/");
         return new FilePath(mock);
     }
 
