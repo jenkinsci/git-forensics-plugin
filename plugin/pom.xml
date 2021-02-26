@@ -30,6 +30,9 @@
     <!-- Jenkins Plugin Dependencies Versions -->
     <forensics-api-plugin.version>1.0.0-rc837.0715d1a7f416</forensics-api-plugin.version>
     <plugin-util-api.version>2.0.0-rc279.38d141835605</plugin-util-api.version>
+    <data-tables-api.version>1.10.23-3-rc393.cd58f9c6c9ca</data-tables-api.version>
+    <echarts-api.version>4.9.0-4-rc356.d6d2dd7b0bf9</echarts-api.version>
+    <popper-api.version>1.16.1-1</popper-api.version>
 
     <git-plugin.version>4.6.0</git-plugin.version>
     <git-client.version>3.6.0</git-client.version>
@@ -38,6 +41,8 @@
     <j2html.version>1.4.0</j2html.version>
     <streamex.version>0.7.3</streamex.version>
 
+    <bootstrap4-api.version>4.6.0-2-rc333.2b112c91d60f</bootstrap4-api.version>
+    <font-awesome-api.version>5.15.2-2-rc239.9679017bcfd6</font-awesome-api.version>
   </properties>
 
   <licenses>
@@ -71,6 +76,26 @@
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>script-security</artifactId>
         <version>1.76</version>
+      </dependency>
+      <dependency>
+        <groupId>io.jenkins.plugins</groupId>
+        <artifactId>echarts-api</artifactId>
+        <version>${echarts-api.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.jenkins.plugins</groupId>
+        <artifactId>bootstrap4-api</artifactId>
+        <version>${bootstrap4-api.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.jenkins.plugins</groupId>
+        <artifactId>font-awesome-api</artifactId>
+        <version>${font-awesome-api.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.jenkins.plugins</groupId>
+        <artifactId>popper-api</artifactId>
+        <version>${popper-api.version}</version>
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
@@ -114,20 +139,6 @@
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>forensics-api</artifactId>
       <version>${forensics-api-plugin.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>io.jenkins.plugins</groupId>
-          <artifactId>echarts-api</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>io.jenkins.plugins</groupId>
-          <artifactId>bootstrap4-api</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>io.jenkins.plugins</groupId>
-          <artifactId>data-tables-api</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
@@ -142,24 +153,15 @@
       <version>${forensics-api-plugin.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>io.jenkins.plugins</groupId>
-          <artifactId>echarts-api</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>io.jenkins.plugins</groupId>
-          <artifactId>bootstrap4-api</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>io.jenkins.plugins</groupId>
-          <artifactId>data-tables-api</artifactId>
-        </exclusion>
-      </exclusions>
-
     </dependency>
 
     <!-- Custom for Integration Test-->
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>matrix-project</artifactId>
+      <version>1.18</version>
+      <scope>test</scope>
+    </dependency>
 
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
@@ -184,6 +186,13 @@
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>plugin-util-api</artifactId>
       <version>${plugin-util-api.version}</version>
+      <scope>test</scope>
+      <type>test-jar</type>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>data-tables-api</artifactId>
+      <version>${data-tables-api.version}</version>
       <scope>test</scope>
       <type>test-jar</type>
     </dependency>
