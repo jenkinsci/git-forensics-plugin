@@ -94,7 +94,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
         @Override @SuppressWarnings("PMD.UseTryWithResources")
         public RemoteResultWrapper<ArrayList<CommitDiffItem>> invoke(
                 final Repository repository, final VirtualChannel channel) {
-            List<CommitDiffItem> commits = new ArrayList<>();
+            ArrayList<CommitDiffItem> commits = new ArrayList<>();
             RemoteResultWrapper<ArrayList<CommitDiffItem>> wrapper = new RemoteResultWrapper<>(
                     commits, "Errors while mining the Git repository:");
 
