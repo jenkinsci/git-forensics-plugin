@@ -121,7 +121,7 @@ class GitBlamer extends Blamer {
             this.headCommit = headCommit;
         }
 
-        @Override
+        @Override @SuppressWarnings("PMD.UseTryWithResources")
         public RemoteResultWrapper<Blames> invoke(final Repository repository, final VirtualChannel channel)
                 throws InterruptedException {
             try {

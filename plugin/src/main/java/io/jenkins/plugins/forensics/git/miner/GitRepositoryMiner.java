@@ -91,10 +91,10 @@ public class GitRepositoryMiner extends RepositoryMiner {
             this.previousCommitId = previousCommitId;
         }
 
-        @Override
+        @Override @SuppressWarnings("PMD.UseTryWithResources")
         public RemoteResultWrapper<ArrayList<CommitDiffItem>> invoke(
                 final Repository repository, final VirtualChannel channel) {
-            ArrayList<CommitDiffItem> commits = new ArrayList<>();
+            List<CommitDiffItem> commits = new ArrayList<>();
             RemoteResultWrapper<ArrayList<CommitDiffItem>> wrapper = new RemoteResultWrapper<>(
                     commits, "Errors while mining the Git repository:");
 
