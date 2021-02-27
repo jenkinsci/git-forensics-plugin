@@ -98,6 +98,11 @@
         <version>${popper-api.version}</version>
       </dependency>
       <dependency>
+        <groupId>io.jenkins.plugins</groupId>
+        <artifactId>jquery3-api</artifactId>
+        <version>${jquery3-api.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>trilead-api</artifactId>
         <version>1.0.13</version>
