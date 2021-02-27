@@ -3,9 +3,12 @@ package io.jenkins.plugins.forensics.git.util;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
+
+import edu.hm.hafner.util.Generated;
 
 import hudson.plugins.git.GitChangeSet;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
@@ -63,6 +66,26 @@ public class GitCommitDecorator extends GitCommitTextDecorator {
         @Override
         public String getId() {
             return id;
+        }
+
+        @Override @Generated
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            if (!super.equals(o)) {
+                return false;
+            }
+            DummyChangeSet that = (DummyChangeSet) o;
+            return Objects.equals(id, that.id);
+        }
+
+        @Override @Generated
+        public int hashCode() {
+            return Objects.hash(super.hashCode(), id);
         }
     }
 }

@@ -91,7 +91,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
             this.previousCommitId = previousCommitId;
         }
 
-        @Override
+        @Override @SuppressWarnings("PMD.UseTryWithResources")
         public RemoteResultWrapper<ArrayList<CommitDiffItem>> invoke(
                 final Repository repository, final VirtualChannel channel) {
             ArrayList<CommitDiffItem> commits = new ArrayList<>();

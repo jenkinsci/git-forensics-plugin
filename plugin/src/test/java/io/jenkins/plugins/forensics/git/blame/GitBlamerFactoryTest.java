@@ -2,8 +2,6 @@ package io.jenkins.plugins.forensics.git.blame;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 import org.assertj.core.util.Lists;
@@ -19,7 +17,6 @@ import hudson.model.Run;
 import hudson.model.Saveable;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
-import hudson.plugins.git.extensions.GitSCMExtension;
 import hudson.plugins.git.extensions.impl.CloneOption;
 import hudson.scm.NullSCM;
 import hudson.util.DescribableList;
@@ -51,10 +48,10 @@ class GitBlamerFactoryTest {
 
     @Test
     void shouldCreateBlamerForGit() throws IOException, InterruptedException {
-        GitSCM gitSCM = mock(GitSCM.class);
-        when(gitSCM.getExtensions()).thenReturn(new DescribableList<>(Saveable.NOOP));
+        GitSCM gitSCM = createGitScm();
 
         Run<?, ?> run = mock(Run.class);
+
         EnvVars envVars = new EnvVars();
         envVars.put("GIT_COMMIT", "test_commit");
         when(run.getEnvironment(NULL_LISTENER)).thenReturn(envVars);
@@ -87,15 +84,14 @@ class GitBlamerFactoryTest {
         CloneOption shallowCloneOption = mock(CloneOption.class);
         when(shallowCloneOption.isShallow()).thenReturn(true);
 
-        GitSCM gitSCM = mock(GitSCM.class);
-        when(gitSCM.getExtensions())
-                .thenReturn(new DescribableList<>(Saveable.NOOP, Lists.list(shallowCloneOption)));
+        GitSCM git = mock(GitSCM.class);
+        when(git.getExtensions()).thenReturn(new DescribableList<>(Saveable.NOOP, Lists.list(shallowCloneOption)));
 
         FilteredLog logger = createLogger();
 
         GitBlamerFactory gitChecker = new GitBlamerFactory();
 
-        assertThat(gitChecker.createBlamer(gitSCM, mock(Run.class), null, NULL_LISTENER, logger)).isEmpty();
+        assertThat(gitChecker.createBlamer(git, mock(Run.class), null, NULL_LISTENER, logger)).isEmpty();
         assertThat(logger.getInfoMessages()).contains(GitRepositoryValidator.INFO_SHALLOW_CLONE);
         assertThat(logger.getErrorMessages()).isEmpty();
     }
@@ -103,18 +99,22 @@ class GitBlamerFactoryTest {
     @Test
     void shouldCreateNullBlamerOnError() throws IOException, InterruptedException {
         GitBlamerFactory gitChecker = new GitBlamerFactory();
-        Run<?, ?> run = mock(Run.class);
-        List<GitSCMExtension> extensions = new ArrayList<>();
-        GitSCM gitSCM = new GitSCM(null, null, false, null, null, null, extensions);
 
+        Run<?, ?> run = mock(Run.class);
         when(run.getEnvironment(NULL_LISTENER)).thenThrow(new IOException());
 
         FilteredLog logger = createLogger();
 
-        assertThat(gitChecker.createBlamer(gitSCM, run, null, NULL_LISTENER, logger)).isEmpty();
+        assertThat(gitChecker.createBlamer(createGitScm(), run, null, NULL_LISTENER, logger)).isEmpty();
         assertThat(logger.getErrorMessages()).isEmpty();
         assertThat(logger.getInfoMessages()).contains(
                 "Exception while creating a GitClient instance for work tree 'null'");
+    }
+
+    private GitSCM createGitScm() {
+        GitSCM git = mock(GitSCM.class);
+        when(git.getExtensions()).thenReturn(new DescribableList<>(Saveable.NOOP));
+        return git;
     }
 
     private FilteredLog createLogger() {

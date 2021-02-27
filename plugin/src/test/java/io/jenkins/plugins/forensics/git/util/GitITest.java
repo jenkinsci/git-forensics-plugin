@@ -2,6 +2,7 @@ package io.jenkins.plugins.forensics.git.util;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -20,6 +21,7 @@ import hudson.FilePath;
 import hudson.model.Job;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
 import jenkins.plugins.git.GitSampleRepoRule;
 
@@ -220,14 +222,10 @@ public class GitITest extends IntegrationTestWithJenkinsPerTest {
      */
     protected GitClient createGitClient() {
         try {
-            GitSCM scm = new GitSCM(
-                    GitSCM.createRepoList("file:///" + sampleRepo.getRoot(), null),
-                    Collections.emptyList(), false, Collections.emptyList(),
-                    null, null, Collections.emptyList());
-            @SuppressWarnings("rawtypes")
-            Run run = mock(Run.class);
+            GitSCM scm = createGitScm("file:///" + sampleRepo.getRoot(), Collections.emptyList());
+            Run<?, ?> run = mock(Run.class);
             Job<?, ?> job = mock(Job.class);
-            when(run.getParent()).thenReturn(job);
+            when(run.getParent()).thenAnswer(i -> job);
 
             return scm.createClient(TaskListener.NULL, new EnvVars(), run,
                     new FilePath(sampleRepo.getRoot()));
@@ -238,9 +236,25 @@ public class GitITest extends IntegrationTestWithJenkinsPerTest {
     }
 
     /**
+     * Creates a new {@link GitSCM} instance.
+     *
+     * @param url
+     *         URL of the repository (file or HTTP)
+     * @param branches
+     *         a list of branches
+     *
+     * @return the SCM
+     */
+    protected GitSCM createGitScm(final String url, final List<BranchSpec> branches) {
+        return new GitSCM(GitSCM.createRepoList(url, null),
+                branches, null, null, Collections.emptyList());
+    }
+
+    /**
      * Runs the specified lambda as a test case in the context of the preconfigured Git repository.
      *
-     * @param testCase the test case to run
+     * @param testCase
+     *         the test case to run
      */
     protected void runTest(final GitTestCase testCase) {
         try {
