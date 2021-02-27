@@ -28,11 +28,11 @@
     <eclipse-collections.version>9.2.0</eclipse-collections.version>
 
     <!-- Jenkins Plugin Dependencies Versions -->
-    <forensics-api-plugin.version>1.0.0-rc837.0715d1a7f416</forensics-api-plugin.version>
-    <plugin-util-api.version>2.0.0-rc279.38d141835605</plugin-util-api.version>
-    <data-tables-api.version>1.10.23-3-rc393.cd58f9c6c9ca</data-tables-api.version>
-    <echarts-api.version>4.9.0-4-rc356.d6d2dd7b0bf9</echarts-api.version>
-    <popper-api.version>1.16.1-1</popper-api.version>
+    <forensics-api-plugin.version>1.0.0</forensics-api-plugin.version>
+    <plugin-util-api.version>2.0.0</plugin-util-api.version>
+    <data-tables-api.version>1.10.23-3</data-tables-api.version>
+    <echarts-api.version>4.9.0-4</echarts-api.version>
+    <popper-api.version>1.16.1-2</popper-api.version>
 
     <git-plugin.version>4.6.0</git-plugin.version>
     <git-client.version>3.6.0</git-client.version>
@@ -41,8 +41,8 @@
     <j2html.version>1.4.0</j2html.version>
     <streamex.version>0.7.3</streamex.version>
 
-    <bootstrap4-api.version>4.6.0-2-rc333.2b112c91d60f</bootstrap4-api.version>
-    <font-awesome-api.version>5.15.2-2-rc239.9679017bcfd6</font-awesome-api.version>
+    <bootstrap4-api.version>4.6.0-2</bootstrap4-api.version>
+    <font-awesome-api.version>5.15.2-2</font-awesome-api.version>
   </properties>
 
   <licenses>
