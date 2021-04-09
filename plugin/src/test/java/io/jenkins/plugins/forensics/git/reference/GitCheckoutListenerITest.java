@@ -70,10 +70,10 @@ public class GitCheckoutListenerITest extends IntegrationTestWithJenkinsPerSuite
         assertThat(nextBuild).isNotEmpty()
                 .hasLatestCommit(gitRepo.head())
                 .hasOnlyCommits(nextBuildHead)
-                .hasNoErrorMessages().hasInfoMessages("-> Recorded one new commit",
-                String.format("Found previous build '%s' that contains recorded Git commits",
-                        referenceBuild.getOwner()),
-                String.format("-> Starting recording of new commits since '%s'", referenceBuildHead));
+                .hasNoErrorMessages()
+                .hasInfoMessages("-> Recorded one new commit",
+                        String.format("Found previous build '%s' that contains recorded Git commits", referenceBuild.getOwner()),
+                        String.format("-> Starting recording of new commits since '%s'", referenceBuildHead));
     }
 
     /**
