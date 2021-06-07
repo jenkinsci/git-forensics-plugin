@@ -185,7 +185,7 @@
     <dependency>
       <groupId>org.jenkinsci.plugins</groupId>
       <artifactId>pipeline-model-definition</artifactId>
-      <version>1.8.4</version>
+      <version>1.8.5</version>
       <scope>test</scope>
     </dependency>
 
