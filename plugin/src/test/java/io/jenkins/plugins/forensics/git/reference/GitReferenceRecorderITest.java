@@ -26,6 +26,7 @@ import jenkins.plugins.git.GitSCMSource;
 import jenkins.scm.api.SCMSource;
 
 import io.jenkins.plugins.forensics.git.util.GitITest;
+import io.jenkins.plugins.forensics.miner.ForensicsBuildAction;
 import io.jenkins.plugins.forensics.reference.ReferenceBuild;
 
 import static io.jenkins.plugins.forensics.assertions.Assertions.*;
@@ -98,9 +99,18 @@ public class GitReferenceRecorderITest extends GitITest {
 
         WorkflowJob featureBranch = createPipeline("feature");
         featureBranch.setDefinition(asStage(createLocalGitCheckout("feature"),
-                "discoverGitReferenceBuild(referenceJob: 'main')"));
+                "discoverGitReferenceBuild(referenceJob: 'main')",
+                "mineRepository()"));
 
         verifyPipelineResult(masterBuild, featureBranch);
+
+        ForensicsBuildAction action = featureBranch.getLastBuild().getAction(ForensicsBuildAction.class);
+        assertThat(action.getNumberOfFiles()).isEqualTo(1);
+        assertThat(action.getTotalChurn()).isEqualTo(1);
+        assertThat(action.getTotalLinesOfCode()).isEqualTo(1);
+        assertThat(action.getDeltaNumberOfFiles()).isEqualTo(1);
+        assertThat(action.getDeltaTotalChurn()).isEqualTo(1);
+        assertThat(action.getDeltaTotalLinesOfCode()).isEqualTo(1);
     }
 
     /**
@@ -295,6 +305,17 @@ public class GitReferenceRecorderITest extends GitITest {
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(masterBuild.getExternalizableId())
                 .hasReferenceBuild(Optional.of(masterBuild));
+
+        ForensicsBuildAction action = featureBuild.getAction(ForensicsBuildAction.class);
+        assertThat(action.getNumberOfFiles()).isEqualTo(2);
+        assertThat(action.getTotalChurn()).isEqualTo(6);
+        assertThat(action.getTotalLinesOfCode()).isEqualTo(2);
+        assertThat(action.getCommitStatistics().getCommitCount()).isEqualTo(3);
+
+        assertThat(action.getDeltaNumberOfFiles()).isEqualTo(2);
+        assertThat(action.getDeltaTotalChurn()).isEqualTo(4);
+        assertThat(action.getDeltaTotalLinesOfCode()).isEqualTo(0);
+        assertThat(action.getDeltaCommitStatistics().getCommitCount()).isEqualTo(1);
     }
 
     /**
@@ -593,7 +614,8 @@ public class GitReferenceRecorderITest extends GitITest {
             writeFile(JENKINS_FILE, "echo \"branch=${env.BRANCH_NAME}\"; "
                     + "node {checkout scm; echo readFile('file'); "
                     + "echo \"GitForensics\"; "
-                    + "discoverGitReferenceBuild()}");
+                    + "discoverGitReferenceBuild();"
+                    + "mineRepository()}");
             writeFile(SOURCE_FILE, "master content");
             addFile(JENKINS_FILE);
             commit("initial content");
@@ -616,7 +638,8 @@ public class GitReferenceRecorderITest extends GitITest {
                     String.format("echo \"branch=${env.BRANCH_NAME}\";"
                             + "node {checkout scm; echo readFile('file').toUpperCase(); "
                             + "echo \"GitForensics\"; "
-                            + "discoverGitReferenceBuild(%s)}", String.join(",", parameters)));
+                            + "discoverGitReferenceBuild(%s);"
+                            + "mineRepository()}", String.join(",", parameters)));
             writeFile(SOURCE_FILE, branch + " content");
             commit(branch + " changes");
         }
