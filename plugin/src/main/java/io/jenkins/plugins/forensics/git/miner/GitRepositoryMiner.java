@@ -6,25 +6,14 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.revwalk.RevWalk;
-import org.eclipse.jgit.revwalk.filter.RevFilter;
 
 import edu.hm.hafner.util.FilteredLog;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import org.jenkinsci.plugins.gitclient.GitClient;
-import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 import hudson.model.Run;
-import hudson.remoting.VirtualChannel;
 
 import io.jenkins.plugins.forensics.git.reference.GitCommitsRecord;
-import io.jenkins.plugins.forensics.git.util.AbstractRepositoryCallback;
 import io.jenkins.plugins.forensics.git.util.RemoteResultWrapper;
 import io.jenkins.plugins.forensics.miner.CommitDiffItem;
 import io.jenkins.plugins.forensics.miner.CommitStatistics;
@@ -52,32 +41,6 @@ public class GitRepositoryMiner extends RepositoryMiner {
         this.gitClient = gitClient;
     }
 
-    @Override
-    public RepositoryStatistics mine(final Run<?, ?> build, final FilteredLog logger) throws InterruptedException {
-        GitCommitsRecord commitsRecord = build.getAction(GitCommitsRecord.class);
-        if (commitsRecord == null) {
-            logger.logInfo("Skipping delta mining since reference build '%s' has no recorded commits", build);
-        }
-        else {
-            logger.logInfo("Starting delta mining of commits");
-            String latestCommit = commitsRecord.getLatestCommit();
-            try {
-                String ancestor = gitClient.withRepository(new MergeBaseSelector(latestCommit));
-                if (StringUtils.isNotEmpty(ancestor)) {
-                    logger.logInfo("-> Selecting common ancestor '%s' of reference build '%s'", ancestor, build);
-
-                    return mine(new RepositoryStatistics(ancestor), logger);
-                }
-                logger.logInfo("-> No common ancestor for reference build '%s' found", build);
-            }
-            catch (IOException exception) {
-                logger.logInfo("-> No common ancestor for reference build '%s' found: %s", build, exception);
-            }
-        }
-        return new RepositoryStatistics();
-    }
-
-    // TODO: we need to create the new results separately to compute the added and deleted lines per build
     @Override
     public RepositoryStatistics mine(final RepositoryStatistics previous, final FilteredLog logger)
             throws InterruptedException {
@@ -110,81 +73,6 @@ public class GitRepositoryMiner extends RepositoryMiner {
             logger.logException(exception,
                     "Exception occurred while mining the Git repository using GitClient");
             return new RepositoryStatistics();
-        }
-    }
-
-    private static class RepositoryStatisticsCallback
-            extends AbstractRepositoryCallback<RemoteResultWrapper<ArrayList<CommitDiffItem>>> {
-        private static final long serialVersionUID = 7667073858514128136L;
-
-        private final String previousCommitId;
-
-        RepositoryStatisticsCallback(final String previousCommitId) {
-            super();
-
-            this.previousCommitId = previousCommitId;
-        }
-
-        @Override
-        @SuppressWarnings("PMD.UseTryWithResources")
-        public RemoteResultWrapper<ArrayList<CommitDiffItem>> invoke(
-                final Repository repository, final VirtualChannel channel) {
-            ArrayList<CommitDiffItem> commits = new ArrayList<>();
-            RemoteResultWrapper<ArrayList<CommitDiffItem>> wrapper = new RemoteResultWrapper<>(
-                    commits, "Errors while mining the Git repository:");
-
-            try {
-                try (Git git = new Git(repository)) {
-                    CommitAnalyzer commitAnalyzer = new CommitAnalyzer();
-                    commits.addAll(commitAnalyzer.run(repository, git, previousCommitId, wrapper));
-                }
-                catch (IOException | GitAPIException exception) {
-                    wrapper.logException(exception,
-                            "Can't analyze commits for the repository " + repository.getIdentifier());
-                }
-            }
-            finally {
-                repository.close();
-            }
-
-            return wrapper;
-        }
-    }
-
-    /**
-     * Finds as good common ancestors as possible for a merge.
-     *
-     * @author Ullrich Hafner
-     * @see <a href="https://git-scm.com/docs/git-merge-base">Git git-merge-base command</a>
-     */
-    private static class MergeBaseSelector implements RepositoryCallback<String> {
-        private static final long serialVersionUID = 163631519980916591L;
-
-        private final String latestCommit;
-
-        MergeBaseSelector(final String latestCommit) {
-            this.latestCommit = latestCommit;
-        }
-
-        @Override
-        public String invoke(final Repository repository, final VirtualChannel virtualChannel) throws IOException {
-            ObjectId head = repository.resolve(Constants.HEAD);
-            if (head == null) {
-                return "";
-            }
-
-            ObjectId target = repository.resolve(latestCommit);
-
-            RevWalk walk = new RevWalk(repository);
-            walk.setRevFilter(RevFilter.MERGE_BASE);
-            walk.markStart(repository.parseCommit(target));
-            walk.markStart(repository.parseCommit(head));
-
-            RevCommit next = walk.next();
-            if (next == null) {
-                return latestCommit;
-            }
-            return next.getId().getName();
         }
     }
 }

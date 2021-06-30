@@ -51,8 +51,8 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
                 "Latest commit: 28af63d");
 
         assertThat(getSummaryText(build, MINER_ROW)).contains(
-                "New commits since previous build: 402",
-                "from 4 authors",
+                "New commits: 402",
+                "4 authors",
                 "131 files",
                 "16510 added",
                 "10444 deleted");
