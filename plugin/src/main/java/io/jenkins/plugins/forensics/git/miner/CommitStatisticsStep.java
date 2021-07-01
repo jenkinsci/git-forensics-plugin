@@ -8,6 +8,7 @@ import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 
 import edu.hm.hafner.util.FilteredLog;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -56,6 +57,7 @@ import io.jenkins.plugins.util.LogHandler;
  *
  * @author Ullrich Hafner
  */
+@SuppressWarnings("checkstyle:ClassFanOutComplexity")
 public class CommitStatisticsStep extends Recorder implements SimpleBuildStep {
     private String scm = StringUtils.EMPTY;
 
@@ -91,16 +93,31 @@ public class CommitStatisticsStep extends Recorder implements SimpleBuildStep {
         LogHandler logHandler = new LogHandler(listener, "Git DiffStats");
         FilteredLog logger = new FilteredLog("Errors while computing diff statistics");
 
+        logger.logInfo("Analyzing commits to obtain diff statistics for affected repository files");
+        Run<?, ?> referenceBuild = selectReferenceBuild(run, logger);
+        if (referenceBuild != null) {
+            analyzeRepositories(run, workspace, referenceBuild, listener, logger, logHandler);
+        }
+    }
+
+    @CheckForNull
+    private Run<?, ?> selectReferenceBuild(final Run<?, ?> run, final FilteredLog logger) {
         Optional<Run<?, ?>> possibleReferenceBuild = new ReferenceFinder().findReference(run, logger);
         if (possibleReferenceBuild.isPresent()) {
             Run<?, ?> referenceBuild = possibleReferenceBuild.get();
-            logger.logInfo("Analyzing commits to obtain diff statistics for affected repository files");
-            logger.logInfo("-> using reference build '%s' as target branch", referenceBuild);
-            analyzeRepositories(run, workspace, referenceBuild, listener, logger, logHandler);
+            logger.logInfo("-> found reference build '%s'", referenceBuild);
+            return referenceBuild;
+        }
+
+        Run<?, ?> previousCompletedBuild = run.getPreviousCompletedBuild();
+        if (previousCompletedBuild == null) {
+            logger.logInfo("-> skipping step since no reference build (and no previous build) has been found");
         }
         else {
-            logger.logInfo("Skipping commit statistics step since no reference build has been found");
+            logger.logInfo("-> no reference build found, using previous build '%s' as baseline",
+                    previousCompletedBuild);
         }
+        return previousCompletedBuild;
     }
 
     private void analyzeRepositories(final Run<?, ?> run, final FilePath workspace, final Run<?, ?> referenceBuild,
