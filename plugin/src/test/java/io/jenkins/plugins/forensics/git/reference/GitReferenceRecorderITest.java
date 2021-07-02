@@ -28,7 +28,6 @@ import jenkins.scm.api.SCMSource;
 import io.jenkins.plugins.forensics.git.util.GitITest;
 import io.jenkins.plugins.forensics.miner.CommitStatistics;
 import io.jenkins.plugins.forensics.miner.CommitStatisticsBuildAction;
-import io.jenkins.plugins.forensics.miner.ForensicsBuildAction;
 import io.jenkins.plugins.forensics.reference.ReferenceBuild;
 
 import static io.jenkins.plugins.forensics.assertions.Assertions.*;
