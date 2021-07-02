@@ -107,11 +107,15 @@ public class GitReferenceRecorderITest extends GitITest {
 
         verifyPipelineResult(masterBuild, featureBranch);
 
-        CommitStatistics action = featureBranch.getLastBuild().getAction(CommitStatisticsBuildAction.class).getCommitStatistics();
-        assertThat(action.getCommitCount()).isEqualTo(1);
-        assertThat(action.getFilesCount()).isEqualTo(1);
-        assertThat(action.getAddedLines()).isEqualTo(1);
-        assertThat(action.getDeletedLines()).isEqualTo(0);
+        assertThat(getCommitStatisticsOf(featureBranch.getLastBuild()))
+                .hasCommitCount(1)
+                .hasFilesCount(1)
+                .hasAddedLines(1)
+                .hasDeletedLines(1);
+    }
+
+    private CommitStatistics getCommitStatisticsOf(final WorkflowRun lastBuild) {
+        return lastBuild.getAction(CommitStatisticsBuildAction.class).getCommitStatistics();
     }
 
     /**
@@ -307,11 +311,11 @@ public class GitReferenceRecorderITest extends GitITest {
                 .hasReferenceBuildId(masterBuild.getExternalizableId())
                 .hasReferenceBuild(Optional.of(masterBuild));
 
-        CommitStatistics action = featureBuild.getAction(CommitStatisticsBuildAction.class).getCommitStatistics();
-        assertThat(action.getCommitCount()).isEqualTo(1);
-        assertThat(action.getFilesCount()).isEqualTo(2);
-        assertThat(action.getDeletedLines()).isEqualTo(2);
-        assertThat(action.getAddedLines()).isEqualTo(2);
+        assertThat(getCommitStatisticsOf(featureBuild))
+                .hasCommitCount(1)
+                .hasFilesCount(2)
+                .hasAddedLines(2)
+                .hasDeletedLines(2);
     }
 
     /**
@@ -346,6 +350,12 @@ public class GitReferenceRecorderITest extends GitITest {
         WorkflowRun firstFeature = verifyFeatureBuild(project, 1);
         verifyRecordSize(firstFeature, 4);
 
+        assertThat(getCommitStatisticsOf(firstFeature))
+                .hasCommitCount(2)
+                .hasFilesCount(3)
+                .hasAddedLines(3)
+                .hasDeletedLines(2);
+
         assertThat(firstFeature.getAction(ReferenceBuild.class)).as(getLog(firstFeature)).isNotNull()
                 .hasOwner(firstFeature); // we do not care about the reference of the first feature build
 
@@ -359,6 +369,12 @@ public class GitReferenceRecorderITest extends GitITest {
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(nextMaster.getExternalizableId())
                 .hasReferenceBuild(Optional.of(nextMaster));
+
+        assertThat(getCommitStatisticsOf(featureBuild))
+                .hasCommitCount(3)
+                .hasFilesCount(3)
+                .hasAddedLines(4)
+                .hasDeletedLines(3);
     }
 
     /**
@@ -470,6 +486,12 @@ public class GitReferenceRecorderITest extends GitITest {
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(nextMaster.getExternalizableId())
                 .hasReferenceBuild(Optional.of(nextMaster));
+
+        assertThat(getCommitStatisticsOf(featureBuild))
+                .hasCommitCount(4)
+                .hasFilesCount(3)
+                .hasAddedLines(6)
+                .hasDeletedLines(3);
     }
 
     /**
