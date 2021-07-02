@@ -57,7 +57,7 @@ import io.jenkins.plugins.util.LogHandler;
  *
  * @author Ullrich Hafner
  */
-@SuppressWarnings("checkstyle:ClassFanOutComplexity")
+@SuppressWarnings({"checkstyle:ClassFanOutComplexity", "PMD.ExcessiveImports"})
 public class CommitStatisticsStep extends Recorder implements SimpleBuildStep {
     private static final GitCommitTextDecorator RENDERER = new GitCommitTextDecorator();
 
