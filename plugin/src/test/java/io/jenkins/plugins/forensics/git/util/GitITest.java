@@ -51,6 +51,9 @@ public class GitITest extends IntegrationTestWithJenkinsPerTest {
     /** Author 2 email. */
     protected static final String BAR_EMAIL = "bar@jenkins.io";
 
+    /** Initial branch used in Git repository. */
+    protected static final String INITIAL_BRANCH = "main";
+
     /** Git repository in a temporary folder. */
     @Rule
     public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
@@ -64,6 +67,7 @@ public class GitITest extends IntegrationTestWithJenkinsPerTest {
     @Before
     public void init() throws Exception {
         sampleRepo.init();
+        checkoutNewBranch(INITIAL_BRANCH);
     }
 
     /**
@@ -138,7 +142,7 @@ public class GitITest extends IntegrationTestWithJenkinsPerTest {
 
     protected void checkoutNewBranch(final String branch) {
         try {
-            sampleRepo.git("checkout", "-b", branch);
+            sampleRepo.git("switch", "-C", branch);
         }
         catch (Exception exception) {
             throw new AssertionError(exception);

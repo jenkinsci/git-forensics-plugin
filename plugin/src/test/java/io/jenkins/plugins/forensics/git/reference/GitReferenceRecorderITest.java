@@ -1,6 +1,8 @@
 package io.jenkins.plugins.forensics.git.reference;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -51,7 +53,7 @@ public class GitReferenceRecorderITest extends GitITest {
     private static final String JENKINS_FILE = "Jenkinsfile";
     private static final String SOURCE_FILE = "file";
     private static final String FEATURE = "feature";
-    private static final String MASTER = "master";
+    private static final String MAIN = "main";
     private static final String ADDITIONAL_SOURCE_FILE = "test.txt";
     private static final String CHANGED_CONTENT = "changed content";
 
@@ -80,7 +82,7 @@ public class GitReferenceRecorderITest extends GitITest {
     }
 
     /**
-     * Creates a pipeline for the master branch and another pipeline for the feature branch, builds them and checks if
+     * Creates a pipeline for the main branch and another pipeline for the feature branch, builds them and checks if
      * the correct reference build will be found.
      * <pre>
      * {@code
@@ -91,16 +93,16 @@ public class GitReferenceRecorderITest extends GitITest {
      */
     @Test
     public void shouldFindCorrectBuildInPipelines() {
-        WorkflowJob mainBranch = createPipeline("main");
-        mainBranch.setDefinition(asStage(createLocalGitCheckout("master")));
+        WorkflowJob mainBranch = createPipeline(MAIN);
+        mainBranch.setDefinition(asStage(createLocalGitCheckout(MAIN)));
 
         Run<?, ?> masterBuild = buildSuccessfully(mainBranch);
 
         createFeatureBranchAndAddCommits();
 
-        WorkflowJob featureBranch = createPipeline("feature");
-        featureBranch.setDefinition(asStage(createLocalGitCheckout("feature"),
-                "discoverGitReferenceBuild(referenceJob: 'main')",
+        WorkflowJob featureBranch = createPipeline(FEATURE);
+        featureBranch.setDefinition(asStage(createLocalGitCheckout(FEATURE),
+                "discoverGitReferenceBuild(referenceJob: '" + MAIN + "')",
                 "gitDiffStat()"));
 
         verifyPipelineResult(masterBuild, featureBranch);
@@ -113,8 +115,8 @@ public class GitReferenceRecorderITest extends GitITest {
     }
 
     /**
-     * Creates a pipeline for the master branch and another pipeline for the feature branch, builds them and checks if
-     * the correct reference build will be found. The master branch contains an additional but unrelated SCM
+     * Creates a pipeline for the main branch and another pipeline for the feature branch, builds them and checks if
+     * the correct reference build will be found. The main branch contains an additional but unrelated SCM
      * repository.
      * <pre>
      * {@code
@@ -128,26 +130,26 @@ public class GitReferenceRecorderITest extends GitITest {
     @Test
     @Issue("JENKINS-64578")
     public void shouldFindCorrectBuildInPipelinesWithMultipleReposInReference() {
-        WorkflowJob mainBranch = createPipeline("main");
+        WorkflowJob mainBranch = createPipeline(MAIN);
         mainBranch.setDefinition(asStage(
                 createForensicsCheckoutStep(),
-                createLocalGitCheckout("master")));
+                createLocalGitCheckout(MAIN)));
 
         Run<?, ?> masterBuild = buildSuccessfully(mainBranch);
 
         createFeatureBranchAndAddCommits();
 
-        WorkflowJob featureBranch = createPipeline("feature");
+        WorkflowJob featureBranch = createPipeline(FEATURE);
         featureBranch.setDefinition(asStage(
-                createLocalGitCheckout("feature"),
-                "discoverGitReferenceBuild(referenceJob: 'main', scm: 'git file')"));
+                createLocalGitCheckout(FEATURE),
+                "discoverGitReferenceBuild(referenceJob: '" + MAIN + "', scm: 'git file')"));
 
         verifyPipelineResult(masterBuild, featureBranch);
     }
 
     /**
-     * Creates a pipeline for the master branch and another pipeline for the feature branch, builds them and checks if
-     * the correct reference build will be found. The master branch contains an additional but unrelated SCM
+     * Creates a pipeline for the main branch and another pipeline for the feature branch, builds them and checks if
+     * the correct reference build will be found. The main branch contains an additional but unrelated SCM
      * repository.
      * <pre>
      * {@code
@@ -161,19 +163,19 @@ public class GitReferenceRecorderITest extends GitITest {
     @Test
     @Issue("JENKINS-64578")
     public void shouldFindCorrectBuildInPipelinesWithMultipleReposInFeature() {
-        WorkflowJob mainBranch = createPipeline("main");
+        WorkflowJob mainBranch = createPipeline(MAIN);
         mainBranch.setDefinition(asStage(
-                createLocalGitCheckout("master")));
+                createLocalGitCheckout(MAIN)));
 
         Run<?, ?> masterBuild = buildSuccessfully(mainBranch);
 
         createFeatureBranchAndAddCommits();
 
-        WorkflowJob featureBranch = createPipeline("feature");
+        WorkflowJob featureBranch = createPipeline(FEATURE);
         featureBranch.setDefinition(asStage(
                 createForensicsCheckoutStep(),
-                createLocalGitCheckout("feature"),
-                "discoverGitReferenceBuild(referenceJob: 'main', scm: 'git file')"));
+                createLocalGitCheckout(FEATURE),
+                "discoverGitReferenceBuild(referenceJob: '" + MAIN + "', scm: 'git file')"));
 
         verifyPipelineResult(masterBuild, featureBranch);
     }
@@ -254,7 +256,7 @@ public class GitReferenceRecorderITest extends GitITest {
         WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject();
 
         buildProject(project);
-        WorkflowRun masterBuild = verifyBuild(project, 1, target, "master content");
+        WorkflowRun masterBuild = verifyBuild(project, 1, target, "main content");
         verifyRecordSize(masterBuild, 2);
 
         String feature = "bugfixes/hotfix-124";
@@ -271,7 +273,7 @@ public class GitReferenceRecorderITest extends GitITest {
     }
 
     /**
-     * Checks if the reference build will be found if the master is one commit and build ahead of the feature branch.
+     * Checks if the reference build will be found if the main is one commit and build ahead of the feature branch.
      *
      * <pre>
      * {@code
@@ -290,7 +292,7 @@ public class GitReferenceRecorderITest extends GitITest {
 
         createFeatureBranchAndAddCommits();
 
-        addAdditionalFileTo(MASTER);
+        addAdditionalFileTo(MAIN);
 
         buildProject(project);
         WorkflowRun nextMaster = verifyMasterBuild(project, 2);
@@ -331,11 +333,11 @@ public class GitReferenceRecorderITest extends GitITest {
         WorkflowRun masterBuild = verifyMasterBuild(project, 1);
         verifyRecordSize(masterBuild, 2);
 
-        addAdditionalFileTo(MASTER);
+        addAdditionalFileTo(MAIN);
 
         createFeatureBranchAndAddCommits("latestBuildIfNotFound: false");
 
-        changeContentOfAdditionalFile(MASTER, CHANGED_CONTENT);
+        changeContentOfAdditionalFile(MAIN, CHANGED_CONTENT);
 
         buildProject(project);
         WorkflowRun nextMaster = verifyMasterBuild(project, 2);
@@ -347,7 +349,7 @@ public class GitReferenceRecorderITest extends GitITest {
         assertThat(firstFeature.getAction(ReferenceBuild.class)).as(getLog(firstFeature)).isNotNull()
                 .hasOwner(firstFeature); // we do not care about the reference of the first feature build
 
-        changeContentOfAdditionalFile(FEATURE, "feature content");
+        changeContentOfAdditionalFile(FEATURE, FEATURE + " content");
 
         buildProject(project);
         WorkflowRun featureBuild = verifyFeatureBuild(project, 2);
@@ -360,7 +362,7 @@ public class GitReferenceRecorderITest extends GitITest {
     }
 
     /**
-     * Checks the configuration option {@code skipUnknownCommits}. If there are unknown commits in the master build the
+     * Checks the configuration option {@code skipUnknownCommits}. If there are unknown commits in the main build the
      * algorithm should skip the build in search for the reference point.
      *
      * <pre>
@@ -378,11 +380,11 @@ public class GitReferenceRecorderITest extends GitITest {
         WorkflowRun masterBuild = verifyMasterBuild(project, 1);
         verifyRecordSize(masterBuild, 2);
 
-        addAdditionalFileTo(MASTER);
+        addAdditionalFileTo(MAIN);
 
         createFeatureBranchAndAddCommits("skipUnknownCommits: true");
 
-        changeContentOfAdditionalFile(MASTER, CHANGED_CONTENT);
+        changeContentOfAdditionalFile(MAIN, CHANGED_CONTENT);
 
         buildProject(project);
         WorkflowRun nextMaster = verifyMasterBuild(project, 2);
@@ -433,7 +435,7 @@ public class GitReferenceRecorderITest extends GitITest {
 
     /**
      * Checks the configuration {@code latestBuildIfNotFound}. If no reference has been found (in this case due to
-     * insufficient {@code maxCommits}) then the lasted build of the master job should be taken as reference point.
+     * insufficient {@code maxCommits}) then the lasted build of the main job should be taken as reference point.
      *
      * <pre>
      * {@code
@@ -450,7 +452,7 @@ public class GitReferenceRecorderITest extends GitITest {
         WorkflowRun masterBuild = verifyMasterBuild(project, 1);
         verifyRecordSize(masterBuild, 2);
 
-        addAdditionalFileTo(MASTER);
+        addAdditionalFileTo(MAIN);
 
         buildProject(project);
         WorkflowRun nextMaster = verifyMasterBuild(project, 2);
@@ -472,7 +474,7 @@ public class GitReferenceRecorderITest extends GitITest {
 
     /**
      * Checks if the correct reference point is found when there are multiple feature branches and one is checked out
-     * not from the master but from one of the other feature branches.
+     * not from the main but from one of the other feature branches.
      *
      * <pre>
      * {@code
@@ -537,7 +539,7 @@ public class GitReferenceRecorderITest extends GitITest {
 
         createFeatureBranchAndAddCommits();
 
-        addAdditionalFileTo(MASTER);
+        addAdditionalFileTo(MAIN);
 
         WorkflowRun nextMaster = buildAgain(toDelete.getParent());
         verifyMasterBuild(project, 2);
@@ -557,7 +559,7 @@ public class GitReferenceRecorderITest extends GitITest {
     }
 
     /**
-     * If the Intersection point is not found due to the build being deleted the newest master build should be taken
+     * If the Intersection point is not found due to the build being deleted the newest main build should be taken
      * with {@code latestBuildIfNotFound} enabled.
      * <pre>
      * {@code
@@ -583,7 +585,7 @@ public class GitReferenceRecorderITest extends GitITest {
         WorkflowRun firstFeature = verifyFeatureBuild(project, 1);
         verifyRecordSize(firstFeature, 3);
 
-        addAdditionalFileTo(MASTER);
+        addAdditionalFileTo(MAIN);
 
         buildProject(project);
         WorkflowRun nextMaster = verifyMasterBuild(project, 2);
@@ -610,7 +612,7 @@ public class GitReferenceRecorderITest extends GitITest {
                     + "echo \"GitForensics\"; "
                     + "discoverGitReferenceBuild();"
                     + "gitDiffStat()}");
-            writeFile(SOURCE_FILE, "master content");
+            writeFile(SOURCE_FILE, MAIN + " content");
             addFile(JENKINS_FILE);
             commit("initial content");
 
@@ -622,7 +624,9 @@ public class GitReferenceRecorderITest extends GitITest {
     }
 
     private void createFeatureBranchAndAddCommits(final String... parameters) {
-        createBranchAndAddCommits(FEATURE, parameters);
+        String[] actual = Arrays.copyOf(parameters, parameters.length + 1);
+        actual[parameters.length] = "defaultBranch: '" + MAIN + "'";
+        createBranchAndAddCommits(FEATURE, actual);
     }
 
     private void createBranchAndAddCommits(final String branch, final String... parameters) {
@@ -663,11 +667,11 @@ public class GitReferenceRecorderITest extends GitITest {
     }
 
     private WorkflowRun verifyMasterBuild(final WorkflowMultiBranchProject project, final int buildNumber) {
-        return verifyBuild(project, buildNumber, MASTER, "master content");
+        return verifyBuild(project, buildNumber, GitITest.INITIAL_BRANCH, MAIN + " content");
     }
 
     private WorkflowRun verifyFeatureBuild(final WorkflowMultiBranchProject project, final int buildNumber) {
-        return verifyBuild(project, buildNumber, FEATURE, "FEATURE CONTENT");
+        return verifyBuild(project, buildNumber, FEATURE, FEATURE.toUpperCase(Locale.ENGLISH) + " CONTENT");
     }
 
     private WorkflowRun verifyBuild(final WorkflowMultiBranchProject project, final int buildNumber,
