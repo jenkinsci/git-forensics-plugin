@@ -5,15 +5,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
-
 import edu.hm.hafner.util.FilteredLog;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import org.jenkinsci.plugins.gitclient.GitClient;
-import hudson.model.Run;
 
-import io.jenkins.plugins.forensics.git.reference.GitCommitsRecord;
 import io.jenkins.plugins.forensics.git.util.RemoteResultWrapper;
 import io.jenkins.plugins.forensics.miner.CommitDiffItem;
 import io.jenkins.plugins.forensics.miner.CommitStatistics;
