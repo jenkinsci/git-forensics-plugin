@@ -18,7 +18,7 @@
   <url>https://github.com/jenkinsci/git-forensics-plugin</url>
 
   <properties>
-    <revision>1.0.1</revision>
+    <revision>1.1.0</revision>
     <changelist>-SNAPSHOT</changelist>
 
     <module.name>${project.groupId}.git.forensics</module.name>
@@ -27,14 +27,13 @@
     <eclipse-collections.version>9.2.0</eclipse-collections.version>
 
     <!-- Jenkins Plugin Dependencies Versions -->
-    <forensics-api-plugin.version>1.0.0</forensics-api-plugin.version>
+    <forensics-api-plugin.version>1.2.0</forensics-api-plugin.version>
     <plugin-util-api.version>2.3.0</plugin-util-api.version>
-    <data-tables-api.version>1.10.23-3</data-tables-api.version>
-    <echarts-api.version>5.1.0-2</echarts-api.version>
-    <popper-api.version>1.16.1-2</popper-api.version>
+    <data-tables-api.version>1.10.25-1</data-tables-api.version>
     <jquery3-api.version>3.6.0-1</jquery3-api.version>
-    <bootstrap4-api.version>4.6.0-3</bootstrap4-api.version>
     <font-awesome-api.version>5.15.3-3</font-awesome-api.version>
+    <echarts-api.version>5.1.2-2</echarts-api.version>
+    <bootstrap5-api.version>5.0.1-2</bootstrap5-api.version>
 
     <git-plugin.version>4.6.0</git-plugin.version>
     <git-client.version>3.6.0</git-client.version>
@@ -42,9 +41,6 @@
 
     <j2html.version>1.4.0</j2html.version>
     <streamex.version>0.7.3</streamex.version>
-
-    <bootstrap4-api.version>4.6.0-2</bootstrap4-api.version>
-    <font-awesome-api.version>5.15.2-2</font-awesome-api.version>
   </properties>
 
   <licenses>
@@ -86,18 +82,13 @@
       </dependency>
       <dependency>
         <groupId>io.jenkins.plugins</groupId>
-        <artifactId>bootstrap4-api</artifactId>
-        <version>${bootstrap4-api.version}</version>
+        <artifactId>bootstrap5-api</artifactId>
+        <version>${bootstrap5-api.version}</version>
       </dependency>
       <dependency>
         <groupId>io.jenkins.plugins</groupId>
         <artifactId>font-awesome-api</artifactId>
         <version>${font-awesome-api.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.jenkins.plugins</groupId>
-        <artifactId>popper-api</artifactId>
-        <version>${popper-api.version}</version>
       </dependency>
       <dependency>
         <groupId>io.jenkins.plugins</groupId>

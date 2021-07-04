@@ -9,7 +9,7 @@ import io.jenkins.plugins.forensics.util.CommitDecorator;
  *
  * @author Ullrich Hafner
  */
-class GitCommitTextDecorator extends CommitDecorator {
+public class GitCommitTextDecorator extends CommitDecorator {
     @Override
     public String asLink(final String id) {
         return asText(id);

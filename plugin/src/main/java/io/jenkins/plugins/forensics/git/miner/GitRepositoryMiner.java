@@ -5,17 +5,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.lib.Repository;
-
 import edu.hm.hafner.util.FilteredLog;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import org.jenkinsci.plugins.gitclient.GitClient;
-import hudson.remoting.VirtualChannel;
 
-import io.jenkins.plugins.forensics.git.util.AbstractRepositoryCallback;
 import io.jenkins.plugins.forensics.git.util.RemoteResultWrapper;
 import io.jenkins.plugins.forensics.miner.CommitDiffItem;
 import io.jenkins.plugins.forensics.miner.CommitStatistics;
@@ -43,7 +37,6 @@ public class GitRepositoryMiner extends RepositoryMiner {
         this.gitClient = gitClient;
     }
 
-    // TODO: we need to create the new results separately to compute the added and deleted lines per build
     @Override
     public RepositoryStatistics mine(final RepositoryStatistics previous, final FilteredLog logger)
             throws InterruptedException {
@@ -76,43 +69,6 @@ public class GitRepositoryMiner extends RepositoryMiner {
             logger.logException(exception,
                     "Exception occurred while mining the Git repository using GitClient");
             return new RepositoryStatistics();
-        }
-    }
-
-    private static class RepositoryStatisticsCallback
-            extends AbstractRepositoryCallback<RemoteResultWrapper<ArrayList<CommitDiffItem>>> {
-        private static final long serialVersionUID = 7667073858514128136L;
-
-        private final String previousCommitId;
-
-        RepositoryStatisticsCallback(final String previousCommitId) {
-            super();
-
-            this.previousCommitId = previousCommitId;
-        }
-
-        @Override @SuppressWarnings("PMD.UseTryWithResources")
-        public RemoteResultWrapper<ArrayList<CommitDiffItem>> invoke(
-                final Repository repository, final VirtualChannel channel) {
-            ArrayList<CommitDiffItem> commits = new ArrayList<>();
-            RemoteResultWrapper<ArrayList<CommitDiffItem>> wrapper = new RemoteResultWrapper<>(
-                    commits, "Errors while mining the Git repository:");
-
-            try {
-                try (Git git = new Git(repository)) {
-                    CommitAnalyzer commitAnalyzer = new CommitAnalyzer();
-                    commits.addAll(commitAnalyzer.run(repository, git, previousCommitId, wrapper));
-                }
-                catch (IOException | GitAPIException exception) {
-                    wrapper.logException(exception,
-                            "Can't analyze commits for the repository " + repository.getIdentifier());
-                }
-            }
-            finally {
-                repository.close();
-            }
-
-            return wrapper;
         }
     }
 }

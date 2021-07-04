@@ -51,15 +51,11 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
                 "Latest commit: 28af63d");
 
         assertThat(getSummaryText(build, MINER_ROW)).contains(
-                "SCM Forensics",
-                "51 repository files",
-                "total lines of code: 6066",
-                "total churn: 16966",
-                "New added lines: 16510",
-                "New deleted lines: 10444",
                 "New commits: 402",
-                "from 4 authors",
-                "in 131 files");
+                "4 authors",
+                "131 files",
+                "16510 added",
+                "10444 deleted");
 
         ScmForensics scmForensics = new ScmForensics(build, "forensics");
         scmForensics.open();
