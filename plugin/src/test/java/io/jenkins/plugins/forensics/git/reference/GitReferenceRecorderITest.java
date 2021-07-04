@@ -111,7 +111,7 @@ public class GitReferenceRecorderITest extends GitITest {
                 .hasCommitCount(1)
                 .hasFilesCount(1)
                 .hasAddedLines(1)
-                .hasDeletedLines(1);
+                .hasDeletedLines(0);
     }
 
     private CommitStatistics getCommitStatisticsOf(final WorkflowRun lastBuild) {
