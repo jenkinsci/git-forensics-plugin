@@ -12,17 +12,21 @@ This Git Forensics Jenkins plugin mines and analyzes data from a Git repository.
 - **Blames**: Provides an API for `git blame` to show in which Git revisions the lines of a file 
   have been modified by what authors. This information can be used to discover the original commit 
   that is the origin for a piece of problematic code. 
-- **File statistics**: Collects commit statistics for all repository files in the style of 
-  [Code as a Crime Scene](https://www.adamtornhill.com/articles/crimescene/codeascrimescene.htm) 
-  \[Adam Tornhill, November 2013\]:
+- **File statistics**: Incrementally collects global commit statistics for all repository files in the style of
+  [Code as a Crime Scene](https://www.adamtornhill.com/articles/crimescene/codeascrimescene.htm)
+  \[Adam Tornhill, November 2013\]. This includes:
   - commits count
   - different authors count
   - creation time
   - last modification time
   - lines of code (from the commit details)
   - code churn (changed lines since created)
-- **Commit tracking**: Tracks all new commits that are part of a build. Using this information other plugins can search 
-  for builds that contain a specific commit.
+- **Commit tracking**: Tracks all new commits that are part of a build. 
+- **Commit statistics**: Collects commit statistics for all new commits in a build or in a series of builds (e.g. for
+  all commits of a pull request). This includes:
+  - commits count
+  - changed files count
+  - added and deleted lines
 - **Reference build**: Discovers a reference build for a given build that can be used to compute relative results that
   show what will be changed if the branch of the current build will be merged with the target branch.
 - **Repository Browser**: Provides a [RepositoryBrowser](https://javadoc.jenkins.io/hudson/scm/RepositoryBrowser.html)
@@ -82,6 +86,19 @@ commit listener on the build status page:
 ![Commits Summary](doc/images/commits-summary.png)
 
 There you will see the number of new commits and a link to open the repository browser with the details of the latest commit. 
+
+## Commit statistics
+
+For pull requests (or more generally: for jobs that have a reference build defined) the Git Forensics plugin collects a statistical summary for all containing commits. 
+This includes the commits count, the changed files count, and the added and deleted lines in those commits. 
+This information will be available as a summary for each build: 
+
+![Commits Statistics](doc/images/commits-statistics.png)
+
+This information is also available for builds that do not have a reference build defined (see next section).
+In this case the statistics since the previous successful build will be shown.
+
+You can use this feature by enabling the pipeline step `gitDiffStat()`.
 
 ## Reference build 
 
