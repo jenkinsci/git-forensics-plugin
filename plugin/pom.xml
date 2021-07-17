@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jvnet.hudson.plugins</groupId>
     <artifactId>analysis-pom</artifactId>
-    <version>5.8.0</version>
+    <version>5.9.0</version>
     <relativePath />
   </parent>
 
@@ -34,6 +34,7 @@
     <font-awesome-api.version>5.15.3-3</font-awesome-api.version>
     <echarts-api.version>5.1.2-2</echarts-api.version>
     <bootstrap5-api.version>5.0.1-2</bootstrap5-api.version>
+    <pull-request-monitoring.version>1.7.7</pull-request-monitoring.version>
 
     <git-plugin.version>4.6.0</git-plugin.version>
     <git-client.version>3.6.0</git-client.version>
@@ -142,6 +143,12 @@
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>plugin-util-api</artifactId>
       <version>${plugin-util-api.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>pull-request-monitoring</artifactId>
+      <version>${pull-request-monitoring.version}</version>
+      <optional>true</optional>
     </dependency>
 
     <!-- Test Dependencies -->

@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: org.jenkins-ci.plugins.workflow:workflow-job:2.41">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/jenkins-ci/plugins/workflow/workflow-job/2.41/workflow-job-2.41.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/org/jenkins-ci/plugins/workflow/workflow-job/2.41/workflow-job-2.41-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/jenkins-ci/plugins/workflow/workflow-job/2.41/workflow-job-2.41-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

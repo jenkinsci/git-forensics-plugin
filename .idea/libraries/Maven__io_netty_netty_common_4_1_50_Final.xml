@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: io.jenkins.plugins:select2-api:4.0.13-5">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/io/jenkins/plugins/select2-api/4.0.13-5/select2-api-4.0.13-5.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/io/jenkins/plugins/select2-api/4.0.13-5/select2-api-4.0.13-5-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/io/jenkins/plugins/select2-api/4.0.13-5/select2-api-4.0.13-5-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
