@@ -1,5 +1,72 @@
 <?jelly escape-by-default='true'?>
 
-<j:jelly xmlns:j="jelly:core">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
 
+    <st:header name="Content-Type" value="text/html;charset=UTF-8"/>
+
+    <st:adjunct includes="io.jenkins.plugins.bootstrap5"/>
+
+        <div class="container">
+            <div class="row justify-content-evenly">
+                <div class="col-4">
+                    <h6>
+                        <l:svgIcon ariaHidden="true"
+                                   href="${resURL}/images/material-icons/svg-sprite-social-symbol.svg#ic_person_24px"/> ${%authors}
+                    </h6>
+                    <h3>${it.authorCount}</h3>
+                </div>
+                <div class="col-4">
+                    <h6>
+                        <l:svgIcon ariaHidden="true"
+                                   href="${resURL}/images/material-icons/svg-sprite-action-symbol.svg#ic_check_circle_24px"/> ${%commits}
+                    </h6>
+                    <h3>${it.commitCount}</h3>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-3">
+                    <h6>
+                        <l:svgIcon ariaHidden="true"
+                                   href="${resURL}/images/material-icons/svg-sprite-action-symbol.svg#ic_track_changes_24px"/> ${%linesOfCode}
+                    </h6>
+                    <h3>${it.linesOfCode}</h3>
+                </div>
+                <div class="col-4">
+                    <h6>
+                        <l:svgIcon class="icon-size-64" ariaHidden="true"
+                                   href="${resURL}/images/material-icons/svg-sprite-action-symbol.svg#ic_donut_large_24px"/>
+                    </h6>
+                </div>
+                <div class="col-3">
+                    <h6>
+                        <l:svgIcon ariaHidden="true"
+                                   href="${resURL}/images/material-icons/svg-sprite-action-symbol.svg#ic_description_24px"/> ${%filesChanged}
+                    </h6>
+                    <h3>${it.filesCount}</h3>
+                </div>
+            </div>
+            <div class="row justify-content-evenly">
+                <div class="col-4">
+                    <h6>${%linesAdded}</h6>
+                    <h3 style="color: #A5D6A7">
+                        <l:svgIcon ariaHidden="true"
+                                   href="${resURL}/images/material-icons/svg-sprite-content-symbol.svg#ic_add_24px"/>${it.addedLines}
+                    </h3>
+                </div>
+                <div class="col-4">
+                    <h6>${%linesRemoved}</h6>
+                    <h3 style="color: #EF9A9A">
+                        <l:svgIcon ariaHidden="true"
+                                   href="${resURL}/images/material-icons/svg-sprite-content-symbol.svg#ic_remove_24px"/> ${it.deletedLines}
+                    </h3>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            .icon-size-64 {
+                width: 64px;
+                height: 64px;
+            }
+        </style>
 </j:jelly>
