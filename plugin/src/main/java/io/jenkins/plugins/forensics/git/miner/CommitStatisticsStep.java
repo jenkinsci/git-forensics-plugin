@@ -124,12 +124,12 @@ public class CommitStatisticsStep extends Recorder implements SimpleBuildStep {
         if (possibleReferenceBuild.isPresent()) {
             Run<?, ?> referenceBuild = possibleReferenceBuild.get();
             logger.logInfo("-> found reference build '%s'", referenceBuild);
-            GitCommitsRecord commitsRecord = referenceBuild.getAction(GitCommitsRecord.class);
-            if (commitsRecord == null) {
+            GitCommitsRecord referenceCommits = referenceBuild.getAction(GitCommitsRecord.class);
+            if (referenceCommits == null) {
                 logger.logInfo("-> skipping since reference build '%s' has no recorded commits", referenceBuild);
             }
             else {
-                computeStatsBasedOnReferenceBuild(run, logger, repository, validator, commitsRecord);
+                computeStatsBasedOnReferenceBuild(run, logger, repository, validator, referenceCommits);
             }
         }
         else {
@@ -144,9 +144,9 @@ public class CommitStatisticsStep extends Recorder implements SimpleBuildStep {
     }
 
     private void computeStatsBasedOnReferenceBuild(final Run<?, ?> run, final FilteredLog logger, final SCM repository,
-            final GitRepositoryValidator validator, final GitCommitsRecord commitsRecord)
+            final GitRepositoryValidator validator, final GitCommitsRecord referenceCommits)
             throws IOException, InterruptedException {
-        String latestCommit = commitsRecord.getLatestCommit();
+        String latestCommit = referenceCommits.getLatestCommit();
         String ancestor = validator.createClient().withRepository(new MergeBaseSelector(latestCommit));
         if (StringUtils.isNotEmpty(ancestor)) {
             logger.logInfo("-> found best common ancestor '%s' between HEAD and target branch commit '%s'",
