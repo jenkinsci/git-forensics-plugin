@@ -15,7 +15,7 @@ import hudson.model.Run;
 import hudson.scm.SCM;
 import jenkins.model.RunAction2;
 
-import io.jenkins.plugins.forensics.git.reference.GitCheckoutListener.Commits;
+import io.jenkins.plugins.forensics.git.reference.GitCheckoutListener.BuildCommits;
 
 /**
  * Stores all commits for a given build and provides a link to the latest commit. For each {@link SCM} repository a
@@ -64,7 +64,7 @@ public class GitCommitsRecord implements RunAction2, Serializable {
      *         hyperlink to the latest commit
      */
     public GitCommitsRecord(final Run<?, ?> owner, final String scmKey, final FilteredLog logger,
-            final Commits commits, final String latestCommitLink) {
+            final BuildCommits commits, final String latestCommitLink) {
         this.owner = owner;
         this.scmKey = scmKey;
         this.infoMessages = new ArrayList<>(logger.getInfoMessages());

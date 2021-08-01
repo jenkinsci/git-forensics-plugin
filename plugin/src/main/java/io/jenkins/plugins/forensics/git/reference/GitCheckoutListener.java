@@ -119,7 +119,7 @@ public class GitCheckoutListener extends SCMListener {
 
     private GitCommitsRecord recordNewCommits(final Run<?, ?> build, final GitRepositoryValidator gitRepository,
             final FilteredLog logger, final String latestCommit) {
-        Commits commits = recordCommitsSincePreviousBuild(latestCommit, isMerge(build), gitRepository, logger);
+        BuildCommits commits = recordCommitsSincePreviousBuild(latestCommit, isMerge(build), gitRepository, logger);
 
         CommitDecorator commitDecorator
                 = GitCommitDecoratorFactory.findCommitDecorator(gitRepository.getScm(), logger);
@@ -153,11 +153,10 @@ public class GitCheckoutListener extends SCMListener {
         return false;
     }
 
-
-    private Commits recordCommitsSincePreviousBuild(final String latestCommitName,
+    private BuildCommits recordCommitsSincePreviousBuild(final String latestCommitName,
             final boolean isMergeCommit, final GitRepositoryValidator gitRepository, final FilteredLog logger) {
         try {
-            RemoteResultWrapper<Commits> resultWrapper = gitRepository.createClient()
+            RemoteResultWrapper<BuildCommits> resultWrapper = gitRepository.createClient()
                     .withRepository(new GitCommitsCollector(latestCommitName, isMergeCommit));
             logger.merge(resultWrapper);
 
@@ -166,7 +165,7 @@ public class GitCheckoutListener extends SCMListener {
         catch (IOException | InterruptedException exception) {
             logger.logException(exception, "Unable to record commits of git repository '%s'", gitRepository.getId());
 
-            return new Commits(isMergeCommit, latestCommitName);
+            return new BuildCommits(latestCommitName);
         }
     }
 
@@ -183,7 +182,7 @@ public class GitCheckoutListener extends SCMListener {
     /**
      * Collects and records all commits since the last build.
      */
-    private static class GitCommitsCollector extends AbstractRepositoryCallback<RemoteResultWrapper<Commits>> {
+    private static class GitCommitsCollector extends AbstractRepositoryCallback<RemoteResultWrapper<BuildCommits>> {
         private static final long serialVersionUID = -5980402198857923793L;
 
         private static final int MAX_COMMITS = 200; // TODO: should the number of recorded commits be configurable?
@@ -192,17 +191,19 @@ public class GitCheckoutListener extends SCMListener {
         private final boolean isMergeCommit;
 
         GitCommitsCollector(final String latestRecordedCommit, final boolean isMergeCommit) {
+            super();
+
             this.latestRecordedCommit = latestRecordedCommit;
             this.isMergeCommit = isMergeCommit;
         }
 
         @Override
-        public RemoteResultWrapper<Commits> invoke(final Repository repository, final VirtualChannel channel) throws IOException {
+        public RemoteResultWrapper<BuildCommits> invoke(final Repository repository, final VirtualChannel channel) throws IOException {
             try (Git git = new Git(repository)) {
-                Commits commits = new Commits(isMergeCommit, latestRecordedCommit);
-                RemoteResultWrapper<Commits> result = new RemoteResultWrapper<>(commits, "Errors while collecting commits");
+                BuildCommits commits = new BuildCommits(latestRecordedCommit);
+                RemoteResultWrapper<BuildCommits> result = new RemoteResultWrapper<>(commits, "Errors while collecting commits");
                 findHeadCommit(repository, commits, result);
-                for (RevCommit commit : git.log().add(commits.head).call()) {
+                for (RevCommit commit : git.log().add(commits.getHead()).call()) {
                     String commitId = commit.getName();
                     if (commitId.equals(latestRecordedCommit) || commits.size() >= MAX_COMMITS) {
                         return result;
@@ -216,7 +217,7 @@ public class GitCheckoutListener extends SCMListener {
             }
         }
 
-        private void findHeadCommit(final Repository repository, final Commits commits, final FilteredLog logger)
+        private void findHeadCommit(final Repository repository, final BuildCommits commits, final FilteredLog logger)
                 throws IOException {
             RevCommit head = getHead(repository);
             if (isMergeCommit) {
@@ -233,10 +234,9 @@ public class GitCheckoutListener extends SCMListener {
                 }
                 else {
                     logger.logInfo("-> Multiple parent commits found - skipping commits of local merge '%s'", DECORATOR.asText(head));
-                    commits.setMerge(head);
-                    commits.setHead(parents[0]);
                     logger.logInfo("-> Using parent commit '%s' of local merge as starting point", DECORATOR.asText(parents[0]));
                     logger.logInfo("-> Storing target branch head '%s' (second parent of local merge) ", DECORATOR.asText(parents[1]));
+                    commits.setHead(parents[0]);
                     commits.setTarget(parents[1]);
                 }
             }
@@ -255,23 +255,22 @@ public class GitCheckoutListener extends SCMListener {
         }
     }
 
-    static class Commits implements Serializable {
-        private final boolean isMergeCommit;
+    /**
+     * The commits of a given build. If these commits are part of a pull request then a target commit ID might be
+     * stored that defines the parent commit of the head in the target branch.
+     */
+    static class BuildCommits implements Serializable {
+        private static final long serialVersionUID = -580006422072874429L;
+
         private final String previousBuildCommit;
 
         private final List<String> commits = new ArrayList<>();
 
         private ObjectId head = ObjectId.zeroId();
         private ObjectId target = ObjectId.zeroId();
-        private ObjectId merge = ObjectId.zeroId();
 
-        Commits(final boolean isMergeCommit, final String previousBuildCommit) {
-            this.isMergeCommit = isMergeCommit;
+        BuildCommits(final String previousBuildCommit) {
             this.previousBuildCommit = previousBuildCommit;
-        }
-
-        String getPreviousBuildCommit() {
-            return previousBuildCommit;
         }
 
         void setHead(final RevCommit head) {
@@ -288,14 +287,6 @@ public class GitCheckoutListener extends SCMListener {
 
         ObjectId getTarget() {
             return target;
-        }
-
-        void setMerge(final RevCommit merge) {
-            this.merge = merge;
-        }
-
-        ObjectId getMerge() {
-            return merge;
         }
 
         List<String> getCommits() {
@@ -321,7 +312,7 @@ public class GitCheckoutListener extends SCMListener {
             return RecordingType.INCREMENTAL;
         }
 
-        public String getLatestCommit() {
+        String getLatestCommit() {
             if (commits.isEmpty()) {
                 return previousBuildCommit;
             }
