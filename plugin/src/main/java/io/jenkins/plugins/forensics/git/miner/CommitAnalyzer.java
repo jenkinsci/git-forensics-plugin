@@ -24,7 +24,7 @@ import edu.hm.hafner.util.TreeStringBuilder;
 import io.jenkins.plugins.forensics.miner.CommitDiffItem;
 
 /**
- * Analyzes the new Git repository commits since a previous commit ID and and creates {@link CommitDiffItem} instances for all
+ * Analyzes the new Git repository commits since a previous commit ID and creates {@link CommitDiffItem} instances for all
  * changes.
  *
  * @author Giulia Del Bravo
@@ -73,8 +73,7 @@ class CommitAnalyzer {
 
     private AbstractTreeIterator createTreeIteratorToCompareTo(final Repository repository,
             final List<RevCommit> newCommits, final int index, final String latestCommitOfPreviousBuild,
-            final FilteredLog logger)
-            throws IOException {
+            final FilteredLog logger) throws IOException {
         int compareIndex = index + 1;
         if (compareIndex < newCommits.size()) { // compare with another commit in the list
             return createTreeIteratorFor(newCommits.get(compareIndex).getName(), repository, logger);
@@ -86,8 +85,7 @@ class CommitAnalyzer {
     }
 
     static AbstractTreeIterator createTreeIteratorFor(final String commitId, final Repository repository,
-            final FilteredLog logger)
-            throws IOException {
+            final FilteredLog logger) throws IOException {
         try (RevWalk walk = new RevWalk(repository)) {
             ObjectId resolve = repository.resolve(commitId);
             if (resolve == null) {

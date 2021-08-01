@@ -2,19 +2,9 @@ package io.jenkins.plugins.forensics.git.reference;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.revwalk.RevWalk;
 
 import edu.hm.hafner.util.FilteredLog;
 
@@ -23,15 +13,12 @@ import hudson.FilePath;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.model.listeners.SCMListener;
-import hudson.remoting.VirtualChannel;
 import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
 import jenkins.scm.api.SCMRevision;
 import jenkins.scm.api.SCMRevisionAction;
 import jenkins.scm.api.mixin.ChangeRequestSCMRevision;
 
-import io.jenkins.plugins.forensics.git.reference.GitCommitsRecord.RecordingType;
-import io.jenkins.plugins.forensics.git.util.AbstractRepositoryCallback;
 import io.jenkins.plugins.forensics.git.util.GitCommitDecoratorFactory;
 import io.jenkins.plugins.forensics.git.util.GitCommitTextDecorator;
 import io.jenkins.plugins.forensics.git.util.GitRepositoryValidator;
@@ -46,7 +33,6 @@ import io.jenkins.plugins.util.LogHandler;
  * @author Arne Schöntag
  */
 @Extension
-@SuppressWarnings("PMD.ExcessiveImports")
 public class GitCheckoutListener extends SCMListener {
     private static final GitCommitTextDecorator DECORATOR = new GitCommitTextDecorator();
     private static final String NO_COMMIT_FOUND = StringUtils.EMPTY;
@@ -177,146 +163,5 @@ public class GitCheckoutListener extends SCMListener {
             }
         }
         return Optional.empty();
-    }
-
-    /**
-     * Collects and records all commits since the last build.
-     */
-    private static class GitCommitsCollector extends AbstractRepositoryCallback<RemoteResultWrapper<BuildCommits>> {
-        private static final long serialVersionUID = -5980402198857923793L;
-
-        private static final int MAX_COMMITS = 200; // TODO: should the number of recorded commits be configurable?
-
-        private final String latestRecordedCommit;
-        private final boolean isMergeCommit;
-
-        GitCommitsCollector(final String latestRecordedCommit, final boolean isMergeCommit) {
-            super();
-
-            this.latestRecordedCommit = latestRecordedCommit;
-            this.isMergeCommit = isMergeCommit;
-        }
-
-        @Override
-        public RemoteResultWrapper<BuildCommits> invoke(final Repository repository, final VirtualChannel channel) throws IOException {
-            try (Git git = new Git(repository)) {
-                BuildCommits commits = new BuildCommits(latestRecordedCommit);
-                RemoteResultWrapper<BuildCommits> result = new RemoteResultWrapper<>(commits, "Errors while collecting commits");
-                findHeadCommit(repository, commits, result);
-                for (RevCommit commit : git.log().add(commits.getHead()).call()) {
-                    String commitId = commit.getName();
-                    if (commitId.equals(latestRecordedCommit) || commits.size() >= MAX_COMMITS) {
-                        return result;
-                    }
-                    commits.add(commitId);
-                }
-                return result;
-            }
-            catch (GitAPIException e) {
-                throw new IOException("Unable to record commits of git repository.", e);
-            }
-        }
-
-        private void findHeadCommit(final Repository repository, final BuildCommits commits, final FilteredLog logger)
-                throws IOException {
-            RevCommit head = getHead(repository);
-            if (isMergeCommit) {
-                RevCommit[] parents = head.getParents();
-                if (parents.length < 1) {
-                    logger.logInfo("-> No parent commits found - detected the first commit in the branch");
-                    logger.logInfo("-> Using head commit '%s' as starting point", DECORATOR.asText(head));
-                    commits.setHead(head);
-                }
-                else if (parents.length == 1) {
-                    logger.logInfo("-> Single parent commit found - branch is already descendant of target branch head");
-                    logger.logInfo("-> Using head commit '%s' as starting point", DECORATOR.asText(head));
-                    commits.setHead(head);
-                }
-                else {
-                    logger.logInfo("-> Multiple parent commits found - skipping commits of local merge '%s'", DECORATOR.asText(head));
-                    logger.logInfo("-> Using parent commit '%s' of local merge as starting point", DECORATOR.asText(parents[0]));
-                    logger.logInfo("-> Storing target branch head '%s' (second parent of local merge) ", DECORATOR.asText(parents[1]));
-                    commits.setHead(parents[0]);
-                    commits.setTarget(parents[1]);
-                }
-            }
-            else {
-                logger.logInfo("-> Using head commit '%s' as starting point", DECORATOR.asText(head));
-                commits.setHead(head);
-            }
-        }
-
-        private RevCommit getHead(final Repository repository) throws IOException {
-            ObjectId head = repository.resolve(Constants.HEAD);
-            if (head == null) {
-                throw new IOException("No HEAD commit found in " + repository);
-            }
-            return new RevWalk(repository).parseCommit(head);
-        }
-    }
-
-    /**
-     * The commits of a given build. If these commits are part of a pull request then a target commit ID might be
-     * stored that defines the parent commit of the head in the target branch.
-     */
-    static class BuildCommits implements Serializable {
-        private static final long serialVersionUID = -580006422072874429L;
-
-        private final String previousBuildCommit;
-
-        private final List<String> commits = new ArrayList<>();
-
-        private ObjectId head = ObjectId.zeroId();
-        private ObjectId target = ObjectId.zeroId();
-
-        BuildCommits(final String previousBuildCommit) {
-            this.previousBuildCommit = previousBuildCommit;
-        }
-
-        void setHead(final RevCommit head) {
-            this.head = head;
-        }
-
-        ObjectId getHead() {
-            return head;
-        }
-
-        void setTarget(final RevCommit target) {
-            this.target = target;
-        }
-
-        ObjectId getTarget() {
-            return target;
-        }
-
-        List<String> getCommits() {
-            return commits;
-        }
-
-        int size() {
-            return commits.size();
-        }
-
-        void add(final String commitId) {
-            commits.add(commitId);
-        }
-
-        boolean isEmpty() {
-            return commits.isEmpty();
-        }
-
-        RecordingType getRecordingType() {
-            if (StringUtils.isBlank(previousBuildCommit)) {
-                return RecordingType.START;
-            }
-            return RecordingType.INCREMENTAL;
-        }
-
-        String getLatestCommit() {
-            if (commits.isEmpty()) {
-                return previousBuildCommit;
-            }
-            return commits.get(0);
-        }
     }
 }

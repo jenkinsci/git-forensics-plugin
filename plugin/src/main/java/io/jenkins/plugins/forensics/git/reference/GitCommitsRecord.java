@@ -15,8 +15,6 @@ import hudson.model.Run;
 import hudson.scm.SCM;
 import jenkins.model.RunAction2;
 
-import io.jenkins.plugins.forensics.git.reference.GitCheckoutListener.BuildCommits;
-
 /**
  * Stores all commits for a given build and provides a link to the latest commit. For each {@link SCM} repository a
  * unique {@link GitCommitsRecord} instance will be used.
@@ -33,7 +31,7 @@ public class GitCommitsRecord implements RunAction2, Serializable {
      * Key of the repository. The {@link GitCheckoutListener} ensures that a single action will be created for each
      * repository.
      */
-    // FIXME: move up to a CommitsBusinessObject
+    // TODO: maybe it makes sense to move these values to a business object that is not loaded every time
     private final String scmKey;
     private final String latestCommit;
     private final RecordingType recordingType;
