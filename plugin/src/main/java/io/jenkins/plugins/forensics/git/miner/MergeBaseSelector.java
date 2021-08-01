@@ -38,8 +38,8 @@ class MergeBaseSelector implements RepositoryCallback<String> {
 
         RevWalk walk = new RevWalk(repository);
         walk.setRevFilter(RevFilter.MERGE_BASE);
-        walk.markStart(repository.parseCommit(target));
         walk.markStart(repository.parseCommit(head));
+        walk.markStart(repository.parseCommit(target));
 
         RevCommit next = walk.next();
         if (next == null) {

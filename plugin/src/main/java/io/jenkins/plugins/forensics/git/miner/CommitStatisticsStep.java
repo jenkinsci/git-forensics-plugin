@@ -98,7 +98,7 @@ public class CommitStatisticsStep extends Recorder implements SimpleBuildStep {
         logger.logInfo("Analyzing commits to obtain diff statistics for affected repository files");
 
         for (SCM repository : new ScmResolver().getScms(run, getScm())) {
-            logger.logInfo("-> checking SCM '%s'", repository.getKey());
+            logger.logInfo("-> Checking SCM '%s'", repository.getKey());
             logHandler.log(logger);
 
             GitRepositoryValidator validator = new GitRepositoryValidator(repository, run, workspace, listener, logger);
@@ -107,11 +107,11 @@ public class CommitStatisticsStep extends Recorder implements SimpleBuildStep {
                     computeStats(run, logger, repository, validator);
                 }
                 catch (IOException exception) {
-                    logger.logInfo("-> skipping due to exception: %s", exception);
+                    logger.logInfo("-> Skipping due to exception: %s", exception);
                 }
             }
             else {
-                logger.logInfo("-> skipping not supported repository");
+                logger.logInfo("-> Skipping not supported repository");
             }
 
             logHandler.log(logger);
@@ -123,10 +123,10 @@ public class CommitStatisticsStep extends Recorder implements SimpleBuildStep {
         Optional<Run<?, ?>> possibleReferenceBuild = new ReferenceFinder().findReference(run, logger);
         if (possibleReferenceBuild.isPresent()) {
             Run<?, ?> referenceBuild = possibleReferenceBuild.get();
-            logger.logInfo("-> found reference build '%s'", referenceBuild);
+            logger.logInfo("-> Found reference build '%s'", referenceBuild);
             GitCommitsRecord referenceCommits = referenceBuild.getAction(GitCommitsRecord.class);
             if (referenceCommits == null) {
-                logger.logInfo("-> skipping since reference build '%s' has no recorded commits", referenceBuild);
+                logger.logInfo("-> Skipping since reference build '%s' has no recorded commits", referenceBuild);
             }
             else {
                 computeStatsBasedOnReferenceBuild(run, logger, repository, validator, referenceCommits);
@@ -135,7 +135,7 @@ public class CommitStatisticsStep extends Recorder implements SimpleBuildStep {
         else {
             Run<?, ?> previousCompletedBuild = run.getPreviousCompletedBuild();
             if (previousCompletedBuild == null) {
-                logger.logInfo("-> skipping step since no previous build has been completed yet");
+                logger.logInfo("-> Skipping step since no previous build has been completed yet");
             }
             else {
                 computeStatsBasedOnPreviousBuild(run, logger, repository, validator, previousCompletedBuild);
@@ -147,9 +147,18 @@ public class CommitStatisticsStep extends Recorder implements SimpleBuildStep {
             final GitRepositoryValidator validator, final GitCommitsRecord referenceCommits)
             throws IOException, InterruptedException {
         String latestCommit = referenceCommits.getLatestCommit();
+        GitCommitsRecord targetCommits = run.getAction(GitCommitsRecord.class);
+        if (targetCommits.contains(latestCommit)) {
+            logger.logInfo("-> Current branch already contains latest commit '%s' of target branch",
+                    renderCommit(latestCommit));
+            extractStats(run, repository, validator.createClient(), logger, latestCommit);
+
+            return;
+        }
+
         String ancestor = validator.createClient().withRepository(new MergeBaseSelector(latestCommit));
         if (StringUtils.isNotEmpty(ancestor)) {
-            logger.logInfo("-> found best common ancestor '%s' between HEAD and target branch commit '%s'",
+            logger.logInfo("-> Found best common ancestor '%s' between HEAD and target branch commit '%s'",
                     renderCommit(ancestor), renderCommit(latestCommit));
             extractStats(run, repository, validator.createClient(), logger, ancestor);
 
@@ -162,20 +171,20 @@ public class CommitStatisticsStep extends Recorder implements SimpleBuildStep {
     private void computeStatsBasedOnPreviousBuild(final Run<?, ?> run, final FilteredLog logger, final SCM repository,
             final GitRepositoryValidator validator, final Run<?, ?> previousCompletedBuild)
             throws IOException, InterruptedException {
-        logger.logInfo("-> no reference build found, using previous build '%s' as baseline",
+        logger.logInfo("-> No reference build found, using previous build '%s' as baseline",
                 previousCompletedBuild);
         GitCommitsRecord commitsRecord = previousCompletedBuild.getAction(GitCommitsRecord.class);
         if (commitsRecord != null) {
             String latestCommit = commitsRecord.getLatestCommit();
             if (StringUtils.isNotEmpty(latestCommit)) {
-                logger.logInfo("-> found latest previous commit '%s'", renderCommit(latestCommit));
+                logger.logInfo("-> Found latest previous commit '%s'", renderCommit(latestCommit));
 
                 extractStats(run, repository, validator.createClient(), logger, latestCommit);
 
                 return;
             }
         }
-        logger.logInfo("-> skipping since previous completed build '%s' has no recorded commits",
+        logger.logInfo("-> Skipping since previous completed build '%s' has no recorded commits",
                 previousCompletedBuild);
     }
 
@@ -184,6 +193,7 @@ public class CommitStatisticsStep extends Recorder implements SimpleBuildStep {
         RemoteResultWrapper<ArrayList<CommitDiffItem>> wrapped = gitClient.withRepository(
                 new RepositoryStatisticsCallback(ancestor));
         List<CommitDiffItem> commits = wrapped.getResult();
+        logger.merge(wrapped);
         CommitStatistics.logCommits(commits, logger);
 
         RepositoryStatistics repositoryStatistics = new RepositoryStatistics(ancestor);

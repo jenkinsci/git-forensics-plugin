@@ -104,7 +104,8 @@ public class GitCheckoutListener extends SCMListener {
         if (record.isPresent()) {
             GitCommitsRecord previous = record.get();
             logger.logInfo("Found previous build '%s' that contains recorded Git commits", previous.getOwner());
-            logger.logInfo("-> Starting recording of new commits since '%s'", previous.getLatestCommit());
+            logger.logInfo("-> Starting recording of new commits since '%s'",
+                    DECORATOR.asText(previous.getLatestCommit()));
 
             return previous.getLatestCommit();
         }
@@ -221,21 +222,26 @@ public class GitCheckoutListener extends SCMListener {
             if (isMergeCommit) {
                 RevCommit[] parents = head.getParents();
                 if (parents.length < 1) {
-                    logger.logInfo("-> no parent commits found");
-                    logger.logInfo("-> using HEAD commit '%s' as starting point", DECORATOR.asText(head));
+                    logger.logInfo("-> No parent commits found - detected the first commit in the branch");
+                    logger.logInfo("-> Using head commit '%s' as starting point", DECORATOR.asText(head));
                     commits.setHead(head);
                 }
-                logger.logInfo("-> skipping commits of local merge '%s'", DECORATOR.asText(head));
-                commits.setMerge(head);
-                commits.setHead(parents[0]);
-                logger.logInfo("-> using parent commit '%s' of local merge as starting point", DECORATOR.asText(parents[0]));
-                if (parents.length > 1) {
-                    logger.logInfo("-> storing target branch head '%s' (second parent of local merge) ", DECORATOR.asText(parents[1]));
+                else if (parents.length == 1) {
+                    logger.logInfo("-> Single parent commit found - branch is already descendant of target branch head");
+                    logger.logInfo("-> Using head commit '%s' as starting point", DECORATOR.asText(head));
+                    commits.setHead(head);
+                }
+                else {
+                    logger.logInfo("-> Multiple parent commits found - skipping commits of local merge '%s'", DECORATOR.asText(head));
+                    commits.setMerge(head);
+                    commits.setHead(parents[0]);
+                    logger.logInfo("-> Using parent commit '%s' of local merge as starting point", DECORATOR.asText(parents[0]));
+                    logger.logInfo("-> Storing target branch head '%s' (second parent of local merge) ", DECORATOR.asText(parents[1]));
                     commits.setTarget(parents[1]);
                 }
             }
             else {
-                logger.logInfo("-> using HEAD commit '%s' as starting point", DECORATOR.asText(head));
+                logger.logInfo("-> Using head commit '%s' as starting point", DECORATOR.asText(head));
                 commits.setHead(head);
             }
         }

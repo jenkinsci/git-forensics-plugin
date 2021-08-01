@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import org.eclipse.jgit.lib.ObjectId;
+
 import edu.hm.hafner.util.FilteredLog;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -36,6 +38,7 @@ public class GitCommitsRecord implements RunAction2, Serializable {
     private final String latestCommit;
     private final RecordingType recordingType;
     private final String latestCommitLink;
+    private final String targetParentCommit;
     private final List<String> commits;
     private final List<String> errorMessages;
     private final List<String> infoMessages;
@@ -70,6 +73,7 @@ public class GitCommitsRecord implements RunAction2, Serializable {
         this.latestCommitLink = latestCommitLink;
         this.commits = new ArrayList<>(commits.getCommits());
         this.recordingType = commits.getRecordingType();
+        targetParentCommit = commits.getTarget().name();
     }
 
     public Run<?, ?> getOwner() {
@@ -90,6 +94,19 @@ public class GitCommitsRecord implements RunAction2, Serializable {
 
     public String getLatestCommitLink() {
         return latestCommitLink;
+    }
+
+    public String getTargetParentCommit() {
+        return targetParentCommit;
+    }
+
+    /**
+     * Determines if the commits contain a merge commit with the target branch.
+     *
+     * @return {@code true} if the commits contain a merge commit with the target branch
+     */
+    public boolean hasTargetParentCommit() {
+        return !ObjectId.zeroId().name().equals(targetParentCommit);
     }
 
     public List<String> getErrorMessages() {
@@ -123,6 +140,18 @@ public class GitCommitsRecord implements RunAction2, Serializable {
 
     public List<String> getCommits() {
         return commits;
+    }
+
+    /**
+     * Returns {@code true} if the specified commit is part of the commits.
+     *
+     * @param commit
+     *         the commit to search for
+     *
+     * @return {@code true} if the commits contain the specified commit, {@code false} otherwise
+     */
+    public boolean contains(final String commit) {
+        return commits.contains(commit);
     }
 
     @Override
