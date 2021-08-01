@@ -488,9 +488,9 @@ public class GitReferenceRecorderITest extends GitITest {
                 .hasReferenceBuild(Optional.of(nextMaster));
 
         assertThat(getCommitStatisticsOf(featureBuild))
-                .hasCommitCount(4)
+                .hasCommitCount(2)
                 .hasFilesCount(3)
-                .hasAddedLines(6)
+                .hasAddedLines(3)
                 .hasDeletedLines(3);
     }
 

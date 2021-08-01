@@ -82,7 +82,6 @@ public class GitMinerStepITest extends GitITest {
     /** Verifies that the mining process is incremental and scans only new commits. */
     @Test
     public void shouldMineRepositoryIncrementally() {
-        String firstCommit = getHead();
         writeFileAsAuthorFoo("1\n2\n3\n");
         String secondCommit = getHead();
 
@@ -95,10 +94,7 @@ public class GitMinerStepITest extends GitITest {
 
         assertThat(getConsoleLog(firstBuild)).contains(
                 "2 commits analyzed",
-                "2 MODIFY commit diff items",
-                String.format("Analyzed commit '%s'", firstCommit),
-                String.format("Analyzed commit '%s'", secondCommit)
-        );
+                "2 MODIFY commit diff items");
         verifyStatistics(statistics, ADDITIONAL_FILE, 1, 1);
 
         Run<?, ?> secondBuild = buildSuccessfully(job);
@@ -109,23 +105,18 @@ public class GitMinerStepITest extends GitITest {
         verifyStatistics(getStatistics(secondBuild), ADDITIONAL_FILE, 1, 1);
 
         writeFileAsAuthorFoo("Third");
-        String thirdCommit = getHead();
 
         Run<?, ?> thirdBuild = buildSuccessfully(job);
 
         assertThat(getConsoleLog(thirdBuild)).contains(
                 "1 commits analyzed",
-                "1 MODIFY commit diff items",
-                String.format("Analyzed commit '%s'", thirdCommit));
+                "1 MODIFY commit diff items");
         verifyStatistics(getStatistics(thirdBuild), ADDITIONAL_FILE, 1, 2);
 
         writeFileAsAuthorBar("Another content");
         Run<?, ?> build = buildSuccessfully(job);
 
-        assertThat(getConsoleLog(thirdBuild)).contains(
-                "1 commits analyzed",
-                "1 MODIFY commit diff items",
-                String.format("Analyzed commit '%s'", thirdCommit));
+        assertThat(getConsoleLog(thirdBuild)).contains("1 commits analyzed", "1 MODIFY commit diff items");
         verifyStatistics(getStatistics(build), ADDITIONAL_FILE, 2, 3);
     }
 
@@ -144,11 +135,7 @@ public class GitMinerStepITest extends GitITest {
         assertThat(statistics).hasFiles(INITIAL_FILE, moved);
         assertThat(statistics).hasLatestCommitId(getHead());
 
-        assertThat(getConsoleLog(build)).contains(
-                "1 commits analyzed",
-                "1 RENAME commit diff items",
-                String.format("Analyzed commit '%s'", getHead())
-        );
+        assertThat(getConsoleLog(build)).contains("1 commits analyzed", "1 RENAME commit diff items");
         verifyStatistics(statistics, moved, 2, 5);
 
         TableModel forensics = getTableModel(build);
@@ -182,11 +169,7 @@ public class GitMinerStepITest extends GitITest {
         assertThat(statistics).hasFiles(INITIAL_FILE);
         assertThat(statistics).hasLatestCommitId(getHead());
 
-        assertThat(getConsoleLog(build)).contains(
-                "1 commits analyzed",
-                "1 DELETE commit diff items",
-                String.format("Analyzed commit '%s'", getHead())
-        );
+        assertThat(getConsoleLog(build)).contains("1 commits analyzed", "1 DELETE commit diff items");
 
         TableModel forensics = getTableModel(build);
         assertThat(forensics.getRows()).hasSize(1);
