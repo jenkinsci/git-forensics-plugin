@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import org.eclipse.jgit.lib.ObjectId;
+
 import edu.hm.hafner.util.FilteredLog;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -19,7 +21,7 @@ import jenkins.model.RunAction2;
  *
  * @author Arne Schöntag
  */
-@SuppressFBWarnings(value = "SE", justification = "transient field owner ist restored using a Jenkins callback")
+@SuppressFBWarnings(value = "SE", justification = "transient field owner is restored using a Jenkins callback")
 public class GitCommitsRecord implements RunAction2, Serializable {
     private static final long serialVersionUID = 8994811233847179343L;
 
@@ -29,10 +31,12 @@ public class GitCommitsRecord implements RunAction2, Serializable {
      * Key of the repository. The {@link GitCheckoutListener} ensures that a single action will be created for each
      * repository.
      */
+    // TODO: maybe it makes sense to move these values to a business object that is not loaded every time
     private final String scmKey;
     private final String latestCommit;
     private final RecordingType recordingType;
     private final String latestCommitLink;
+    private final String targetParentCommit;
     private final List<String> commits;
     private final List<String> errorMessages;
     private final List<String> infoMessages;
@@ -52,68 +56,22 @@ public class GitCommitsRecord implements RunAction2, Serializable {
      *         the ID of the SCM repository
      * @param logger
      *         the logger
-     * @param latestCommit
-     *         the latest commit (either the head of the new commits or the latest commit from the previous build)
+     * @param commits
+     *         the latest commits in this build (since the previous build)
      * @param latestCommitLink
      *         hyperlink to the latest commit
-     * @param commits
-     *         the new commits in this build (since the previous build)
-     * @param recordingType
-     *         the recording type that indicates if the number of commits is
      */
-    GitCommitsRecord(final Run<?, ?> owner, final String scmKey,
-            final FilteredLog logger, final String latestCommit, final String latestCommitLink,
-            final List<String> commits, final RecordingType recordingType) {
-        super();
-
+    public GitCommitsRecord(final Run<?, ?> owner, final String scmKey, final FilteredLog logger,
+            final BuildCommits commits, final String latestCommitLink) {
         this.owner = owner;
         this.scmKey = scmKey;
         this.infoMessages = new ArrayList<>(logger.getInfoMessages());
         this.errorMessages = new ArrayList<>(logger.getErrorMessages());
-        this.latestCommit = latestCommit;
+        this.latestCommit = commits.getLatestCommit();
         this.latestCommitLink = latestCommitLink;
-        this.commits = new ArrayList<>(commits);
-        this.recordingType = recordingType;
-    }
-
-    /**
-     * Creates a new {@link GitCommitsRecord} instance with the specified list of new commits.
-     *
-     * @param owner
-     *         the current build as owner of the Git commits
-     * @param scmKey
-     *         the ID of the SCM repository
-     * @param logger
-     *         the logger
-     * @param latestCommit
-     *         the latest commit (either the head of the new commits or the latest commit from the previous build)
-     * @param latestCommitLink
-     *         hyperlink to the latest commit
-     * @param commits
-     *         the new commits in this build (since the previous build)
-     */
-    GitCommitsRecord(final Run<?, ?> owner, final String scmKey,
-            final FilteredLog logger, final String latestCommit, final String latestCommitLink, final List<String> commits) {
-        this(owner, scmKey, logger, latestCommit, latestCommitLink, commits, RecordingType.INCREMENTAL);
-    }
-
-    /**
-     * Creates a new {@link GitCommitsRecord} instance with an empty list of commits.
-     *
-     * @param owner
-     *         the current build as owner of the Git commits
-     * @param scmKey
-     *         the ID of the SCM repository
-     * @param logger
-     *         the logger
-     * @param latestCommit
-     *         the latest commit of the previous build
-     * @param latestCommitLink
-     *         hyperlink to the latest commit
-     */
-    GitCommitsRecord(final Run<?, ?> owner, final String scmKey,
-            final FilteredLog logger, final String latestCommit, final String latestCommitLink) {
-        this(owner, scmKey, logger, latestCommit, latestCommitLink, Collections.emptyList());
+        this.commits = new ArrayList<>(commits.getCommits());
+        this.recordingType = commits.getRecordingType();
+        targetParentCommit = commits.getTarget().name();
     }
 
     public Run<?, ?> getOwner() {
@@ -134,6 +92,19 @@ public class GitCommitsRecord implements RunAction2, Serializable {
 
     public String getLatestCommitLink() {
         return latestCommitLink;
+    }
+
+    public String getTargetParentCommit() {
+        return targetParentCommit;
+    }
+
+    /**
+     * Determines if the commits contain a merge commit with the target branch.
+     *
+     * @return {@code true} if the commits contain a merge commit with the target branch
+     */
+    public boolean hasTargetParentCommit() {
+        return !ObjectId.zeroId().name().equals(targetParentCommit);
     }
 
     public List<String> getErrorMessages() {
@@ -167,6 +138,18 @@ public class GitCommitsRecord implements RunAction2, Serializable {
 
     public List<String> getCommits() {
         return commits;
+    }
+
+    /**
+     * Returns {@code true} if the specified commit is part of the commits.
+     *
+     * @param commit
+     *         the commit to search for
+     *
+     * @return {@code true} if the commits contain the specified commit, {@code false} otherwise
+     */
+    public boolean contains(final String commit) {
+        return commits.contains(commit);
     }
 
     @Override

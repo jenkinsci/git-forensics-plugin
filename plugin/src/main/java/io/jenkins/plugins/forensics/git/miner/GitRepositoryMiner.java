@@ -49,7 +49,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
             logger.merge(wrapped);
 
             List<CommitDiffItem> commits = wrapped.getResult();
-            logger.logInfo("-> created report in %d seconds", 1 + (System.nanoTime() - nano) / 1_000_000_000L);
+            logger.logInfo("-> Created report in %d seconds", 1 + (System.nanoTime() - nano) / 1_000_000_000L);
             CommitStatistics.logCommits(commits, logger);
 
             String latestCommitId;

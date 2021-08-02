@@ -22,18 +22,15 @@ import edu.hm.hafner.util.FilteredLog;
 import edu.hm.hafner.util.TreeStringBuilder;
 
 import io.jenkins.plugins.forensics.miner.CommitDiffItem;
-import io.jenkins.plugins.forensics.miner.CommitStatistics;
 
 /**
- * Analyzes the new Git repository commits since a previous commit ID and and creates {@link CommitDiffItem} instances for all
+ * Analyzes the new Git repository commits since a previous commit ID and creates {@link CommitDiffItem} instances for all
  * changes.
  *
  * @author Giulia Del Bravo
  * @author Ullrich Hafner
  */
 class CommitAnalyzer {
-    private static final int MAX_COMMIT_TO_LOG = 7;
-
     List<CommitDiffItem> run(final Repository repository, final Git git,
             final String latestCommitOfPreviousBuild,
             final FilteredLog logger) throws IOException, GitAPIException {
@@ -42,9 +39,7 @@ class CommitAnalyzer {
         if (newRevCommits.isEmpty()) {
             logger.logInfo("No commits found since previous commit '%s'", latestCommitOfPreviousBuild);
         }
-        if (newRevCommits.size() >= MAX_COMMIT_TO_LOG) {
-            logger.logInfo("Found %d commits", newRevCommits.size());
-        }
+        logger.logInfo("Found %d commits", newRevCommits.size());
 
         TreeStringBuilder fileNameBuilder = new TreeStringBuilder();
         List<CommitDiffItem> commitsOfBuild = new ArrayList<>();
@@ -52,14 +47,8 @@ class CommitAnalyzer {
             AbstractTreeIterator toTree = createTreeIteratorToCompareTo(
                     repository, newRevCommits, i, latestCommitOfPreviousBuild, logger);
             CommitDiffItem commit = createFromRevCommit(newRevCommits.get(i));
-            List<CommitDiffItem> commits = new DiffsCollector().getDiffsForCommit(repository, git, commit, toTree,
-                    fileNameBuilder, logger);
-            if (newRevCommits.size() < MAX_COMMIT_TO_LOG) {
-                logger.logInfo("Analyzed commit '%s' (authored by %s): %d files affected",
-                        commit.getId(), commit.getAuthor(), commits.size());
-                CommitStatistics.logCommits(commits, logger);
-            }
-            commitsOfBuild.addAll(commits);
+            commitsOfBuild.addAll(new DiffsCollector().getDiffsForCommit(
+                    repository, git, commit, toTree, fileNameBuilder, logger));
         }
         fileNameBuilder.dedup();
 
@@ -84,8 +73,7 @@ class CommitAnalyzer {
 
     private AbstractTreeIterator createTreeIteratorToCompareTo(final Repository repository,
             final List<RevCommit> newCommits, final int index, final String latestCommitOfPreviousBuild,
-            final FilteredLog logger)
-            throws IOException {
+            final FilteredLog logger) throws IOException {
         int compareIndex = index + 1;
         if (compareIndex < newCommits.size()) { // compare with another commit in the list
             return createTreeIteratorFor(newCommits.get(compareIndex).getName(), repository, logger);
@@ -97,8 +85,7 @@ class CommitAnalyzer {
     }
 
     static AbstractTreeIterator createTreeIteratorFor(final String commitId, final Repository repository,
-            final FilteredLog logger)
-            throws IOException {
+            final FilteredLog logger) throws IOException {
         try (RevWalk walk = new RevWalk(repository)) {
             ObjectId resolve = repository.resolve(commitId);
             if (resolve == null) {

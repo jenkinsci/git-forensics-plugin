@@ -2,37 +2,28 @@ package io.jenkins.plugins.forensics.git.reference;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.revwalk.RevWalk;
 
 import edu.hm.hafner.util.FilteredLog;
 
-import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.model.listeners.SCMListener;
-import hudson.remoting.VirtualChannel;
 import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
+import jenkins.scm.api.SCMRevision;
+import jenkins.scm.api.SCMRevisionAction;
+import jenkins.scm.api.mixin.ChangeRequestSCMRevision;
 
-import io.jenkins.plugins.forensics.git.reference.GitCommitsRecord.RecordingType;
 import io.jenkins.plugins.forensics.git.util.GitCommitDecoratorFactory;
+import io.jenkins.plugins.forensics.git.util.GitCommitTextDecorator;
 import io.jenkins.plugins.forensics.git.util.GitRepositoryValidator;
+import io.jenkins.plugins.forensics.git.util.RemoteResultWrapper;
 import io.jenkins.plugins.forensics.util.CommitDecorator;
-import io.jenkins.plugins.forensics.util.CommitDecorator.NullDecorator;
 import io.jenkins.plugins.util.LogHandler;
 
 /**
@@ -42,8 +33,10 @@ import io.jenkins.plugins.util.LogHandler;
  * @author Arne Schöntag
  */
 @Extension
-@SuppressWarnings("PMD.ExcessiveImports")
 public class GitCheckoutListener extends SCMListener {
+    private static final GitCommitTextDecorator DECORATOR = new GitCommitTextDecorator();
+    private static final String NO_COMMIT_FOUND = StringUtils.EMPTY;
+
     @Override
     public void onCheckout(final Run<?, ?> build, final SCM scm, final FilePath workspace,
             final TaskListener listener, final File changelogFile, final SCMRevisionState pollingBaseline) {
@@ -82,7 +75,7 @@ public class GitCheckoutListener extends SCMListener {
         String id = gitRepository.getId();
         logger.logInfo("Recording commits of '%s'", id);
 
-        String latestRecordedCommit = getLatestRecordedCommit(build, id, logger);
+        String latestRecordedCommit = getLatestCommitOfPreviousBuild(build, id, logger);
         GitCommitsRecord commitsRecord = recordNewCommits(build, gitRepository, logger, latestRecordedCommit);
         if (hasRecordForScm(build, id)) { // In case a parallel step has added the same result in the meanwhile
             logSkipping(logger, id);
@@ -92,30 +85,35 @@ public class GitCheckoutListener extends SCMListener {
         }
     }
 
-    private String getLatestRecordedCommit(final Run<?, ?> build, final String scmKey, final FilteredLog logger) {
+    private String getLatestCommitOfPreviousBuild(final Run<?, ?> build, final String scmKey, final FilteredLog logger) {
         Optional<GitCommitsRecord> record = getPreviousRecord(build, scmKey);
         if (record.isPresent()) {
             GitCommitsRecord previous = record.get();
             logger.logInfo("Found previous build '%s' that contains recorded Git commits", previous.getOwner());
-            logger.logInfo("-> Starting recording of new commits since '%s'", previous.getLatestCommit());
+            logger.logInfo("-> Starting recording of new commits since '%s'",
+                    DECORATOR.asText(previous.getLatestCommit()));
+
             return previous.getLatestCommit();
         }
         else {
             logger.logInfo("Found no previous build with recorded Git commits");
             logger.logInfo("-> Starting initial recording of commits");
-            return StringUtils.EMPTY;
+
+            return NO_COMMIT_FOUND;
         }
     }
 
     private GitCommitsRecord recordNewCommits(final Run<?, ?> build, final GitRepositoryValidator gitRepository,
             final FilteredLog logger, final String latestCommit) {
-        CommitDecorator decorator = getCommitDecorator(gitRepository, logger);
+        BuildCommits commits = recordCommitsSincePreviousBuild(latestCommit, isMerge(build), gitRepository, logger);
 
-        List<String> commits = recordCommitsSincePreviousBuild(latestCommit, gitRepository, logger);
+        CommitDecorator commitDecorator
+                = GitCommitDecoratorFactory.findCommitDecorator(gitRepository.getScm(), logger);
         String id = gitRepository.getId();
         if (commits.isEmpty()) {
             logger.logInfo("-> No new commits found");
-            return new GitCommitsRecord(build, id, logger, latestCommit, decorator.asLink(latestCommit));
+
+            return new GitCommitsRecord(build, id, logger, commits, commitDecorator.asLink(latestCommit));
         }
         else {
             if (commits.size() == 1) {
@@ -124,31 +122,36 @@ public class GitCheckoutListener extends SCMListener {
             else {
                 logger.logInfo("-> Recorded %d new commits", commits.size());
             }
-            return new GitCommitsRecord(build, id, logger, commits.get(0), decorator.asLink(commits.get(0)),
-                    commits, getRecordingType(latestCommit));
+            return new GitCommitsRecord(build, id, logger, commits, commitDecorator.asLink(commits.getLatestCommit()));
         }
     }
 
-    private CommitDecorator getCommitDecorator(final GitRepositoryValidator gitRepository, final FilteredLog logger) {
-        return new GitCommitDecoratorFactory().createCommitDecorator(gitRepository.getScm(), logger)
-                .orElse(new NullDecorator());
-    }
-
-    private RecordingType getRecordingType(final String latestCommit) {
-        if (StringUtils.isBlank(latestCommit)) {
-            return RecordingType.START;
+    private boolean isMerge(final Run<?, ?> build) {
+        SCMRevisionAction scmRevision = build.getAction(SCMRevisionAction.class);
+        if (scmRevision == null) {
+            return false;
         }
-        return RecordingType.INCREMENTAL;
+
+        SCMRevision revision = scmRevision.getRevision();
+        if (revision instanceof ChangeRequestSCMRevision) {
+            return ((ChangeRequestSCMRevision<?>) revision).isMerge();
+        }
+        return false;
     }
 
-    private List<String> recordCommitsSincePreviousBuild(final String latestCommitName,
-            final GitRepositoryValidator gitRepository, final FilteredLog logger) {
+    private BuildCommits recordCommitsSincePreviousBuild(final String latestCommitName,
+            final boolean isMergeCommit, final GitRepositoryValidator gitRepository, final FilteredLog logger) {
         try {
-            return gitRepository.createClient().withRepository(new GitCommitsCollector(latestCommitName));
+            RemoteResultWrapper<BuildCommits> resultWrapper = gitRepository.createClient()
+                    .withRepository(new GitCommitsCollector(latestCommitName, isMergeCommit));
+            logger.merge(resultWrapper);
+
+            return resultWrapper.getResult();
         }
         catch (IOException | InterruptedException exception) {
             logger.logException(exception, "Unable to record commits of git repository '%s'", gitRepository.getId());
-            return Collections.emptyList();
+
+            return new BuildCommits(latestCommitName);
         }
     }
 
@@ -160,46 +163,5 @@ public class GitCheckoutListener extends SCMListener {
             }
         }
         return Optional.empty();
-    }
-
-    /**
-     * Collects and records all commits since the last build.
-     */
-    private static class GitCommitsCollector implements RepositoryCallback<List<String>> {
-        private static final long serialVersionUID = -5980402198857923793L;
-
-        private static final int MAX_COMMITS = 200; // TODO: should the number of recorded commits be configurable?
-
-        private final String latestRecordedCommit;
-
-        GitCommitsCollector(final String latestRecordedCommit) {
-            this.latestRecordedCommit = latestRecordedCommit;
-        }
-
-        @Override
-        public List<String> invoke(final Repository repository, final VirtualChannel channel) throws IOException {
-            List<String> newCommits = new ArrayList<>();
-            try (Git git = new Git(repository)) {
-                for (RevCommit commit : git.log().add(getHead(repository)).call()) {
-                    String commitId = commit.getName();
-                    if (commitId.equals(latestRecordedCommit) || newCommits.size() >= MAX_COMMITS) {
-                        return newCommits;
-                    }
-                    newCommits.add(commitId);
-                }
-            }
-            catch (GitAPIException e) {
-                throw new IOException("Unable to record commits of git repository.", e);
-            }
-            return newCommits;
-        }
-
-        private RevCommit getHead(final Repository repository) throws IOException {
-            ObjectId head = repository.resolve(Constants.HEAD);
-            if (head == null) {
-                throw new IOException("No HEAD commit found in " + repository);
-            }
-            return new RevWalk(repository).parseCommit(head);
-        }
     }
 }

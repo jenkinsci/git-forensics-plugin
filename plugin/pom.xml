@@ -144,6 +144,10 @@
       <artifactId>plugin-util-api</artifactId>
       <version>${plugin-util-api.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>branch-api</artifactId>
+    </dependency>
 
     <!-- Test Dependencies -->
     <dependency>

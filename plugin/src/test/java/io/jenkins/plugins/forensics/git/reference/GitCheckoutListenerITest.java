@@ -12,6 +12,7 @@ import hudson.model.FreeStyleProject;
 import hudson.plugins.git.GitSCM;
 import jenkins.plugins.git.GitSampleRepoRule;
 
+import io.jenkins.plugins.forensics.git.util.GitCommitTextDecorator;
 import io.jenkins.plugins.util.IntegrationTestWithJenkinsPerSuite;
 
 import static io.jenkins.plugins.forensics.git.assertions.Assertions.*;
@@ -24,6 +25,8 @@ import static io.jenkins.plugins.forensics.git.assertions.Assertions.*;
  */
 @SuppressWarnings("PMD.SignatureDeclareThrowsException")
 public class GitCheckoutListenerITest extends IntegrationTestWithJenkinsPerSuite {
+    private static final GitCommitTextDecorator RENDERER = new GitCommitTextDecorator();
+
     private static final String GIT_FORENSICS_URL = "https://github.com/jenkinsci/git-forensics-plugin.git";
     private static final String FORENSICS_API_URL = "https://github.com/jenkinsci/forensics-api-plugin.git";
 
@@ -73,7 +76,10 @@ public class GitCheckoutListenerITest extends IntegrationTestWithJenkinsPerSuite
                 .hasNoErrorMessages().hasInfoMessages("-> Recorded one new commit",
                 String.format("Found previous build '%s' that contains recorded Git commits",
                         referenceBuild.getOwner()),
-                String.format("-> Starting recording of new commits since '%s'", referenceBuildHead));
+                String.format("-> Starting recording of new commits since '%s'",
+                        RENDERER.asText(referenceBuildHead)),
+                String.format("-> Using head commit '%s' as starting point",
+                        RENDERER.asText(nextBuildHead)));
     }
 
     /**
