@@ -16,7 +16,7 @@
   <name>UI Tests of Git Forensics Plugin</name>
 
   <properties>
-    <jenkins.version>2.277.1</jenkins.version>
+    <jenkins.version>2.289.3</jenkins.version>
   </properties>
 
   <dependencies>
