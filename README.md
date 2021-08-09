@@ -44,6 +44,7 @@ note that the scanning of the repository might take some time if your Git reposi
 repository is done incrementally, i.e., for new builds only additional commits will be analyzed making the overall 
 runtime much faster. 
 
+You can use this feature by enabling the pipeline step `mineRepository`.
 After a build you will find a summary of the repository mining on the main build page:
 
 ![Build Summary](doc/images/summary.png)
@@ -76,6 +77,44 @@ to the Git commit details of your repository (if configured correctly).
 ![GitHub Details 1](doc/images/github-title.png)
 ![GitHub Details 2](doc/images/github-details.png)
 
+On the job level, the mining step also provides a trend chart for your Git commits. Your can choose from
+one of the four different trend charts, see next section.
+
+### Total number of files
+
+The total number of files trend chart simply counts the number of files in your repository 
+over the time.
+
+![Total number of files trend chart](doc/images/forensics-files.png)
+
+### Total lines of code and churn
+
+The total lines of code and churn trend chart counts two different line statistics:
+
+- **Lines of code**: the total number of source code lines in your repository is computed by subtracting the
+  deleted from the added lines in the repository over the time. The result represents the actual
+  volume of code in your project.
+- **Churn**: the source code churn in your repository is computed by summing up the absolute values of deleted and 
+added lines in the repository over the time. The result is a measure of activity and overhead in your source code base.
+The smaller the gap between **Churn** and **Lines of code** the less code has been changed or thrown away during 
+the project's lifetime.
+
+![Total lines of code and churn trend chart](doc/images/forensics-churn.png)
+
+### Deleted and added lines
+
+The deleted and added lines trend chart visualizes the delta between added or deleted lines in each build.
+Using this chart your project easily can spot peaks where more or less code has been changed.    
+
+![Deleted and added lines trend chart](doc/images/forensics-deleted-added.png)
+
+### Author, commit, and modified files count
+
+Finally, the author, commit, and modified files count trend visualizes some additional  
+information that might be helpful to keep your project in shape.
+
+![Author, commit, and modified files count trend chart](doc/images/forensics-statistics.png)
+
 ## Commit tracking
 
 The Git Forensics plugin automatically tracks all new commits that are part of a build that uses a Git SCM. Using this 
@@ -88,7 +127,8 @@ There you will see the number of new commits and a link to open the repository b
 
 ## Commit statistics
 
-For pull requests (or more generally: for jobs that have a reference build defined) the Git Forensics plugin collects a statistical summary for all containing commits. 
+For pull requests (or more generally: for jobs that have a reference build defined) the Git Forensics plugin collects 
+a statistical summary for all containing commits. 
 This includes the commits count, the changed files count, and the added and deleted lines in those commits. 
 This information will be available as a summary for each build: 
 
@@ -97,7 +137,22 @@ This information will be available as a summary for each build:
 This information is also available for builds that do not have a reference build defined (see next section).
 In this case the statistics since the previous successful build will be shown.
 
-You can use this feature by enabling the pipeline step `gitDiffStat()`.
+You can use this feature by enabling the pipeline step `gitDiffStat`.
+On the job level, this step also provides a trend chart for your Git commits. Your can choose from
+one of the following two trend charts, see next section.
+
+### Deleted and added lines
+
+The deleted and added lines trend chart visualizes the delta between added or deleted lines in each build.
+
+![Deleted and added lines trend chart](doc/images/statistics-added-deleted.png)
+
+### Author, commit, and modified files count
+
+Additionally, the author, commit, and modified files count trend visualizes in which way the files of a build 
+have been changed.
+
+![Author, commit, and modified files count trend chart](doc/images/statistics-trend.png)
 
 ## Reference build 
 
