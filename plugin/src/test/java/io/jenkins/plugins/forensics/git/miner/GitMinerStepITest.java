@@ -70,7 +70,7 @@ public class GitMinerStepITest extends GitITest {
     }
 
     private void verifyInitialFile(final TableModel forensics) {
-        String wrappedInitialFileName = "<a href=\"fileName." + INITIAL_FILE.hashCode() + "\">" + INITIAL_FILE + "</a>";
+        String wrappedInitialFileName = "<a href=\"fileName." + INITIAL_FILE.hashCode() + "\" data-bs-toggle=\"tooltip\" data-bs-placement=\"left\" title=\"file\">" + INITIAL_FILE + "</a>";
         assertThat(getRow(forensics, 0))
                 .hasFileName(wrappedInitialFileName)
                 .hasAuthorsSize(1)
@@ -93,14 +93,13 @@ public class GitMinerStepITest extends GitITest {
         assertThat(statistics).hasLatestCommitId(getHead());
 
         assertThat(getConsoleLog(firstBuild)).contains(
-                "2 commits analyzed",
+                "2 commits with differences analyzed",
                 "2 MODIFY commit diff items");
         verifyStatistics(statistics, ADDITIONAL_FILE, 1, 1);
 
         Run<?, ?> secondBuild = buildSuccessfully(job);
 
         assertThat(getConsoleLog(secondBuild)).contains(
-                "0 commits analyzed",
                 String.format("No commits found since previous commit '%s'", secondCommit));
         verifyStatistics(getStatistics(secondBuild), ADDITIONAL_FILE, 1, 1);
 
@@ -109,14 +108,14 @@ public class GitMinerStepITest extends GitITest {
         Run<?, ?> thirdBuild = buildSuccessfully(job);
 
         assertThat(getConsoleLog(thirdBuild)).contains(
-                "1 commits analyzed",
+                "1 commits with differences analyzed",
                 "1 MODIFY commit diff items");
         verifyStatistics(getStatistics(thirdBuild), ADDITIONAL_FILE, 1, 2);
 
         writeFileAsAuthorBar("Another content");
         Run<?, ?> build = buildSuccessfully(job);
 
-        assertThat(getConsoleLog(thirdBuild)).contains("1 commits analyzed", "1 MODIFY commit diff items");
+        assertThat(getConsoleLog(thirdBuild)).contains("1 commits with differences analyzed", "1 MODIFY commit diff items");
         verifyStatistics(getStatistics(build), ADDITIONAL_FILE, 2, 3);
     }
 
@@ -135,7 +134,7 @@ public class GitMinerStepITest extends GitITest {
         assertThat(statistics).hasFiles(INITIAL_FILE, moved);
         assertThat(statistics).hasLatestCommitId(getHead());
 
-        assertThat(getConsoleLog(build)).contains("1 commits analyzed", "1 RENAME commit diff items");
+        assertThat(getConsoleLog(build)).contains("1 commits with differences analyzed", "1 RENAME commit diff items");
         verifyStatistics(statistics, moved, 2, 5);
 
         TableModel forensics = getTableModel(build);
@@ -146,7 +145,9 @@ public class GitMinerStepITest extends GitITest {
     }
 
     private void verifyAdditionalFile(final String fileName, final TableModel forensics, final int commitsSize) {
-        String wrappedFileName = "<a href=\"fileName." + fileName.hashCode() + "\">" + fileName + "</a>";
+        String wrappedFileName = "<a href=\"fileName." + fileName.hashCode() + "\" data-bs-toggle=\"tooltip\" data-bs-placement=\"left\" title=\""
+                + fileName
+                + "\">" + fileName + "</a>";
         assertThat(getRow(forensics, 1))
                 .hasFileName(wrappedFileName)
                 .hasAuthorsSize(2)
@@ -169,7 +170,7 @@ public class GitMinerStepITest extends GitITest {
         assertThat(statistics).hasFiles(INITIAL_FILE);
         assertThat(statistics).hasLatestCommitId(getHead());
 
-        assertThat(getConsoleLog(build)).contains("1 commits analyzed", "1 DELETE commit diff items");
+        assertThat(getConsoleLog(build)).contains("1 commits with differences analyzed", "1 DELETE commit diff items");
 
         TableModel forensics = getTableModel(build);
         assertThat(forensics.getRows()).hasSize(1);
