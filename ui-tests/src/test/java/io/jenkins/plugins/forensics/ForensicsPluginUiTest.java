@@ -120,7 +120,7 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
         detailsTable.sortColumn(FILE_NAME);
         assertRow(detailsTable,
                 0,
-                "config.yml",
+                ".gitattributes",
                 1,
                 1
         );
