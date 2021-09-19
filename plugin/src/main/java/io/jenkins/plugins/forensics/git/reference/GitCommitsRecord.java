@@ -33,10 +33,11 @@ public class GitCommitsRecord implements RunAction2, Serializable {
      * @param scmKey
      *         the ID of the SCM repository
      *
+     * @return the commits record, if found
      */
     public static Optional<GitCommitsRecord> findRecordForScm(final Run<?, ?> build, final String scmKey) {
         return build.getActions(GitCommitsRecord.class)
-                .stream().filter(record -> scmKey.equals(record.getScmKey())).findAny();
+                .stream().filter(record -> record.getScmKey().contains(scmKey)).findAny();
     }
 
     private transient Run<?, ?> owner;
