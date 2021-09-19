@@ -153,7 +153,7 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
      *         detailsTable object we want to assert the search for.
      */
     private void assertSearch(final DetailsTable detailsTable) {
-        detailsTable.searchTable("ui-tests/pom.xml");
+        detailsTable.searchTable("GitBlamer.java");
         assertThat(detailsTable.getNumberOfTableEntries()).isEqualTo(1);
 
         detailsTable.sortColumn(AUTHORS);
@@ -161,9 +161,9 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
 
         assertRow(detailsTable,
                 0,
-                "pom.xml",
-                2,
-                2
+                "GitBlamer.java",
+                3,
+                46
         );
         detailsTable.clearSearch();
         assertThat(detailsTable.getTableRows().size()).isEqualTo(10);
