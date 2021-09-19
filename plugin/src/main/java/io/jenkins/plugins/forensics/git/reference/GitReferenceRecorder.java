@@ -82,23 +82,16 @@ public class GitReferenceRecorder extends ReferenceRecorder {
 
     @Override
     protected Optional<Run<?, ?>> find(final Run<?, ?> owner, final Run<?, ?> lastCompletedBuildOfReferenceJob) {
-        Optional<GitCommitsRecord> referenceCommit = getCommitsFor(lastCompletedBuildOfReferenceJob);
+        Optional<GitCommitsRecord> referenceCommit = GitCommitsRecord.findRecordForScm(lastCompletedBuildOfReferenceJob, getScm());
         if (!referenceCommit.isPresent()) {
             return Optional.empty();
         }
 
-        Optional<GitCommitsRecord> thisCommit = getCommitsFor(owner);
+        Optional<GitCommitsRecord> thisCommit = GitCommitsRecord.findRecordForScm(owner, getScm());
         if (thisCommit.isPresent()) {
             return thisCommit.get().getReferencePoint(referenceCommit.get(), getMaxCommits(), isSkipUnknownCommits());
         }
         return Optional.empty();
-    }
-
-    private Optional<GitCommitsRecord> getCommitsFor(final Run<?, ?> lastCompletedBuildOfReferenceJob) {
-        return lastCompletedBuildOfReferenceJob.getActions(GitCommitsRecord.class)
-                .stream()
-                .filter(r -> r.getScmKey().contains(getScm()))
-                .findFirst();
     }
 
     @Override

@@ -25,6 +25,21 @@ import jenkins.model.RunAction2;
 public class GitCommitsRecord implements RunAction2, Serializable {
     private static final long serialVersionUID = 8994811233847179343L;
 
+    /**
+     * Tries to find a {@link GitCommitsRecord} for the specified SCM.
+     *
+     * @param build
+     *         the build to search for corresponding {@link GitCommitsRecord} actions
+     * @param scmKey
+     *         the ID of the SCM repository
+     *
+     * @return the commits record, if found
+     */
+    public static Optional<GitCommitsRecord> findRecordForScm(final Run<?, ?> build, final String scmKey) {
+        return build.getActions(GitCommitsRecord.class)
+                .stream().filter(record -> record.getScmKey().contains(scmKey)).findAny();
+    }
+
     private transient Run<?, ?> owner;
 
     /**
@@ -227,10 +242,7 @@ public class GitCommitsRecord implements RunAction2, Serializable {
     }
 
     private List<String> getCommitsForRepository(final Run<?, ?> run) {
-        return run.getActions(GitCommitsRecord.class)
-                .stream()
-                .filter(gc -> this.getScmKey().equals(gc.getScmKey()))
-                .findAny()
+        return findRecordForScm(run, getScmKey())
                 .map(GitCommitsRecord::getCommits)
                 .orElse(Collections.emptyList());
     }

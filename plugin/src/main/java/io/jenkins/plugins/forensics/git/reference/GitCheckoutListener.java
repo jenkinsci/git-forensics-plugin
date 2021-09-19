@@ -62,12 +62,7 @@ public class GitCheckoutListener extends SCMListener {
     }
 
     private boolean hasRecordForScm(final Run<?, ?> build, final String scmKey) {
-        return findRecordForScm(build, scmKey).isPresent();
-    }
-
-    private Optional<GitCommitsRecord> findRecordForScm(final Run<?, ?> build, final String scmKey) {
-        return build.getActions(GitCommitsRecord.class)
-                .stream().filter(record -> scmKey.equals(record.getScmKey())).findAny();
+        return GitCommitsRecord.findRecordForScm(build, scmKey).isPresent();
     }
 
     private void recordNewCommits(final Run<?, ?> build, final GitRepositoryValidator gitRepository,
@@ -157,7 +152,7 @@ public class GitCheckoutListener extends SCMListener {
 
     private Optional<GitCommitsRecord> getPreviousRecord(final Run<?, ?> currentBuild, final String scmKey) {
         for (Run<?, ?> build = currentBuild.getPreviousBuild(); build != null; build = build.getPreviousBuild()) {
-            Optional<GitCommitsRecord> record = findRecordForScm(build, scmKey);
+            Optional<GitCommitsRecord> record = GitCommitsRecord.findRecordForScm(build, scmKey);
             if (record.isPresent()) {
                 return record;
             }

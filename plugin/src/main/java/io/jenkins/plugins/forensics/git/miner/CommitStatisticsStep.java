@@ -124,12 +124,12 @@ public class CommitStatisticsStep extends Recorder implements SimpleBuildStep {
         if (possibleReferenceBuild.isPresent()) {
             Run<?, ?> referenceBuild = possibleReferenceBuild.get();
             logger.logInfo("-> Found reference build '%s'", referenceBuild);
-            GitCommitsRecord referenceCommits = referenceBuild.getAction(GitCommitsRecord.class);
-            if (referenceCommits == null) {
-                logger.logInfo("-> Skipping since reference build '%s' has no recorded commits", referenceBuild);
+            Optional<GitCommitsRecord> referenceCommits = GitCommitsRecord.findRecordForScm(referenceBuild, getScm());
+            if (referenceCommits.isPresent()) {
+                computeStatsBasedOnReferenceBuild(run, logger, repository, validator, referenceCommits.get());
             }
             else {
-                computeStatsBasedOnReferenceBuild(run, logger, repository, validator, referenceCommits);
+                logger.logInfo("-> Skipping since reference build '%s' has no recorded commits", referenceBuild);
             }
         }
         else {
@@ -147,8 +147,8 @@ public class CommitStatisticsStep extends Recorder implements SimpleBuildStep {
             final GitRepositoryValidator validator, final GitCommitsRecord referenceCommits)
             throws IOException, InterruptedException {
         String latestCommit = referenceCommits.getLatestCommit();
-        GitCommitsRecord targetCommits = run.getAction(GitCommitsRecord.class);
-        if (targetCommits.contains(latestCommit)) {
+        Optional<GitCommitsRecord> targetCommits = GitCommitsRecord.findRecordForScm(run, getScm());
+        if (targetCommits.isPresent() && targetCommits.get().contains(latestCommit)) {
             logger.logInfo("-> Current branch already contains latest commit '%s' of target branch",
                     renderCommit(latestCommit));
             extractStats(run, repository, validator.createClient(), logger, latestCommit);
@@ -173,9 +173,9 @@ public class CommitStatisticsStep extends Recorder implements SimpleBuildStep {
             throws IOException, InterruptedException {
         logger.logInfo("-> No reference build found, using previous build '%s' as baseline",
                 previousCompletedBuild);
-        GitCommitsRecord commitsRecord = previousCompletedBuild.getAction(GitCommitsRecord.class);
-        if (commitsRecord != null) {
-            String latestCommit = commitsRecord.getLatestCommit();
+        Optional<GitCommitsRecord> commitsRecord = GitCommitsRecord.findRecordForScm(previousCompletedBuild, getScm());
+        if (commitsRecord.isPresent()) {
+            String latestCommit = commitsRecord.get().getLatestCommit();
             if (StringUtils.isNotEmpty(latestCommit)) {
                 logger.logInfo("-> Found latest previous commit '%s'", renderCommit(latestCommit));
 
