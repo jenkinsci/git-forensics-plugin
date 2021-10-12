@@ -122,6 +122,7 @@ public class GitCheckoutListener extends SCMListener {
     }
 
     private boolean isMerge(final Run<?, ?> build) {
+        // FIXME: see https://issues.jenkins.io/browse/JENKINS-66480?focusedCommentId=412857
         SCMRevisionAction scmRevision = build.getAction(SCMRevisionAction.class);
         if (scmRevision == null) {
             return false;
