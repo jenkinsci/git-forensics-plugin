@@ -1,7 +1,7 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:t="/lib/hudson">
 
-  <t:summary icon="/plugin/git-forensics/icons/git-48x48.png">
+  <t:summary icon="/plugin/git-forensics/icons/git-icon.svg">
     SCM: ${it.scmKey}
     <ul>
       <j:choose>
