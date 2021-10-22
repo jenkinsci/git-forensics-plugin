@@ -6,6 +6,8 @@ import java.util.List;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import static io.jenkins.plugins.forensics.DetailsTable.*;
 
 /**
@@ -27,7 +29,7 @@ public class DetailsTableRow {
      * @param detailsTable
      *         reference to the detailsTable page object which is showing the rows.
      */
-    @SuppressWarnings("EI")
+    @SuppressFBWarnings("EI")
     public DetailsTableRow(final WebElement rowElement, final DetailsTable detailsTable) {
         this.row = rowElement;
         this.detailsTable = detailsTable;
