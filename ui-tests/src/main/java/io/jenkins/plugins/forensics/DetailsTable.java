@@ -1,6 +1,7 @@
 package io.jenkins.plugins.forensics;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -57,7 +58,7 @@ public class DetailsTable {
      * @return table headers as list.
      */
     public List<String> getHeaders() {
-        return headers;
+        return Collections.unmodifiableList(headers);
     }
 
     /**
@@ -67,7 +68,8 @@ public class DetailsTable {
      */
     public List<DetailsTableRow> getTableRows() {
         updateTableRows();
-        return this.tableRows;
+
+        return Collections.unmodifiableList(tableRows);
     }
 
     /**
@@ -77,7 +79,8 @@ public class DetailsTable {
      */
     public int getNumberOfTableEntries() {
         updateTableRows();
-        return tableRows.size(); }
+        return tableRows.size();
+    }
 
     /**
      * returns the forensics information on the bottom left of the Table showing the number of total entries and the

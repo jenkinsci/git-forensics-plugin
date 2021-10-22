@@ -27,6 +27,7 @@ public class DetailsTableRow {
      * @param detailsTable
      *         reference to the detailsTable page object which is showing the rows.
      */
+    @SuppressWarnings("EI")
     public DetailsTableRow(final WebElement rowElement, final DetailsTable detailsTable) {
         this.row = rowElement;
         this.detailsTable = detailsTable;
