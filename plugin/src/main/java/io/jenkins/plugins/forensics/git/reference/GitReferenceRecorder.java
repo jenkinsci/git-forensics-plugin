@@ -15,9 +15,15 @@ import org.jenkinsci.Symbol;
 import hudson.Extension;
 import hudson.model.AbstractProject;
 import hudson.model.Item;
+import hudson.model.ItemGroup;
+import hudson.model.Job;
 import hudson.model.Run;
 import hudson.util.ComboBoxModel;
 import hudson.util.FormValidation;
+import jenkins.branch.MultiBranchProject;
+import jenkins.scm.api.SCMHead;
+import jenkins.scm.api.SCMHead.HeadByItem;
+import jenkins.scm.api.mixin.ChangeRequestSCMHead;
 
 import io.jenkins.plugins.forensics.reference.ReferenceRecorder;
 import io.jenkins.plugins.util.JenkinsFacade;
@@ -86,9 +92,30 @@ public class GitReferenceRecorder extends ReferenceRecorder {
             return Optional.empty();
         }
 
+        getLatestFromPullRequest(owner, lastCompletedBuildOfReferenceJob);
+
         Optional<GitCommitsRecord> thisCommit = GitCommitsRecord.findRecordForScm(owner, getScm());
         if (thisCommit.isPresent()) {
-            return thisCommit.get().getReferencePoint(referenceCommit.get(), getMaxCommits(), isSkipUnknownCommits());
+            GitCommitsRecord commitsRecord = thisCommit.get();
+            Optional<Run<?, ?>> referencePoint = commitsRecord.getReferencePoint(
+                    referenceCommit.get(), getMaxCommits(), isSkipUnknownCommits());
+            if (referencePoint.isPresent()) {
+                return referencePoint;
+            }
+        }
+
+        return getLatestFromPullRequest(owner, lastCompletedBuildOfReferenceJob);
+    }
+
+    private Optional<Run<?, ?>> getLatestFromPullRequest(final Run<?, ?> owner,
+            final Run<?, ?> lastCompletedBuildOfReferenceJob) {
+        Job<?, ?> job = owner.getParent();
+        ItemGroup<?> topLevel = job.getParent();
+        if (topLevel instanceof MultiBranchProject) {
+            Optional<ChangeRequestSCMHead> possibleHead = new ScmFacade().findHead(job);
+            if (possibleHead.isPresent()) {
+                return Optional.of(lastCompletedBuildOfReferenceJob);
+            }
         }
         return Optional.empty();
     }
@@ -97,6 +124,16 @@ public class GitReferenceRecorder extends ReferenceRecorder {
     @SuppressFBWarnings("BC")
     public Descriptor getDescriptor() {
         return (Descriptor) super.getDescriptor();
+    }
+
+    static class ScmFacade {
+        Optional<ChangeRequestSCMHead> findHead(final Job<?, ?> job) {
+            SCMHead head = HeadByItem.findHead(job);
+            if (head instanceof ChangeRequestSCMHead) {
+                return Optional.of((ChangeRequestSCMHead) head);
+            }
+            return Optional.empty();
+        }
     }
 
     /**
