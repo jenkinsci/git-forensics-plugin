@@ -15,6 +15,8 @@ import hudson.model.Run;
 import hudson.scm.SCM;
 import jenkins.model.RunAction2;
 
+import io.jenkins.plugins.forensics.git.util.GitCommitTextDecorator;
+
 /**
  * Stores all commits for a given build and provides a link to the latest commit. For each {@link SCM} repository a
  * unique {@link GitCommitsRecord} instance will be used.
@@ -213,19 +215,59 @@ public class GitCommitsRecord implements RunAction2, Serializable {
      */
     public Optional<Run<?, ?>> getReferencePoint(final GitCommitsRecord referenceCommits,
             final int maxCommits, final boolean skipUnknownCommits) {
-        List<String> branchCommits = collectBranchCommits(maxCommits);
+        return getReferencePoint(referenceCommits, maxCommits, skipUnknownCommits, new FilteredLog("UNUSED"));
+    }
 
-        List<String> masterCommits = new ArrayList<>(referenceCommits.getCommits());
+    /**
+     * Tries to find a reference build using the specified {@link GitCommitsRecord} of the reference job as a starting
+     * point.
+     *
+     * @param referenceCommits
+     *         the recorded commits of the build of the reference job that should be used as a starting point for the
+     *         search
+     * @param maxCommits
+     *         maximal number of commits to look at
+     * @param skipUnknownCommits
+     *         determines whether a build with unknown commits should be skipped or not
+     * @param logger
+     *         the logger
+     *
+     * @return the found reference build or empty if none has been found
+     */
+    Optional<Run<?, ?>> getReferencePoint(final GitCommitsRecord referenceCommits, final int maxCommits,
+            final boolean skipUnknownCommits, final FilteredLog logger) {
+        GitCommitTextDecorator textDecorator = new GitCommitTextDecorator();
+        List<String> branchCommits = collectBranchCommits(maxCommits);
+        logger.logInfo("-> detected %d commits in current branch (last one: %s)", branchCommits.size(),
+                branchCommits.isEmpty() ? "-" : textDecorator.asText(branchCommits.get(branchCommits.size() - 1)));
+        List<String> targetCommits = new ArrayList<>(referenceCommits.getCommits());
+        logger.logInfo("-> detected %d commits in reference build of target branch (last one: %s)", targetCommits.size(),
+                branchCommits.isEmpty() ? "-" : textDecorator.asText(branchCommits.get(branchCommits.size() - 1)));
         for (Run<?, ?> build = referenceCommits.owner;
-                masterCommits.size() < maxCommits && build != null;
+                targetCommits.size() < maxCommits && build != null;
                 build = build.getPreviousBuild()) {
-            List<String> additionalCommits = getCommitsForRepository(build);
+            List<String> additionalCommits = getCommitsForRepository(build); // FIXME: are they not already in targetCommits?
+            logger.logInfo("-> adding another %d commits from build '%s' of reference job (last one: %s)", additionalCommits.size(),
+                    build.getDisplayName(),
+                    additionalCommits.isEmpty() ? "-" : textDecorator.asText(additionalCommits.get(additionalCommits.size() - 1)));
+
             if (!skipUnknownCommits || branchCommits.containsAll(additionalCommits)) {
-                masterCommits.addAll(additionalCommits);
-                Optional<String> referencePoint = branchCommits.stream().filter(masterCommits::contains).findFirst();
+                if (skipUnknownCommits) {
+                    logger.logInfo("-> all commits of target branch are part of the current build");
+                }
+                else {
+                    logger.logInfo("-> ignoring if some of the commits are not part of the current branch build");
+                }
+                targetCommits.addAll(additionalCommits);
+                Optional<String> referencePoint = branchCommits.stream().filter(targetCommits::contains).findFirst();
                 if (referencePoint.isPresent()) {
+                    logger.logInfo("-> found matching commit '%s' in current branch and target branch builds",
+                            textDecorator.asText(referencePoint.get()));
                     return Optional.of(build);
                 }
+            }
+            else {
+                logger.logInfo("-> not all commits of target branch are part of the current build");
             }
         }
         return Optional.empty();

@@ -2,6 +2,7 @@ package io.jenkins.plugins.forensics.git.reference;
 
 import java.util.Optional;
 
+import edu.hm.hafner.util.FilteredLog;
 import edu.hm.hafner.util.VisibleForTesting;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -15,12 +16,10 @@ import org.jenkinsci.Symbol;
 import hudson.Extension;
 import hudson.model.AbstractProject;
 import hudson.model.Item;
-import hudson.model.ItemGroup;
 import hudson.model.Job;
 import hudson.model.Run;
 import hudson.util.ComboBoxModel;
 import hudson.util.FormValidation;
-import jenkins.branch.MultiBranchProject;
 import jenkins.scm.api.SCMHead;
 import jenkins.scm.api.SCMHead.HeadByItem;
 import jenkins.scm.api.mixin.ChangeRequestSCMHead;
@@ -86,37 +85,41 @@ public class GitReferenceRecorder extends ReferenceRecorder {
     }
 
     @Override
-    protected Optional<Run<?, ?>> find(final Run<?, ?> owner, final Run<?, ?> lastCompletedBuildOfReferenceJob) {
-        Optional<GitCommitsRecord> referenceCommit = GitCommitsRecord.findRecordForScm(lastCompletedBuildOfReferenceJob, getScm());
-        if (!referenceCommit.isPresent()) {
-            return Optional.empty();
-        }
+    protected Optional<Run<?, ?>> find(final Run<?, ?> owner, final Run<?, ?> lastCompletedBuildOfReferenceJob,
+            final FilteredLog log) {
+        Optional<GitCommitsRecord> referenceCommit
+                = GitCommitsRecord.findRecordForScm(lastCompletedBuildOfReferenceJob, getScm());
+        if (referenceCommit.isPresent()) {
+            Optional<GitCommitsRecord> thisCommit = GitCommitsRecord.findRecordForScm(owner, getScm());
+            if (thisCommit.isPresent()) {
+                GitCommitsRecord commitsRecord = thisCommit.get();
+                Optional<Run<?, ?>> referencePoint = commitsRecord.getReferencePoint(
+                        referenceCommit.get(), getMaxCommits(), isSkipUnknownCommits(), log);
+                if (referencePoint.isPresent()) {
+                    log.logInfo("-> found build '%s' in reference job with matching commits",
+                            referencePoint.get().getDisplayName());
 
-        getLatestFromPullRequest(owner, lastCompletedBuildOfReferenceJob);
-
-        Optional<GitCommitsRecord> thisCommit = GitCommitsRecord.findRecordForScm(owner, getScm());
-        if (thisCommit.isPresent()) {
-            GitCommitsRecord commitsRecord = thisCommit.get();
-            Optional<Run<?, ?>> referencePoint = commitsRecord.getReferencePoint(
-                    referenceCommit.get(), getMaxCommits(), isSkipUnknownCommits());
-            if (referencePoint.isPresent()) {
-                return referencePoint;
+                    return referencePoint;
+                }
+            }
+            else {
+                log.logInfo("-> current build '%s' does not yet contain a `GitCommitsRecord`",
+                        owner.getDisplayName());
             }
         }
-
-        return getLatestFromPullRequest(owner, lastCompletedBuildOfReferenceJob);
-    }
-
-    private Optional<Run<?, ?>> getLatestFromPullRequest(final Run<?, ?> owner,
-            final Run<?, ?> lastCompletedBuildOfReferenceJob) {
-        Job<?, ?> job = owner.getParent();
-        ItemGroup<?> topLevel = job.getParent();
-        if (topLevel instanceof MultiBranchProject) {
-            Optional<ChangeRequestSCMHead> possibleHead = new ScmFacade().findHead(job);
-            if (possibleHead.isPresent()) {
-                return Optional.of(lastCompletedBuildOfReferenceJob);
-            }
+        else {
+            log.logInfo("-> selected build '%s' of reference job does not yet contain a `GitCommitsRecord`",
+                    lastCompletedBuildOfReferenceJob.getDisplayName());
         }
+
+        Optional<SCMHead> targetBranchHead = findTargetBranchHead(owner.getParent());
+        if (targetBranchHead.isPresent()) {
+            log.logInfo("-> falling back to latest build '%s' since a pull or merge request has been detected",
+                    lastCompletedBuildOfReferenceJob.getDisplayName());
+            return Optional.of(lastCompletedBuildOfReferenceJob);
+        }
+        log.logInfo("-> no reference build found");
+
         return Optional.empty();
     }
 
@@ -157,6 +160,7 @@ public class GitReferenceRecorder extends ReferenceRecorder {
          *
          * @param project
          *         the project that is configured
+         *
          * @return the model with the possible reference jobs
          */
         @Override
@@ -181,7 +185,8 @@ public class GitReferenceRecorder extends ReferenceRecorder {
         @Override
         @POST
         @SuppressWarnings("unused") // Used in jelly validation
-        public FormValidation doCheckReferenceJob(@AncestorInPath final AbstractProject<?, ?> project, @QueryParameter final String referenceJob) {
+        public FormValidation doCheckReferenceJob(@AncestorInPath final AbstractProject<?, ?> project,
+                @QueryParameter final String referenceJob) {
             if (!JENKINS.hasPermission(Item.CONFIGURE)) {
                 return FormValidation.ok();
             }
