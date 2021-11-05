@@ -52,8 +52,9 @@ public class GitReferenceRecorder extends ReferenceRecorder {
     }
 
     /**
-     * Sets the maximal number of commits that will be compared with the builds of the reference job to find the
-     * matching reference build.
+     * Sets the maximal number of additional commits in the reference job that will be considered during the
+     * comparison with the current branch. In order to avoid an indefinite scanning of the build history until a
+     * matching reference has been found this value is used as a stop criteria.
      *
      * @param maxCommits
      *         maximal number of commits

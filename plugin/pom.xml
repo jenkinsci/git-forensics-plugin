@@ -28,7 +28,7 @@
     <echarts-api.version>5.2.1-2</echarts-api.version>
     <plugin-util-api.version>2.5.0</plugin-util-api.version>
     <data-tables-api.version>1.11.3-1</data-tables-api.version>
-    <forensics-api-plugin.version>1.6.0-rc1097.66cbb7e5be8d</forensics-api-plugin.version>
+    <forensics-api-plugin.version>1.6.0-rc1103.85ae25a1ba43</forensics-api-plugin.version>
     <j2html.version>1.4.0</j2html.version>
     <streamex.version>0.7.3</streamex.version>
   </properties>

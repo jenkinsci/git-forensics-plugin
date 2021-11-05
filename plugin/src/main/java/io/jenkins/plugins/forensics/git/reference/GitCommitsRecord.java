@@ -238,18 +238,16 @@ public class GitCommitsRecord implements RunAction2, Serializable {
             final boolean skipUnknownCommits, final FilteredLog logger) {
         GitCommitTextDecorator textDecorator = new GitCommitTextDecorator();
         List<String> branchCommits = collectBranchCommits(maxCommits);
-        logger.logInfo("-> detected %d commits in current branch (last one: %s)", branchCommits.size(),
-                branchCommits.isEmpty() ? "-" : textDecorator.asText(branchCommits.get(branchCommits.size() - 1)));
-        List<String> targetCommits = new ArrayList<>(referenceCommits.getCommits());
-        logger.logInfo("-> detected %d commits in reference build of target branch (last one: %s)", targetCommits.size(),
-                branchCommits.isEmpty() ? "-" : textDecorator.asText(branchCommits.get(branchCommits.size() - 1)));
-        for (Run<?, ?> build = referenceCommits.owner;
-                targetCommits.size() < maxCommits && build != null;
+        logger.logInfo("-> detected %d commits in current branch (last one: '%s')",
+                branchCommits.size(), getHeadCommitOf(branchCommits, textDecorator));
+        List<String> targetCommits = new ArrayList<>();
+        Run<?, ?> build = referenceCommits.owner;
+        for (; targetCommits.size() < maxCommits && build != null;
                 build = build.getPreviousBuild()) {
-            List<String> additionalCommits = getCommitsForRepository(build); // FIXME: are they not already in targetCommits?
-            logger.logInfo("-> adding another %d commits from build '%s' of reference job (last one: %s)", additionalCommits.size(),
-                    build.getDisplayName(),
-                    additionalCommits.isEmpty() ? "-" : textDecorator.asText(additionalCommits.get(additionalCommits.size() - 1)));
+            List<String> additionalCommits = getCommitsForRepository(build);
+            logger.logInfo("-> adding %d commits from build '%s' of reference job (last one: '%s')",
+                    additionalCommits.size(), build.getDisplayName(),
+                    getHeadCommitOf(additionalCommits, textDecorator));
 
             if (!skipUnknownCommits || branchCommits.containsAll(additionalCommits)) {
                 if (skipUnknownCommits) {
@@ -261,20 +259,33 @@ public class GitCommitsRecord implements RunAction2, Serializable {
                 targetCommits.addAll(additionalCommits);
                 Optional<String> referencePoint = branchCommits.stream().filter(targetCommits::contains).findFirst();
                 if (referencePoint.isPresent()) {
-                    logger.logInfo("-> found matching commit '%s' in current branch and target branch builds",
+                    logger.logInfo("-> found a matching commit in current branch and target branch: '%s'",
                             textDecorator.asText(referencePoint.get()));
                     return Optional.of(build);
                 }
+                logger.logInfo("-> no matching commit found yet, continuing with commits of previous build of '%s'",
+                        build.getDisplayName());
             }
             else {
-                logger.logInfo("-> not all commits of target branch are part of the current build");
+                logger.logInfo("-> not all commits of target branch are part of the collected reference builds yet");
             }
+        }
+        if (build == null) {
+            logger.logInfo("-> stopping commit search since we reached the first build of the reference job");
+        }
+        if (targetCommits.size() >= maxCommits) {
+            logger.logInfo("-> stopping commit search since the #commits of the target builds is %d and the limit `maxCommits` has been set to %d",
+                    targetCommits.size(), maxCommits);
         }
         return Optional.empty();
     }
 
+    private String getHeadCommitOf(final List<String> additionalCommits, final GitCommitTextDecorator textDecorator) {
+        return additionalCommits.isEmpty() ? "-" : textDecorator.asText(additionalCommits.get(0));
+    }
+
     private List<String> collectBranchCommits(final int maxCommits) {
-        List<String> branchCommits = new ArrayList<>(this.getCommits());
+        List<String> branchCommits = new ArrayList<>();
         for (Run<?, ?> build = owner;
                 branchCommits.size() < maxCommits && build != null;
                 build = build.getPreviousBuild()) {
