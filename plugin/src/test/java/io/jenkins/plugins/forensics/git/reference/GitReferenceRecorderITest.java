@@ -720,6 +720,7 @@ public class GitReferenceRecorderITest extends GitITest {
         return verifyBuild(project, buildNumber, FEATURE, FEATURE.toUpperCase(Locale.ENGLISH) + " CONTENT");
     }
 
+    @SuppressWarnings("PMD.SystemPrintln")
     private WorkflowRun verifyBuild(final WorkflowMultiBranchProject project, final int buildNumber,
             final String branch, final String branchContent) {
         try {

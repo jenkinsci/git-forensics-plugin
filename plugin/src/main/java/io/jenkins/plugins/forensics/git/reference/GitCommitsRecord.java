@@ -250,12 +250,6 @@ public class GitCommitsRecord implements RunAction2, Serializable {
                     getHeadCommitOf(additionalCommits, textDecorator));
 
             if (!skipUnknownCommits || branchCommits.containsAll(additionalCommits)) {
-                if (skipUnknownCommits) {
-                    logger.logInfo("-> all commits of target branch are part of the current build");
-                }
-                else {
-                    logger.logInfo("-> ignoring if some of the commits are not part of the current branch build");
-                }
                 targetCommits.addAll(additionalCommits);
                 Optional<String> referencePoint = branchCommits.stream().filter(targetCommits::contains).findFirst();
                 if (referencePoint.isPresent()) {
