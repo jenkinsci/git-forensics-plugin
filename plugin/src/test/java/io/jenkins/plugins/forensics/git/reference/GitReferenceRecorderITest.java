@@ -63,6 +63,7 @@ public class GitReferenceRecorderITest extends GitITest {
     @ClassRule
     public static final BuildWatcher BUILD_WATCHER = new BuildWatcher();
     private static final String MULTI_BRANCH_PROJECT = "Found a `MultiBranchProject`, trying to resolve the target branch from the configuration";
+    private static final String MAIN_IS_TARGET = "-> using target branch 'main' as configured in step";
 
     /**
      * Runs a pipeline and verifies that the recorder does not break the build if Git is not configured.
@@ -246,7 +247,7 @@ public class GitReferenceRecorderITest extends GitITest {
                 .hasReferenceBuildId(masterBuild.getExternalizableId())
                 .hasReferenceBuild(Optional.of(masterBuild))
                 .hasMessages(MULTI_BRANCH_PROJECT,
-                        "-> using target branch 'main' as configured in step",
+                        MAIN_IS_TARGET,
                         String.format("-> detected 3 commits in current branch (last one: '%s')", DECORATOR.asText(featureCommit)),
                         String.format("-> adding 2 commits from build '#1' of reference job (last one: '%s')", DECORATOR.asText(mainCommit)),
                         String.format("-> found a matching commit in current branch and target branch: '%s'", DECORATOR.asText(mainCommit)),
@@ -303,12 +304,13 @@ public class GitReferenceRecorderITest extends GitITest {
         buildProject(project);
         WorkflowRun masterBuild = verifyMasterBuild(project, 1);
         verifyRecordSize(masterBuild, 2);
+        String initialMain = getHead();
 
-        createFeatureBranchAndAddCommits();
+        String featureCommit = createFeatureBranchAndAddCommits();
 
-        addAdditionalFileTo(MAIN);
+        String mainCommit = addAdditionalFileTo(MAIN);
 
-        buildProject(project);
+        buildAgain(masterBuild.getParent());
         WorkflowRun nextMaster = verifyMasterBuild(project, 2);
         verifyRecordSize(nextMaster, 1);
 
@@ -319,7 +321,15 @@ public class GitReferenceRecorderITest extends GitITest {
         assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(masterBuild.getExternalizableId())
-                .hasReferenceBuild(Optional.of(masterBuild));
+                .hasReferenceBuild(Optional.of(masterBuild))
+                .hasMessages(MULTI_BRANCH_PROJECT,
+                        MAIN_IS_TARGET,
+                        String.format("-> detected 3 commits in current branch (last one: '%s')", DECORATOR.asText(featureCommit)),
+                        String.format("-> adding 1 commits from build '#2' of reference job (last one: '%s')", DECORATOR.asText(mainCommit)),
+                        "-> no matching commit found yet, continuing with commits of previous build of '#2'",
+                        String.format("-> adding 2 commits from build '#1' of reference job (last one: '%s')", DECORATOR.asText(initialMain)),
+                        String.format("-> found a matching commit in current branch and target branch: '%s'", DECORATOR.asText(initialMain)),
+                        "-> found build '#1' in reference job with matching commits");
 
         assertThat(getCommitStatisticsOf(featureBuild))
                 .hasCommitCount(1)
@@ -351,7 +361,7 @@ public class GitReferenceRecorderITest extends GitITest {
 
         createFeatureBranchAndAddCommits("latestBuildIfNotFound: false");
 
-        changeContentOfAdditionalFile(MAIN, CHANGED_CONTENT);
+        String mainCommit = changeContentOfAdditionalFile(MAIN, CHANGED_CONTENT);
 
         buildProject(project);
         WorkflowRun nextMaster = verifyMasterBuild(project, 2);
@@ -369,7 +379,7 @@ public class GitReferenceRecorderITest extends GitITest {
         assertThat(firstFeature.getAction(ReferenceBuild.class)).as(getLog(firstFeature)).isNotNull()
                 .hasOwner(firstFeature); // we do not care about the reference of the first feature build
 
-        changeContentOfAdditionalFile(FEATURE, FEATURE + " content");
+        String featureCommit = changeContentOfAdditionalFile(FEATURE, FEATURE + " content");
 
         buildProject(project);
         WorkflowRun featureBuild = verifyFeatureBuild(project, 2);
@@ -378,7 +388,12 @@ public class GitReferenceRecorderITest extends GitITest {
         assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(nextMaster.getExternalizableId())
-                .hasReferenceBuild(Optional.of(nextMaster));
+                .hasReferenceBuild(Optional.of(nextMaster))
+                .hasMessages(MULTI_BRANCH_PROJECT,
+                        MAIN_IS_TARGET,
+                        String.format("-> detected 5 commits in current branch (last one: '%s')", DECORATOR.asText(featureCommit)),
+                        String.format("-> adding 2 commits from build '#2' of reference job (last one: '%s')", DECORATOR.asText(mainCommit)),
+                        "-> found build '#2' in reference job with matching commits");
 
         assertThat(getCommitStatisticsOf(featureBuild))
                 .hasCommitCount(3)
@@ -406,13 +421,16 @@ public class GitReferenceRecorderITest extends GitITest {
         WorkflowRun masterBuild = verifyMasterBuild(project, 1);
         verifyRecordSize(masterBuild, 2);
 
+        String firstMainCommit = getHead();
+
         addAdditionalFileTo(MAIN);
 
-        createFeatureBranchAndAddCommits("skipUnknownCommits: true");
+        String featureCommit = createFeatureBranchAndAddCommits("skipUnknownCommits: true");
 
-        changeContentOfAdditionalFile(MAIN, CHANGED_CONTENT);
+        String mainCommit = changeContentOfAdditionalFile(MAIN, CHANGED_CONTENT);
 
-        buildProject(project);
+        buildAgain(masterBuild.getParent());
+
         WorkflowRun nextMaster = verifyMasterBuild(project, 2);
         verifyRecordSize(nextMaster, 2);
 
@@ -423,7 +441,14 @@ public class GitReferenceRecorderITest extends GitITest {
         assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(masterBuild.getExternalizableId())
-                .hasReferenceBuild(Optional.of(masterBuild));
+                .hasReferenceBuild(Optional.of(masterBuild))
+                .hasMessages(MULTI_BRANCH_PROJECT,
+                        MAIN_IS_TARGET,
+                        String.format("-> detected 4 commits in current branch (last one: '%s')", DECORATOR.asText(featureCommit)),
+                        String.format("-> adding 2 commits from build '#2' of reference job (last one: '%s')", DECORATOR.asText(mainCommit)),
+                        "-> not all commits of target branch are part of the collected reference builds yet",
+                        String.format("-> adding 2 commits from build '#1' of reference job (last one: '%s')", DECORATOR.asText(firstMainCommit)),
+                        "-> found build '#1' in reference job with matching commits");
     }
 
     /**
