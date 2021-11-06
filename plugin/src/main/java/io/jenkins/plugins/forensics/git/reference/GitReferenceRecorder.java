@@ -16,13 +16,10 @@ import org.jenkinsci.Symbol;
 import hudson.Extension;
 import hudson.model.AbstractProject;
 import hudson.model.Item;
-import hudson.model.Job;
 import hudson.model.Run;
 import hudson.util.ComboBoxModel;
 import hudson.util.FormValidation;
 import jenkins.scm.api.SCMHead;
-import jenkins.scm.api.SCMHead.HeadByItem;
-import jenkins.scm.api.mixin.ChangeRequestSCMHead;
 
 import io.jenkins.plugins.forensics.reference.ReferenceRecorder;
 import io.jenkins.plugins.util.JenkinsFacade;
@@ -128,16 +125,6 @@ public class GitReferenceRecorder extends ReferenceRecorder {
     @SuppressFBWarnings("BC")
     public Descriptor getDescriptor() {
         return (Descriptor) super.getDescriptor();
-    }
-
-    static class ScmFacade {
-        Optional<ChangeRequestSCMHead> findHead(final Job<?, ?> job) {
-            SCMHead head = HeadByItem.findHead(job);
-            if (head instanceof ChangeRequestSCMHead) {
-                return Optional.of((ChangeRequestSCMHead) head);
-            }
-            return Optional.empty();
-        }
     }
 
     /**
