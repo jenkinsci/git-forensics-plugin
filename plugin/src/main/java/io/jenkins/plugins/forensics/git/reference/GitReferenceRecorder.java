@@ -134,12 +134,15 @@ public class GitReferenceRecorder extends ReferenceRecorder {
         /**
          * Creates a new descriptor with the concrete services.
          */
+        @SuppressWarnings("unused") // Required for extension point
         public Descriptor() {
             this(new JenkinsFacade(), new GitReferenceJobModelValidation());
         }
 
         @VisibleForTesting
         Descriptor(final JenkinsFacade  jenkins, final GitReferenceJobModelValidation model) {
+            super();
+
             this.jenkins = jenkins;
             this.model = model;
         }
