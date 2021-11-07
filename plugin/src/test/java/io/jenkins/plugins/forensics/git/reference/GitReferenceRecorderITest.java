@@ -118,6 +118,35 @@ public class GitReferenceRecorderITest extends GitITest {
                 .hasDeletedLines(0);
     }
 
+    /**
+     * Creates a pipeline for the main branch and another pipeline for the feature branch, builds them and removes the
+     * commits action from the reference job. This simulates a setup where the last master build was finished before
+     * the Git forensics plugin has been added.
+     */
+    @Test
+    public void shouldFindNoReferenceBuildIfReferenceJobHasNoCommitsAction() {
+        WorkflowJob mainBranch = createPipeline(MAIN);
+        mainBranch.setDefinition(asStage(createLocalGitCheckout(MAIN)));
+
+        Run<?, ?> masterBuild = buildSuccessfully(mainBranch);
+        masterBuild.removeAction(masterBuild.getAction(GitCommitsRecord.class)); // simulate a master build without records
+        createFeatureBranchAndAddCommits();
+
+        WorkflowJob featureBranch = createPipeline(FEATURE);
+        featureBranch.setDefinition(asStage(createLocalGitCheckout(FEATURE),
+                "discoverGitReferenceBuild(referenceJob: '" + MAIN + "')",
+                "gitDiffStat()"));
+
+        Run<?, ?> featureBuild = buildSuccessfully(featureBranch);
+        assertThat(featureBuild.getNumber()).isEqualTo(1);
+        assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
+                .hasOwner(featureBuild)
+                .hasReferenceBuild(Optional.empty())
+                .hasMessages("Configured reference job: 'main'",
+                        "-> selected build '#1' of reference job does not yet contain a `GitCommitsRecord`",
+                        "-> no reference build found");
+    }
+
     private CommitStatistics getCommitStatisticsOf(final WorkflowRun lastBuild) {
         return lastBuild.getAction(CommitStatisticsBuildAction.class).getCommitStatistics();
     }
@@ -208,10 +237,19 @@ public class GitReferenceRecorderITest extends GitITest {
         Run<?, ?> featureBuild = buildSuccessfully(featureBranch);
         assertThat(featureBuild.getNumber()).isEqualTo(1);
 
+        String featureCommit = getHead();
+        checkout(MAIN);
+        String masterCommit = getHead();
+
         assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(masterBuild.getExternalizableId())
-                .hasReferenceBuild(Optional.of(masterBuild));
+                .hasReferenceBuild(Optional.of(masterBuild))
+                .hasMessages("Configured reference job: 'main'",
+                        String.format("-> detected 2 commits in current branch (last one: '%s')", DECORATOR.asText(featureCommit)),
+                        String.format("-> adding 1 commits from build '#1' of reference job (last one: '%s')", DECORATOR.asText(masterCommit)),
+                        String.format("-> found a matching commit in current branch and target branch: '%s'", DECORATOR.asText(masterCommit)),
+                        "Found reference build '#1' for target branch");
     }
 
     private String getUrl() {

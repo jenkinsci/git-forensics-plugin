@@ -100,10 +100,6 @@ public class GitReferenceRecorder extends ReferenceRecorder {
                     return referencePoint;
                 }
             }
-            else {
-                log.logInfo("-> current build '%s' does not yet contain a `GitCommitsRecord`",
-                        owner.getDisplayName());
-            }
         }
         else {
             log.logInfo("-> selected build '%s' of reference job does not yet contain a `GitCommitsRecord`",
@@ -133,7 +129,20 @@ public class GitReferenceRecorder extends ReferenceRecorder {
     @Extension
     @Symbol("discoverGitReferenceBuild")
     public static class Descriptor extends SimpleReferenceRecorderDescriptor {
-        private static final JenkinsFacade JENKINS = new JenkinsFacade();
+        private final JenkinsFacade jenkins;
+
+        /**
+         * Creates a new descriptor with the concrete services.
+         */
+        public Descriptor() {
+            this(new JenkinsFacade(), new GitReferenceJobModelValidation());
+        }
+
+        @VisibleForTesting
+        Descriptor(final JenkinsFacade  jenkins, final GitReferenceJobModelValidation model) {
+            this.jenkins = jenkins;
+            this.model = model;
+        }
 
         @NonNull
         @Override
@@ -141,7 +150,7 @@ public class GitReferenceRecorder extends ReferenceRecorder {
             return Messages.Recorder_DisplayName();
         }
 
-        private final GitReferenceJobModelValidation model = new GitReferenceJobModelValidation();
+        private final GitReferenceJobModelValidation model;
 
         /**
          * Returns the model with the possible reference jobs.
@@ -154,7 +163,7 @@ public class GitReferenceRecorder extends ReferenceRecorder {
         @Override
         @POST
         public ComboBoxModel doFillReferenceJobItems(@AncestorInPath final AbstractProject<?, ?> project) {
-            if (JENKINS.hasPermission(Item.CONFIGURE)) {
+            if (jenkins.hasPermission(Item.CONFIGURE, project)) {
                 return model.getAllJobs();
             }
             return new ComboBoxModel();
@@ -175,7 +184,7 @@ public class GitReferenceRecorder extends ReferenceRecorder {
         @SuppressWarnings("unused") // Used in jelly validation
         public FormValidation doCheckReferenceJob(@AncestorInPath final AbstractProject<?, ?> project,
                 @QueryParameter final String referenceJob) {
-            if (!JENKINS.hasPermission(Item.CONFIGURE)) {
+            if (!jenkins.hasPermission(Item.CONFIGURE, project)) {
                 return FormValidation.ok();
             }
             return model.validateJob(referenceJob);
