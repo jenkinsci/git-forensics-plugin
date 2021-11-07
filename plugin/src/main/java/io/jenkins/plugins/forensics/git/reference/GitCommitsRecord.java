@@ -15,6 +15,8 @@ import hudson.model.Run;
 import hudson.scm.SCM;
 import jenkins.model.RunAction2;
 
+import io.jenkins.plugins.forensics.git.util.GitCommitTextDecorator;
+
 /**
  * Stores all commits for a given build and provides a link to the latest commit. For each {@link SCM} repository a
  * unique {@link GitCommitsRecord} instance will be used.
@@ -213,26 +215,71 @@ public class GitCommitsRecord implements RunAction2, Serializable {
      */
     public Optional<Run<?, ?>> getReferencePoint(final GitCommitsRecord referenceCommits,
             final int maxCommits, final boolean skipUnknownCommits) {
-        List<String> branchCommits = collectBranchCommits(maxCommits);
+        return getReferencePoint(referenceCommits, maxCommits, skipUnknownCommits, new FilteredLog("UNUSED"));
+    }
 
-        List<String> masterCommits = new ArrayList<>(referenceCommits.getCommits());
-        for (Run<?, ?> build = referenceCommits.owner;
-                masterCommits.size() < maxCommits && build != null;
+    /**
+     * Tries to find a reference build using the specified {@link GitCommitsRecord} of the reference job as a starting
+     * point.
+     *
+     * @param referenceCommits
+     *         the recorded commits of the build of the reference job that should be used as a starting point for the
+     *         search
+     * @param maxCommits
+     *         maximal number of commits to look at
+     * @param skipUnknownCommits
+     *         determines whether a build with unknown commits should be skipped or not
+     * @param logger
+     *         the logger
+     *
+     * @return the found reference build or empty if none has been found
+     */
+    Optional<Run<?, ?>> getReferencePoint(final GitCommitsRecord referenceCommits, final int maxCommits,
+            final boolean skipUnknownCommits, final FilteredLog logger) {
+        GitCommitTextDecorator textDecorator = new GitCommitTextDecorator();
+        List<String> branchCommits = collectBranchCommits(maxCommits);
+        logger.logInfo("-> detected %d commits in current branch (last one: '%s')",
+                branchCommits.size(), getHeadCommitOf(branchCommits, textDecorator));
+        List<String> targetCommits = new ArrayList<>();
+        Run<?, ?> build = referenceCommits.owner;
+        for (; targetCommits.size() < maxCommits && build != null;
                 build = build.getPreviousBuild()) {
             List<String> additionalCommits = getCommitsForRepository(build);
+            logger.logInfo("-> adding %d commits from build '%s' of reference job (last one: '%s')",
+                    additionalCommits.size(), build.getDisplayName(),
+                    getHeadCommitOf(additionalCommits, textDecorator));
+
             if (!skipUnknownCommits || branchCommits.containsAll(additionalCommits)) {
-                masterCommits.addAll(additionalCommits);
-                Optional<String> referencePoint = branchCommits.stream().filter(masterCommits::contains).findFirst();
+                targetCommits.addAll(additionalCommits);
+                Optional<String> referencePoint = branchCommits.stream().filter(targetCommits::contains).findFirst();
                 if (referencePoint.isPresent()) {
+                    logger.logInfo("-> found a matching commit in current branch and target branch: '%s'",
+                            textDecorator.asText(referencePoint.get()));
                     return Optional.of(build);
                 }
+                logger.logInfo("-> no matching commit found yet, continuing with commits of previous build of '%s'",
+                        build.getDisplayName());
             }
+            else {
+                logger.logInfo("-> not all commits of target branch are part of the collected reference builds yet");
+            }
+        }
+        if (build == null) {
+            logger.logInfo("-> stopping commit search since we reached the first build of the reference job");
+        }
+        if (targetCommits.size() >= maxCommits) {
+            logger.logInfo("-> stopping commit search since the #commits of the target builds is %d and the limit `maxCommits` has been set to %d",
+                    targetCommits.size(), maxCommits);
         }
         return Optional.empty();
     }
 
+    private String getHeadCommitOf(final List<String> additionalCommits, final GitCommitTextDecorator textDecorator) {
+        return additionalCommits.isEmpty() ? "-" : textDecorator.asText(additionalCommits.get(0));
+    }
+
     private List<String> collectBranchCommits(final int maxCommits) {
-        List<String> branchCommits = new ArrayList<>(this.getCommits());
+        List<String> branchCommits = new ArrayList<>();
         for (Run<?, ?> build = owner;
                 branchCommits.size() < maxCommits && build != null;
                 build = build.getPreviousBuild()) {

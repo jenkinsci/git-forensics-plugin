@@ -2,6 +2,7 @@ package io.jenkins.plugins.forensics.git.reference;
 
 import java.util.Optional;
 
+import edu.hm.hafner.util.FilteredLog;
 import edu.hm.hafner.util.VisibleForTesting;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -18,6 +19,7 @@ import hudson.model.Item;
 import hudson.model.Run;
 import hudson.util.ComboBoxModel;
 import hudson.util.FormValidation;
+import jenkins.scm.api.SCMHead;
 
 import io.jenkins.plugins.forensics.reference.ReferenceRecorder;
 import io.jenkins.plugins.util.JenkinsFacade;
@@ -47,8 +49,9 @@ public class GitReferenceRecorder extends ReferenceRecorder {
     }
 
     /**
-     * Sets the maximal number of commits that will be compared with the builds of the reference job to find the
-     * matching reference build.
+     * Sets the maximal number of additional commits in the reference job that will be considered during the
+     * comparison with the current branch. In order to avoid an indefinite scanning of the build history until a
+     * matching reference has been found this value is used as a stop criteria.
      *
      * @param maxCommits
      *         maximal number of commits
@@ -80,16 +83,37 @@ public class GitReferenceRecorder extends ReferenceRecorder {
     }
 
     @Override
-    protected Optional<Run<?, ?>> find(final Run<?, ?> owner, final Run<?, ?> lastCompletedBuildOfReferenceJob) {
-        Optional<GitCommitsRecord> referenceCommit = GitCommitsRecord.findRecordForScm(lastCompletedBuildOfReferenceJob, getScm());
-        if (!referenceCommit.isPresent()) {
-            return Optional.empty();
+    protected Optional<Run<?, ?>> find(final Run<?, ?> owner, final Run<?, ?> lastCompletedBuildOfReferenceJob,
+            final FilteredLog log) {
+        Optional<GitCommitsRecord> referenceCommit
+                = GitCommitsRecord.findRecordForScm(lastCompletedBuildOfReferenceJob, getScm());
+        if (referenceCommit.isPresent()) {
+            Optional<GitCommitsRecord> thisCommit = GitCommitsRecord.findRecordForScm(owner, getScm());
+            if (thisCommit.isPresent()) {
+                GitCommitsRecord commitsRecord = thisCommit.get();
+                Optional<Run<?, ?>> referencePoint = commitsRecord.getReferencePoint(
+                        referenceCommit.get(), getMaxCommits(), isSkipUnknownCommits(), log);
+                if (referencePoint.isPresent()) {
+                    log.logInfo("-> found build '%s' in reference job with matching commits",
+                            referencePoint.get().getDisplayName());
+
+                    return referencePoint;
+                }
+            }
+        }
+        else {
+            log.logInfo("-> selected build '%s' of reference job does not yet contain a `GitCommitsRecord`",
+                    lastCompletedBuildOfReferenceJob.getDisplayName());
         }
 
-        Optional<GitCommitsRecord> thisCommit = GitCommitsRecord.findRecordForScm(owner, getScm());
-        if (thisCommit.isPresent()) {
-            return thisCommit.get().getReferencePoint(referenceCommit.get(), getMaxCommits(), isSkipUnknownCommits());
+        Optional<SCMHead> targetBranchHead = findTargetBranchHead(owner.getParent());
+        if (targetBranchHead.isPresent()) {
+            log.logInfo("-> falling back to latest build '%s' since a pull or merge request has been detected",
+                    lastCompletedBuildOfReferenceJob.getDisplayName());
+            return Optional.of(lastCompletedBuildOfReferenceJob);
         }
+        log.logInfo("-> no reference build found");
+
         return Optional.empty();
     }
 
@@ -105,7 +129,23 @@ public class GitReferenceRecorder extends ReferenceRecorder {
     @Extension
     @Symbol("discoverGitReferenceBuild")
     public static class Descriptor extends SimpleReferenceRecorderDescriptor {
-        private static final JenkinsFacade JENKINS = new JenkinsFacade();
+        private final JenkinsFacade jenkins;
+
+        /**
+         * Creates a new descriptor with the concrete services.
+         */
+        @SuppressWarnings("unused") // Required for extension point
+        public Descriptor() {
+            this(new JenkinsFacade(), new GitReferenceJobModelValidation());
+        }
+
+        @VisibleForTesting
+        Descriptor(final JenkinsFacade  jenkins, final GitReferenceJobModelValidation model) {
+            super();
+
+            this.jenkins = jenkins;
+            this.model = model;
+        }
 
         @NonNull
         @Override
@@ -113,19 +153,20 @@ public class GitReferenceRecorder extends ReferenceRecorder {
             return Messages.Recorder_DisplayName();
         }
 
-        private final GitReferenceJobModelValidation model = new GitReferenceJobModelValidation();
+        private final GitReferenceJobModelValidation model;
 
         /**
          * Returns the model with the possible reference jobs.
          *
          * @param project
          *         the project that is configured
+         *
          * @return the model with the possible reference jobs
          */
         @Override
         @POST
         public ComboBoxModel doFillReferenceJobItems(@AncestorInPath final AbstractProject<?, ?> project) {
-            if (JENKINS.hasPermission(Item.CONFIGURE)) {
+            if (jenkins.hasPermission(Item.CONFIGURE, project)) {
                 return model.getAllJobs();
             }
             return new ComboBoxModel();
@@ -144,8 +185,9 @@ public class GitReferenceRecorder extends ReferenceRecorder {
         @Override
         @POST
         @SuppressWarnings("unused") // Used in jelly validation
-        public FormValidation doCheckReferenceJob(@AncestorInPath final AbstractProject<?, ?> project, @QueryParameter final String referenceJob) {
-            if (!JENKINS.hasPermission(Item.CONFIGURE)) {
+        public FormValidation doCheckReferenceJob(@AncestorInPath final AbstractProject<?, ?> project,
+                @QueryParameter final String referenceJob) {
+            if (!jenkins.hasPermission(Item.CONFIGURE, project)) {
                 return FormValidation.ok();
             }
             return model.validateJob(referenceJob);
