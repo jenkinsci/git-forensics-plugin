@@ -1,7 +1,6 @@
 package io.jenkins.plugins.forensics.git.delta;
 
 import edu.hm.hafner.util.FilteredLog;
-import io.jenkins.plugins.forensics.assertions.Assertions;
 import io.jenkins.plugins.forensics.delta.model.*;
 import io.jenkins.plugins.forensics.git.util.GitITest;
 import org.apache.commons.lang3.StringUtils;
@@ -10,7 +9,7 @@ import org.junit.Test;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static io.jenkins.plugins.forensics.assertions.Assertions.assertThat;
 
 /**
  * Integration test for the class {@link GitDeltaCalculator}.
@@ -19,8 +18,11 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 public class GitDeltaCalculatorITest extends GitITest {
 
+    /**
+     * The delta result should be empty if there are invalid commits.
+     */
     @Test
-    public void shouldCreateEmptyDeltaIfCommitsAreEmpty() {
+    public void shouldCreateEmptyDeltaIfCommitsAreInvalid() {
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
 
         FilteredLog log = createLog();
@@ -29,6 +31,9 @@ public class GitDeltaCalculatorITest extends GitITest {
         assertThat(delta).isEmpty();
     }
 
+    /**
+     * The commit boundaries should be set properly.
+     */
     @Test
     public void shouldSetCommitBoundaries() {
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
@@ -42,10 +47,13 @@ public class GitDeltaCalculatorITest extends GitITest {
         assertThat(result).isNotEmpty();
 
         Delta delta = result.get();
-        Assertions.assertThat(delta).hasCurrentCommit(currentCommit);
-        Assertions.assertThat(delta).hasReferenceCommit(referenceCommit);
+        assertThat(delta).hasCurrentCommit(currentCommit);
+        assertThat(delta).hasReferenceCommit(referenceCommit);
     }
 
+    /**
+     * The Git diff file should be created properly.
+     */
     @Test
     public void shouldCreateDiffFile() {
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
@@ -63,7 +71,7 @@ public class GitDeltaCalculatorITest extends GitITest {
         assertThat(result).isNotEmpty();
 
         Delta delta = result.get();
-        Assertions.assertThat(delta).hasDiffFile("diff --git a/newFile b/newFile\n"
+        assertThat(delta).hasDiffFile("diff --git a/newFile b/newFile\n"
                 + "new file mode 100644\n"
                 + "index 0000000..6b584e8\n"
                 + "--- /dev/null\n"
@@ -73,6 +81,9 @@ public class GitDeltaCalculatorITest extends GitITest {
                 + "\\ No newline at end of file\n");
     }
 
+    /**
+     * An added file should be determined.
+     */
     @Test
     public void shouldDetermineAddedFile() {
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
@@ -97,6 +108,9 @@ public class GitDeltaCalculatorITest extends GitITest {
         assertThat(fileChanges.getFileContent()).isEqualTo(content);
     }
 
+    /**
+     * A modified file should be determined.
+     */
     @Test
     public void shouldDetermineModifiedFile() {
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
@@ -118,6 +132,9 @@ public class GitDeltaCalculatorITest extends GitITest {
         assertThat(fileChanges.getFileContent()).isEqualTo(content);
     }
 
+    /**
+     * A deleted file should be determined.
+     */
     @Test
     public void shouldDetermineDeletedFile() {
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
@@ -140,6 +157,9 @@ public class GitDeltaCalculatorITest extends GitITest {
         assertThat(fileChanges.getFileContent()).isEqualTo(content);
     }
 
+    /**
+     * Added lines within a specific file should be determined.
+     */
     @Test
     public void shouldDetermineAddedLines() {
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
@@ -157,11 +177,14 @@ public class GitDeltaCalculatorITest extends GitITest {
         Delta delta = result.get();
         FileChanges fileChanges = getFileChanges(delta);
         Change change = getSingleChangeOfType(fileChanges, ChangeEditType.INSERT);
-        Assertions.assertThat(change.getEditType()).isEqualTo(ChangeEditType.INSERT);
+        assertThat(change.getEditType()).isEqualTo(ChangeEditType.INSERT);
         assertThat(change.getFromLine()).isEqualTo(3);
         assertThat(change.getToLine()).isEqualTo(4);
     }
 
+    /**
+     * Modified lines within a specific file should be determined.
+     */
     @Test
     public void shouldDetermineModifiedLines() {
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
@@ -180,11 +203,14 @@ public class GitDeltaCalculatorITest extends GitITest {
         Delta delta = result.get();
         FileChanges fileChanges = getFileChanges(delta);
         Change change = getSingleChangeOfType(fileChanges, ChangeEditType.REPLACE);
-        Assertions.assertThat(change.getEditType()).isEqualTo(ChangeEditType.REPLACE);
+        assertThat(change.getEditType()).isEqualTo(ChangeEditType.REPLACE);
         assertThat(change.getFromLine()).isEqualTo(2);
         assertThat(change.getToLine()).isEqualTo(2);
     }
 
+    /**
+     * Deleted lines within a specific file should be determined.
+     */
     @Test
     public void shouldDetermineDeletedLines() {
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
@@ -203,11 +229,14 @@ public class GitDeltaCalculatorITest extends GitITest {
         Delta delta = result.get();
         FileChanges fileChanges = getFileChanges(delta);
         Change change = getSingleChangeOfType(fileChanges, ChangeEditType.DELETE);
-        Assertions.assertThat(change.getEditType()).isEqualTo(ChangeEditType.DELETE);
+        assertThat(change.getEditType()).isEqualTo(ChangeEditType.DELETE);
         assertThat(change.getFromLine()).isEqualTo(2);
         assertThat(change.getToLine()).isEqualTo(2);
     }
 
+    /**
+     * Added, modified and deleted lines within a specific file should be determined properly together.
+     */
     @Test
     public void shouldDetermineAllChangeTypesTogether() {
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
@@ -227,21 +256,29 @@ public class GitDeltaCalculatorITest extends GitITest {
         FileChanges fileChanges = getFileChanges(delta);
 
         Change replace = getSingleChangeOfType(fileChanges, ChangeEditType.REPLACE);
-        Assertions.assertThat(replace.getEditType()).isEqualTo(ChangeEditType.REPLACE);
+        assertThat(replace.getEditType()).isEqualTo(ChangeEditType.REPLACE);
         assertThat(replace.getFromLine()).isEqualTo(1);
         assertThat(replace.getToLine()).isEqualTo(1);
 
         Change insert = getSingleChangeOfType(fileChanges, ChangeEditType.INSERT);
-        Assertions.assertThat(insert.getEditType()).isEqualTo(ChangeEditType.INSERT);
+        assertThat(insert.getEditType()).isEqualTo(ChangeEditType.INSERT);
         assertThat(insert.getFromLine()).isEqualTo(3);
         assertThat(insert.getToLine()).isEqualTo(3);
 
         Change delete = getSingleChangeOfType(fileChanges, ChangeEditType.DELETE);
-        Assertions.assertThat(delete.getEditType()).isEqualTo(ChangeEditType.DELETE);
+        assertThat(delete.getEditType()).isEqualTo(ChangeEditType.DELETE);
         assertThat(delete.getFromLine()).isEqualTo(4);
         assertThat(delete.getToLine()).isEqualTo(4);
     }
 
+    /**
+     * Gets the first {@link Change} of a specific {@link ChangeEditType} within a file when there is only a single change
+     * and checks if the found values are properly.
+     *
+     * @param fileChanges The changes within a file
+     * @param type        The change type
+     * @return the first found change
+     */
     private Change getSingleChangeOfType(final FileChanges fileChanges, final ChangeEditType type) {
         List<Change> changes = fileChanges.getChanges().get(type);
         assertThat(changes).isNotNull().isNotEmpty();
@@ -249,12 +286,23 @@ public class GitDeltaCalculatorITest extends GitITest {
         return changes.get(0);
     }
 
+    /**
+     * Gets the {@link FileChanges} of a calculated code {@link Delta}.
+     *
+     * @param delta The code delta
+     * @return the found changes.
+     */
     private FileChanges getFileChanges(final Delta delta) {
         Optional<FileChanges> fileChanges = delta.getFileChanges().values().stream().findFirst();
         assertThat(fileChanges).isNotEmpty();
         return fileChanges.get();
     }
 
+    /**
+     * Creates and commits a file with a fixed name and with the passed file content.
+     *
+     * @param content The file contend
+     */
     private void commitFile(final String content) {
         writeFile(INITIAL_FILE, content);
         git("add", INITIAL_FILE);
@@ -263,10 +311,20 @@ public class GitDeltaCalculatorITest extends GitITest {
         git("commit", "--message=Test");
     }
 
+    /**
+     * Creates a {@link FilteredLog}.
+     *
+     * @return the created log
+     */
     private FilteredLog createLog() {
         return new FilteredLog(StringUtils.EMPTY);
     }
 
+    /**
+     * Creates a {@link GitDeltaCalculator}.
+     *
+     * @return the created delta calculator
+     */
     private GitDeltaCalculator createDeltaCalculator() {
         return new GitDeltaCalculator(createGitClient());
     }

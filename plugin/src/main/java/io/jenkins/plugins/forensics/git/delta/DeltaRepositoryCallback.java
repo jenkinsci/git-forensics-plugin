@@ -18,6 +18,7 @@ import org.eclipse.jgit.revwalk.RevWalk;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -41,7 +42,14 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
      */
     private final String referenceCommitId;
 
+    /**
+     * Creates an instance which can be used for executing a Git repository callback.
+     *
+     * @param currentCommitId The commit ID of the currently processed commit
+     * @param referenceCommitId The commit ID of the reference commit.
+     */
     public DeltaRepositoryCallback(final String currentCommitId, final String referenceCommitId) {
+        super();
         this.currentCommitId = currentCommitId;
         this.referenceCommitId = referenceCommitId;
     }
@@ -111,7 +119,7 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
                 fileChangesMap.put(diffEntry.getNewId().name(), fileChanges);
             }
 
-            String diffFile = diffStream.toString();
+            String diffFile = new String(diffStream.toByteArray(), StandardCharsets.UTF_8);
             delta.setDiffFile(diffFile);
             delta.setFileChanges(fileChangesMap);
         }
@@ -130,7 +138,7 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
     private String getFileContent(final ObjectId fileId, final Repository repository) throws IOException {
         ObjectDatabase objectDatabase = repository.getObjectDatabase();
         ObjectLoader objectLoader = objectDatabase.open(fileId);
-        return new String(objectLoader.getBytes());
+        return new String(objectLoader.getBytes(), StandardCharsets.UTF_8);
     }
 
     /**
