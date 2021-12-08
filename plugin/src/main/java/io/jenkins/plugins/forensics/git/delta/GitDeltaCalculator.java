@@ -35,7 +35,7 @@ public class GitDeltaCalculator extends DeltaCalculator {
 
     @Override
     public Optional<Delta> calculateDelta(final String currentCommit, final String referenceCommit,
-            final FilteredLog log) {
+                                          final FilteredLog log) {
         try {
             log.logInfo("Invoking Git delta calculator for determining the made changes between the commits with the IDs %s and %s",
                     currentCommit, referenceCommit);

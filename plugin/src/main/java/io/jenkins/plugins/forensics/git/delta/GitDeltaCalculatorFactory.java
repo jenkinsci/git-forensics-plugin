@@ -22,7 +22,7 @@ public class GitDeltaCalculatorFactory extends DeltaCalculatorFactory {
 
     @Override
     public Optional<DeltaCalculator> createDeltaCalculator(final SCM scm, final Run<?, ?> run, final FilePath workspace,
-            final TaskListener listener, final FilteredLog logger) {
+                                                           final TaskListener listener, final FilteredLog logger) {
         GitRepositoryValidator validator = new GitRepositoryValidator(scm, run, workspace, listener, logger);
         if (validator.isGitRepository()) {
             GitClient client = validator.createClient();

@@ -56,12 +56,9 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
      * Calculates the delta between the commits {@link #currentCommitId} and {@link #referenceCommitId} by using the Git
      * repository.
      *
-     * @param repository
-     *         The Git repository.
-     *
+     * @param repository The Git repository.
      * @return a serializable wrapper containing the delta
-     * @throws IOException
-     *         if communicating with Git failed
+     * @throws IOException if communicating with Git failed
      */
     private RemoteResultWrapper<Delta> calculateDelta(final Repository repository) throws IOException {
         Delta delta = new Delta(currentCommitId, referenceCommitId);
@@ -125,14 +122,10 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
     /**
      * Reads the content of a file which is specified by its id - the {@link ObjectId}.
      *
-     * @param fileId
-     *         The file id
-     * @param repository
-     *         The Git repository
-     *
+     * @param fileId     The file id
+     * @param repository The Git repository
      * @return the file content
-     * @throws IOException
-     *         if reading failed
+     * @throws IOException if reading failed
      */
     private String getFileContent(final ObjectId fileId, final Repository repository) throws IOException {
         ObjectDatabase objectDatabase = repository.getObjectDatabase();
@@ -143,9 +136,7 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
     /**
      * Transforms the Git specific {@link ChangeType} to the general model {@link FileEditType}.
      *
-     * @param type
-     *         The Git specific change type
-     *
+     * @param type The Git specific change type
      * @return the transformed general type
      */
     private FileEditType getFileEditType(final ChangeType type) {
@@ -168,9 +159,7 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
     /**
      * Transforms the Git specific {@link Edit.Type} to the general model {@link ChangeEditType}.
      *
-     * @param type
-     *         The Git specific edit type
-     *
+     * @param type The Git specific edit type
      * @return the transformed general type
      */
     private ChangeEditType getChangeEditType(final Edit.Type type) {
@@ -191,10 +180,8 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
     /**
      * Processes an edit on a file and adds it to a map which key are the {@link ChangeEditType}.
      *
-     * @param edit
-     *         The edit to be processed
-     * @param changesByType
-     *         The map to which edits are added to after processing
+     * @param edit          The edit to be processed
+     * @param changesByType The map to which edits are added to after processing
      */
     private void addChangeByType(final Edit edit, final Map<ChangeEditType, List<Change>> changesByType) {
         ChangeEditType changeEditType = getChangeEditType(edit.getType());
