@@ -29,7 +29,7 @@
     <font-awesome-api.version>5.15.4-3</font-awesome-api.version>
     <plugin-util-api.version>2.5.1</plugin-util-api.version>
     <data-tables-api.version>1.11.3-1</data-tables-api.version>
-    <forensics-api-plugin.version>1.8.0-rc1147.37a46657bd0d</forensics-api-plugin.version>
+    <forensics-api-plugin.version>1.8.0-rc1149.c59a6e6ded1c</forensics-api-plugin.version>
     <j2html.version>1.4.0</j2html.version>
     <streamex.version>0.8.0</streamex.version>
   </properties>
