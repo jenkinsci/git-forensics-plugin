@@ -58,7 +58,6 @@ class GitReferenceRecorderTest {
 
             Descriptor descriptor = new Descriptor(jenkins, model);
 
-
             FreeStyleProject project = mock(FreeStyleProject.class);
             assertThat(descriptor.doFillReferenceJobItems(project)).isEqualTo(new ComboBoxModel());
             verifyNoInteractions(model);
