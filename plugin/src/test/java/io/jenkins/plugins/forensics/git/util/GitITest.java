@@ -67,6 +67,7 @@ public class GitITest extends IntegrationTestWithJenkinsPerTest {
     @Before
     public void init() throws Exception {
         sampleRepo.init();
+        sampleRepo.git("config", "--global", "core.longpaths", "true");
         checkoutNewBranch(INITIAL_BRANCH);
     }
 
