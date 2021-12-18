@@ -5,9 +5,11 @@
  * collect a statistical summary for all containing commits. This includes the commits count, the changed files count,
  * and the added and deleted lines in those commits.
  * </p>
+ *
  * <p>
  * Additionally, the classes in this package will collect commit statistics for all repository files in the style of
  * the book "Code as a Crime Scene":
+ * </p>
  * <ul>
  *     <li> commits count </li>
  *     <li> different authors count </li>

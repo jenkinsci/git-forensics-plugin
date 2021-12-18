@@ -22,6 +22,7 @@ import static io.jenkins.plugins.forensics.assertions.Assertions.*;
  *
  * @author Ullrich Hafner
  */
+@SuppressWarnings("checkstyle:LambdaBodyLength")
 public class DiffsCollectorITest extends GitITest {
     private static final String MOVED_FILE = "moved";
     private static final String AUTHOR = "author";
