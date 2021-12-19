@@ -8,6 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
 import edu.hm.hafner.util.FilteredLog;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import io.jenkins.plugins.forensics.delta.model.Change;
 import io.jenkins.plugins.forensics.delta.model.ChangeEditType;
@@ -43,6 +44,7 @@ public class GitDeltaCalculatorITest extends GitITest {
      * The Git diff file should be created properly.
      */
     @Test
+    @SuppressFBWarnings(value = "BC_UNCONFIRMED_CAST_OF_RETURN_VALUE", justification = "The cast is confirmed via an assertion")
     public void shouldCreateDiffFile() {
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         FilteredLog log = createLog();
@@ -62,6 +64,7 @@ public class GitDeltaCalculatorITest extends GitITest {
         assertThat(delta).hasCurrentCommit(currentCommit);
         assertThat(delta).hasReferenceCommit(referenceCommit);
         assertThat(delta).isInstanceOf(GitDelta.class);
+
         assertThat(((GitDelta) delta).getDiffFile()).isEqualTo("diff --git a/newFile b/newFile\n"
                 + "new file mode 100644\n"
                 + "index 0000000..6b584e8\n"
