@@ -2,9 +2,9 @@ package io.jenkins.plugins.forensics.git.delta;
 
 import java.io.IOException;
 import java.util.Optional;
-import javax.annotation.Nonnull;
 
 import edu.hm.hafner.util.FilteredLog;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -39,8 +39,8 @@ public class GitDeltaCalculator extends DeltaCalculator {
     }
 
     @Override
-    public Optional<Delta> calculateDelta(@Nonnull final String currentCommit, @Nonnull final String referenceCommit,
-            @Nonnull final FilteredLog log) {
+    public Optional<Delta> calculateDelta(@NonNull final String currentCommit, @NonNull final String referenceCommit,
+            @NonNull final FilteredLog log) {
         try {
             log.logInfo(
                     "Invoking Git delta calculator for determining the made changes between the commits with the IDs %s and %s",
