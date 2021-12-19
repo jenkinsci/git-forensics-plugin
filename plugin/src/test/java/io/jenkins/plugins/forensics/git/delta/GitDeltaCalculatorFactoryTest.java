@@ -1,6 +1,16 @@
 package io.jenkins.plugins.forensics.git.delta;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Optional;
+
+import org.assertj.core.util.Lists;
+import org.eclipse.jgit.lib.ObjectId;
+import org.junit.jupiter.api.Test;
+
 import edu.hm.hafner.util.FilteredLog;
+
+import org.jenkinsci.plugins.gitclient.GitClient;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.model.Run;
@@ -10,21 +20,13 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.impl.CloneOption;
 import hudson.scm.NullSCM;
 import hudson.util.DescribableList;
+
 import io.jenkins.plugins.forensics.delta.DeltaCalculator;
 import io.jenkins.plugins.forensics.git.util.GitRepositoryValidator;
-import org.assertj.core.util.Lists;
-import org.eclipse.jgit.lib.ObjectId;
-import org.jenkinsci.plugins.gitclient.GitClient;
-import org.junit.jupiter.api.Test;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 /**
  * Integration test for the class {@link GitDeltaCalculatorFactory}.

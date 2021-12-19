@@ -1,17 +1,19 @@
 package io.jenkins.plugins.forensics.git.delta;
 
-import edu.hm.hafner.util.FilteredLog;
-import io.jenkins.plugins.forensics.delta.model.Delta;
-import org.apache.commons.lang3.StringUtils;
-import org.jenkinsci.plugins.gitclient.GitClient;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentMatchers;
-import org.mockito.Mockito;
-
 import java.io.IOException;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.apache.commons.lang3.StringUtils;
+import org.junit.jupiter.api.Test;
+
+import edu.hm.hafner.util.FilteredLog;
+
+import org.jenkinsci.plugins.gitclient.GitClient;
+
+import io.jenkins.plugins.forensics.delta.model.Delta;
+
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 /**
  * Tests for the class {@link GitDeltaCalculator}.
@@ -33,8 +35,8 @@ class GitDeltaCalculatorTest {
     }
 
     private GitClient createGitClientWithException(final Exception exception) throws InterruptedException, IOException {
-        GitClient gitClient = Mockito.mock(GitClient.class);
-        Mockito.when(gitClient.withRepository(ArgumentMatchers.any())).thenThrow(exception);
+        GitClient gitClient = mock(GitClient.class);
+        when(gitClient.withRepository(any())).thenThrow(exception);
         return gitClient;
     }
 }
