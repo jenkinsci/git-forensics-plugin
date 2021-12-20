@@ -31,7 +31,7 @@
     <data-tables-api.version>1.11.3-1</data-tables-api.version>
     <forensics-api-plugin.version>1.7.0</forensics-api-plugin.version>
     <j2html.version>1.4.0</j2html.version>
-    <streamex.version>0.8.0</streamex.version>
+    <streamex.version>0.8.1</streamex.version>
   </properties>
 
   <licenses>
