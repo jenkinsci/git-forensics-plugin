@@ -9,9 +9,8 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebElement;
 
-
 /**
- * Page object for the details table of the forensics view.
+ * Page object for the details-table of the forensics view.
  *
  * @author Mitja Oldenbourg
  */
@@ -44,7 +43,7 @@ public class DetailsTable {
     }
 
     /**
-     * returns the Header Row Size.
+     * Returns the Header Row Size.
      *
      * @return amount of columns as Integer.
      */
@@ -53,7 +52,7 @@ public class DetailsTable {
     }
 
     /**
-     * returns a List of Strings containing the Headers.
+     * Returns a List of Strings containing the Headers.
      *
      * @return table headers as list.
      */
@@ -62,7 +61,7 @@ public class DetailsTable {
     }
 
     /**
-     * returns a List of DetailsTableRow objects that represent the rows of the Table.
+     * Returns a List of DetailsTableRow objects that represent the rows of the Table.
      *
      * @return table rows as List.
      */
@@ -73,7 +72,7 @@ public class DetailsTable {
     }
 
     /**
-     * returns the amount of row entries of the Table.
+     * Returns the amount of row entries of the Table.
      *
      * @return amount of shown table rows.
      */
@@ -83,7 +82,7 @@ public class DetailsTable {
     }
 
     /**
-     * returns the forensics information on the bottom left of the Table showing the number of total entries and the
+     * Returns the forensics information on the bottom left of the Table showing the number of total entries and the
      * page we are on.
      *
      * @return forensics info string.
