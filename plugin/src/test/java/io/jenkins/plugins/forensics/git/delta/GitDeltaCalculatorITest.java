@@ -63,16 +63,16 @@ public class GitDeltaCalculatorITest extends GitITest {
         Delta delta = result.get();
         assertThat(delta).hasCurrentCommit(currentCommit);
         assertThat(delta).hasReferenceCommit(referenceCommit);
-        assertThat(delta).isInstanceOf(GitDelta.class);
-
-        assertThat(((GitDelta) delta).getDiffFile()).isEqualTo("diff --git a/newFile b/newFile\n"
-                + "new file mode 100644\n"
-                + "index 0000000..6b584e8\n"
-                + "--- /dev/null\n"
-                + "+++ b/newFile\n"
-                + "@@ -0,0 +1 @@\n"
-                + "+content\n"
-                + "\\ No newline at end of file\n");
+        assertThat(delta).isInstanceOfSatisfying(GitDelta.class,
+                gitDelta -> assertThat(gitDelta.getDiffFile()).isEqualTo(
+                        "diff --git a/newFile b/newFile\n"
+                                + "new file mode 100644\n"
+                                + "index 0000000..6b584e8\n"
+                                + "--- /dev/null\n"
+                                + "+++ b/newFile\n"
+                                + "@@ -0,0 +1 @@\n"
+                                + "+content\n"
+                                + "\\ No newline at end of file\n"));
     }
 
     /**
