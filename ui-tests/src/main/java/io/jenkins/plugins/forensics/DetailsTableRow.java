@@ -12,7 +12,6 @@ import static io.jenkins.plugins.forensics.DetailsTable.*;
 
 /**
  * Describes one row in the DetailsTable on the ScmForensics Page.
- *
  */
 public class DetailsTableRow {
     private static final String FILE_SEPARATOR = "/";
@@ -85,7 +84,6 @@ public class DetailsTableRow {
         List<WebElement> cells = row.findElements(By.tagName("td"));
         return cells.get(this.detailsTable.getHeaders().indexOf(header));
     }
-
 
     private String getCellContent(final String header) {
         if (!detailsTable.getHeaders().contains(header)) {
