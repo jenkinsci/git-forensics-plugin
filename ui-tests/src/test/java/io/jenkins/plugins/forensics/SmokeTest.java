@@ -36,7 +36,7 @@ public class SmokeTest extends AbstractJUnitTest {
         Build firstBuild = buildSuccessfully(firstJob);
 
         // build second job
-        String option = "discoverReferenceBuild(referenceJob: '" + firstJob.name + "') \n" + "gitDiffStat()";
+        String option = "discoverGitReferenceBuild(referenceJob: '" + firstJob.name + "') \n" + "gitDiffStat()"; // also works with discoverReferenceBuild
         WorkflowJob secondJob = createJob(option, secondCommitHash );
         Build secondBuild = buildSuccessfully(secondJob);
 
