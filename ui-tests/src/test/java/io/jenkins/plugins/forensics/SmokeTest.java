@@ -13,6 +13,7 @@ import org.jenkinsci.test.acceptance.po.WorkflowJob;
 
 import org.junit.Test;
 import org.openqa.selenium.By;
+import org.openqa.selenium.By.ByClassName;
 import org.openqa.selenium.WebElement;
 
 import static org.assertj.core.api.Assertions.*;
@@ -78,9 +79,47 @@ public class SmokeTest extends AbstractJUnitTest {
         assertThat(isLinkWorking(linkToFirstBuild)).isTrue();
 
 
-        //check trend charts
-        //System.out.println("-------------------------------------");
-        //System.out.println("-------------------------------------");
+        secondJob.startBuild();
+        secondJob.startBuild();
+
+        // wait for Commit Statistics Chart to appear
+        try {
+            Thread.sleep(10000);
+        }
+        catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+
+        driver.get(driver.getCurrentUrl());
+        //check trend chart title
+        assertThat(isChartTitleDisplayed()).isTrue();
+
+        //check trend chart canvas
+        assertThat(isChartDisplayed()).isTrue();
+        // todo: test chart values, color, configuration etc.
+    }
+
+
+    private boolean isChartDisplayed(){
+        List<WebElement> charts = driver.findElements(By.className("echarts-trend"));
+        for(WebElement chart : charts){
+            System.out.println(chart.getAttribute("id"));
+            if(chart.isDisplayed()){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isChartTitleDisplayed (){
+        List<WebElement> captions = driver.findElements(By.className("test-trend-caption"));
+        for(WebElement caption : captions){
+            if(caption.getText().equals("Commit Statistics Trend")){
+                return true;
+            }
+        }
+        return false;
     }
 
 
