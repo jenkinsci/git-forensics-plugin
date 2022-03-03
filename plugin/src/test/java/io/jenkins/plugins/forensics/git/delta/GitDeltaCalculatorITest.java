@@ -160,9 +160,10 @@ public class GitDeltaCalculatorITest extends GitITest {
         FilteredLog log = createLog();
 
         final String content = "Test\nTest\n";
+        final String insertedContent = "Test\nInsert1\nInsert2\nTest\n";
         commitFile(content);
         final String referenceCommit = getHead();
-        commitFile(content + content);
+        commitFile(insertedContent);
         final String currentCommit = getHead();
 
         Optional<Delta> result = deltaCalculator.calculateDelta(currentCommit, referenceCommit, log);
@@ -172,8 +173,10 @@ public class GitDeltaCalculatorITest extends GitITest {
         FileChanges fileChanges = getSingleFileChanges(delta);
         Change change = getSingleChangeOfType(fileChanges, ChangeEditType.INSERT);
         assertThat(change.getEditType()).isEqualTo(ChangeEditType.INSERT);
-        assertThat(change.getFromLine()).isEqualTo(3);
-        assertThat(change.getToLine()).isEqualTo(4);
+        assertThat(change.getChangedFromLine()).isEqualTo(1);
+        assertThat(change.getChangedToLine()).isEqualTo(1);
+        assertThat(change.getFromLine()).isEqualTo(2);
+        assertThat(change.getToLine()).isEqualTo(3);
     }
 
     /**
@@ -184,8 +187,8 @@ public class GitDeltaCalculatorITest extends GitITest {
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         FilteredLog log = createLog();
 
-        final String content = "Test\nTest\n";
-        final String modified = "Test\nModified\n";
+        final String content = "Test\nTest\nTest\nTest";
+        final String modified = "Test\nModified\nModified2\nTest";
         commitFile(content);
         final String referenceCommit = getHead();
         commitFile(modified);
@@ -198,8 +201,10 @@ public class GitDeltaCalculatorITest extends GitITest {
         FileChanges fileChanges = getSingleFileChanges(delta);
         Change change = getSingleChangeOfType(fileChanges, ChangeEditType.REPLACE);
         assertThat(change.getEditType()).isEqualTo(ChangeEditType.REPLACE);
+        assertThat(change.getChangedFromLine()).isEqualTo(2);
+        assertThat(change.getChangedToLine()).isEqualTo(3);
         assertThat(change.getFromLine()).isEqualTo(2);
-        assertThat(change.getToLine()).isEqualTo(2);
+        assertThat(change.getToLine()).isEqualTo(3);
     }
 
     /**
@@ -210,8 +215,8 @@ public class GitDeltaCalculatorITest extends GitITest {
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         FilteredLog log = createLog();
 
-        final String content = "Test\nTest\n";
-        final String modified = "Test\n";
+        final String content = "Test\nTest3\nTest";
+        final String modified = "Test\nTest";
         commitFile(content);
         final String referenceCommit = getHead();
         commitFile(modified);
@@ -224,8 +229,10 @@ public class GitDeltaCalculatorITest extends GitITest {
         FileChanges fileChanges = getSingleFileChanges(delta);
         Change change = getSingleChangeOfType(fileChanges, ChangeEditType.DELETE);
         assertThat(change.getEditType()).isEqualTo(ChangeEditType.DELETE);
-        assertThat(change.getFromLine()).isEqualTo(2);
-        assertThat(change.getToLine()).isEqualTo(2);
+        assertThat(change.getChangedFromLine()).isEqualTo(2);
+        assertThat(change.getChangedToLine()).isEqualTo(2);
+        assertThat(change.getFromLine()).isEqualTo(1);
+        assertThat(change.getToLine()).isEqualTo(1);
     }
 
     /**
@@ -251,16 +258,22 @@ public class GitDeltaCalculatorITest extends GitITest {
 
         Change replace = getSingleChangeOfType(fileChanges, ChangeEditType.REPLACE);
         assertThat(replace.getEditType()).isEqualTo(ChangeEditType.REPLACE);
+        assertThat(replace.getChangedFromLine()).isEqualTo(1);
+        assertThat(replace.getChangedToLine()).isEqualTo(1);
         assertThat(replace.getFromLine()).isEqualTo(1);
         assertThat(replace.getToLine()).isEqualTo(1);
 
         Change insert = getSingleChangeOfType(fileChanges, ChangeEditType.INSERT);
         assertThat(insert.getEditType()).isEqualTo(ChangeEditType.INSERT);
+        assertThat(insert.getChangedFromLine()).isEqualTo(2);
+        assertThat(insert.getChangedToLine()).isEqualTo(2);
         assertThat(insert.getFromLine()).isEqualTo(3);
         assertThat(insert.getToLine()).isEqualTo(3);
 
         Change delete = getSingleChangeOfType(fileChanges, ChangeEditType.DELETE);
         assertThat(delete.getEditType()).isEqualTo(ChangeEditType.DELETE);
+        assertThat(delete.getChangedFromLine()).isEqualTo(4);
+        assertThat(delete.getChangedToLine()).isEqualTo(4);
         assertThat(delete.getFromLine()).isEqualTo(4);
         assertThat(delete.getToLine()).isEqualTo(4);
     }

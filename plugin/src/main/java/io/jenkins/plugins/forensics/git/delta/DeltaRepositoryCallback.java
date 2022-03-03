@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
@@ -153,8 +154,7 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
         FileChanges fileChanges = new FileChanges(filePath, fileContent, fileEditType, new HashMap<>());
 
         for (Edit edit : diffFormatter.toFileHeader(diffEntry).toEditList()) {
-            Change change = createChange(edit);
-            fileChanges.addChange(change);
+            createChange(edit).ifPresent(fileChanges::addChange);
         }
 
         return fileChanges;
@@ -232,19 +232,26 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
      * @param edit
      *         The edit to be processed
      *
-     * @return the created change
+     * @return the created change as an Optional if there is a edit which is not empty
      */
-    private Change createChange(final Edit edit) {
+    private Optional<Change> createChange(final Edit edit) {
         ChangeEditType changeEditType = getChangeEditType(edit.getType());
-        // add 1 to the 'begin' since it is included and the index is zero based
-        // 'end' does not need this because the value is excluded anyway
-        if (changeEditType == ChangeEditType.DELETE) {
-            // get the changed line indices from the old file version
-            return new Change(changeEditType, edit.getBeginA() + 1, edit.getEndA());
+        // add 1 to the 'begin' of the interval which is relevant for determining the made change since the begin is
+        // included and the index is zero based ('end' does not need this because the value is excluded anyway)
+        if (changeEditType.equals(ChangeEditType.DELETE)) {
+            return Optional.of(new Change(changeEditType,
+                    edit.getBeginA() + 1, edit.getEndA(),
+                    edit.getBeginB(), edit.getEndB()));
         }
-        else {
-            // get the changed line indices from the new file version
-            return new Change(changeEditType, edit.getBeginB() + 1, edit.getEndB());
+        else if (changeEditType.equals(ChangeEditType.INSERT)) {
+            return Optional.of(new Change(changeEditType,
+                    edit.getBeginA(), edit.getEndA(),
+                    edit.getBeginB() + 1, edit.getEndB()));
+        } else if (changeEditType.equals(ChangeEditType.REPLACE)) {
+            return Optional.of(new Change(changeEditType,
+                    edit.getBeginA() + 1, edit.getEndA(),
+                    edit.getBeginB() + 1, edit.getEndB()));
         }
+        return Optional.empty();
     }
 }
