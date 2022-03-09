@@ -28,7 +28,7 @@
     <echarts-api.version>5.3.0-2</echarts-api.version>
     <font-awesome-api.version>6.0.0-1</font-awesome-api.version>
     <plugin-util-api.version>2.14.0</plugin-util-api.version>
-    <data-tables-api.version>1.11.4-1</data-tables-api.version>
+    <data-tables-api.version>1.11.4-3</data-tables-api.version>
     <forensics-api-plugin.version>1.9.0</forensics-api-plugin.version>
     <bootstrap5-api.version>5.1.3-6</bootstrap5-api.version>
     <streamex.version>0.8.1</streamex.version>
