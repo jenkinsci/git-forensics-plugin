@@ -106,11 +106,14 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
                     fileChangesMap.put(diffEntry.getNewId().name(), fileChanges);
                 }
 
+                log.logInfo("Creating the Git diff file");
                 String diffFile = new String(diffStream.toByteArray(), StandardCharsets.UTF_8);
 
                 GitDelta delta = new GitDelta(currentCommitId, referenceCommitId, fileChangesMap, diffFile);
                 RemoteResultWrapper<Delta> wrapper = new RemoteResultWrapper<>(delta, "Errors from Git Delta:");
                 wrapper.merge(log);
+
+                log.logInfo("Git code delta successfully calculated");
 
                 return wrapper;
             }
@@ -247,7 +250,8 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
             return Optional.of(new Change(changeEditType,
                     edit.getBeginA(), edit.getEndA(),
                     edit.getBeginB() + 1, edit.getEndB()));
-        } else if (changeEditType.equals(ChangeEditType.REPLACE)) {
+        }
+        else if (changeEditType.equals(ChangeEditType.REPLACE)) {
             return Optional.of(new Change(changeEditType,
                     edit.getBeginA() + 1, edit.getEndA(),
                     edit.getBeginB() + 1, edit.getEndB()));
