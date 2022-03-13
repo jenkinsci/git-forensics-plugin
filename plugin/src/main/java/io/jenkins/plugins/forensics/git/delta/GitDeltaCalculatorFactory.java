@@ -6,6 +6,7 @@ import edu.hm.hafner.util.FilteredLog;
 import edu.hm.hafner.util.PathUtil;
 
 import org.jenkinsci.plugins.gitclient.GitClient;
+import hudson.Extension;
 import hudson.FilePath;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -20,6 +21,7 @@ import io.jenkins.plugins.forensics.git.util.GitRepositoryValidator;
  *
  * @author Florian Orendi
  */
+@Extension
 public class GitDeltaCalculatorFactory extends DeltaCalculatorFactory {
 
     @Override
