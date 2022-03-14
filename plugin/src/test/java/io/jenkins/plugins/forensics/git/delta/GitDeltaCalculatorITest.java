@@ -1,5 +1,6 @@
 package io.jenkins.plugins.forensics.git.delta;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
@@ -10,15 +11,21 @@ import org.junit.Test;
 import edu.hm.hafner.util.FilteredLog;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
+import hudson.model.FreeStyleProject;
+import hudson.model.Run;
+import hudson.plugins.git.GitSCM;
+
 import io.jenkins.plugins.forensics.delta.model.Change;
 import io.jenkins.plugins.forensics.delta.model.ChangeEditType;
 import io.jenkins.plugins.forensics.delta.model.Delta;
 import io.jenkins.plugins.forensics.delta.model.FileChanges;
 import io.jenkins.plugins.forensics.delta.model.FileEditType;
 import io.jenkins.plugins.forensics.git.delta.model.GitDelta;
+import io.jenkins.plugins.forensics.git.reference.GitReferenceRecorder;
 import io.jenkins.plugins.forensics.git.util.GitITest;
 
 import static io.jenkins.plugins.forensics.assertions.Assertions.*;
+import static org.mockito.Mockito.*;
 
 /**
  * Integration test for the class {@link GitDeltaCalculator}.
@@ -35,9 +42,8 @@ public class GitDeltaCalculatorITest extends GitITest {
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
 
         FilteredLog log = createLog();
-        Optional<Delta> delta = deltaCalculator.calculateDelta("", "", log);
-
-        assertThat(delta).isEmpty();
+        assertThat(deltaCalculator.calculateDelta("", "", log)).isEmpty();
+        assertThat(deltaCalculator.calculateDelta(mock(Run.class), mock(Run.class), log)).isEmpty();
     }
 
     /**
@@ -80,19 +86,20 @@ public class GitDeltaCalculatorITest extends GitITest {
      */
     @Test
     public void shouldDetermineAddedFile() {
+        FreeStyleProject job = createJobWithReferenceRecorder();
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         FilteredLog log = createLog();
 
-        final String referenceCommit = getHead();
+        Run<?, ?> referenceBuild = buildSuccessfully(job);
 
-        final String newFileName = "newFile";
-        final String content = "added";
+        String newFileName = "newFile";
+        String content = "added";
         writeFile(newFileName, content);
         addFile(newFileName);
         commit("test");
-        final String currentCommit = getHead();
+        Run<?, ?> build = buildSuccessfully(job);
 
-        Optional<Delta> result = deltaCalculator.calculateDelta(currentCommit, referenceCommit, log);
+        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, log);
         assertThat(result).isNotEmpty();
 
         Delta delta = result.get();
@@ -107,16 +114,17 @@ public class GitDeltaCalculatorITest extends GitITest {
      */
     @Test
     public void shouldDetermineModifiedFile() {
+        FreeStyleProject job = createJobWithReferenceRecorder();
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         FilteredLog log = createLog();
 
-        final String content = "modified";
+        String content = "modified";
         commitFile("test");
-        final String referenceCommit = getHead();
+        Run<?, ?> referenceBuild = buildSuccessfully(job);
         commitFile(content);
-        final String currentCommit = getHead();
+        Run<?, ?> build = buildSuccessfully(job);
 
-        Optional<Delta> result = deltaCalculator.calculateDelta(currentCommit, referenceCommit, log);
+        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, log);
         assertThat(result).isNotEmpty();
 
         Delta delta = result.get();
@@ -131,17 +139,18 @@ public class GitDeltaCalculatorITest extends GitITest {
      */
     @Test
     public void shouldDetermineDeletedFile() {
+        FreeStyleProject job = createJobWithReferenceRecorder();
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         FilteredLog log = createLog();
 
-        final String content = "content";
+        String content = "content";
         commitFile(content);
-        final String referenceCommit = getHead();
+        Run<?, ?> referenceBuild = buildSuccessfully(job);
         git("rm", GitITest.INITIAL_FILE);
         commit("test");
-        final String currentCommit = getHead();
+        Run<?, ?> build = buildSuccessfully(job);
 
-        Optional<Delta> result = deltaCalculator.calculateDelta(currentCommit, referenceCommit, log);
+        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, log);
         assertThat(result).isNotEmpty();
 
         Delta delta = result.get();
@@ -156,17 +165,18 @@ public class GitDeltaCalculatorITest extends GitITest {
      */
     @Test
     public void shouldDetermineAddedLines() {
+        FreeStyleProject job = createJobWithReferenceRecorder();
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         FilteredLog log = createLog();
 
-        final String content = "Test\nTest\n";
-        final String insertedContent = "Test\nInsert1\nInsert2\nTest\n";
+        String content = "Test\nTest\n";
+        String insertedContent = "Test\nInsert1\nInsert2\nTest\n";
         commitFile(content);
-        final String referenceCommit = getHead();
+        Run<?, ?> referenceBuild = buildSuccessfully(job);
         commitFile(insertedContent);
-        final String currentCommit = getHead();
+        Run<?, ?> build = buildSuccessfully(job);
 
-        Optional<Delta> result = deltaCalculator.calculateDelta(currentCommit, referenceCommit, log);
+        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, log);
         assertThat(result).isNotEmpty();
 
         Delta delta = result.get();
@@ -184,17 +194,18 @@ public class GitDeltaCalculatorITest extends GitITest {
      */
     @Test
     public void shouldDetermineModifiedLines() {
+        FreeStyleProject job = createJobWithReferenceRecorder();
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         FilteredLog log = createLog();
 
-        final String content = "Test\nTest\nTest\nTest";
-        final String modified = "Test\nModified\nModified2\nTest";
+        String content = "Test\nTest\nTest\nTest";
+        String modified = "Test\nModified\nModified2\nTest";
         commitFile(content);
-        final String referenceCommit = getHead();
+        Run<?, ?> referenceBuild = buildSuccessfully(job);
         commitFile(modified);
-        final String currentCommit = getHead();
+        Run<?, ?> build = buildSuccessfully(job);
 
-        Optional<Delta> result = deltaCalculator.calculateDelta(currentCommit, referenceCommit, log);
+        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, log);
         assertThat(result).isNotEmpty();
 
         Delta delta = result.get();
@@ -212,17 +223,18 @@ public class GitDeltaCalculatorITest extends GitITest {
      */
     @Test
     public void shouldDetermineDeletedLines() {
+        FreeStyleProject job = createJobWithReferenceRecorder();
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         FilteredLog log = createLog();
 
-        final String content = "Test\nTest3\nTest";
-        final String modified = "Test\nTest";
+        String content = "Test\nTest3\nTest";
+        String modified = "Test\nTest";
         commitFile(content);
-        final String referenceCommit = getHead();
+        Run<?, ?> referenceBuild = buildSuccessfully(job);
         commitFile(modified);
-        final String currentCommit = getHead();
+        Run<?, ?> build = buildSuccessfully(job);
 
-        Optional<Delta> result = deltaCalculator.calculateDelta(currentCommit, referenceCommit, log);
+        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, log);
         assertThat(result).isNotEmpty();
 
         Delta delta = result.get();
@@ -240,17 +252,18 @@ public class GitDeltaCalculatorITest extends GitITest {
      */
     @Test
     public void shouldDetermineAllChangeTypesTogether() {
+        FreeStyleProject job = createJobWithReferenceRecorder();
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         FilteredLog log = createLog();
 
-        final String content = "Test1\nTest2\nTest3\nTest4";
-        final String newContent = "Modified\nTest2\nInserted\nTest3";
+        String content = "Test1\nTest2\nTest3\nTest4";
+        String newContent = "Modified\nTest2\nInserted\nTest3";
         commitFile(content);
-        final String referenceCommit = getHead();
+        Run<?, ?> referenceBuild = buildSuccessfully(job);
         commitFile(newContent);
-        final String currentCommit = getHead();
+        Run<?, ?> build = buildSuccessfully(job);
 
-        Optional<Delta> result = deltaCalculator.calculateDelta(currentCommit, referenceCommit, log);
+        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, log);
         assertThat(result).isNotEmpty();
 
         Delta delta = result.get();
@@ -343,5 +356,22 @@ public class GitDeltaCalculatorITest extends GitITest {
      */
     private GitDeltaCalculator createDeltaCalculator() {
         return new GitDeltaCalculator(createGitClient());
+    }
+
+    /**
+     * Creates a {@link FreeStyleProject} which contains a {@link GitReferenceRecorder} within the publishers list.
+     *
+     * @return the created project
+     */
+    private FreeStyleProject createJobWithReferenceRecorder() {
+        try {
+            FreeStyleProject job = createFreeStyleProject();
+            job.setScm(new GitSCM(getRepositoryRoot()));
+            job.getPublishersList().add(new GitReferenceRecorder());
+            return job;
+        }
+        catch (IOException exception) {
+            throw new AssertionError(exception);
+        }
     }
 }
