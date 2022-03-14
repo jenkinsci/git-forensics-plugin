@@ -42,8 +42,7 @@ public class GitDeltaCalculatorITest extends GitITest {
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
 
         FilteredLog log = createLog();
-        assertThat(deltaCalculator.calculateDelta("", "", log)).isEmpty();
-        assertThat(deltaCalculator.calculateDelta(mock(Run.class), mock(Run.class), log)).isEmpty();
+        assertThat(deltaCalculator.calculateDelta(mock(Run.class), mock(Run.class), "", log)).isEmpty();
     }
 
     /**
@@ -52,18 +51,22 @@ public class GitDeltaCalculatorITest extends GitITest {
     @Test
     @SuppressFBWarnings(value = "BC_UNCONFIRMED_CAST_OF_RETURN_VALUE", justification = "The cast is confirmed via an assertion")
     public void shouldCreateDiffFile() {
+        FreeStyleProject job = createJobWithReferenceRecorder();
+
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         FilteredLog log = createLog();
 
-        final String referenceCommit = getHead();
-        final String fileName = "newFile";
-        final String content = "content";
+        Run<?, ?> referenceBuild = buildSuccessfully(job);
+        String referenceCommit = getHead();
+        String fileName = "newFile";
+        String content = "content";
         writeFile(fileName, content);
         addFile(fileName);
         commit("test");
-        final String currentCommit = getHead();
+        Run<?, ?> build = buildSuccessfully(job);
+        String currentCommit = getHead();
 
-        Optional<Delta> result = deltaCalculator.calculateDelta(currentCommit, referenceCommit, log);
+        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, "", log);
         assertThat(result).isNotEmpty();
 
         Delta delta = result.get();
@@ -99,7 +102,7 @@ public class GitDeltaCalculatorITest extends GitITest {
         commit("test");
         Run<?, ?> build = buildSuccessfully(job);
 
-        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, log);
+        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, "", log);
         assertThat(result).isNotEmpty();
 
         Delta delta = result.get();
@@ -124,7 +127,7 @@ public class GitDeltaCalculatorITest extends GitITest {
         commitFile(content);
         Run<?, ?> build = buildSuccessfully(job);
 
-        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, log);
+        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, "", log);
         assertThat(result).isNotEmpty();
 
         Delta delta = result.get();
@@ -150,7 +153,7 @@ public class GitDeltaCalculatorITest extends GitITest {
         commit("test");
         Run<?, ?> build = buildSuccessfully(job);
 
-        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, log);
+        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, "", log);
         assertThat(result).isNotEmpty();
 
         Delta delta = result.get();
@@ -176,7 +179,7 @@ public class GitDeltaCalculatorITest extends GitITest {
         commitFile(insertedContent);
         Run<?, ?> build = buildSuccessfully(job);
 
-        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, log);
+        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, "", log);
         assertThat(result).isNotEmpty();
 
         Delta delta = result.get();
@@ -205,7 +208,7 @@ public class GitDeltaCalculatorITest extends GitITest {
         commitFile(modified);
         Run<?, ?> build = buildSuccessfully(job);
 
-        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, log);
+        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, "", log);
         assertThat(result).isNotEmpty();
 
         Delta delta = result.get();
@@ -234,7 +237,7 @@ public class GitDeltaCalculatorITest extends GitITest {
         commitFile(modified);
         Run<?, ?> build = buildSuccessfully(job);
 
-        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, log);
+        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, "", log);
         assertThat(result).isNotEmpty();
 
         Delta delta = result.get();
@@ -263,7 +266,7 @@ public class GitDeltaCalculatorITest extends GitITest {
         commitFile(newContent);
         Run<?, ?> build = buildSuccessfully(job);
 
-        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, log);
+        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, "", log);
         assertThat(result).isNotEmpty();
 
         Delta delta = result.get();
