@@ -34,6 +34,8 @@ import static org.mockito.Mockito.*;
  */
 public class GitDeltaCalculatorITest extends GitITest {
 
+    private static final String EMPTY_SCM_KEY = "";
+
     /**
      * The delta result should be empty if there are invalid commits.
      */
@@ -42,7 +44,7 @@ public class GitDeltaCalculatorITest extends GitITest {
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
 
         FilteredLog log = createLog();
-        assertThat(deltaCalculator.calculateDelta(mock(Run.class), mock(Run.class), "", log)).isEmpty();
+        assertThat(deltaCalculator.calculateDelta(mock(Run.class), mock(Run.class), EMPTY_SCM_KEY, log)).isEmpty();
     }
 
     /**
@@ -66,7 +68,7 @@ public class GitDeltaCalculatorITest extends GitITest {
         Run<?, ?> build = buildSuccessfully(job);
         String currentCommit = getHead();
 
-        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, "", log);
+        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
         assertThat(result).isNotEmpty();
 
         Delta delta = result.get();
@@ -102,7 +104,7 @@ public class GitDeltaCalculatorITest extends GitITest {
         commit("test");
         Run<?, ?> build = buildSuccessfully(job);
 
-        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, "", log);
+        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
         assertThat(result).isNotEmpty();
 
         Delta delta = result.get();
@@ -127,7 +129,7 @@ public class GitDeltaCalculatorITest extends GitITest {
         commitFile(content);
         Run<?, ?> build = buildSuccessfully(job);
 
-        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, "", log);
+        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
         assertThat(result).isNotEmpty();
 
         Delta delta = result.get();
@@ -153,7 +155,7 @@ public class GitDeltaCalculatorITest extends GitITest {
         commit("test");
         Run<?, ?> build = buildSuccessfully(job);
 
-        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, "", log);
+        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
         assertThat(result).isNotEmpty();
 
         Delta delta = result.get();
@@ -179,7 +181,7 @@ public class GitDeltaCalculatorITest extends GitITest {
         commitFile(insertedContent);
         Run<?, ?> build = buildSuccessfully(job);
 
-        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, "", log);
+        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
         assertThat(result).isNotEmpty();
 
         Delta delta = result.get();
@@ -208,7 +210,7 @@ public class GitDeltaCalculatorITest extends GitITest {
         commitFile(modified);
         Run<?, ?> build = buildSuccessfully(job);
 
-        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, "", log);
+        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
         assertThat(result).isNotEmpty();
 
         Delta delta = result.get();
@@ -237,7 +239,7 @@ public class GitDeltaCalculatorITest extends GitITest {
         commitFile(modified);
         Run<?, ?> build = buildSuccessfully(job);
 
-        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, "", log);
+        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
         assertThat(result).isNotEmpty();
 
         Delta delta = result.get();
@@ -266,7 +268,7 @@ public class GitDeltaCalculatorITest extends GitITest {
         commitFile(newContent);
         Run<?, ?> build = buildSuccessfully(job);
 
-        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, "", log);
+        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
         assertThat(result).isNotEmpty();
 
         Delta delta = result.get();
