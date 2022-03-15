@@ -15,6 +15,7 @@ skinparam component {
 
 [Blamer] --> [Utilities]
 [Delta] --> [Utilities]
+[Delta] -> [Reference]
 [Miner] --> [Utilities]
 [Miner] -> [Reference]
 [Reference] --> [Utilities]
