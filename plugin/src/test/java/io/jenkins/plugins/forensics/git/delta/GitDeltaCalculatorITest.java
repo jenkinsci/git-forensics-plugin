@@ -6,7 +6,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import edu.hm.hafner.util.FilteredLog;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -32,15 +32,14 @@ import static org.mockito.Mockito.*;
  *
  * @author Florian Orendi
  */
-public class GitDeltaCalculatorITest extends GitITest {
-
+class GitDeltaCalculatorITest extends GitITest {
     private static final String EMPTY_SCM_KEY = "";
 
     /**
      * The delta result should be empty if there are invalid commits.
      */
     @Test
-    public void shouldCreateEmptyDeltaIfCommitsAreInvalid() {
+    void shouldCreateEmptyDeltaIfCommitsAreInvalid() {
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
 
         FilteredLog log = createLog();
@@ -52,7 +51,7 @@ public class GitDeltaCalculatorITest extends GitITest {
      */
     @Test
     @SuppressFBWarnings(value = "BC_UNCONFIRMED_CAST_OF_RETURN_VALUE", justification = "The cast is confirmed via an assertion")
-    public void shouldCreateDiffFile() {
+    void shouldCreateDiffFile() {
         FreeStyleProject job = createJobWithReferenceRecorder();
 
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
@@ -90,7 +89,7 @@ public class GitDeltaCalculatorITest extends GitITest {
      * An added file should be determined.
      */
     @Test
-    public void shouldDetermineAddedFile() {
+    void shouldDetermineAddedFile() {
         FreeStyleProject job = createJobWithReferenceRecorder();
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         FilteredLog log = createLog();
@@ -118,7 +117,7 @@ public class GitDeltaCalculatorITest extends GitITest {
      * A modified file should be determined.
      */
     @Test
-    public void shouldDetermineModifiedFile() {
+    void shouldDetermineModifiedFile() {
         FreeStyleProject job = createJobWithReferenceRecorder();
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         FilteredLog log = createLog();
@@ -143,7 +142,7 @@ public class GitDeltaCalculatorITest extends GitITest {
      * A deleted file should be determined.
      */
     @Test
-    public void shouldDetermineDeletedFile() {
+    void shouldDetermineDeletedFile() {
         FreeStyleProject job = createJobWithReferenceRecorder();
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         FilteredLog log = createLog();
@@ -169,7 +168,7 @@ public class GitDeltaCalculatorITest extends GitITest {
      * Added lines within a specific file should be determined.
      */
     @Test
-    public void shouldDetermineAddedLines() {
+    void shouldDetermineAddedLines() {
         FreeStyleProject job = createJobWithReferenceRecorder();
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         FilteredLog log = createLog();
@@ -198,7 +197,7 @@ public class GitDeltaCalculatorITest extends GitITest {
      * Modified lines within a specific file should be determined.
      */
     @Test
-    public void shouldDetermineModifiedLines() {
+    void shouldDetermineModifiedLines() {
         FreeStyleProject job = createJobWithReferenceRecorder();
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         FilteredLog log = createLog();
@@ -227,7 +226,7 @@ public class GitDeltaCalculatorITest extends GitITest {
      * Deleted lines within a specific file should be determined.
      */
     @Test
-    public void shouldDetermineDeletedLines() {
+    void shouldDetermineDeletedLines() {
         FreeStyleProject job = createJobWithReferenceRecorder();
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         FilteredLog log = createLog();
@@ -256,7 +255,7 @@ public class GitDeltaCalculatorITest extends GitITest {
      * Added, modified and deleted lines within a specific file should be determined properly together.
      */
     @Test
-    public void shouldDetermineAllChangeTypesTogether() {
+    void shouldDetermineAllChangeTypesTogether() {
         FreeStyleProject job = createJobWithReferenceRecorder();
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         FilteredLog log = createLog();

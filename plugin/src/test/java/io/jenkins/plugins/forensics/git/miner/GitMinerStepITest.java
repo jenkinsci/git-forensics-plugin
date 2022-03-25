@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import hudson.model.FreeStyleProject;
@@ -29,7 +29,7 @@ import static io.jenkins.plugins.forensics.assertions.Assertions.*;
  *
  * @author Ullrich Hafner
  */
-public class GitMinerStepITest extends GitITest {
+class GitMinerStepITest extends GitITest {
     private static final String GIT_FORENSICS_URL = "https://github.com/jenkinsci/git-forensics-plugin.git";
     private static final String FORENSICS_API_URL = "https://github.com/jenkinsci/forensics-api-plugin.git";
     private static final String FORENSICS_API_COMMIT = "a6d0ef09ab3c418e370449a884da99b8190ae950";
@@ -39,7 +39,7 @@ public class GitMinerStepITest extends GitITest {
 
     /** Verifies that the table contains two rows with the correct statistics. */
     @Test
-    public void shouldFillTableDynamically() {
+    void shouldFillTableDynamically() {
         buildJob();
     }
 
@@ -81,7 +81,7 @@ public class GitMinerStepITest extends GitITest {
 
     /** Verifies that the mining process is incremental and scans only new commits. */
     @Test
-    public void shouldMineRepositoryIncrementally() {
+    void shouldMineRepositoryIncrementally() {
         writeFileAsAuthorFoo("1\n2\n3\n");
         String secondCommit = getHead();
 
@@ -121,7 +121,7 @@ public class GitMinerStepITest extends GitITest {
 
     /** Verifies that the history of moved files will be preserved. */
     @Test
-    public void shouldPreserveHistoryOfMovedFiles() {
+    void shouldPreserveHistoryOfMovedFiles() {
         FreeStyleProject job = buildJob();
 
         String moved = "moved";
@@ -158,7 +158,7 @@ public class GitMinerStepITest extends GitITest {
 
     /** Verifies that deleted files are not shown anymore. */
     @Test
-    public void shouldNotShowDeletedFiles() {
+    void shouldNotShowDeletedFiles() {
         FreeStyleProject job = buildJob();
 
         git("rm", ADDITIONAL_FILE);
@@ -180,7 +180,7 @@ public class GitMinerStepITest extends GitITest {
 
     /** Verifies the calculation of the #LOC and churn. */
     @Test
-    public void shouldCalculateLocAndChurn() {
+    void shouldCalculateLocAndChurn() {
         writeFileAsAuthorFoo("First\n");
 
         FreeStyleProject job = createJobWithMiner();
@@ -199,7 +199,7 @@ public class GitMinerStepITest extends GitITest {
 
     /** Run on existing project. */
     @Test
-    public void shouldRunOnExistingProject() throws IOException {
+    void shouldRunOnExistingProject() throws IOException {
         FreeStyleProject job = createFreeStyleProject();
         GitSCM scm = createGitScm("https://github.com/jenkinsci/git-forensics-plugin.git",
                 Collections.singletonList(new BranchSpec(GIT_FORENSICS_COMMIT)));
@@ -213,7 +213,7 @@ public class GitMinerStepITest extends GitITest {
 
     /** Run on existing project. */
     @Test
-    public void shouldRunInPipelineOnExistingProject() {
+    void shouldRunInPipelineOnExistingProject() {
         WorkflowJob job = createPipeline();
         job.setDefinition(asStage(checkout(GIT_FORENSICS_COMMIT, GIT_FORENSICS_URL), "mineRepository()"));
 
@@ -226,7 +226,7 @@ public class GitMinerStepITest extends GitITest {
      * Creates a pipeline that checks out two different repositories and verifies that both repositories will be mined.
      */
     @Test
-    public void shouldMineMultipleRepositories() {
+    void shouldMineMultipleRepositories() {
         WorkflowJob job = createPipeline();
         job.setDefinition(asStage(
                 checkout(GIT_FORENSICS_COMMIT, GIT_FORENSICS_URL),
@@ -244,7 +244,7 @@ public class GitMinerStepITest extends GitITest {
      * Creates a pipeline that checks out the same repository twice and verifies that the repository is mined only once.
      */
     @Test
-    public void shouldSkipDuplicateRepository() {
+    void shouldSkipDuplicateRepository() {
         WorkflowJob job = createPipeline();
         job.setDefinition(asStage(
                 checkout(GIT_FORENSICS_COMMIT, GIT_FORENSICS_URL),
@@ -265,7 +265,7 @@ public class GitMinerStepITest extends GitITest {
      * Creates a pipeline that checks out two different repositories and verifies that both repositories will be mined.
      */
     @Test
-    public void shouldMineSelectedRepository() {
+    void shouldMineSelectedRepository() {
         WorkflowJob job = createPipeline();
         job.setDefinition(asStage(
                 checkout(GIT_FORENSICS_COMMIT, GIT_FORENSICS_URL),

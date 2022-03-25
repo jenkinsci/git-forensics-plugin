@@ -1,7 +1,7 @@
 package io.jenkins.plugins.forensics.git.blame;
 
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 
 import edu.hm.hafner.util.FilteredLog;
@@ -18,12 +18,12 @@ import static io.jenkins.plugins.forensics.assertions.Assertions.*;
  *
  * @author Ullrich Hafner
  */
-public class GitBlamerITest extends GitITest {
+class GitBlamerITest extends GitITest {
     /**
      * Verifies that the blames are empty if there are no requests defined.
      */
     @Test
-    public void shouldCreateEmptyBlamesIfRequestIsEmpty() {
+    void shouldCreateEmptyBlamesIfRequestIsEmpty() {
         GitBlamer gitBlamer = createBlamer();
 
         FilteredLog log = createLog();
@@ -38,7 +38,7 @@ public class GitBlamerITest extends GitITest {
      * Verifies that the blames are empty if there are no requests defined.
      */
     @Test
-    public void shouldCreateBlamesIfRequestIsExistingFile() {
+    void shouldCreateBlamesIfRequestIsExistingFile() {
         create2RevisionsWithDifferentAuthors();
 
         FileLocations locations = new FileLocations();
@@ -73,7 +73,7 @@ public class GitBlamerITest extends GitITest {
      */
     @Test
     @Issue("JENKINS-59252")
-    public void shouldAssignLastCommitterIfNoLineNumberIsGiven() {
+    void shouldAssignLastCommitterIfNoLineNumberIsGiven() {
         create2RevisionsWithDifferentAuthors();
 
         FileLocations locations = new FileLocations();

@@ -4,35 +4,29 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import hudson.model.FreeStyleProject;
 import hudson.plugins.git.GitSCM;
-import jenkins.plugins.git.GitSampleRepoRule;
 
 import io.jenkins.plugins.forensics.git.util.GitCommitTextDecorator;
-import io.jenkins.plugins.util.IntegrationTestWithJenkinsPerSuite;
+import io.jenkins.plugins.forensics.git.util.GitITest;
 
 import static io.jenkins.plugins.forensics.git.assertions.Assertions.*;
 
 /**
- * Integration tests of the recording of Git commits using the classes {@link GitCheckoutListener} and {@link
- * GitCommitsRecord}.
+ * Integration tests of the recording of Git commits using the classes {@link GitCheckoutListener} and
+ * {@link GitCommitsRecord}.
  *
  * @author Arne Schöntag
  */
 @SuppressWarnings("PMD.SignatureDeclareThrowsException")
-public class GitCheckoutListenerITest extends IntegrationTestWithJenkinsPerSuite {
+class GitCheckoutListenerITest extends GitITest {
     private static final GitCommitTextDecorator RENDERER = new GitCommitTextDecorator();
 
     private static final String GIT_FORENSICS_URL = "https://github.com/jenkinsci/git-forensics-plugin.git";
     private static final String FORENSICS_API_URL = "https://github.com/jenkinsci/forensics-api-plugin.git";
-
-    /** Provides the Git repository for the test. */
-    @Rule
-    public GitSampleRepoRule gitRepo = new GitSampleRepoRule();
 
     /**
      * Creates two builds: the first one has 3 commits, the second one an additional commit. Verifies that the commits
@@ -42,19 +36,17 @@ public class GitCheckoutListenerITest extends IntegrationTestWithJenkinsPerSuite
      *         in case of an IO exception
      */
     @Test
-    public void shouldLogAllGitCommits() throws Exception {
-        gitRepo.init();
-
+    void shouldLogAllGitCommits() throws Exception {
         List<String> expectedCommits = new ArrayList<>();
-        expectedCommits.add(gitRepo.head());
+        expectedCommits.add(getHead());
         createAndCommitFile("First.java", "first commit after init");
-        expectedCommits.add(gitRepo.head());
+        expectedCommits.add(getHead());
         createAndCommitFile("Second.java", "second commit after init");
-        expectedCommits.add(gitRepo.head());
+        expectedCommits.add(getHead());
 
         FreeStyleProject job = createFreeStyleProject("listener");
 
-        String referenceBuildHead = gitRepo.head();
+        String referenceBuildHead = getHead();
 
         GitCommitsRecord referenceBuild = buildSuccessfully(job).getAction(GitCommitsRecord.class);
         assertThat(referenceBuild).isNotNull()
@@ -69,17 +61,17 @@ public class GitCheckoutListenerITest extends IntegrationTestWithJenkinsPerSuite
 
         GitCommitsRecord nextBuild = buildSuccessfully(job).getAction(GitCommitsRecord.class);
 
-        String nextBuildHead = gitRepo.head();
+        String nextBuildHead = getHead();
         assertThat(nextBuild).isNotEmpty()
-                .hasLatestCommit(gitRepo.head())
+                .hasLatestCommit(getHead())
                 .hasOnlyCommits(nextBuildHead)
                 .hasNoErrorMessages().hasInfoMessages("-> Recorded one new commit",
-                String.format("Found previous build '%s' that contains recorded Git commits",
-                        referenceBuild.getOwner()),
-                String.format("-> Starting recording of new commits since '%s'",
-                        RENDERER.asText(referenceBuildHead)),
-                String.format("-> Using head commit '%s' as starting point",
-                        RENDERER.asText(nextBuildHead)));
+                        String.format("Found previous build '%s' that contains recorded Git commits",
+                                referenceBuild.getOwner()),
+                        String.format("-> Starting recording of new commits since '%s'",
+                                RENDERER.asText(referenceBuildHead)),
+                        String.format("-> Using head commit '%s' as starting point",
+                                RENDERER.asText(nextBuildHead)));
     }
 
     /**
@@ -90,8 +82,7 @@ public class GitCheckoutListenerITest extends IntegrationTestWithJenkinsPerSuite
      *         in case of an IO exception
      */
     @Test
-    public void shouldFindReferencePoint() throws Exception {
-        gitRepo.init();
+    void shouldFindReferencePoint() throws Exception {
         createAndCommitFile("Test.java", "public class Test {}");
 
         FreeStyleProject reference = createFreeStyleProject("reference");
@@ -99,14 +90,14 @@ public class GitCheckoutListenerITest extends IntegrationTestWithJenkinsPerSuite
 
         createAndCommitFile("first-after-start", "first commit in reference");
         GitCommitsRecord first = buildSuccessfully(reference).getAction(GitCommitsRecord.class);
-        String firstHead = gitRepo.head();
+        String firstHead = getHead();
         assertThat(first).isNotEmpty()
                 .hasLatestCommit(firstHead)
                 .hasOnlyCommits(firstHead);
 
         createAndCommitFile("second-after-start", "second commit in reference");
         GitCommitsRecord second = buildSuccessfully(reference).getAction(GitCommitsRecord.class);
-        String secondHead = gitRepo.head();
+        String secondHead = getHead();
         assertThat(second).isNotEmpty()
                 .hasLatestCommit(secondHead)
                 .hasOnlyCommits(secondHead);
@@ -117,11 +108,11 @@ public class GitCheckoutListenerITest extends IntegrationTestWithJenkinsPerSuite
     }
 
     /**
-     * Creates a pipeline that checks out two different repositories and verifies that the decorator correctly will
-     * be attached to both of them.
+     * Creates a pipeline that checks out two different repositories and verifies that the decorator correctly will be
+     * attached to both of them.
      */
     @Test
-    public void shouldDecorateSeveralRepositories() {
+    void shouldDecorateSeveralRepositories() {
         WorkflowJob job = createPipeline();
         job.setDefinition(asStage(
                 "checkout([$class: 'GitSCM', "
@@ -146,7 +137,7 @@ public class GitCheckoutListenerITest extends IntegrationTestWithJenkinsPerSuite
      * Creates a pipeline that checks out the same repository twice.
      */
     @Test
-    public void shouldSkipDuplicateRepositories() {
+    void shouldSkipDuplicateRepositories() {
         WorkflowJob job = createPipeline();
         job.setDefinition(asStage(
                 "checkout([$class: 'GitSCM', "
@@ -172,18 +163,19 @@ public class GitCheckoutListenerITest extends IntegrationTestWithJenkinsPerSuite
                         "Found no previous build with recorded Git commits",
                         "-> Recorded 200 new commits")
                 .anySatisfy(value -> assertThat(value)
-                        .startsWith("-> Git commit decorator successfully obtained 'hudson.plugins.git.browser.GithubWeb"));
+                        .startsWith(
+                                "-> Git commit decorator successfully obtained 'hudson.plugins.git.browser.GithubWeb"));
     }
 
     private void createAndCommitFile(final String fileName, final String content) throws Exception {
-        gitRepo.write(fileName, content);
-        gitRepo.git("add", fileName);
-        gitRepo.git("commit", "--message=" + fileName + " created");
+        writeFile(fileName, content);
+        addFile(fileName);
+        commit(fileName + " created");
     }
 
     private FreeStyleProject createFreeStyleProject(final String name) throws IOException {
         FreeStyleProject project = createProject(FreeStyleProject.class, name);
-        project.setScm(new GitSCM(gitRepo.toString()));
+        project.setScm(new GitSCM(getGitRepositoryPath()));
         return project;
     }
 }

@@ -1,16 +1,21 @@
 package io.jenkins.plugins.forensics.git.util;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.RepositoryBuilder;
-import org.junit.Before;
-import org.junit.Rule;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.io.TempDir;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -18,15 +23,17 @@ import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 import hudson.EnvVars;
 import hudson.FilePath;
+import hudson.Launcher;
 import hudson.model.Job;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
-import jenkins.plugins.git.GitSampleRepoRule;
+import hudson.util.StreamTaskListener;
 
 import io.jenkins.plugins.util.IntegrationTestWithJenkinsPerTest;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
@@ -35,7 +42,7 @@ import static org.mockito.Mockito.*;
  * @author Ullrich Hafner
  */
 @SuppressWarnings({"IllegalCatch", "PMD.SignatureDeclareThrowsException"})
-public class GitITest extends IntegrationTestWithJenkinsPerTest {
+public abstract class GitITest extends IntegrationTestWithJenkinsPerTest {
     /** File name of a source file that will be modified by two authors. */
     protected static final String ADDITIONAL_FILE = "source.txt";
 
@@ -54,20 +61,13 @@ public class GitITest extends IntegrationTestWithJenkinsPerTest {
     /** Initial branch used in Git repository. */
     protected static final String INITIAL_BRANCH = "main";
 
-    /** Git repository in a temporary folder. */
-    @Rule
-    public GitSampleRepoRule sampleRepo = new GitSampleRepoRule();
+    private GitRepository gitRepository;
 
-    /**
-     * Initializes the Git repository.
-     *
-     * @throws Exception
-     *         if the initialization fails
-     */
-    @Before
-    public void init() throws Exception {
-        sampleRepo.init();
-        sampleRepo.git("config", "--global", "core.longpaths", "true");
+    @BeforeEach
+    void initializeGitRepository(@TempDir final File baseDirectory) {
+        gitRepository = new GitRepository(baseDirectory);
+        gitRepository.init();
+        gitRepository.git("config", "--global", "core.longpaths", "true");
         checkoutNewBranch(INITIAL_BRANCH);
     }
 
@@ -77,12 +77,7 @@ public class GitITest extends IntegrationTestWithJenkinsPerTest {
      * @return the head commit
      */
     protected ObjectId getHeadCommit() {
-        try {
-            return ObjectId.fromString(getHead());
-        }
-        catch (Exception exception) {
-            throw new AssertionError(exception);
-        }
+        return ObjectId.fromString(getHead());
     }
 
     /**
@@ -91,28 +86,7 @@ public class GitITest extends IntegrationTestWithJenkinsPerTest {
      * @return the head commit (as String)
      */
     protected String getHead() {
-        try {
-            return sampleRepo.head();
-        }
-        catch (Exception exception) {
-            throw new AssertionError(exception);
-        }
-    }
-
-    /**
-     * Returns the sample repository.
-     *
-     * @return the sample repository
-     */
-    @SuppressFBWarnings("BC")
-    protected Repository createRepository() {
-        try {
-            RepositoryBuilder repositoryBuilder = new RepositoryBuilder();
-            return repositoryBuilder.setWorkTree(sampleRepo.getRoot()).setMustExist(true).build();
-        }
-        catch (IOException exception) {
-            throw new AssertionError(exception);
-        }
+        return getGitRepository().head();
     }
 
     /**
@@ -124,63 +98,27 @@ public class GitITest extends IntegrationTestWithJenkinsPerTest {
      *         the text content of the file
      */
     protected void writeFile(final String relativePath, final String content) {
-        try {
-            sampleRepo.write(relativePath, content);
-        }
-        catch (IOException exception) {
-            throw new AssertionError(exception);
-        }
+        getGitRepository().write(relativePath, content);
     }
 
     protected void checkout(final String branch) {
-        try {
-            sampleRepo.git("checkout", branch);
-        }
-        catch (Exception exception) {
-            throw new AssertionError(exception);
-        }
+        getGitRepository().git("checkout", branch);
     }
 
     protected void checkoutNewBranch(final String branch) {
-        try {
-            sampleRepo.git("switch", "-C", branch);
-        }
-        catch (Exception exception) {
-            throw new AssertionError(exception);
-        }
+        getGitRepository().git("switch", "-C", branch);
     }
 
     protected void addFile(final String additionalSourceFile) {
-        try {
-            sampleRepo.git("add", additionalSourceFile);
-        }
-        catch (Exception exception) {
-            throw new AssertionError(exception);
-        }
+        getGitRepository().git("add", additionalSourceFile);
     }
 
     protected void commit(final String message) {
-        try {
-            sampleRepo.git("commit", "--all", "--message=" + message);
-        }
-        catch (Exception exception) {
-            throw new AssertionError(exception);
-        }
+        getGitRepository().git("commit", "--all", "--message=" + message);
     }
 
-    /**
-     * Writes a file to repository.
-     *
-     * @param commands
-     *         git commands and parameters
-     */
     protected void git(final String... commands) {
-        try {
-            sampleRepo.git(commands);
-        }
-        catch (Exception exception) {
-            throw new AssertionError(exception);
-        }
+        getGitRepository().git(commands);
     }
 
     /**
@@ -217,7 +155,7 @@ public class GitITest extends IntegrationTestWithJenkinsPerTest {
      * @return absolute path to the working tree (normalized with Unix file separators).
      */
     protected String getRepositoryRoot() {
-        return AbstractRepositoryCallback.getAbsolutePath(sampleRepo.getRoot());
+        return AbstractRepositoryCallback.getAbsolutePath(getGitRepository().getBaseDirectory());
     }
 
     /**
@@ -227,13 +165,13 @@ public class GitITest extends IntegrationTestWithJenkinsPerTest {
      */
     protected GitClient createGitClient() {
         try {
-            GitSCM scm = createGitScm("file:///" + sampleRepo.getRoot(), Collections.emptyList());
+            GitSCM scm = createGitScm("file:///" + getGitRepository().getBaseDirectory(), Collections.emptyList());
             Run<?, ?> run = mock(Run.class);
             Job<?, ?> job = mock(Job.class);
             when(run.getParent()).thenAnswer(i -> job);
 
             return scm.createClient(TaskListener.NULL, new EnvVars(), run,
-                    new FilePath(sampleRepo.getRoot()));
+                    new FilePath(getGitRepository().getBaseDirectory()));
         }
         catch (IOException | InterruptedException exception) {
             throw new AssertionError(exception);
@@ -279,6 +217,14 @@ public class GitITest extends IntegrationTestWithJenkinsPerTest {
         }
     }
 
+    public GitRepository getGitRepository() {
+        return gitRepository;
+    }
+
+    protected String getGitRepositoryPath() {
+        return getGitRepository().getBaseDirectory().getAbsolutePath();
+    }
+
     /**
      * A test case that runs in the preconfigured Git repository of this integration test.
      */
@@ -298,5 +244,82 @@ public class GitITest extends IntegrationTestWithJenkinsPerTest {
          *         in case of an IO error
          */
         void run(Repository repository, Git git) throws GitAPIException, IOException;
+    }
+
+    /**
+     * A Git repository for integration tests.
+     */
+    private static class GitRepository {
+        private final File baseDirectory;
+
+        GitRepository(final File baseDirectory) {
+            this.baseDirectory = baseDirectory;
+        }
+
+        private void run(final String... cmds) {
+            try {
+                TaskListener listener = StreamTaskListener.fromStdout();
+
+                int commandExitCode = new Launcher.LocalLauncher(listener).launch()
+                        .cmds(cmds)
+                        .pwd(baseDirectory)
+                        .stdout(listener)
+                        .join();
+
+                assertThat(commandExitCode).as(Arrays.toString(cmds) + " failed with error code").isZero();
+            }
+            catch (IOException | InterruptedException exception) {
+                throw new AssertionError(exception);
+            }
+        }
+
+        void write(final String relativePath, final String content) {
+            try {
+                FileUtils.write(new File(this.baseDirectory, relativePath), content, StandardCharsets.UTF_8);
+            }
+            catch (IOException exception) {
+                throw new AssertionError(exception);
+            }
+        }
+
+        void git(final String... cmds) {
+            List<String> args = new ArrayList<>();
+            args.add("git");
+            args.addAll(Arrays.asList(cmds));
+
+            run(args.toArray(new String[0]));
+        }
+
+        @SuppressWarnings("checkstyle:IllegalCatch")
+        void init() {
+            try {
+                run("git", "version");
+                git("init", "--template=");
+                write("file", "");
+                git("add", "file");
+                git("config", "user.name", "Git SampleRepoRule");
+                git("config", "user.email", "gits@mplereporule");
+                git("commit", "--message=init");
+            }
+            catch (Exception exception) {
+                throw new AssertionError(exception);
+            }
+        }
+
+        @SuppressFBWarnings("BC")
+        String head() {
+            try (Repository repository = new RepositoryBuilder().setWorkTree(baseDirectory).build()) {
+                return repository
+                        .resolve("HEAD")
+                        .name();
+            }
+            catch (IOException exception) {
+                throw new AssertionError(exception);
+            }
+        }
+
+        File getBaseDirectory() {
+            return this.baseDirectory;
+        }
     }
 }
