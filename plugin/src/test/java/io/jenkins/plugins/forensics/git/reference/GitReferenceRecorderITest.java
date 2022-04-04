@@ -7,9 +7,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.jvnet.hudson.test.BuildWatcher;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 
 import com.cloudbees.hudson.plugins.folder.computed.FolderComputation;
@@ -48,7 +46,7 @@ import static org.jvnet.hudson.test.JenkinsRule.*;
 // TODO: add freestyle tests
 // TODO: add test if a recorded reference build is deleted afterwards
 @SuppressWarnings({"checkstyle:IllegalCatch", "PMD.GodClass"})
-public class GitReferenceRecorderITest extends GitITest {
+class GitReferenceRecorderITest extends GitITest {
     private static final String FORENSICS_API_URL = "https://github.com/jenkinsci/forensics-api-plugin.git";
 
     private static final String JENKINS_FILE = "Jenkinsfile";
@@ -59,9 +57,6 @@ public class GitReferenceRecorderITest extends GitITest {
     private static final String CHANGED_CONTENT = "changed content";
     private static final GitCommitTextDecorator DECORATOR = new GitCommitTextDecorator();
 
-    /** Watches for build results. */
-    @ClassRule
-    public static final BuildWatcher BUILD_WATCHER = new BuildWatcher();
     private static final String MULTI_BRANCH_PROJECT = "Found a `MultiBranchProject`, trying to resolve the target branch from the configuration";
     private static final String MAIN_IS_TARGET = "-> using target branch 'main' as configured in step";
 
@@ -72,7 +67,7 @@ public class GitReferenceRecorderITest extends GitITest {
      */
     @Test
     @Issue("JENKINS-64545")
-    public void shouldHandleJobsWithoutGitGracefully() {
+    void shouldHandleJobsWithoutGitGracefully() {
         WorkflowJob job = createPipeline("no-git");
 
         job.setDefinition(new CpsFlowDefinition("node {}", true));
@@ -96,7 +91,7 @@ public class GitReferenceRecorderITest extends GitITest {
      * </pre>
      */
     @Test
-    public void shouldFindCorrectBuildInPipelines() {
+    void shouldFindCorrectBuildInPipelines() {
         WorkflowJob mainBranch = createPipeline(MAIN);
         mainBranch.setDefinition(asStage(createLocalGitCheckout(MAIN)));
 
@@ -124,7 +119,7 @@ public class GitReferenceRecorderITest extends GitITest {
      * the Git forensics plugin has been added.
      */
     @Test
-    public void shouldFindNoReferenceBuildIfReferenceJobHasNoCommitsAction() {
+    void shouldFindNoReferenceBuildIfReferenceJobHasNoCommitsAction() {
         WorkflowJob mainBranch = createPipeline(MAIN);
         mainBranch.setDefinition(asStage(createLocalGitCheckout(MAIN)));
 
@@ -166,7 +161,7 @@ public class GitReferenceRecorderITest extends GitITest {
      */
     @Test
     @Issue("JENKINS-64578")
-    public void shouldFindCorrectBuildInPipelinesWithMultipleReposInReference() {
+    void shouldFindCorrectBuildInPipelinesWithMultipleReposInReference() {
         WorkflowJob mainBranch = createPipeline(MAIN);
         mainBranch.setDefinition(asStage(
                 createForensicsCheckoutStep(),
@@ -199,7 +194,7 @@ public class GitReferenceRecorderITest extends GitITest {
      */
     @Test
     @Issue("JENKINS-64578")
-    public void shouldFindCorrectBuildInPipelinesWithMultipleReposInFeature() {
+    void shouldFindCorrectBuildInPipelinesWithMultipleReposInFeature() {
         WorkflowJob mainBranch = createPipeline(MAIN);
         mainBranch.setDefinition(asStage(
                 createLocalGitCheckout(MAIN)));
@@ -253,7 +248,7 @@ public class GitReferenceRecorderITest extends GitITest {
     }
 
     private String getUrl() {
-        return "userRemoteConfigs: [[url: 'file://" + new PathUtil().getAbsolutePath(sampleRepo.toString()) + "']],\n";
+        return "userRemoteConfigs: [[url: 'file://" + new PathUtil().getAbsolutePath(getGitRepositoryPath()) + "']],\n";
     }
 
     /**
@@ -266,7 +261,7 @@ public class GitReferenceRecorderITest extends GitITest {
      * </pre>
      */
     @Test
-    public void shouldFindCorrectBuildForMultibranchPipeline() {
+    void shouldFindCorrectBuildForMultibranchPipeline() {
         WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject();
 
         buildProject(project);
@@ -302,7 +297,7 @@ public class GitReferenceRecorderITest extends GitITest {
      * </pre>
      */
     @Test @Issue("JENKINS-64544")
-    public void shouldFindCorrectBuildForMultibranchPipelineWithComplexBranchNames() {
+    void shouldFindCorrectBuildForMultibranchPipelineWithComplexBranchNames() {
         String target = "releases/warnings-2021";
 
         checkoutNewBranch(target);
@@ -336,7 +331,7 @@ public class GitReferenceRecorderITest extends GitITest {
      * </pre>
      */
     @Test
-    public void shouldHandleExtraCommitsAfterBranchPointOnMaster() {
+    void shouldHandleExtraCommitsAfterBranchPointOnMaster() {
         WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject();
 
         buildProject(project);
@@ -388,7 +383,7 @@ public class GitReferenceRecorderITest extends GitITest {
      * </pre>
      */
     @Test
-    public void shouldFindBuildWithMultipleCommitsInReferenceBuild() throws IOException {
+    void shouldFindBuildWithMultipleCommitsInReferenceBuild() throws IOException {
         WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject();
 
         buildProject(project);
@@ -452,7 +447,7 @@ public class GitReferenceRecorderITest extends GitITest {
      * </pre>
      */
     @Test
-    public void shouldSkipBuildWithUnknownBuildsEnabled() {
+    void shouldSkipBuildWithUnknownBuildsEnabled() {
         WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject();
         buildProject(project);
 
@@ -501,7 +496,7 @@ public class GitReferenceRecorderITest extends GitITest {
      * </pre>
      */
     @Test
-    public void shouldNotFindBuildWithInsufficientMaxCommitsForMultibranchPipeline() {
+    void shouldNotFindBuildWithInsufficientMaxCommitsForMultibranchPipeline() {
         WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject();
 
         buildProject(project);
@@ -546,7 +541,7 @@ public class GitReferenceRecorderITest extends GitITest {
      * </pre>
      */
     @Test
-    public void shouldUseNewestBuildIfNewestBuildIfNotFoundIsEnabled() {
+    void shouldUseNewestBuildIfNewestBuildIfNotFoundIsEnabled() {
         WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject();
 
         buildProject(project);
@@ -593,7 +588,7 @@ public class GitReferenceRecorderITest extends GitITest {
      * </pre>
      */
     @Test
-    public void shouldFindMasterReferenceIfBranchIsCheckedOutFromAnotherFeatureBranch() {
+    void shouldFindMasterReferenceIfBranchIsCheckedOutFromAnotherFeatureBranch() {
         WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject();
 
         buildProject(project);
@@ -634,7 +629,7 @@ public class GitReferenceRecorderITest extends GitITest {
      * </pre>
      */
     @Test
-    public void shouldNotFindIntersectionIfBuildWasDeleted() {
+    void shouldNotFindIntersectionIfBuildWasDeleted() {
         WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject();
 
         buildProject(project);
@@ -676,7 +671,7 @@ public class GitReferenceRecorderITest extends GitITest {
      * </pre>
      */
     @Test
-    public void shouldTakeNewestMasterBuildIfBuildWasDeletedAndNewestBuildIfNotFoundIsEnabled() {
+    void shouldTakeNewestMasterBuildIfBuildWasDeletedAndNewestBuildIfNotFoundIsEnabled() {
         WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject();
 
         buildProject(project);
@@ -834,7 +829,7 @@ public class GitReferenceRecorderITest extends GitITest {
         try {
             WorkflowMultiBranchProject project = createProject(WorkflowMultiBranchProject.class);
             project.getSourcesList().add(
-                    new BranchSource(new GitSCMSource(null, sampleRepo.toString(), "", "*",
+                    new BranchSource(new GitSCMSource(null, getGitRepositoryPath(), "", "*",
                             "", false),
                             new DefaultBranchPropertyStrategy(new BranchProperty[0])));
             for (SCMSource source : project.getSCMSources()) {

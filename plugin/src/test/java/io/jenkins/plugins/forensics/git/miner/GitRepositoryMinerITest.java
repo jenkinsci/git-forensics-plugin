@@ -1,7 +1,7 @@
 package io.jenkins.plugins.forensics.git.miner;
 
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import edu.hm.hafner.util.FilteredLog;
 
@@ -16,7 +16,7 @@ import static io.jenkins.plugins.forensics.assertions.Assertions.*;
  *
  * @author Ullrich Hafner
  */
-public class GitRepositoryMinerITest extends GitITest {
+class GitRepositoryMinerITest extends GitITest {
     private static final String OTHER_FILE = "file";
     private static final FilteredLog LOG = new FilteredLog(StringUtils.EMPTY);
 
@@ -27,7 +27,7 @@ public class GitRepositoryMinerITest extends GitITest {
      *         never thrown
      */
     @Test
-    public void shouldCollectSingleFile() throws InterruptedException {
+    void shouldCollectSingleFile() throws InterruptedException {
         RepositoryStatistics statisticsPerFile = createRepositoryStatistics();
 
         assertThat(statisticsPerFile).hasFiles(OTHER_FILE);
@@ -42,7 +42,7 @@ public class GitRepositoryMinerITest extends GitITest {
      *         never thrown
      */
     @Test
-    public void shouldCountNumberOfCommits() throws InterruptedException {
+    void shouldCountNumberOfCommits() throws InterruptedException {
         writeFileAsAuthorFoo("First\n");
         String firstCommit = getHead();
         writeFileAsAuthorFoo("Second\nLine\n");
@@ -79,7 +79,7 @@ public class GitRepositoryMinerITest extends GitITest {
      *         never thrown
      */
     @Test
-    public void shouldCountNumberOfAuthors() throws InterruptedException {
+    void shouldCountNumberOfAuthors() throws InterruptedException {
         writeFileAsAuthorFoo("First");
         writeFileAsAuthorBar("Second");
         writeFileAsAuthorFoo("First");

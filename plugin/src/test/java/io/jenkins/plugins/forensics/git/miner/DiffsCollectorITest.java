@@ -7,7 +7,7 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.treewalk.AbstractTreeIterator;
 import org.eclipse.jgit.treewalk.EmptyTreeIterator;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import edu.hm.hafner.util.FilteredLog;
 import edu.hm.hafner.util.TreeStringBuilder;
@@ -23,14 +23,14 @@ import static io.jenkins.plugins.forensics.assertions.Assertions.*;
  * @author Ullrich Hafner
  */
 @SuppressWarnings("checkstyle:LambdaBodyLength")
-public class DiffsCollectorITest extends GitITest {
+class DiffsCollectorITest extends GitITest {
     private static final String MOVED_FILE = "moved";
     private static final String AUTHOR = "author";
     private static final EmptyTreeIterator NULL_ITERATOR = new EmptyTreeIterator();
 
     /** Verifies that the initial repository contains a single commit. */
     @Test
-    public void shouldInitializeCounter() {
+    void shouldInitializeCounter() {
         runTest((repository, git) -> {
             String head = getHead();
             List<CommitDiffItem> actualCommits = createDiff(repository, git, head, NULL_ITERATOR);
@@ -46,7 +46,7 @@ public class DiffsCollectorITest extends GitITest {
 
     /** Verifies that adding lines to the same file works. */
     @Test
-    public void shouldCountAddedLines() {
+    void shouldCountAddedLines() {
         String firstCommit = getHead();
         writeFileAsAuthorBar("First Line\nSecond Line\n");
         String secondCommit = getHead();
@@ -86,7 +86,7 @@ public class DiffsCollectorITest extends GitITest {
 
     /** Verifies that deleting lines from the same file works. */
     @Test
-    public void shouldCountDeletedLines() {
+    void shouldCountDeletedLines() {
         String firstCommit = getHead();
         writeFileAsAuthorBar("First Line\nSecond Line\n");
         String secondCommit = getHead();
@@ -116,7 +116,7 @@ public class DiffsCollectorITest extends GitITest {
 
     /** Verifies that deleting multiple non-overlapping line blocks in the same file works. */
     @Test
-    public void shouldHandleMultipleSections() {
+    void shouldHandleMultipleSections() {
         writeFileAsAuthorBar("1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n");
         String secondCommit = getHead();
         writeFileAsAuthorBar("1 =====\n3 =====\n5 =====\n");
@@ -136,7 +136,7 @@ public class DiffsCollectorITest extends GitITest {
 
     /** Verifies that removing a file correctly identifies the deleted lines. */
     @Test
-    public void shouldHandleRemovedFiles() {
+    void shouldHandleRemovedFiles() {
         writeFileAsAuthorBar("1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n");
         String initialCommit = getHead();
         git("rm", ADDITIONAL_FILE);
@@ -157,7 +157,7 @@ public class DiffsCollectorITest extends GitITest {
 
     /** Verifies that moving a file correctly identifies an entry that contains a reference to the old file name. */
     @Test
-    public void shouldHandleMovedFiles() {
+    void shouldHandleMovedFiles() {
         writeFileAsAuthorBar("1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n");
         String initialCommit = getHead();
         git("mv", ADDITIONAL_FILE, MOVED_FILE);
@@ -178,7 +178,7 @@ public class DiffsCollectorITest extends GitITest {
 
     /** Verifies that moving and changing a file correctly identifies the changed lines in the moved file. */
     @Test
-    public void shouldHandleMovedAndChangedFiles() {
+    void shouldHandleMovedAndChangedFiles() {
         writeFileAsAuthorBar("1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n");
         String initialCommit = getHead();
         git("mv", ADDITIONAL_FILE, MOVED_FILE);
@@ -190,7 +190,7 @@ public class DiffsCollectorITest extends GitITest {
 
     /** Verifies that changing and moving a file correctly identifies the changed lines in the moved file. */
     @Test
-    public void shouldHandleChangedAndMovedFiles() {
+    void shouldHandleChangedAndMovedFiles() {
         writeFileAsAuthorBar("1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n");
         String initialCommit = getHead();
         writeFile(ADDITIONAL_FILE, "1 =====\n2a =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n2 =====\n3 =====\n4 =====\n5 =====\n");

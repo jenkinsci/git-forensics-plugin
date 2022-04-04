@@ -98,7 +98,7 @@ class GitDeltaCalculatorFactoryTest {
         GitDeltaCalculatorFactory factory = new GitDeltaCalculatorFactory();
 
         Run<?, ?> run = mock(Run.class);
-        when(run.getEnvironment(NULL_LISTENER)).thenThrow(new IOException());
+        when(run.getEnvironment(NULL_LISTENER)).thenThrow(new IOException("Error"));
 
         FilteredLog logger = createLogger();
 

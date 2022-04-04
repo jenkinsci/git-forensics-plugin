@@ -1,0 +1,5 @@
+<?jelly escape-by-default='true'?>
+
+<div>
+  Mines and analyzes data from a Git repository.
+</div>

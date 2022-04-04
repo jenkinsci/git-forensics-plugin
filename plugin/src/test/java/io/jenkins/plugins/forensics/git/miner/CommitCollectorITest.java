@@ -9,7 +9,7 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import edu.hm.hafner.util.FilteredLog;
 
@@ -22,10 +22,10 @@ import static org.assertj.core.api.Assertions.*;
  *
  * @author Ullrich Hafner
  */
-public class CommitCollectorITest extends GitITest {
+class CommitCollectorITest extends GitITest {
     /** Verifies that the initial repository contains a single commit. */
     @Test
-    public void shouldFindInitialCommits() {
+    void shouldFindInitialCommits() {
         runTest((repository, git) -> {
             List<RevCommit> actualCommits = findCommits(repository, git, "-");
 
@@ -36,7 +36,7 @@ public class CommitCollectorITest extends GitITest {
 
     /** Verifies that additional commits are recorded and sorted correctly. */
     @Test
-    public void shouldFindAdditionalCommits() {
+    void shouldFindAdditionalCommits() {
         ObjectId start = getHeadCommit();
         writeFileAsAuthorFoo("Middle");
         ObjectId middle = getHeadCommit();
@@ -59,7 +59,7 @@ public class CommitCollectorITest extends GitITest {
 
     /** Verifies that commits are recorded only up to a given commit. */
     @Test
-    public void shouldFindCommitsUpToGivenCommit() {
+    void shouldFindCommitsUpToGivenCommit() {
         ObjectId start = getHeadCommit();
         writeFileAsAuthorFoo("Middle");
         ObjectId middle = getHeadCommit();
