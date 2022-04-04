@@ -17,6 +17,7 @@
 
   <properties>
     <jenkins.version>2.338</jenkins.version>
+    <module.name>${project.groupId}.git.forensics.ui.tests</module.name>
   </properties>
 
   <dependencyManagement>
