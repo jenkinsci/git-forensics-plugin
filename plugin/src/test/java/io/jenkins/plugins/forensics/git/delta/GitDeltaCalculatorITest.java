@@ -34,6 +34,7 @@ import static org.mockito.Mockito.*;
  */
 class GitDeltaCalculatorITest extends GitITest {
     private static final String EMPTY_SCM_KEY = "";
+    private static final String EMPTY_FILE_PATH = "";
 
     /**
      * The delta result should be empty if there are invalid commits.
@@ -109,6 +110,7 @@ class GitDeltaCalculatorITest extends GitITest {
         Delta delta = result.get();
         FileChanges fileChanges = getSingleFileChanges(delta);
         assertThat(fileChanges.getFileName()).isEqualTo(newFileName);
+        assertThat(fileChanges.getOldFileName()).isEqualTo(EMPTY_FILE_PATH);
         assertThat(fileChanges.getFileEditType()).isEqualTo(FileEditType.ADD);
         assertThat(fileChanges.getFileContent()).isEqualTo(content);
     }
@@ -133,7 +135,8 @@ class GitDeltaCalculatorITest extends GitITest {
 
         Delta delta = result.get();
         FileChanges fileChanges = getSingleFileChanges(delta);
-        assertThat(fileChanges.getFileName()).isEqualTo(GitITest.INITIAL_FILE);
+        assertThat(fileChanges.getFileName()).isEqualTo(INITIAL_FILE);
+        assertThat(fileChanges.getOldFileName()).isEqualTo(INITIAL_FILE);
         assertThat(fileChanges.getFileEditType()).isEqualTo(FileEditType.MODIFY);
         assertThat(fileChanges.getFileContent()).isEqualTo(content);
     }
@@ -150,7 +153,7 @@ class GitDeltaCalculatorITest extends GitITest {
         String content = "content";
         commitFile(content);
         Run<?, ?> referenceBuild = buildSuccessfully(job);
-        git("rm", GitITest.INITIAL_FILE);
+        git("rm", INITIAL_FILE);
         commit("test");
         Run<?, ?> build = buildSuccessfully(job);
 
@@ -159,8 +162,36 @@ class GitDeltaCalculatorITest extends GitITest {
 
         Delta delta = result.get();
         FileChanges fileChanges = getSingleFileChanges(delta);
-        assertThat(fileChanges.getFileName()).isEqualTo(GitITest.INITIAL_FILE);
+        assertThat(fileChanges.getFileName()).isEqualTo(EMPTY_FILE_PATH);
+        assertThat(fileChanges.getOldFileName()).isEqualTo(INITIAL_FILE);
         assertThat(fileChanges.getFileEditType()).isEqualTo(FileEditType.DELETE);
+        assertThat(fileChanges.getFileContent()).isEqualTo(content);
+    }
+
+    /**
+     * A renamed file should be determined.
+     */
+    @Test
+    void shouldDetermineRenamedFile() {
+        FreeStyleProject job = createJobWithReferenceRecorder();
+        GitDeltaCalculator deltaCalculator = createDeltaCalculator();
+        FilteredLog log = createLog();
+
+        String content = "content";
+        commitFile(content);
+        Run<?, ?> referenceBuild = buildSuccessfully(job);
+        git("rm", INITIAL_FILE);
+        writeFileAsAuthorFoo(content);
+        Run<?, ?> build = buildSuccessfully(job);
+
+        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
+        assertThat(result).isNotEmpty();
+
+        Delta delta = result.get();
+        FileChanges fileChanges = getSingleFileChanges(delta);
+        assertThat(fileChanges.getFileName()).isEqualTo(ADDITIONAL_FILE);
+        assertThat(fileChanges.getOldFileName()).isEqualTo(INITIAL_FILE);
+        assertThat(fileChanges.getFileEditType()).isEqualTo(FileEditType.RENAME);
         assertThat(fileChanges.getFileContent()).isEqualTo(content);
     }
 

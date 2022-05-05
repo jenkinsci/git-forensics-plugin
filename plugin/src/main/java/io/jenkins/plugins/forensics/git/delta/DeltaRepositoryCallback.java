@@ -94,6 +94,8 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
             try (DiffFormatter diffFormatter = new DiffFormatter(diffStream)) {
                 diffFormatter.setDiffComparator(RawTextComparator.WS_IGNORE_ALL);
                 diffFormatter.setRepository(repository);
+                // enabling rename detection requires a set repository
+                diffFormatter.setDetectRenames(true);
 
                 final List<DiffEntry> diffEntries = diffFormatter.scan(referenceCommit, currentCommit);
                 final Map<String, FileChanges> fileChangesMap = new HashMap<>();
@@ -103,7 +105,9 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
                 for (DiffEntry diffEntry : diffEntries) {
                     FileEditType fileEditType = getFileEditType(diffEntry.getChangeType());
                     FileChanges fileChanges = createFileChanges(fileEditType, diffEntry, diffFormatter, repository);
-                    fileChangesMap.put(diffEntry.getNewId().name(), fileChanges);
+
+                    String fileId = getFileId(diffEntry, fileEditType);
+                    fileChangesMap.put(fileId, fileChanges);
                 }
 
                 log.logInfo("Creating the Git diff file");
@@ -117,6 +121,26 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
 
                 return wrapper;
             }
+        }
+    }
+
+    /**
+     * Gets the ID of the edited file, which is represented by the passed {@link DiffEntry}. If it is a deleted file,
+     * the old ID before the edit is taken in order to provide always unique IDs.
+     *
+     * @param diffEntry
+     *         Represents the edits of a file
+     * @param fileEditType
+     *         The {@link FileEditType}
+     *
+     * @return the file ID
+     */
+    private String getFileId(final DiffEntry diffEntry, final FileEditType fileEditType) {
+        if (FileEditType.DELETE.equals(fileEditType)) {
+            return diffEntry.getOldId().name();
+        }
+        else {
+            return diffEntry.getNewId().name();
         }
     }
 
@@ -141,20 +165,27 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
             final DiffFormatter diffFormatter, final Repository repository)
             throws IOException {
         String filePath;
+        String oldFilePath;
         String fileContent;
-        if (fileEditType == FileEditType.DELETE) {
-            // file path and content of deleted files have to be read using old ID
-            filePath = diffEntry.getOldPath();
+        if (fileEditType.equals(FileEditType.DELETE)) {
             fileContent = getFileContent(diffEntry.getOldId().toObjectId(), repository);
+            oldFilePath = diffEntry.getOldPath();
+            filePath = "";
         }
         else {
-            filePath = diffEntry.getNewPath();
+            if (fileEditType.equals(FileEditType.ADD)) {
+                oldFilePath = "";
+            }
+            else {
+                oldFilePath = diffEntry.getOldPath();
+            }
             fileContent = getFileContent(diffEntry.getNewId().toObjectId(), repository);
+            filePath = diffEntry.getNewPath();
         }
 
         diffFormatter.format(diffEntry);
 
-        FileChanges fileChanges = new FileChanges(filePath, fileContent, fileEditType, new HashMap<>());
+        FileChanges fileChanges = new FileChanges(filePath, oldFilePath, fileContent, fileEditType, new HashMap<>());
 
         for (Edit edit : diffFormatter.toFileHeader(diffEntry).toEditList()) {
             createChange(edit).ifPresent(fileChanges::addChange);
