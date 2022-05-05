@@ -25,7 +25,7 @@
 
     <!-- Library Dependencies Versions -->
     <eclipse-collections.version>9.2.0</eclipse-collections.version>
-    <echarts-api.version>5.3.0-2</echarts-api.version>
+    <echarts-api.version>5.3.2-1</echarts-api.version>
     <font-awesome-api.version>6.0.0-1</font-awesome-api.version>
     <plugin-util-api.version>2.16.0</plugin-util-api.version>
     <data-tables-api.version>1.11.4-3</data-tables-api.version>
