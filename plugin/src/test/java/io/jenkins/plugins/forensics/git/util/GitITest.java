@@ -14,6 +14,7 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.RepositoryBuilder;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -62,6 +63,11 @@ public abstract class GitITest extends IntegrationTestWithJenkinsPerTest {
     protected static final String INITIAL_BRANCH = "main";
 
     private GitRepository gitRepository;
+
+    @BeforeAll
+    static void allowLocalCheckouts() {
+        GitSCM.ALLOW_LOCAL_CHECKOUT = true;
+    }
 
     @BeforeEach
     void initializeGitRepository(@TempDir final File baseDirectory) {
