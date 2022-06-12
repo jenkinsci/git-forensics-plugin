@@ -1,4 +1,4 @@
-package io.jenkins.plugins.forensics;
+package io.jenkins.plugins.forensics.git;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
