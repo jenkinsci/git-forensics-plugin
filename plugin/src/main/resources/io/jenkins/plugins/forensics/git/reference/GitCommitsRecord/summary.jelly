@@ -3,7 +3,7 @@
 
   <t:summary icon="/plugin/git-forensics/icons/git-icon.svg">
 
-    <span id="commits-of-${it.scmKey}">
+    <span id="commits-of-${it.scmKey.hashCode()}">
       SCM: ${it.scmKey}
       <ul>
         <j:choose>
