@@ -1,4 +1,4 @@
-package io.jenkins.plugins.forensics;
+package io.jenkins.plugins.forensics.git;
 
 import java.util.Arrays;
 import java.util.List;
@@ -8,7 +8,7 @@ import org.openqa.selenium.WebElement;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
-import static io.jenkins.plugins.forensics.DetailsTable.*;
+import static io.jenkins.plugins.forensics.git.DetailsTable.*;
 
 /**
  * Describes one row in the DetailsTable on the ScmForensics Page.

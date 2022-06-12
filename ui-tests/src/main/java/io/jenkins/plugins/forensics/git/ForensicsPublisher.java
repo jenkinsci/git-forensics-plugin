@@ -1,4 +1,4 @@
-package io.jenkins.plugins.forensics;
+package io.jenkins.plugins.forensics.git;
 
 import org.jenkinsci.test.acceptance.po.AbstractStep;
 import org.jenkinsci.test.acceptance.po.Describable;

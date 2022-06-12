@@ -1,4 +1,4 @@
-package io.jenkins.plugins.forensics;
+package io.jenkins.plugins.forensics.git;
 
 import java.util.ArrayList;
 import java.util.Collections;

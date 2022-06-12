@@ -1,9 +1,8 @@
-package io.jenkins.plugins.forensics;
+package io.jenkins.plugins.forensics.git;
 
 import java.util.List;
 
 import org.junit.Test;
-import org.openqa.selenium.By;
 
 import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
 import org.jenkinsci.test.acceptance.junit.WithPlugins;
@@ -11,8 +10,8 @@ import org.jenkinsci.test.acceptance.po.Build;
 import org.jenkinsci.test.acceptance.po.Job;
 import org.jenkinsci.test.acceptance.po.WorkflowJob;
 
-import static io.jenkins.plugins.forensics.DetailsTable.*;
-import static org.assertj.core.api.Assertions.*;
+import static io.jenkins.plugins.forensics.git.Assertions.*;
+import static io.jenkins.plugins.forensics.git.DetailsTable.*;
 
 /**
  * Acceptance tests for the Git Forensics Plugin.
@@ -22,9 +21,8 @@ import static org.assertj.core.api.Assertions.*;
 @WithPlugins({"forensics-api", "git-forensics", "git", "workflow-durable-task-step", "workflow-basic-steps"})
 public class ForensicsPluginUiTest extends AbstractJUnitTest {
     private static final String REPOSITORY_URL = "https://github.com/jenkinsci/git-forensics-plugin.git";
-    private static final int GIT_SUMMARY_ROW = 2;
-    private static final int COMMIT_RECORDER_ROW = 3;
-    private static final int MINER_ROW = 4;
+    private static final String SCM_KEY = "git " + REPOSITORY_URL;
+    private static final int SCM_HASH = SCM_KEY.hashCode();
 
     /**
      * Verifies the Git miner by running a build with the forensics plugin analyzing a commit hash of the
@@ -41,27 +39,29 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
                 "-> 10444 lines deleted");
 
         build.open();
-        assertThat(getSummaryText(build, GIT_SUMMARY_ROW)).contains(
-                "Revision: 28af63def44286729e3b19b03464d100fd1d0587", "detached");
 
-        // TODO: create page objects
-        assertThat(getSummaryText(build, COMMIT_RECORDER_ROW)).contains(
-                "SCM: git " + REPOSITORY_URL,
-                "Initial recording of 200 commits",
-                "Latest commit: 28af63d");
+        Summary commitStatistics = new Summary(build, "commits-of-" + SCM_HASH);
+        assertThat(commitStatistics).hasTitle("SCM: " + SCM_KEY);
+        assertThat(commitStatistics).hasDetails("Initial recording of 200 commits", "Latest commit: 28af63d");
+        assertThat(commitStatistics.openLinkByText("28af63d")).isEqualTo("https://github.com/jenkinsci/git-forensics-plugin/commit/28af63def44286729e3b19b03464d100fd1d0587");
 
-        assertThat(getSummaryText(build, MINER_ROW)).contains(
-                "New commits: 402",
-                "4 authors",
-                "131 files",
-                "16510 added",
-                "10444 deleted");
+        build.open();
 
-        ScmForensics scmForensics = new ScmForensics(build, "forensics");
-        scmForensics.open();
-        DetailsTable detailsTable = new DetailsTable(scmForensics);
+        Summary scmForensics = new Summary(build, "scm-forensics-of-" + SCM_HASH);
+        assertThat(scmForensics).hasTitle("SCM Forensics: " + SCM_KEY);
+        assertThat(scmForensics).hasDetails("51 repository files (total lines of code: 6066, total churn: 16966)",
+                "New commits: 402 (from 4 authors in 131 files)",
+                "Changed lines: 16510 added, 10444 deleted");
 
-        assertThat(scmForensics.getTotal()).isEqualTo(51);
+        assertThat(scmForensics.openLinkByText("51 repository files")).endsWith("1/forensics/");
+
+        // TODO: navigate from summary
+
+        ScmForensics forensicsDetails = new ScmForensics(build, "forensics");
+        forensicsDetails.open();
+        assertThat(forensicsDetails.getTotal()).isEqualTo(51);
+
+        DetailsTable detailsTable = new DetailsTable(forensicsDetails);
         assertTableHeaders(detailsTable);
         assertTableEntriesAndSorting(detailsTable);
         assertSearch(detailsTable);
@@ -78,11 +78,6 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
                 + "} \n");
         job.save();
         return job;
-    }
-
-    private String getSummaryText(final Build referenceBuild, final int row) {
-        return referenceBuild.getElement(
-                By.xpath("/html/body/div[4]/div[2]/table/tbody/tr[" + row + "]/td[2]")).getText();
     }
 
     /**
