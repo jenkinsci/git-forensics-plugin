@@ -3,7 +3,6 @@ package io.jenkins.plugins.forensics.git;
 import java.util.List;
 
 import org.junit.Test;
-import org.openqa.selenium.By;
 
 import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
 import org.jenkinsci.test.acceptance.junit.WithPlugins;
@@ -24,9 +23,6 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
     private static final String REPOSITORY_URL = "https://github.com/jenkinsci/git-forensics-plugin.git";
     private static final String SCM_KEY = "git " + REPOSITORY_URL;
     private static final int SCM_HASH = SCM_KEY.hashCode();
-    private static final int GIT_SUMMARY_ROW = 2;
-    private static final int COMMIT_RECORDER_ROW = 3;
-    private static final int MINER_ROW = 4;
 
     /**
      * Verifies the Git miner by running a build with the forensics plugin analyzing a commit hash of the
@@ -82,11 +78,6 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
                 + "} \n");
         job.save();
         return job;
-    }
-
-    private String getSummaryText(final Build referenceBuild, final int row) {
-        return referenceBuild.getElement(
-                By.xpath("/html/body/div[4]/div[2]/table/tbody/tr[" + row + "]/td[2]")).getText();
     }
 
     /**

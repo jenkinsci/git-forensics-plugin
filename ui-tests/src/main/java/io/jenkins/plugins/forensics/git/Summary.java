@@ -22,10 +22,7 @@ import org.jenkinsci.test.acceptance.po.PageObject;
 public class Summary extends PageObject {
     private static final Pattern REMOVE_DETAILS = Pattern.compile("(\\r?\\n|\\r).*");
 
-    private final String id;
-
-    private final WebElement summary;
-    private final List<WebElement> results;
+    private final WebElement summarySpan;
     private final String title;
     private final List<String> details;
 
@@ -40,12 +37,9 @@ public class Summary extends PageObject {
     public Summary(final Build parent, final String id) {
         super(parent, parent.url(id));
 
-        this.id = id;
-
-        summary = getElement(By.id(id));
-        title = REMOVE_DETAILS.matcher(summary.getText()).replaceAll("");
-        results = summary.findElements(by.xpath("ul/li"));
-        details = results.stream()
+        summarySpan = getElement(By.id(id));
+        title = REMOVE_DETAILS.matcher(summarySpan.getText()).replaceAll("");
+        details = summarySpan.findElements(by.xpath("ul/li")).stream()
                 .map(WebElement::getText)
                 .map(StringUtils::normalizeSpace)
                 .collect(Collectors.toList());
@@ -78,7 +72,7 @@ public class Summary extends PageObject {
      * @return the URL of the page that has been opened by the link
      */
     public String openLinkByText(final String text) {
-        summary.findElement(By.linkText(text)).click();
+        summarySpan.findElement(By.linkText(text)).click();
 
         return driver.getCurrentUrl();
     }
