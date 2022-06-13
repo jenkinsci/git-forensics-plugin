@@ -27,7 +27,7 @@
     <eclipse-collections.version>9.2.0</eclipse-collections.version>
     <forensics-api-plugin.version>1.15.1</forensics-api-plugin.version>
     <data-tables-api.version>1.11.4-4</data-tables-api.version>
-    <testcontainers.version>1.17.1</testcontainers.version>
+    <testcontainers.version>1.17.2</testcontainers.version>
   </properties>
 
   <licenses>
