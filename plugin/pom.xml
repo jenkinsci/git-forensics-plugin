@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jvnet.hudson.plugins</groupId>
     <artifactId>analysis-pom</artifactId>
-    <version>5.31.0</version>
+    <version>5.32.0</version>
     <relativePath />
   </parent>
 
@@ -25,8 +25,6 @@
 
     <!-- Library Dependencies Versions -->
     <eclipse-collections.version>9.2.0</eclipse-collections.version>
-    <forensics-api-plugin.version>1.15.1</forensics-api-plugin.version>
-    <data-tables-api.version>1.11.4-4</data-tables-api.version>
     <testcontainers.version>1.17.3</testcontainers.version>
   </properties>
 
@@ -66,7 +64,6 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>forensics-api</artifactId>
-      <version>${forensics-api-plugin.version}</version>
     </dependency>
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
@@ -85,9 +82,8 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>forensics-api</artifactId>
-      <version>${forensics-api-plugin.version}</version>
-      <type>test-jar</type>
       <scope>test</scope>
+      <classifier>tests</classifier>
     </dependency>
 
     <!-- Custom for Integration Test-->
@@ -122,9 +118,8 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>data-tables-api</artifactId>
-      <version>${data-tables-api.version}</version>
       <scope>test</scope>
-      <type>test-jar</type>
+      <classifier>tests</classifier>
     </dependency>
 
     <dependency>
