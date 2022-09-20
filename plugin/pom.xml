@@ -23,6 +23,9 @@
 
     <module.name>${project.groupId}.git.forensics</module.name>
 
+    <jenkins.baseline>2.346</jenkins.baseline>
+    <jenkins.version>2.346.3</jenkins.version>
+
     <!-- Library Dependencies Versions -->
     <eclipse-collections.version>9.2.0</eclipse-collections.version>
     <testcontainers.version>1.17.3</testcontainers.version>
@@ -71,6 +74,7 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>font-awesome-api</artifactId>
+      <version>6.2.0-1</version>
     </dependency>
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
