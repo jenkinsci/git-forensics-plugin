@@ -1,7 +1,7 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:t="/lib/hudson">
 
-  <t:summary icon="/plugin/git-forensics/icons/git-icon.svg">
+  <t:summary icon="symbol-brands/git-alt plugin-font-awesome-api">
 
     <span id="commits-of-${it.scmKey.hashCode()}">
       SCM: ${it.scmKey}
