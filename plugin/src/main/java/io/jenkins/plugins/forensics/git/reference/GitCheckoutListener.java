@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jgit.lib.ObjectId;
 
 import edu.hm.hafner.util.FilteredLog;
 
@@ -98,24 +99,25 @@ public class GitCheckoutListener extends SCMListener {
     private GitCommitsRecord recordNewCommits(final Run<?, ?> build, final GitRepositoryValidator gitRepository,
             final FilteredLog logger, final String latestCommit) {
         BuildCommits commits = recordCommitsSincePreviousBuild(latestCommit, gitRepository, logger);
-
+        String calculatedLatestCommit = commits.getMergeOrLatestCommit();
+        
         CommitDecorator commitDecorator
                 = GitCommitDecoratorFactory.findCommitDecorator(gitRepository.getScm(), logger);
         String id = gitRepository.getId();
         if (commits.isEmpty()) {
             logger.logInfo("-> No new commits found");
-
-            return new GitCommitsRecord(build, id, logger, commits, commitDecorator.asLink(latestCommit));
+        }
+        else if (commits.size() == 1) {
+            logger.logInfo("-> Recorded one new commit", commits.size());
         }
         else {
-            if (commits.size() == 1) {
-                logger.logInfo("-> Recorded one new commit", commits.size());
-            }
-            else {
-                logger.logInfo("-> Recorded %d new commits", commits.size());
-            }
-            return new GitCommitsRecord(build, id, logger, commits, commitDecorator.asLink(commits.getLatestCommit()));
+            logger.logInfo("-> Recorded %d new commits", commits.size());
         }
+        if (!commits.getMerge().equals(ObjectId.zeroId())) {
+            logger.logInfo("-> The latest commit '%s' is a merge commit", calculatedLatestCommit);
+        }
+        return new GitCommitsRecord(build, id, logger, commits,
+                commitDecorator.asLink(calculatedLatestCommit));
     }
 
     private BuildCommits recordCommitsSincePreviousBuild(final String latestCommitName,
