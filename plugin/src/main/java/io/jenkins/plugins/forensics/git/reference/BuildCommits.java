@@ -25,6 +25,7 @@ class BuildCommits implements Serializable {
 
     private ObjectId head = ObjectId.zeroId();
     private ObjectId target = ObjectId.zeroId();
+    private ObjectId merge = ObjectId.zeroId();
 
     BuildCommits(final String previousBuildCommit) {
         this.previousBuildCommit = previousBuildCommit;
@@ -44,6 +45,14 @@ class BuildCommits implements Serializable {
 
     ObjectId getTarget() {
         return target;
+    }
+
+    public ObjectId getMerge() {
+        return merge;
+    }
+
+    public void setMerge(final ObjectId merge) {
+        this.merge = merge;
     }
 
     List<String> getCommits() {

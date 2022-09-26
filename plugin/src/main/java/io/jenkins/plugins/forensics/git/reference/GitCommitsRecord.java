@@ -54,6 +54,7 @@ public class GitCommitsRecord implements RunAction2, Serializable {
     private final RecordingType recordingType;
     private final String latestCommitLink;
     private final String targetParentCommit;
+    private final String mergeCommit;
     private final List<String> commits;
     private final List<String> errorMessages;
     private final List<String> infoMessages;
@@ -89,6 +90,7 @@ public class GitCommitsRecord implements RunAction2, Serializable {
         this.commits = new ArrayList<>(commits.getCommits());
         this.recordingType = commits.getRecordingType();
         targetParentCommit = commits.getTarget().name();
+        mergeCommit = commits.getMerge().name();
     }
 
     public Run<?, ?> getOwner() {
@@ -122,6 +124,14 @@ public class GitCommitsRecord implements RunAction2, Serializable {
      */
     public boolean hasTargetParentCommit() {
         return !ObjectId.zeroId().name().equals(targetParentCommit);
+    }
+
+    public String getMergeCommit() {
+        return mergeCommit;
+    }
+
+    public boolean hasMergeCommit() {
+        return !ObjectId.zeroId().name().equals(mergeCommit);
     }
 
     public List<String> getErrorMessages() {

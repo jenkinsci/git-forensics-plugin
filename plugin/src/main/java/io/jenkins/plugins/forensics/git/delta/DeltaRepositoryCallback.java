@@ -89,7 +89,7 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
             ByteArrayOutputStream diffStream = new ByteArrayOutputStream();
 
             FilteredLog log = new FilteredLog("Errors from Git Delta:");
-            log.logInfo("Start scanning for differences between commits...");
+            log.logInfo("-> Start scanning for differences between commits...");
 
             try (DiffFormatter diffFormatter = new DiffFormatter(diffStream)) {
                 diffFormatter.setDiffComparator(RawTextComparator.WS_IGNORE_ALL);
@@ -100,7 +100,7 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
                 final List<DiffEntry> diffEntries = diffFormatter.scan(referenceCommit, currentCommit);
                 final Map<String, FileChanges> fileChangesMap = new HashMap<>();
 
-                log.logInfo("%d files contain changes", diffEntries.size());
+                log.logInfo("-> %d files contain changes", diffEntries.size());
 
                 for (DiffEntry diffEntry : diffEntries) {
                     FileEditType fileEditType = getFileEditType(diffEntry.getChangeType());
@@ -110,14 +110,14 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
                     fileChangesMap.put(fileId, fileChanges);
                 }
 
-                log.logInfo("Creating the Git diff file");
+                log.logInfo("-> Creating the Git diff file");
                 String diffFile = new String(diffStream.toByteArray(), StandardCharsets.UTF_8);
 
                 GitDelta delta = new GitDelta(currentCommitId, referenceCommitId, fileChangesMap, diffFile);
                 RemoteResultWrapper<Delta> wrapper = new RemoteResultWrapper<>(delta, "Errors from Git Delta:");
                 wrapper.merge(log);
 
-                log.logInfo("Git code delta successfully calculated");
+                log.logInfo("-> Git code delta successfully calculated");
 
                 return wrapper;
             }

@@ -1,5 +1,6 @@
 package io.jenkins.plugins.forensics.git.reference;
 
+import java.beans.Transient;
 import java.io.IOException;
 
 import org.eclipse.jgit.api.Git;
@@ -29,6 +30,7 @@ class GitCommitsCollector extends AbstractRepositoryCallback<RemoteResultWrapper
     private static final int MAX_COMMITS = 200; // TODO: should the number of recorded commits be configurable?
 
     private final String latestRecordedCommit;
+    // unused
     private final boolean isMergeCommit;
 
     GitCommitsCollector(final String latestRecordedCommit, final boolean isMergeCommit) {
@@ -63,34 +65,29 @@ class GitCommitsCollector extends AbstractRepositoryCallback<RemoteResultWrapper
     private void findHeadCommit(final Repository repository, final BuildCommits commits, final FilteredLog logger)
             throws IOException {
         RevCommit head = getHead(repository);
-        if (isMergeCommit) {
-            RevCommit[] parents = head.getParents();
-            if (parents.length < 1) {
-                logger.logInfo("-> No parent commits found - detected the first commit in the branch");
-                logger.logInfo("-> Using head commit '%s' as starting point",
-                        DECORATOR.asText(head));
-                commits.setHead(head);
-            }
-            else if (parents.length == 1) {
-                logger.logInfo("-> Single parent commit found - branch is already descendant of target branch head");
-                logger.logInfo("-> Using head commit '%s' as starting point",
-                        DECORATOR.asText(head));
-                commits.setHead(head);
-            }
-            else {
-                logger.logInfo("-> Multiple parent commits found - skipping commits of local merge '%s'",
-                        DECORATOR.asText(head));
-                logger.logInfo("-> Using parent commit '%s' of local merge as starting point",
-                        DECORATOR.asText(parents[0]));
-                logger.logInfo("-> Storing target branch head '%s' (second parent of local merge) ",
-                        DECORATOR.asText(parents[1]));
-                commits.setHead(parents[0]);
-                commits.setTarget(parents[1]);
-            }
+        RevCommit[] parents = head.getParents();
+        if (parents.length < 1) {
+            logger.logInfo("-> No parent commits found - detected the first commit in the branch");
+            logger.logInfo("-> Using head commit '%s' as starting point",
+                    DECORATOR.asText(head));
+            commits.setHead(head);
+        }
+        else if (parents.length == 1) {
+            logger.logInfo("-> Single parent commit found - branch is already descendant of target branch head");
+            logger.logInfo("-> Using head commit '%s' as starting point",
+                    DECORATOR.asText(head));
+            commits.setHead(head);
         }
         else {
-            logger.logInfo("-> Using head commit '%s' as starting point", DECORATOR.asText(head));
-            commits.setHead(head);
+            logger.logInfo("-> Multiple parent commits found - storing latest commit of local merge '%s'",
+                    DECORATOR.asText(head));
+            logger.logInfo("-> Using parent commit '%s' of local merge as starting point",
+                    DECORATOR.asText(parents[0]));
+            logger.logInfo("-> Storing target branch head '%s' (second parent of local merge) ",
+                    DECORATOR.asText(parents[1]));
+            commits.setHead(parents[0]);
+            commits.setTarget(parents[1]);
+            commits.setMerge(head);
         }
     }
 

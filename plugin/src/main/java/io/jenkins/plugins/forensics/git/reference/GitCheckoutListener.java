@@ -100,7 +100,7 @@ public class GitCheckoutListener extends SCMListener {
 
     private GitCommitsRecord recordNewCommits(final Run<?, ?> build, final GitRepositoryValidator gitRepository,
             final FilteredLog logger, final String latestCommit) {
-        BuildCommits commits = recordCommitsSincePreviousBuild(latestCommit, isMerge(build), gitRepository, logger);
+        BuildCommits commits = recordCommitsSincePreviousBuild(latestCommit, gitRepository, logger);
 
         CommitDecorator commitDecorator
                 = GitCommitDecoratorFactory.findCommitDecorator(gitRepository.getScm(), logger);
@@ -121,25 +121,11 @@ public class GitCheckoutListener extends SCMListener {
         }
     }
 
-    private boolean isMerge(final Run<?, ?> build) {
-        // FIXME: see https://issues.jenkins.io/browse/JENKINS-66480?focusedCommentId=412857
-        SCMRevisionAction scmRevision = build.getAction(SCMRevisionAction.class);
-        if (scmRevision == null) {
-            return false;
-        }
-
-        SCMRevision revision = scmRevision.getRevision();
-        if (revision instanceof ChangeRequestSCMRevision) {
-            return ((ChangeRequestSCMRevision<?>) revision).isMerge();
-        }
-        return false;
-    }
-
     private BuildCommits recordCommitsSincePreviousBuild(final String latestCommitName,
-            final boolean isMergeCommit, final GitRepositoryValidator gitRepository, final FilteredLog logger) {
+            final GitRepositoryValidator gitRepository, final FilteredLog logger) {
         try {
             RemoteResultWrapper<BuildCommits> resultWrapper = gitRepository.createClient()
-                    .withRepository(new GitCommitsCollector(latestCommitName, isMergeCommit));
+                    .withRepository(new GitCommitsCollector(latestCommitName, false));
             logger.merge(resultWrapper);
 
             return resultWrapper.getResult();
