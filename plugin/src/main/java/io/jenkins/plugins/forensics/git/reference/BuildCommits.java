@@ -84,4 +84,17 @@ class BuildCommits implements Serializable {
         }
         return commits.get(0);
     }
+
+    /**
+     * Returns a merge commit if existent or the latest commit if not. In case that there is a merge commit, it is the
+     * head of the commits of this record.
+     *
+     * @return the found commit
+     */
+    String getMergeOrLatestCommit() {
+        if (getMerge().equals(ObjectId.zeroId())) {
+            return getLatestCommit();
+        }
+        return getMerge().name();
+    }
 }

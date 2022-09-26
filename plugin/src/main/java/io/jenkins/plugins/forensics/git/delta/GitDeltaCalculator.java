@@ -81,14 +81,7 @@ public class GitDeltaCalculator extends DeltaCalculator {
      * @return the latest commit
      */
     private String getLatestCommit(final String buildName, final GitCommitsRecord record, final FilteredLog log) {
-        String latestCommitId;
-        if (record.hasMergeCommit()) {
-            // the latest commit is a merge commit
-            latestCommitId = record.getMergeCommit();
-            log.logInfo("-> Using merge commit '%s' as latest commit for build '%s'", latestCommitId, buildName);
-            return latestCommitId;
-        }
-        latestCommitId = record.getLatestCommit();
+        String latestCommitId = record.getLatestCommit();
         log.logInfo("-> Using commit '%s' as latest commit for build '%s'", latestCommitId, buildName);
         return latestCommitId;
     }

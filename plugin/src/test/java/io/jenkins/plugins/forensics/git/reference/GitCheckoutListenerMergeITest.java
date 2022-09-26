@@ -53,7 +53,6 @@ class GitCheckoutListenerMergeITest extends GitITest {
         assertThat(latestMainRecord)
                 .isNotNull()
                 .satisfies(commit -> {
-                    assertThat(commit.getMergeCommit()).isEqualTo(ObjectId.zeroId().name());
                     assertThat(commit.getTargetParentCommit()).isEqualTo(ObjectId.zeroId().name());
                     assertThat(commit.getLatestCommit()).isEqualTo(getHead());
                 });
@@ -65,7 +64,6 @@ class GitCheckoutListenerMergeITest extends GitITest {
         assertThat(latestPullRequestRecord)
                 .isNotNull()
                 .satisfies(commit -> {
-                    assertThat(commit.getMergeCommit()).isEqualTo(ObjectId.zeroId().name());
                     assertThat(commit.getTargetParentCommit()).isEqualTo(ObjectId.zeroId().name());
                     assertThat(commit.getLatestCommit()).isEqualTo(getHead());
                 });
@@ -77,9 +75,7 @@ class GitCheckoutListenerMergeITest extends GitITest {
         assertThat(mergeBuild.getAction(GitCommitsRecord.class))
                 .isNotNull()
                 .satisfies(commit -> {
-                    assertThat(commit.getMergeCommit()).isEqualTo(getHead());
-                    assertThat(commit.getMergeCommit()).isNotEqualTo(commit.getLatestCommit());
-                    assertThat(commit.getLatestCommit()).isEqualTo(latestPullRequestRecord.getLatestCommit());
+                    assertThat(commit.getLatestCommit()).isEqualTo(getHead());
                     assertThat(commit.getTargetParentCommit()).isEqualTo(latestMainRecord.getLatestCommit());
                 });
     }
@@ -104,8 +100,7 @@ class GitCheckoutListenerMergeITest extends GitITest {
 
         checkout(INITIAL_BRANCH);
         commitFile("additionalFile", "Commit 2 in main");
-        Run<?, ?> latestMainBuild = buildSuccessfully(mainJob);
-        GitCommitsRecord latestMainRecord = latestMainBuild.getAction(GitCommitsRecord.class);
+        buildSuccessfully(mainJob);
         // merge PR into main and create a merge commit
         mergeWithoutFastForwarding(PR_BRANCH_NAME);
         // verify commits
@@ -113,9 +108,7 @@ class GitCheckoutListenerMergeITest extends GitITest {
         assertThat(mergeBuild.getAction(GitCommitsRecord.class))
                 .isNotNull()
                 .satisfies(commit -> {
-                    assertThat(commit.getMergeCommit()).isEqualTo(getHead());
-                    assertThat(commit.getMergeCommit()).isNotEqualTo(commit.getLatestCommit());
-                    assertThat(commit.getLatestCommit()).isEqualTo(latestMainRecord.getLatestCommit());
+                    assertThat(commit.getLatestCommit()).isEqualTo(getHead());
                     assertThat(commit.getTargetParentCommit()).isEqualTo(latestPullRequestRecord.getLatestCommit());
                 });
 
@@ -147,7 +140,6 @@ class GitCheckoutListenerMergeITest extends GitITest {
         assertThat(mergeBuild.getAction(GitCommitsRecord.class))
                 .isNotNull()
                 .satisfies(commit -> {
-                    assertThat(commit.getMergeCommit()).isEqualTo(ObjectId.zeroId().name());
                     assertThat(commit.getTargetParentCommit()).isEqualTo(ObjectId.zeroId().name());
                     assertThat(commit.getLatestCommit()).isEqualTo(latestPullRequestRecord.getLatestCommit());
                 });
@@ -168,7 +160,6 @@ class GitCheckoutListenerMergeITest extends GitITest {
         assertThat(latestPullRequestBuild.getAction(GitCommitsRecord.class))
                 .isNotNull()
                 .satisfies(commit -> {
-                    assertThat(commit.getMergeCommit()).isEqualTo(ObjectId.zeroId().name());
                     assertThat(commit.getTargetParentCommit()).isEqualTo(ObjectId.zeroId().name());
                     assertThat(commit.getLatestCommit()).isEqualTo(getHead());
                 });
@@ -182,6 +173,8 @@ class GitCheckoutListenerMergeITest extends GitITest {
      *         The name of the project
      * @param referenceJobName
      *         The name of the reference job
+     * @param branchSpec
+     *         The branch used by the {@link GitSCM}
      *
      * @return the created project
      * @throws IOException
@@ -226,12 +219,7 @@ class GitCheckoutListenerMergeITest extends GitITest {
      *         The branch to be merged
      */
     protected void mergeWithoutFastForwarding(final String branch) {
-        try {
-            git("merge", "--no-ff", branch);
-        }
-        catch (Exception exception) {
-            throw new AssertionError(exception);
-        }
+        git("merge", "--no-ff", branch);
     }
 
     /**
@@ -241,11 +229,6 @@ class GitCheckoutListenerMergeITest extends GitITest {
      *         The branch to be merged
      */
     protected void mergeWithFastForwarding(final String branch) {
-        try {
-            git("merge", "--ff", branch);
-        }
-        catch (Exception exception) {
-            throw new AssertionError(exception);
-        }
+        git("merge", "--ff", branch);
     }
 }

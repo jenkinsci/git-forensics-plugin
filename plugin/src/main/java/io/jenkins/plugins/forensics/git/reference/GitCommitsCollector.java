@@ -1,6 +1,5 @@
 package io.jenkins.plugins.forensics.git.reference;
 
-import java.beans.Transient;
 import java.io.IOException;
 
 import org.eclipse.jgit.api.Git;
@@ -30,14 +29,10 @@ class GitCommitsCollector extends AbstractRepositoryCallback<RemoteResultWrapper
     private static final int MAX_COMMITS = 200; // TODO: should the number of recorded commits be configurable?
 
     private final String latestRecordedCommit;
-    // unused
-    private final boolean isMergeCommit;
 
-    GitCommitsCollector(final String latestRecordedCommit, final boolean isMergeCommit) {
+    GitCommitsCollector(final String latestRecordedCommit) {
         super();
-
         this.latestRecordedCommit = latestRecordedCommit;
-        this.isMergeCommit = isMergeCommit;
     }
 
     @Override

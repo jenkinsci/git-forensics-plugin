@@ -15,9 +15,6 @@ import hudson.model.TaskListener;
 import hudson.model.listeners.SCMListener;
 import hudson.scm.SCM;
 import hudson.scm.SCMRevisionState;
-import jenkins.scm.api.SCMRevision;
-import jenkins.scm.api.SCMRevisionAction;
-import jenkins.scm.api.mixin.ChangeRequestSCMRevision;
 
 import io.jenkins.plugins.forensics.git.util.GitCommitDecoratorFactory;
 import io.jenkins.plugins.forensics.git.util.GitCommitTextDecorator;
@@ -125,7 +122,7 @@ public class GitCheckoutListener extends SCMListener {
             final GitRepositoryValidator gitRepository, final FilteredLog logger) {
         try {
             RemoteResultWrapper<BuildCommits> resultWrapper = gitRepository.createClient()
-                    .withRepository(new GitCommitsCollector(latestCommitName, false));
+                    .withRepository(new GitCommitsCollector(latestCommitName));
             logger.merge(resultWrapper);
 
             return resultWrapper.getResult();
