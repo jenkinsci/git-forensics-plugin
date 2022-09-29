@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.jgit.lib.ObjectId;
 
 import edu.hm.hafner.util.FilteredLog;
 
