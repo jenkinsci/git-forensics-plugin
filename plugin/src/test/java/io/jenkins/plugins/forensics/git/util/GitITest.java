@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
@@ -123,6 +124,27 @@ public abstract class GitITest extends IntegrationTestWithJenkinsPerTest {
         getGitRepository().git("commit", "--all", "--message=" + message);
     }
 
+    /**
+     * Merges the passed branch into the current branch without fast-forwarding. This creates an additional merge
+     * commit.
+     *
+     * @param branch
+     *         The branch to be merged
+     */
+    protected void mergeWithoutFastForwarding(final String branch) {
+        git("merge", "--no-ff", branch);
+    }
+
+    /**
+     * Merges the passed branch into the current branch using fast-forwarding.
+     *
+     * @param branch
+     *         The branch to be merged
+     */
+    protected void mergeWithFastForwarding(final String branch) {
+        git("merge", "--ff", branch);
+    }
+
     protected void git(final String... commands) {
         getGitRepository().git(commands);
     }
@@ -134,11 +156,7 @@ public abstract class GitITest extends IntegrationTestWithJenkinsPerTest {
      *         the new content of the file
      */
     protected void writeFileAsAuthorFoo(final String content) {
-        writeFile(ADDITIONAL_FILE, content);
-        git("add", ADDITIONAL_FILE);
-        git("config", "user.name", FOO_NAME);
-        git("config", "user.email", FOO_EMAIL);
-        git("commit", "--message=Foo");
+        commitFile(ADDITIONAL_FILE, content, FOO_NAME, FOO_EMAIL, "Foo");
     }
 
     /**
@@ -148,11 +166,42 @@ public abstract class GitITest extends IntegrationTestWithJenkinsPerTest {
      *         the new content of the file
      */
     protected void writeFileAsAuthorBar(final String content) {
-        writeFile(ADDITIONAL_FILE, content);
-        git("add", ADDITIONAL_FILE);
-        git("config", "user.name", BAR_NAME);
-        git("config", "user.email", BAR_EMAIL);
-        git("commit", "--message=Bar");
+        commitFile(ADDITIONAL_FILE, content, BAR_NAME, BAR_EMAIL, "Bar");
+    }
+
+    /**
+     * Commits a file with a specific name and message and a random content.
+     *
+     * @param fileName
+     *         The file name
+     * @param message
+     *         The message
+     */
+    protected void writeFileWithNameAsAuthorFoo(final String fileName, final String message) {
+        commitFile(fileName, UUID.randomUUID().toString(), FOO_NAME, FOO_EMAIL, message);
+    }
+
+    /**
+     * Commits a file.
+     *
+     * @param file
+     *         The file name
+     * @param content
+     *         The file content
+     * @param authorName
+     *         The author name
+     * @param authorEmail
+     *         The author email
+     * @param message
+     *         the commit message
+     */
+    private void commitFile(final String file, final String content, final String authorName, final String authorEmail,
+            final String message) {
+        writeFile(file, content);
+        git("add", file);
+        git("config", "user.name", authorName);
+        git("config", "user.email", authorEmail);
+        git("commit", String.format("--message=%s", message));
     }
 
     /**

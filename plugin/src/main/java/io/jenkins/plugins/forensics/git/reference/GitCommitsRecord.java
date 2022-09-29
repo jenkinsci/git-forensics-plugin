@@ -158,6 +158,29 @@ public class GitCommitsRecord implements RunAction2, Serializable {
     }
 
     /**
+     * Returns all recorded new {@link #commits} including the commits which belong to a merge, if it is part of this
+     * commit record. These affected merge commits consist of the
+     * {@link #targetParentCommit latest commit of the target branch} as well as the latest merge commit itself.
+     * The order is as follows:
+     * <ol>
+     *     <li>Latest merge commit</li>
+     *     <li>Latest target branch commit</li>
+     *     <li>Recorded new commits</li>
+     * </ol>
+     *
+     * @return the hash codes of the found commits
+     */
+    public List<String> getCommitsWithMerge() {
+        List<String> foundCommits = new ArrayList<>(getCommits());
+        if (foundCommits.contains(latestCommit) || ObjectId.zeroId().name().equals(targetParentCommit)) {
+            return foundCommits; // there is no merge commit
+        }
+        foundCommits.add(0, latestCommit);
+        foundCommits.add(1, targetParentCommit);
+        return foundCommits;
+    }
+
+    /**
      * Returns {@code true} if the specified commit is part of the commits.
      *
      * @param commit
@@ -244,11 +267,13 @@ public class GitCommitsRecord implements RunAction2, Serializable {
         Run<?, ?> build = referenceCommits.owner;
         for (; targetCommits.size() < maxCommits && build != null;
                 build = build.getPreviousBuild()) {
+            if (owner.getExternalizableId().equals(build.getExternalizableId())) {
+                continue; // skip the identical build when searching for a reference
+            }
             List<String> additionalCommits = getCommitsForRepository(build);
             logger.logInfo("-> adding %d commits from build '%s' of reference job (last one: '%s')",
                     additionalCommits.size(), build.getDisplayName(),
                     getHeadCommitOf(additionalCommits, textDecorator));
-
             if (!skipUnknownCommits || branchCommits.containsAll(additionalCommits)) {
                 targetCommits.addAll(additionalCommits);
                 Optional<String> referencePoint = branchCommits.stream().filter(targetCommits::contains).findFirst();
@@ -290,7 +315,7 @@ public class GitCommitsRecord implements RunAction2, Serializable {
 
     private List<String> getCommitsForRepository(final Run<?, ?> run) {
         return findRecordForScm(run, getScmKey())
-                .map(GitCommitsRecord::getCommits)
+                .map(GitCommitsRecord::getCommitsWithMerge)
                 .orElse(Collections.emptyList());
     }
 }

@@ -100,9 +100,7 @@ public class GitCheckoutListener extends SCMListener {
             final FilteredLog logger, final String latestCommit) {
         BuildCommits commits = recordCommitsSincePreviousBuild(latestCommit, gitRepository, logger);
         String calculatedLatestCommit = commits.getMergeOrLatestCommit();
-        
-        CommitDecorator commitDecorator
-                = GitCommitDecoratorFactory.findCommitDecorator(gitRepository.getScm(), logger);
+
         String id = gitRepository.getId();
         if (commits.isEmpty()) {
             logger.logInfo("-> No new commits found");
@@ -113,11 +111,12 @@ public class GitCheckoutListener extends SCMListener {
         else {
             logger.logInfo("-> Recorded %d new commits", commits.size());
         }
-        if (!commits.getMerge().equals(ObjectId.zeroId())) {
+        if (commits.hasMerge()) {
             logger.logInfo("-> The latest commit '%s' is a merge commit", calculatedLatestCommit);
         }
-        return new GitCommitsRecord(build, id, logger, commits,
-                commitDecorator.asLink(calculatedLatestCommit));
+
+        CommitDecorator commitDecorator = GitCommitDecoratorFactory.findCommitDecorator(gitRepository.getScm(), logger);
+        return new GitCommitsRecord(build, id, logger, commits, commitDecorator.asLink(calculatedLatestCommit));
     }
 
     private BuildCommits recordCommitsSincePreviousBuild(final String latestCommitName,

@@ -55,6 +55,15 @@ class BuildCommits implements Serializable {
         this.merge = merge;
     }
 
+    /**
+     * Checks whether the commit record contains a merge commit.
+     *
+     * @return {@code true} if a merge commit exists
+     */
+    public boolean hasMerge() {
+        return !merge.equals(ObjectId.zeroId());
+    }
+
     List<String> getCommits() {
         return commits;
     }
