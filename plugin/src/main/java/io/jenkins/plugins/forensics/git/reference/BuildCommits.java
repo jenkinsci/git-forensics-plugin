@@ -25,6 +25,7 @@ class BuildCommits implements Serializable {
 
     private ObjectId head = ObjectId.zeroId();
     private ObjectId target = ObjectId.zeroId();
+    private ObjectId merge = ObjectId.zeroId();
 
     BuildCommits(final String previousBuildCommit) {
         this.previousBuildCommit = previousBuildCommit;
@@ -44,6 +45,23 @@ class BuildCommits implements Serializable {
 
     ObjectId getTarget() {
         return target;
+    }
+
+    public ObjectId getMerge() {
+        return merge;
+    }
+
+    public void setMerge(final ObjectId merge) {
+        this.merge = merge;
+    }
+
+    /**
+     * Checks whether the commit record contains a merge commit.
+     *
+     * @return {@code true} if a merge commit exists
+     */
+    public boolean hasMerge() {
+        return !merge.equals(ObjectId.zeroId());
     }
 
     List<String> getCommits() {
@@ -74,5 +92,18 @@ class BuildCommits implements Serializable {
             return previousBuildCommit;
         }
         return commits.get(0);
+    }
+
+    /**
+     * Returns a merge commit if existent or the latest commit if not. In case that there is a merge commit, it is the
+     * head of the commits of this record.
+     *
+     * @return the found commit
+     */
+    String getMergeOrLatestCommit() {
+        if (getMerge().equals(ObjectId.zeroId())) {
+            return getLatestCommit();
+        }
+        return getMerge().name();
     }
 }

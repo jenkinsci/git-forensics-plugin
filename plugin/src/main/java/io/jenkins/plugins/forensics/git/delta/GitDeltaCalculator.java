@@ -46,11 +46,11 @@ public class GitDeltaCalculator extends DeltaCalculator {
         Optional<GitCommitsRecord> buildCommits = GitCommitsRecord.findRecordForScm(build, scmKeyFilter);
         Optional<GitCommitsRecord> referenceCommits = GitCommitsRecord.findRecordForScm(referenceBuild, scmKeyFilter);
         if (buildCommits.isPresent() && referenceCommits.isPresent()) {
-            String currentCommit = buildCommits.get().getLatestCommit();
-            String referenceCommit = referenceCommits.get().getLatestCommit();
+            String currentCommit = getLatestCommit(build.getFullDisplayName(), buildCommits.get(), log);
+            String referenceCommit = getLatestCommit(referenceBuild.getFullDisplayName(), referenceCommits.get(), log);
             if (!currentCommit.isEmpty() && !referenceCommit.isEmpty()) {
                 log.logInfo(
-                        "Invoking Git delta calculator for determining the made changes between the commits with the IDs %s and %s",
+                        "-> Invoking Git delta calculator for determining the made changes between the commits with the IDs '%s' and '%s'",
                         currentCommit, referenceCommit);
                 try {
                     RemoteResultWrapper<Delta> wrapped = git.withRepository(
@@ -66,5 +66,23 @@ public class GitDeltaCalculator extends DeltaCalculator {
         }
         log.logError(EMPTY_COMMIT_ERROR);
         return Optional.empty();
+    }
+
+    /**
+     * Returns the latest commit of the {@link GitCommitsRecord commits record} of a Git repository.
+     *
+     * @param buildName
+     *         The name of the build the commits record corresponds to
+     * @param record
+     *         The commits record
+     * @param log
+     *         The log
+     *
+     * @return the latest commit
+     */
+    private String getLatestCommit(final String buildName, final GitCommitsRecord record, final FilteredLog log) {
+        String latestCommitId = record.getLatestCommit();
+        log.logInfo("-> Using commit '%s' as latest commit for build '%s'", latestCommitId, buildName);
+        return latestCommitId;
     }
 }
