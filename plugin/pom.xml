@@ -23,9 +23,6 @@
 
     <module.name>${project.groupId}.git.forensics</module.name>
 
-    <jenkins.baseline>2.346</jenkins.baseline>
-    <jenkins.version>2.346.3</jenkins.version>
-
     <!-- Library Dependencies Versions -->
     <eclipse-collections.version>9.2.0</eclipse-collections.version>
     <testcontainers.version>1.17.4</testcontainers.version>
