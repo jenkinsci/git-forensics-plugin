@@ -34,6 +34,7 @@ public class GitDelta extends Delta {
     public GitDelta(final String currentCommit, final String referenceCommit,
             final Map<String, FileChanges> fileChanges, final String diffFile) {
         super(currentCommit, referenceCommit, fileChanges);
+
         this.diffFile = diffFile;
     }
 

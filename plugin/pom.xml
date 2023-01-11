@@ -30,8 +30,8 @@
     <!-- Maven Surefire ArgLine -->
     <argLine>-Djava.awt.headless=true -Xmx1024m -Djenkins.test.timeout=1000 --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.util.concurrent=ALL-UNNAMED</argLine>
 
-    <forensics-api.version>2.0.0-rc1380.c93c627cd828</forensics-api.version>
-
+    <forensics-api.version>2.0.0-rc1381.02e905b_3cb_b_2</forensics-api.version>
+    <plugin-util-api.version>3.0.0-rc676.39c5d554b_82f</plugin-util-api.version>
   </properties>
 
   <licenses>
@@ -80,7 +80,7 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>plugin-util-api</artifactId>
-      <version>3.0.0-rc674.f33a_a_ee40321</version>
+      <version>${plugin-util-api.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -124,6 +124,7 @@
       <artifactId>plugin-util-api</artifactId>
       <scope>test</scope>
       <classifier>tests</classifier>
+      <version>${plugin-util-api.version}</version>
     </dependency>
     <dependency>
       <groupId>io.jenkins.plugins</groupId>

@@ -12,6 +12,7 @@ import hudson.model.Run;
 import io.jenkins.plugins.forensics.delta.Delta;
 import io.jenkins.plugins.forensics.delta.DeltaCalculator;
 import io.jenkins.plugins.forensics.git.reference.GitCommitsRecord;
+import io.jenkins.plugins.forensics.git.util.GitCommitTextDecorator;
 import io.jenkins.plugins.forensics.git.util.RemoteResultWrapper;
 
 /**
@@ -22,6 +23,7 @@ import io.jenkins.plugins.forensics.git.util.RemoteResultWrapper;
 @SuppressFBWarnings(value = "SE", justification = "GitClient implementation is Serializable")
 public class GitDeltaCalculator extends DeltaCalculator {
     private static final long serialVersionUID = -7303579046266608368L;
+    private static final GitCommitTextDecorator DECORATOR = new GitCommitTextDecorator();
 
     static final String DELTA_ERROR = "Computing delta information failed with an exception:";
     static final String EMPTY_COMMIT_ERROR = "Calculating the Git code delta is not possible due to an unknown commit ID";
@@ -49,9 +51,8 @@ public class GitDeltaCalculator extends DeltaCalculator {
             String currentCommit = getLatestCommit(build.getFullDisplayName(), buildCommits.get(), log);
             String referenceCommit = getLatestCommit(referenceBuild.getFullDisplayName(), referenceCommits.get(), log);
             if (!currentCommit.isEmpty() && !referenceCommit.isEmpty()) {
-                log.logInfo(
-                        "-> Invoking Git delta calculator for determining the made changes between the commits with the IDs '%s' and '%s'",
-                        currentCommit, referenceCommit);
+                log.logInfo("-> Invoking Git delta calculator for determining the changes between commits '%s' and '%s'",
+                        DECORATOR.asText(currentCommit), DECORATOR.asText(referenceCommit));
                 try {
                     RemoteResultWrapper<Delta> wrapped = git.withRepository(
                             new DeltaRepositoryCallback(currentCommit, referenceCommit));
@@ -82,7 +83,7 @@ public class GitDeltaCalculator extends DeltaCalculator {
      */
     private String getLatestCommit(final String buildName, final GitCommitsRecord record, final FilteredLog log) {
         String latestCommitId = record.getLatestCommit();
-        log.logInfo("-> Using commit '%s' as latest commit for build '%s'", latestCommitId, buildName);
+        log.logInfo("-> Using commit '%s' as latest commit for build '%s'", DECORATOR.asText(latestCommitId), buildName);
         return latestCommitId;
     }
 }
