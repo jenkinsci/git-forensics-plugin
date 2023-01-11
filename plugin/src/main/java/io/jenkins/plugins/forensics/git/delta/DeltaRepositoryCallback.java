@@ -24,12 +24,11 @@ import edu.hm.hafner.util.FilteredLog;
 
 import hudson.remoting.VirtualChannel;
 
-import io.jenkins.plugins.forensics.delta.model.Change;
-import io.jenkins.plugins.forensics.delta.model.ChangeEditType;
-import io.jenkins.plugins.forensics.delta.model.Delta;
-import io.jenkins.plugins.forensics.delta.model.FileChanges;
-import io.jenkins.plugins.forensics.delta.model.FileEditType;
-import io.jenkins.plugins.forensics.git.delta.model.GitDelta;
+import io.jenkins.plugins.forensics.delta.Change;
+import io.jenkins.plugins.forensics.delta.ChangeEditType;
+import io.jenkins.plugins.forensics.delta.Delta;
+import io.jenkins.plugins.forensics.delta.FileChanges;
+import io.jenkins.plugins.forensics.delta.FileEditType;
 import io.jenkins.plugins.forensics.git.util.AbstractRepositoryCallback;
 import io.jenkins.plugins.forensics.git.util.RemoteResultWrapper;
 
@@ -39,12 +38,11 @@ import io.jenkins.plugins.forensics.git.util.RemoteResultWrapper;
  * @author Florian Orendi
  */
 public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteResultWrapper<Delta>> {
+    private static final long serialVersionUID = -4561284338216569043L;
 
     static final String ERROR_MESSAGE_UNKNOWN_FILE_EDIT_TYPE = "Detected unknown file edit type '%s'";
 
     static final String ERROR_MESSAGE_UNKNOWN_CHANGE_TYPE = "Detected unknown change type '%s'";
-
-    private static final long serialVersionUID = -4561284338216569043L;
 
     private final String currentCommitId;
 
@@ -60,6 +58,7 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
      */
     public DeltaRepositoryCallback(final String currentCommitId, final String referenceCommitId) {
         super();
+
         this.currentCommitId = currentCommitId;
         this.referenceCommitId = referenceCommitId;
     }
@@ -111,7 +110,7 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
                 }
 
                 log.logInfo("-> Creating the Git diff file");
-                String diffFile = new String(diffStream.toByteArray(), StandardCharsets.UTF_8);
+                String diffFile = diffStream.toString(StandardCharsets.UTF_8);
 
                 GitDelta delta = new GitDelta(currentCommitId, referenceCommitId, fileChangesMap, diffFile);
                 RemoteResultWrapper<Delta> wrapper = new RemoteResultWrapper<>(delta, "Errors from Git Delta:");

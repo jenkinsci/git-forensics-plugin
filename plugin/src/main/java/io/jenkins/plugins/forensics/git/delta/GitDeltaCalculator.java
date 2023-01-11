@@ -9,8 +9,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import hudson.model.Run;
 
+import io.jenkins.plugins.forensics.delta.Delta;
 import io.jenkins.plugins.forensics.delta.DeltaCalculator;
-import io.jenkins.plugins.forensics.delta.model.Delta;
 import io.jenkins.plugins.forensics.git.reference.GitCommitsRecord;
 import io.jenkins.plugins.forensics.git.util.RemoteResultWrapper;
 
@@ -21,11 +21,10 @@ import io.jenkins.plugins.forensics.git.util.RemoteResultWrapper;
  */
 @SuppressFBWarnings(value = "SE", justification = "GitClient implementation is Serializable")
 public class GitDeltaCalculator extends DeltaCalculator {
+    private static final long serialVersionUID = -7303579046266608368L;
 
     static final String DELTA_ERROR = "Computing delta information failed with an exception:";
     static final String EMPTY_COMMIT_ERROR = "Calculating the Git code delta is not possible due to an unknown commit ID";
-
-    private static final long serialVersionUID = -7303579046266608368L;
 
     private final GitClient git;
 
@@ -37,6 +36,7 @@ public class GitDeltaCalculator extends DeltaCalculator {
      */
     public GitDeltaCalculator(final GitClient git) {
         super();
+
         this.git = git;
     }
 

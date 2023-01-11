@@ -23,7 +23,6 @@ import io.jenkins.plugins.forensics.git.util.GitRepositoryValidator;
  */
 @Extension
 public class GitDeltaCalculatorFactory extends DeltaCalculatorFactory {
-
     @Override
     public Optional<DeltaCalculator> createDeltaCalculator(final SCM scm, final Run<?, ?> run, final FilePath workspace,
             final TaskListener listener, final FilteredLog logger) {

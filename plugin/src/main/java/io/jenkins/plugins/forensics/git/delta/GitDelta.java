@@ -1,10 +1,10 @@
-package io.jenkins.plugins.forensics.git.delta.model;
+package io.jenkins.plugins.forensics.git.delta;
 
 import java.util.Map;
 import java.util.Objects;
 
-import io.jenkins.plugins.forensics.delta.model.Delta;
-import io.jenkins.plugins.forensics.delta.model.FileChanges;
+import io.jenkins.plugins.forensics.delta.Delta;
+import io.jenkins.plugins.forensics.delta.FileChanges;
 
 /**
  * A Git specific extension of {@link Delta}.
@@ -12,7 +12,6 @@ import io.jenkins.plugins.forensics.delta.model.FileChanges;
  * @author Florian Orendi
  */
 public class GitDelta extends Delta {
-
     private static final long serialVersionUID = 4075956106966630282L;
 
     /**
@@ -24,13 +23,13 @@ public class GitDelta extends Delta {
      * Constructor for a delta instance which wraps code changes between the two passed commits.
      *
      * @param currentCommit
-     *         The currently processed commit
+     *         the currently processed commit
      * @param referenceCommit
-     *         The reference commit
+     *         the reference commit
      * @param fileChanges
-     *         The map which contains the changes for modified files, mapped by the file ID.
+     *         the map which contains the changes for modified files, mapped by the file ID.
      * @param diffFile
-     *         The Diff-File which has been created by Git and wraps up all made changes between two commits.
+     *         the Diff-File which has been created by Git and wraps up all made changes between two commits.
      */
     public GitDelta(final String currentCommit, final String referenceCommit,
             final Map<String, FileChanges> fileChanges, final String diffFile) {
