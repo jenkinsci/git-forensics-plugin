@@ -16,7 +16,7 @@
   <name>UI Tests of Git Forensics Plugin</name>
 
   <properties>
-    <jenkins.version>2.373</jenkins.version>
+    <jenkins.version>2.392</jenkins.version>
     <module.name>${project.groupId}.git.forensics.ui.tests</module.name>
 
     <!-- Maven Surefire ArgLine -->
