@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jvnet.hudson.plugins</groupId>
     <artifactId>analysis-pom</artifactId>
-    <version>5.35.0</version>
+    <version>6.2.0</version>
     <relativePath />
   </parent>
 
@@ -18,7 +18,7 @@
   <url>https://github.com/jenkinsci/git-forensics-plugin</url>
 
   <properties>
-    <revision>1.12.0</revision>
+    <revision>2.0.0</revision>
     <changelist>-SNAPSHOT</changelist>
 
     <module.name>${project.groupId}.git.forensics</module.name>
@@ -29,6 +29,15 @@
 
     <!-- Maven Surefire ArgLine -->
     <argLine>-Djava.awt.headless=true -Xmx1024m -Djenkins.test.timeout=1000 --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.util.concurrent=ALL-UNNAMED</argLine>
+
+    <forensics-api.version>2.0.0</forensics-api.version>
+    <jquery3-api.version>3.6.3-1</jquery3-api.version>
+    <plugin-util-api.version>3.1.0</plugin-util-api.version>
+    <bootstrap5-api.version>5.2.2-1</bootstrap5-api.version>
+    <font-awesome-api.version>6.3.0-1</font-awesome-api.version>
+    <data-tables-api.version>1.13.3-1</data-tables-api.version>
+    <echarts-api.version>5.4.0-2</echarts-api.version>
+
   </properties>
 
   <licenses>
@@ -45,6 +54,31 @@
       <email>ullrich.hafner@gmail.com</email>
     </developer>
   </developers>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>io.jenkins.plugins</groupId>
+        <artifactId>echarts-api</artifactId>
+        <version>${echarts-api.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.jenkins.plugins</groupId>
+        <artifactId>bootstrap5-api</artifactId>
+        <version>${bootstrap5-api.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.jenkins.plugins</groupId>
+        <artifactId>jquery3-api</artifactId>
+        <version>${jquery3-api.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.jenkins.plugins</groupId>
+        <artifactId>data-tables-api</artifactId>
+        <version>${data-tables-api.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <dependencies>
     <!-- Project Dependencies -->
@@ -67,15 +101,17 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>forensics-api</artifactId>
+      <version>${forensics-api.version}</version>
     </dependency>
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>font-awesome-api</artifactId>
-      <version>6.2.0-3</version>
+      <version>${font-awesome-api.version}</version>
     </dependency>
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>plugin-util-api</artifactId>
+      <version>${plugin-util-api.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -88,6 +124,7 @@
       <artifactId>forensics-api</artifactId>
       <scope>test</scope>
       <classifier>tests</classifier>
+      <version>${forensics-api.version}</version>
     </dependency>
 
     <!-- Custom for Integration Test-->
@@ -118,10 +155,12 @@
       <artifactId>plugin-util-api</artifactId>
       <scope>test</scope>
       <classifier>tests</classifier>
+      <version>${plugin-util-api.version}</version>
     </dependency>
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>data-tables-api</artifactId>
+      <version>${data-tables-api.version}</version>
       <scope>test</scope>
       <classifier>tests</classifier>
     </dependency>

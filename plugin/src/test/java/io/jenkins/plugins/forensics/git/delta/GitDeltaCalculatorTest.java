@@ -10,7 +10,7 @@ import edu.hm.hafner.util.FilteredLog;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import hudson.model.Run;
 
-import io.jenkins.plugins.forensics.delta.model.Delta;
+import io.jenkins.plugins.forensics.delta.Delta;
 
 import static io.jenkins.plugins.forensics.git.delta.GitDeltaCalculator.*;
 import static org.assertj.core.api.Assertions.*;

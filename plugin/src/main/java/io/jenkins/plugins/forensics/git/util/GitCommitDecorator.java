@@ -14,7 +14,7 @@ import static j2html.TagCreator.*;
 /**
  * A {@link RepositoryBrowser} for Git commits. Since a {@link RepositoryBrowser} has no API to generate links to simple
  * commits, this decorator adds such a functionality for Git. Basically, this implementation delegates to the {@link
- * GitRepositoryBrowser} implementation, if available. Otherwise a plain link will be rendered using a short
+ * GitRepositoryBrowser} implementation, if available. Otherwise, a plain link will be rendered using a short
  * representation, see {@link #asText(String)}.
  *
  * @author Ullrich Hafner

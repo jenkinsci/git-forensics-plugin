@@ -15,12 +15,11 @@ import hudson.model.FreeStyleProject;
 import hudson.model.Run;
 import hudson.plugins.git.GitSCM;
 
-import io.jenkins.plugins.forensics.delta.model.Change;
-import io.jenkins.plugins.forensics.delta.model.ChangeEditType;
-import io.jenkins.plugins.forensics.delta.model.Delta;
-import io.jenkins.plugins.forensics.delta.model.FileChanges;
-import io.jenkins.plugins.forensics.delta.model.FileEditType;
-import io.jenkins.plugins.forensics.git.delta.model.GitDelta;
+import io.jenkins.plugins.forensics.delta.Change;
+import io.jenkins.plugins.forensics.delta.ChangeEditType;
+import io.jenkins.plugins.forensics.delta.Delta;
+import io.jenkins.plugins.forensics.delta.FileChanges;
+import io.jenkins.plugins.forensics.delta.FileEditType;
 import io.jenkins.plugins.forensics.git.reference.GitReferenceRecorder;
 import io.jenkins.plugins.forensics.git.util.GitITest;
 

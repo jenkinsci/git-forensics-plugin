@@ -1,4 +1,4 @@
-package io.jenkins.plugins.forensics.git.delta.model;
+package io.jenkins.plugins.forensics.git.delta;
 
 import java.util.HashMap;
 

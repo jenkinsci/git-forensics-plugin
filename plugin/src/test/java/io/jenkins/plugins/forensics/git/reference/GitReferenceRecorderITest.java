@@ -308,7 +308,7 @@ class GitReferenceRecorderITest extends GitITest {
         verifyRecordSize(masterBuild, 2);
 
         String feature = "bugfixes/hotfix-124";
-        createBranchAndAddCommits(feature, "defaultBranch: '" + target + "'");
+        createBranchAndAddCommits(feature, "targetBranch: '" + target + "'");
 
         buildProject(project);
         WorkflowRun featureBuild = verifyBuild(project, 1, feature, StringUtils.upperCase(feature));
@@ -727,7 +727,7 @@ class GitReferenceRecorderITest extends GitITest {
 
     private String createFeatureBranchAndAddCommits(final String... parameters) {
         String[] actual = Arrays.copyOf(parameters, parameters.length + 1);
-        actual[parameters.length] = "defaultBranch: '" + MAIN + "'";
+        actual[parameters.length] = "targetBranch: '" + MAIN + "'";
         return createBranchAndAddCommits(FEATURE, actual);
     }
 
