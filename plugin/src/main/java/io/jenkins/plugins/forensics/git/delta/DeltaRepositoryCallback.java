@@ -114,9 +114,9 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
 
                 GitDelta delta = new GitDelta(currentCommitId, referenceCommitId, fileChangesMap, diffFile);
                 RemoteResultWrapper<Delta> wrapper = new RemoteResultWrapper<>(delta, "Errors from Git Delta:");
-                wrapper.merge(log);
 
                 log.logInfo("-> Git code delta successfully calculated");
+                wrapper.merge(log);
 
                 return wrapper;
             }
