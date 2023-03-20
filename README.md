@@ -3,7 +3,8 @@
 [![Join the chat at https://gitter.im/jenkinsci/warnings-plugin](https://badges.gitter.im/jenkinsci/warnings-plugin.svg)](https://gitter.im/jenkinsci/warnings-plugin?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Jenkins](https://ci.jenkins.io/job/Plugins/job/git-forensics-plugin/job/master/badge/icon?subject=Jenkins%20CI)](https://ci.jenkins.io/job/Plugins/job/git-forensics-plugin/job/master/)
 [![GitHub Actions](https://github.com/jenkinsci/git-forensics-plugin/workflows/GitHub%20CI/badge.svg?branch=master)](https://github.com/jenkinsci/git-forensics-plugin/actions)
-[![Codecov](https://app.codecov.io/gh/jenkinsci/git-forensics-plugin/branch/master/graph/badge.svg)](https://app.codecov.io/gh/jenkinsci/git-forensics-plugin)
+[![codecov](https://codecov.io/gh/jenkinsci/git-forensics-plugin/branch/master/graph/badge.svg)](https://codecov.io/gh/jenkinsci/git-forensics-plugin)
+[![CodeQL](https://github.com/jenkinsci/git-forensics-plugin/workflows/CodeQL/badge.svg?branch=master)](https://github.com/jenkinsci/git-forensics-plugin/actions/workflows/codeql.yml)
 
 This Git Forensics Jenkins plugin mines and analyzes data from a Git repository. It implements all extension points of
 [Jenkins' Forensics API Plugin](https://github.com/jenkinsci/forensics-api-plugin) and provides the following services:
