@@ -19,6 +19,7 @@
     <jenkins.version>2.403</jenkins.version>
     <module.name>${project.groupId}.git.forensics.ui.tests</module.name>
 
+    <hpi-plugin.version>3.43</hpi-plugin.version>
     <!-- Maven Surefire ArgLine -->
     <argLine>-Djava.awt.headless=true -Xmx1024m -Djenkins.test.timeout=1000 --add-opens java.base/sun.reflect.annotation=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.util.concurrent=ALL-UNNAMED</argLine>
   </properties>
@@ -30,15 +31,28 @@
         <artifactId>jenkins-core</artifactId>
         <version>${jenkins.version}</version>
       </dependency>
+      <dependency>
+        <!-- ClassNotFoundException if omitted -->
+        <groupId>io.netty</groupId>
+        <artifactId>netty-bom</artifactId>
+        <version>4.1.90.Final</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
   <dependencies>
-    <!-- Jenkins Plugin Dependencies -->
     <dependency>
       <groupId>org.jenkins-ci</groupId>
       <artifactId>acceptance-test-harness</artifactId>
-      <version>5504.v485694f31cdf</version>
+      <version>5588.vd13b_52985008</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.15.0</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
@@ -97,6 +111,7 @@
             <artifactId>maven-surefire-plugin</artifactId>
             <configuration>
               <reuseForks>false</reuseForks>
+              <trimStackTrace>false</trimStackTrace>
               <environmentVariables>
                 <PLUGINS_DIR>../plugin/target/test-classes/test-dependencies</PLUGINS_DIR>
                 <JENKINS_VERSION>${jenkins.version}</JENKINS_VERSION>
@@ -123,6 +138,13 @@
     </profile>
   </profiles>
 
+  <pluginRepositories>
+    <pluginRepository>
+      <id>repo.jenkins-ci.org</id>
+      <url>https://repo.jenkins-ci.org/public/</url>
+    </pluginRepository>
+  </pluginRepositories>
+
   <build>
     <plugins>
       <plugin>
@@ -146,6 +168,10 @@
           <packages combine.children="append">
             <package>io.jenkins.plugins.forensics.git</package>
           </packages>
+          <excludes>
+            <exclude>.*Test</exclude>
+            <exclude>.*Table</exclude>
+          </excludes>
           <entryPointClassPackage>io.jenkins.plugins.forensics.git</entryPointClassPackage>
         </configuration>
       </plugin>
@@ -178,12 +204,12 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <trimStackTrace>false</trimStackTrace> <!-- SUREFIRE-1798 -->
           <reuseForks>false</reuseForks>
+          <trimStackTrace>false</trimStackTrace> <!-- SUREFIRE-1798 -->
           <environmentVariables>
             <PLUGINS_DIR>../plugin/target/test-classes/test-dependencies</PLUGINS_DIR>
             <JENKINS_VERSION>${jenkins.version}</JENKINS_VERSION>
-            <BROWSER>firefox-container</BROWSER>
+            <BROWSER>chrome-container</BROWSER>
           </environmentVariables>
           <rerunFailingTestsCount>1</rerunFailingTestsCount>
           <includes>
@@ -207,16 +233,6 @@
         </executions>
       </plugin>
       <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>${maven-compiler-plugin.version}</version>
-        <configuration>
-          <source>${java.version}</source>
-          <target>${java.version}</target>
-          <testSource>${java.version}</testSource>
-          <testTarget>${java.version}</testTarget>
-        </configuration>
-      </plugin>
-      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
         <configuration>
@@ -227,7 +243,11 @@
           </archive>
         </configuration>
       </plugin>
-
+      <plugin>
+        <groupId>org.jenkins-ci.tools</groupId>
+        <artifactId>maven-hpi-plugin</artifactId>
+        <version>${hpi-plugin.version}</version>
+      </plugin>
     </plugins>
   </build>
 </project>
