@@ -15,7 +15,7 @@ import org.eclipse.jgit.lib.ObjectInserter;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.jupiter.api.Test;
-import org.jvnet.hudson.test.Issue;
+import org.junitpioneer.jupiter.Issue;
 import org.mockito.ArgumentMatchers;
 
 import edu.hm.hafner.util.FilteredLog;
