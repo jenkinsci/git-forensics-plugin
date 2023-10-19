@@ -16,7 +16,7 @@
   <name>UI Tests of Git Forensics Plugin</name>
 
   <properties>
-    <jenkins.version>2.427</jenkins.version>
+    <jenkins.version>2.428</jenkins.version>
     <module.name>${project.groupId}.git.forensics.ui.tests</module.name>
 
     <hpi-plugin.version>3.49</hpi-plugin.version>
