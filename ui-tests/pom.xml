@@ -5,7 +5,7 @@
   <parent>
     <groupId>edu.hm.hafner</groupId>
     <artifactId>codingstyle-pom</artifactId>
-    <version>2.29.0</version>
+    <version>3.33.0</version>
     <relativePath/>
   </parent>
 
@@ -16,7 +16,10 @@
   <name>UI Tests of Git Forensics Plugin</name>
 
   <properties>
-    <jenkins.version>2.428</jenkins.version>
+    <jenkins.version>2.427</jenkins.version>
+    <hpi-plugin.version>3.48</hpi-plugin.version>
+    <json-smart.version>2.3</json-smart.version>
+    <json-unit-assertj.version>2.38.0</json-unit-assertj.version>
     <module.name>${project.groupId}.git.forensics.ui.tests</module.name>
 
     <hpi-plugin.version>3.49</hpi-plugin.version>
@@ -111,7 +114,7 @@
             <artifactId>maven-surefire-plugin</artifactId>
             <configuration>
               <reuseForks>false</reuseForks>
-              <trimStackTrace>false</trimStackTrace>
+              <trimStackTrace>false</trimStackTrace> <!-- SUREFIRE-1798 -->
               <environmentVariables>
                 <PLUGINS_DIR>../plugin/target/test-classes/test-dependencies</PLUGINS_DIR>
                 <JENKINS_VERSION>${jenkins.version}</JENKINS_VERSION>
@@ -147,6 +150,20 @@
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.pitest</groupId>
+        <artifactId>pitest-maven</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
