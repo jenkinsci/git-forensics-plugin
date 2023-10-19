@@ -5,7 +5,7 @@
   <parent>
     <groupId>edu.hm.hafner</groupId>
     <artifactId>codingstyle-pom</artifactId>
-    <version>2.29.0</version>
+    <version>3.33.0</version>
     <relativePath/>
   </parent>
 
@@ -16,8 +16,11 @@
   <name>UI Tests of Git Forensics Plugin</name>
 
   <properties>
-    <jenkins.version>2.426</jenkins.version>
-    <module.name>${project.groupId}.git.forensics.ui.tests</module.name>
+    <jenkins.version>2.417</jenkins.version>
+    <hpi-plugin.version>3.48</hpi-plugin.version>
+    <json-smart.version>2.3</json-smart.version>
+    <json-unit-assertj.version>2.38.0</json-unit-assertj.version>
+    <module.name>${project.groupId}.warnings.ui.tests</module.name>
 
     <hpi-plugin.version>3.49</hpi-plugin.version>
     <!-- Maven Surefire ArgLine -->
@@ -46,13 +49,7 @@
     <dependency>
       <groupId>org.jenkins-ci</groupId>
       <artifactId>acceptance-test-harness</artifactId>
-      <version>5717.v51fb_b_1f0f6d1</version>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
-      <version>2.15.2</version>
-      <scope>test</scope>
+      <version>5735.v233d965d2dec</version>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
