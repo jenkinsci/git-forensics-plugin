@@ -16,13 +16,11 @@
   <name>UI Tests of Git Forensics Plugin</name>
 
   <properties>
-    <jenkins.version>2.428</jenkins.version>
+    <jenkins.version>2.427</jenkins.version>
     <hpi-plugin.version>3.49</hpi-plugin.version>
-    <json-smart.version>2.3</json-smart.version>
-    <json-unit-assertj.version>2.38.0</json-unit-assertj.version>
+
     <module.name>${project.groupId}.git.forensics.ui.tests</module.name>
 
-    <hpi-plugin.version>3.49</hpi-plugin.version>
     <!-- Maven Surefire ArgLine -->
     <argLine>-Djava.awt.headless=true -Xmx1024m -Djenkins.test.timeout=1000 --add-opens java.base/sun.reflect.annotation=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.util.concurrent=ALL-UNNAMED</argLine>
   </properties>
@@ -70,83 +68,6 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-
-  <repositories>
-    <repository>
-      <id>maven.jenkins-ci.org</id>
-      <url>https://repo.jenkins-ci.org/releases/</url>
-    </repository>
-    <repository>
-      <id>incrementals.jenkins-ci.org</id>
-      <url>https://repo.jenkins-ci.org/incrementals/</url>
-    </repository>
-  </repositories>
-
-  <profiles>
-    <profile>
-      <id>no-ui-tests-on-windows</id>
-      <activation>
-        <os>
-          <family>windows</family>
-        </os>
-      </activation>
-      <properties>
-        <maven.test.skip>true</maven.test.skip>
-      </properties>
-    </profile>
-    <profile>
-      <id>no-ui-tests-on-mac</id>
-      <activation>
-        <os>
-          <family>mac</family>
-        </os>
-      </activation>
-      <properties>
-        <maven.test.skip>true</maven.test.skip>
-      </properties>
-    </profile>
-    <profile>
-      <id>ui-tests-locally</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <reuseForks>false</reuseForks>
-              <trimStackTrace>false</trimStackTrace> <!-- SUREFIRE-1798 -->
-              <environmentVariables>
-                <PLUGINS_DIR>../plugin/target/test-classes/test-dependencies</PLUGINS_DIR>
-                <JENKINS_VERSION>${jenkins.version}</JENKINS_VERSION>
-                <BROWSER>firefox</BROWSER>
-              </environmentVariables>
-              <rerunFailingTestsCount>1</rerunFailingTestsCount>
-              <includes>
-                <include>**/*Tests.java</include>
-                <include>**/*Test.java</include>
-              </includes>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-      <properties>
-        <maven.test.skip>false</maven.test.skip>
-      </properties>
-    </profile>
-    <profile>
-      <id>consume-incrementals</id>
-    </profile>
-    <profile>
-      <id>might-produce-incrementals</id>
-    </profile>
-  </profiles>
-
-  <pluginRepositories>
-    <pluginRepository>
-      <id>repo.jenkins-ci.org</id>
-      <url>https://repo.jenkins-ci.org/public/</url>
-    </pluginRepository>
-  </pluginRepositories>
 
   <build>
     <plugins>
@@ -267,4 +188,82 @@
       </plugin>
     </plugins>
   </build>
+
+  <repositories>
+    <repository>
+      <id>maven.jenkins-ci.org</id>
+      <url>https://repo.jenkins-ci.org/releases/</url>
+    </repository>
+    <repository>
+      <id>incrementals.jenkins-ci.org</id>
+      <url>https://repo.jenkins-ci.org/incrementals/</url>
+    </repository>
+  </repositories>
+
+  <profiles>
+    <profile>
+      <id>no-ui-tests-on-windows</id>
+      <activation>
+        <os>
+          <family>windows</family>
+        </os>
+      </activation>
+      <properties>
+        <maven.test.skip>true</maven.test.skip>
+      </properties>
+    </profile>
+    <profile>
+      <id>no-ui-tests-on-mac</id>
+      <activation>
+        <os>
+          <family>mac</family>
+        </os>
+      </activation>
+      <properties>
+        <maven.test.skip>true</maven.test.skip>
+      </properties>
+    </profile>
+    <profile>
+      <id>ui-tests-locally</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <reuseForks>false</reuseForks>
+              <trimStackTrace>false</trimStackTrace> <!-- SUREFIRE-1798 -->
+              <environmentVariables>
+                <PLUGINS_DIR>../plugin/target/test-classes/test-dependencies</PLUGINS_DIR>
+                <JENKINS_VERSION>${jenkins.version}</JENKINS_VERSION>
+                <BROWSER>chrome</BROWSER>
+              </environmentVariables>
+              <rerunFailingTestsCount>1</rerunFailingTestsCount>
+              <includes>
+                <include>**/*Tests.java</include>
+                <include>**/*Test.java</include>
+              </includes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+      <properties>
+        <maven.test.skip>false</maven.test.skip>
+      </properties>
+    </profile>
+    <profile>
+      <id>consume-incrementals</id>
+    </profile>
+    <profile>
+      <id>might-produce-incrementals</id>
+    </profile>
+  </profiles>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>repo.jenkins-ci.org</id>
+      <url>https://repo.jenkins-ci.org/public/</url>
+    </pluginRepository>
+  </pluginRepositories>
+
 </project>

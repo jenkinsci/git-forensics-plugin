@@ -19,7 +19,7 @@ import static io.jenkins.plugins.forensics.git.DetailsTable.*;
  * @author Ullrich Hafner
  */
 @WithPlugins({"forensics-api", "git-forensics", "git", "workflow-durable-task-step", "workflow-basic-steps"})
-public class ForensicsPluginUiTest extends AbstractJUnitTest {
+public class SmokeTests extends AbstractJUnitTest {
     private static final String REPOSITORY_URL = "https://github.com/jenkinsci/git-forensics-plugin.git";
     private static final String SCM_KEY = "git " + REPOSITORY_URL;
     private static final int SCM_HASH = SCM_KEY.hashCode();
@@ -29,7 +29,7 @@ public class ForensicsPluginUiTest extends AbstractJUnitTest {
      * git-forensics-plugin repository. Checks the contents of the summary and details view.
      */
     @Test
-    public void shouldAggregateToolsIntoSingleResult() {
+    public void shouldMineGitHubRepository() {
         WorkflowJob job = createJob();
         Build build = buildSuccessfully(job);
 
