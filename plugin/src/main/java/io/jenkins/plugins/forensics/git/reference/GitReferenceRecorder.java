@@ -14,7 +14,7 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.verb.POST;
 import org.jenkinsci.Symbol;
 import hudson.Extension;
-import hudson.model.AbstractProject;
+import hudson.model.BuildableItem;
 import hudson.model.Item;
 import hudson.model.Run;
 import hudson.util.ComboBoxModel;
@@ -165,7 +165,7 @@ public class GitReferenceRecorder extends ReferenceRecorder {
          */
         @Override
         @POST
-        public ComboBoxModel doFillReferenceJobItems(@AncestorInPath final AbstractProject<?, ?> project) {
+        public ComboBoxModel doFillReferenceJobItems(@AncestorInPath final BuildableItem project) {
             if (jenkins.hasPermission(Item.CONFIGURE, project)) {
                 return model.getAllJobs();
             }
@@ -185,7 +185,7 @@ public class GitReferenceRecorder extends ReferenceRecorder {
         @Override
         @POST
         @SuppressWarnings("unused") // Used in jelly validation
-        public FormValidation doCheckReferenceJob(@AncestorInPath final AbstractProject<?, ?> project,
+        public FormValidation doCheckReferenceJob(@AncestorInPath final BuildableItem project,
                 @QueryParameter final String referenceJob) {
             if (!jenkins.hasPermission(Item.CONFIGURE, project)) {
                 return FormValidation.ok();
