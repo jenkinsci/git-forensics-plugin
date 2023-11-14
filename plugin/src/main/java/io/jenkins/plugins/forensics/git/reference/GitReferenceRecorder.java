@@ -163,7 +163,6 @@ public class GitReferenceRecorder extends ReferenceRecorder {
          *
          * @return the model with the possible reference jobs
          */
-        @Override
         @POST
         public ComboBoxModel doFillReferenceJobItems(@AncestorInPath final BuildableItem project) {
             if (jenkins.hasPermission(Item.CONFIGURE, project)) {
@@ -182,7 +181,6 @@ public class GitReferenceRecorder extends ReferenceRecorder {
          *
          * @return the validation result
          */
-        @Override
         @POST
         @SuppressWarnings("unused") // Used in jelly validation
         public FormValidation doCheckReferenceJob(@AncestorInPath final BuildableItem project,
