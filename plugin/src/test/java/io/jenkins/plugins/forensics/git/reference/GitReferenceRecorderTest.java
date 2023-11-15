@@ -3,6 +3,7 @@ package io.jenkins.plugins.forensics.git.reference;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import hudson.model.BuildableItem;
 import hudson.model.FreeStyleProject;
 import hudson.model.Item;
 import hudson.util.ComboBoxModel;
@@ -36,15 +37,15 @@ class GitReferenceRecorderTest {
             Descriptor descriptor = new Descriptor(jenkins, model);
 
             FreeStyleProject project = mock(FreeStyleProject.class);
-            assertThat(descriptor.doCheckReferenceJob(project, JOB_NAME)).isEqualTo(OK);
+            assertThat(descriptor.doCheckReferenceJob((BuildableItem) project, JOB_NAME)).isEqualTo(OK);
             verifyNoInteractions(model);
 
             // Now enable permission
-            when(jenkins.hasPermission(Item.CONFIGURE, project)).thenReturn(true);
+            when(jenkins.hasPermission(Item.CONFIGURE, (BuildableItem)project)).thenReturn(true);
             // first call stub returns ERROR
-            assertThat(descriptor.doCheckReferenceJob(project, JOB_NAME)).isEqualTo(ERROR);
+            assertThat(descriptor.doCheckReferenceJob((BuildableItem) project, JOB_NAME)).isEqualTo(ERROR);
             // second call stub returns ERROR
-            assertThat(descriptor.doCheckReferenceJob(project, JOB_NAME)).isEqualTo(OK);
+            assertThat(descriptor.doCheckReferenceJob((BuildableItem) project, JOB_NAME)).isEqualTo(OK);
         }
 
         @Test
@@ -59,12 +60,12 @@ class GitReferenceRecorderTest {
             Descriptor descriptor = new Descriptor(jenkins, model);
 
             FreeStyleProject project = mock(FreeStyleProject.class);
-            assertThat(descriptor.doFillReferenceJobItems(project)).isEqualTo(new ComboBoxModel());
+            assertThat(descriptor.doFillReferenceJobItems((BuildableItem) project)).isEqualTo(new ComboBoxModel());
             verifyNoInteractions(model);
 
             // Now enable permission
-            when(jenkins.hasPermission(Item.CONFIGURE, project)).thenReturn(true);
-            assertThat(descriptor.doFillReferenceJobItems(project)).isEqualTo(jobs);
+            when(jenkins.hasPermission(Item.CONFIGURE, (BuildableItem)project)).thenReturn(true);
+            assertThat(descriptor.doFillReferenceJobItems((BuildableItem) project)).isEqualTo(jobs);
         }
     }
 }
