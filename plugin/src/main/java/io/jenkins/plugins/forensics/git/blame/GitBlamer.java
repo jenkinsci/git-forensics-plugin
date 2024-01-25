@@ -124,7 +124,7 @@ class GitBlamer extends Blamer {
         @Override @SuppressWarnings("PMD.UseTryWithResources")
         public RemoteResultWrapper<Blames> invoke(final Repository repository, final VirtualChannel channel)
                 throws InterruptedException {
-            try {
+            try (repository) {
                 RemoteResultWrapper<Blames> log = new RemoteResultWrapper<>(blames, "Errors while running Git blame:");
                 log.logInfo("-> Git commit ID = '%s'", headCommit.getName());
                 log.logInfo("-> Git working tree = '%s'", getWorkTree(repository));
@@ -147,9 +147,6 @@ class GitBlamer extends Blamer {
                 log.logInfo("-> blamed authors of issues in %d files", blames.size());
 
                 return log;
-            }
-            finally {
-                repository.close();
             }
         }
 

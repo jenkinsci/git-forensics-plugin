@@ -3,6 +3,8 @@ package io.jenkins.plugins.forensics.git.delta;
 import java.io.IOException;
 import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
+
 import edu.hm.hafner.util.FilteredLog;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -29,24 +31,30 @@ public class GitDeltaCalculator extends DeltaCalculator {
     static final String EMPTY_COMMIT_ERROR = "Calculating the Git code delta is not possible due to an unknown commit ID";
 
     private final GitClient git;
+    private final String scmKey;
 
     /**
      * Constructor for an instance of {@link DeltaCalculator} which can be used for Git.
      *
      * @param git
      *         The {@link GitClient}
+     * @param scmKey
+     *         the key of the SCM repository (substring that must be part of the SCM key)
      */
-    public GitDeltaCalculator(final GitClient git) {
+    public GitDeltaCalculator(final GitClient git, final String scmKey) {
         super();
 
         this.git = git;
+        this.scmKey = scmKey;
     }
 
     @Override
     public Optional<Delta> calculateDelta(final Run<?, ?> build, final Run<?, ?> referenceBuild,
             final String scmKeyFilter, final FilteredLog log) {
-        Optional<GitCommitsRecord> buildCommits = GitCommitsRecord.findRecordForScm(build, scmKeyFilter);
-        Optional<GitCommitsRecord> referenceCommits = GitCommitsRecord.findRecordForScm(referenceBuild, scmKeyFilter);
+        // FIXME: cleanup scmKeyFilter
+        String scm = StringUtils.defaultIfEmpty(scmKeyFilter, scmKey);
+        Optional<GitCommitsRecord> buildCommits = GitCommitsRecord.findRecordForScm(build, scm);
+        Optional<GitCommitsRecord> referenceCommits = GitCommitsRecord.findRecordForScm(referenceBuild, scm);
         if (buildCommits.isPresent() && referenceCommits.isPresent()) {
             String currentCommit = getLatestCommit(build.getFullDisplayName(), buildCommits.get(), log);
             String referenceCommit = getLatestCommit(referenceBuild.getFullDisplayName(), referenceCommits.get(), log);

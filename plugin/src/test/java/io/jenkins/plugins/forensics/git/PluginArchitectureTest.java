@@ -57,5 +57,4 @@ class PluginArchitectureTest {
 
     @ArchTest
     static final ArchRule USE_POST_FOR_LIST_MODELS_RULE = PluginArchitectureRules.USE_POST_FOR_LIST_AND_COMBOBOX_FILL;
-
 }

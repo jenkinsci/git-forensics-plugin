@@ -14,7 +14,6 @@ import static org.assertj.core.api.Assertions.*;
  * @author Florian Orendi
  */
 class GitDeltaTest {
-
     private static final String DIFF_FILE = "testContent";
 
     @Test
