@@ -9,7 +9,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 
 import edu.hm.hafner.util.FilteredLog;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import hudson.model.FreeStyleProject;
 import hudson.model.Run;
@@ -35,9 +34,6 @@ class GitDeltaCalculatorITest extends GitITest {
     private static final String EMPTY_SCM_KEY = "";
     private static final String EMPTY_FILE_PATH = "";
 
-    /**
-     * The delta result should be empty if there are invalid commits.
-     */
     @Test
     void shouldCreateEmptyDeltaIfCommitsAreInvalid() {
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
@@ -46,11 +42,7 @@ class GitDeltaCalculatorITest extends GitITest {
         assertThat(deltaCalculator.calculateDelta(mock(Run.class), mock(Run.class), EMPTY_SCM_KEY, log)).isEmpty();
     }
 
-    /**
-     * The Git diff file should be created properly.
-     */
     @Test
-    @SuppressFBWarnings(value = "BC_UNCONFIRMED_CAST_OF_RETURN_VALUE", justification = "The cast is confirmed via an assertion")
     void shouldCreateDiffFile() {
         FreeStyleProject job = createJobWithReferenceRecorder();
 
@@ -83,8 +75,9 @@ class GitDeltaCalculatorITest extends GitITest {
                                 + "@@ -0,0 +1 @@\n"
                                 + "+content\n"
                                 + "\\ No newline at end of file\n"));
-        var fileChanges = delta.getFileChangesById("newFile");
-        assertThat(fileChanges.getModifiedLines()).containsExactly(1);
+        assertThat(delta.getFileChangesMap().values()).hasSize(1)
+                .first().satisfies(fileChanges ->
+                        assertThat(fileChanges.getModifiedLines()).containsExactly(1));
     }
 
     /**
