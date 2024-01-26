@@ -51,7 +51,6 @@ public class GitDeltaCalculator extends DeltaCalculator {
     @Override
     public Optional<Delta> calculateDelta(final Run<?, ?> build, final Run<?, ?> referenceBuild,
             final String scmKeyFilter, final FilteredLog log) {
-        // FIXME: cleanup scmKeyFilter
         String scm = StringUtils.defaultIfEmpty(scmKeyFilter, scmKey);
         Optional<GitCommitsRecord> buildCommits = GitCommitsRecord.findRecordForScm(build, scm);
         Optional<GitCommitsRecord> referenceCommits = GitCommitsRecord.findRecordForScm(referenceBuild, scm);
@@ -81,11 +80,11 @@ public class GitDeltaCalculator extends DeltaCalculator {
      * Returns the latest commit of the {@link GitCommitsRecord commits record} of a Git repository.
      *
      * @param buildName
-     *         The name of the build the commits record corresponds to
+     *         the name of the build the commits record corresponds to
      * @param record
-     *         The commits record
+     *         the commits record
      * @param log
-     *         The log
+     *         the log
      *
      * @return the latest commit
      */
