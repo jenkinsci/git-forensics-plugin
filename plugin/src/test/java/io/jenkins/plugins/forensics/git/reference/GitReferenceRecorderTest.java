@@ -34,18 +34,18 @@ class GitReferenceRecorderTest {
 
             JenkinsFacade jenkins = mock(JenkinsFacade.class);
 
-            Descriptor descriptor = new Descriptor(jenkins, model);
+            Descriptor descriptor = new Descriptor();
 
             FreeStyleProject project = mock(FreeStyleProject.class);
-            assertThat(descriptor.doCheckReferenceJob((BuildableItem) project, JOB_NAME)).isEqualTo(OK);
+            assertThat(descriptor.doCheckReferenceJob(project, JOB_NAME)).isEqualTo(OK);
             verifyNoInteractions(model);
 
             // Now enable permission
             when(jenkins.hasPermission(Item.CONFIGURE, (BuildableItem)project)).thenReturn(true);
             // first call stub returns ERROR
-            assertThat(descriptor.doCheckReferenceJob((BuildableItem) project, JOB_NAME)).isEqualTo(ERROR);
+            assertThat(descriptor.doCheckReferenceJob(project, JOB_NAME)).isEqualTo(ERROR);
             // second call stub returns ERROR
-            assertThat(descriptor.doCheckReferenceJob((BuildableItem) project, JOB_NAME)).isEqualTo(OK);
+            assertThat(descriptor.doCheckReferenceJob(project, JOB_NAME)).isEqualTo(OK);
         }
 
         @Test
@@ -57,15 +57,15 @@ class GitReferenceRecorderTest {
 
             JenkinsFacade jenkins = mock(JenkinsFacade.class);
 
-            Descriptor descriptor = new Descriptor(jenkins, model);
+            Descriptor descriptor = new Descriptor();
 
             FreeStyleProject project = mock(FreeStyleProject.class);
-            assertThat(descriptor.doFillReferenceJobItems((BuildableItem) project)).isEqualTo(new ComboBoxModel());
+            assertThat(descriptor.doFillReferenceJobItems(project)).isEqualTo(new ComboBoxModel());
             verifyNoInteractions(model);
 
             // Now enable permission
             when(jenkins.hasPermission(Item.CONFIGURE, (BuildableItem)project)).thenReturn(true);
-            assertThat(descriptor.doFillReferenceJobItems((BuildableItem) project)).isEqualTo(jobs);
+            assertThat(descriptor.doFillReferenceJobItems(project)).isEqualTo(jobs);
         }
     }
 }

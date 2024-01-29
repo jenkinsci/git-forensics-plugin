@@ -82,7 +82,7 @@ class GitReferenceRecorderITest extends GitITest {
 
     /**
      * Creates a pipeline for the main branch and another pipeline for the feature branch, builds them and checks if
-     * the correct reference build will be found.
+     * the correct reference build is found.
      * <pre>
      * {@code
      * M:  [M1]#1
@@ -95,7 +95,7 @@ class GitReferenceRecorderITest extends GitITest {
         WorkflowJob mainBranch = createPipeline(MAIN);
         mainBranch.setDefinition(asStage(createLocalGitCheckout(MAIN)));
 
-        Run<?, ?> masterBuild = buildSuccessfully(mainBranch);
+        Run<?, ?> mainBuild = buildSuccessfully(mainBranch);
 
         createFeatureBranchAndAddCommits();
 
@@ -104,7 +104,7 @@ class GitReferenceRecorderITest extends GitITest {
                 "discoverGitReferenceBuild(referenceJob: '" + MAIN + "')",
                 "gitDiffStat()"));
 
-        verifyPipelineResult(masterBuild, featureBranch);
+        verifyPipelineResult(mainBuild, featureBranch);
 
         assertThat(getCommitStatisticsOf(featureBranch.getLastBuild()))
                 .hasCommitCount(1)
@@ -115,7 +115,7 @@ class GitReferenceRecorderITest extends GitITest {
 
     /**
      * Creates a pipeline for the main branch and another pipeline for the feature branch, builds them and removes the
-     * commits action from the reference job. This simulates a setup where the last master build was finished before
+     * commits action from the reference job. This simulates a setup where the last main build was finished before
      * the Git forensics plugin has been added.
      */
     @Test
@@ -123,8 +123,8 @@ class GitReferenceRecorderITest extends GitITest {
         WorkflowJob mainBranch = createPipeline(MAIN);
         mainBranch.setDefinition(asStage(createLocalGitCheckout(MAIN)));
 
-        Run<?, ?> masterBuild = buildSuccessfully(mainBranch);
-        masterBuild.removeAction(masterBuild.getAction(GitCommitsRecord.class)); // simulate a master build without records
+        Run<?, ?> mainBuild = buildSuccessfully(mainBranch);
+        mainBuild.removeAction(mainBuild.getAction(GitCommitsRecord.class)); // simulate a main build without records
         createFeatureBranchAndAddCommits();
 
         WorkflowJob featureBranch = createPipeline(FEATURE);
@@ -148,7 +148,7 @@ class GitReferenceRecorderITest extends GitITest {
 
     /**
      * Creates a pipeline for the main branch and another pipeline for the feature branch, builds them and checks if
-     * the correct reference build will be found. The main branch contains an additional but unrelated SCM
+     * the correct reference build is found. The main branch contains an additional but unrelated SCM
      * repository.
      * <pre>
      * {@code
@@ -167,7 +167,7 @@ class GitReferenceRecorderITest extends GitITest {
                 createForensicsCheckoutStep(),
                 createLocalGitCheckout(MAIN)));
 
-        Run<?, ?> masterBuild = buildSuccessfully(mainBranch);
+        Run<?, ?> mainBuild = buildSuccessfully(mainBranch);
 
         createFeatureBranchAndAddCommits();
 
@@ -176,12 +176,12 @@ class GitReferenceRecorderITest extends GitITest {
                 createLocalGitCheckout(FEATURE),
                 "discoverGitReferenceBuild(referenceJob: '" + MAIN + "', scm: 'git file')"));
 
-        verifyPipelineResult(masterBuild, featureBranch);
+        verifyPipelineResult(mainBuild, featureBranch);
     }
 
     /**
      * Creates a pipeline for the main branch and another pipeline for the feature branch, builds them and checks if
-     * the correct reference build will be found. The main branch contains an additional but unrelated SCM
+     * the correct reference build is found. The main branch contains an additional but unrelated SCM
      * repository.
      * <pre>
      * {@code
@@ -199,7 +199,7 @@ class GitReferenceRecorderITest extends GitITest {
         mainBranch.setDefinition(asStage(
                 createLocalGitCheckout(MAIN)));
 
-        Run<?, ?> masterBuild = buildSuccessfully(mainBranch);
+        Run<?, ?> mainBuild = buildSuccessfully(mainBranch);
 
         createFeatureBranchAndAddCommits();
 
@@ -209,7 +209,7 @@ class GitReferenceRecorderITest extends GitITest {
                 createLocalGitCheckout(FEATURE),
                 "discoverGitReferenceBuild(referenceJob: '" + MAIN + "', scm: 'git file')"));
 
-        verifyPipelineResult(masterBuild, featureBranch);
+        verifyPipelineResult(mainBuild, featureBranch);
     }
 
     private String createLocalGitCheckout(final String branch) {
@@ -228,7 +228,7 @@ class GitReferenceRecorderITest extends GitITest {
                 + "            relativeTargetDir: 'forensics-api']]])";
     }
 
-    private void verifyPipelineResult(final Run<?, ?> masterBuild, final WorkflowJob featureBranch) {
+    private void verifyPipelineResult(final Run<?, ?> mainBuild, final WorkflowJob featureBranch) {
         Run<?, ?> featureBuild = buildSuccessfully(featureBranch);
         assertThat(featureBuild.getNumber()).isEqualTo(1);
 
@@ -238,8 +238,8 @@ class GitReferenceRecorderITest extends GitITest {
 
         assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
                 .hasOwner(featureBuild)
-                .hasReferenceBuildId(masterBuild.getExternalizableId())
-                .hasReferenceBuild(Optional.of(masterBuild))
+                .hasReferenceBuildId(mainBuild.getExternalizableId())
+                .hasReferenceBuild(Optional.of(mainBuild))
                 .hasMessages("Configured reference job: 'main'",
                         String.format("-> detected 2 commits in current branch (last one: '%s')", DECORATOR.asText(featureCommit)),
                         String.format("-> adding 1 commits from build '#1' of reference job (last one: '%s')", DECORATOR.asText(masterCommit)),
@@ -265,8 +265,8 @@ class GitReferenceRecorderITest extends GitITest {
         WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject();
 
         buildProject(project);
-        WorkflowRun masterBuild = verifyMasterBuild(project, 1);
-        verifyRecordSize(masterBuild, 2);
+        WorkflowRun mainBuild = verifyMainBuild(project, 1);
+        verifyRecordSize(mainBuild, 2);
 
         String mainCommit = getHead();
         String featureCommit = createFeatureBranchAndAddCommits();
@@ -277,8 +277,8 @@ class GitReferenceRecorderITest extends GitITest {
 
         assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
                 .hasOwner(featureBuild)
-                .hasReferenceBuildId(masterBuild.getExternalizableId())
-                .hasReferenceBuild(Optional.of(masterBuild))
+                .hasReferenceBuildId(mainBuild.getExternalizableId())
+                .hasReferenceBuild(Optional.of(mainBuild))
                 .hasMessages(MULTI_BRANCH_PROJECT,
                         MAIN_IS_TARGET,
                         String.format("-> detected 3 commits in current branch (last one: '%s')", DECORATOR.asText(featureCommit)),
@@ -304,8 +304,8 @@ class GitReferenceRecorderITest extends GitITest {
         WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject();
 
         buildProject(project);
-        WorkflowRun masterBuild = verifyBuild(project, 1, target, "main content");
-        verifyRecordSize(masterBuild, 2);
+        WorkflowRun mainBuild = verifyBuild(project, 1, target, "main content");
+        verifyRecordSize(mainBuild, 2);
 
         String feature = "bugfixes/hotfix-124";
         createBranchAndAddCommits(feature, "targetBranch: '" + target + "'");
@@ -316,8 +316,8 @@ class GitReferenceRecorderITest extends GitITest {
 
         assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
                 .hasOwner(featureBuild)
-                .hasReferenceBuildId(masterBuild.getExternalizableId())
-                .hasReferenceBuild(Optional.of(masterBuild));
+                .hasReferenceBuildId(mainBuild.getExternalizableId())
+                .hasReferenceBuild(Optional.of(mainBuild));
     }
 
     /**
@@ -335,16 +335,16 @@ class GitReferenceRecorderITest extends GitITest {
         WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject();
 
         buildProject(project);
-        WorkflowRun masterBuild = verifyMasterBuild(project, 1);
-        verifyRecordSize(masterBuild, 2);
+        WorkflowRun mainBuild = verifyMainBuild(project, 1);
+        verifyRecordSize(mainBuild, 2);
         String initialMain = getHead();
 
         String featureCommit = createFeatureBranchAndAddCommits();
 
         String mainCommit = addAdditionalFileTo(MAIN);
 
-        buildAgain(masterBuild.getParent());
-        WorkflowRun nextMaster = verifyMasterBuild(project, 2);
+        buildAgain(mainBuild.getParent());
+        WorkflowRun nextMaster = verifyMainBuild(project, 2);
         verifyRecordSize(nextMaster, 1);
 
         buildProject(project);
@@ -353,8 +353,8 @@ class GitReferenceRecorderITest extends GitITest {
 
         assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
                 .hasOwner(featureBuild)
-                .hasReferenceBuildId(masterBuild.getExternalizableId())
-                .hasReferenceBuild(Optional.of(masterBuild))
+                .hasReferenceBuildId(mainBuild.getExternalizableId())
+                .hasReferenceBuild(Optional.of(mainBuild))
                 .hasMessages(MULTI_BRANCH_PROJECT,
                         MAIN_IS_TARGET,
                         String.format("-> detected 3 commits in current branch (last one: '%s')", DECORATOR.asText(featureCommit)),
@@ -372,7 +372,7 @@ class GitReferenceRecorderITest extends GitITest {
     }
 
     /**
-     * Checks if the reference build is found even if the reference build has commits that the feature build does not.
+     * Checks if the reference build is found even if the reference build contains commits that the feature build does not.
      * This also checks the algorithm if the config {@code skipUnknownCommits} is disabled.
      *
      * <pre>
@@ -387,8 +387,8 @@ class GitReferenceRecorderITest extends GitITest {
         WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject();
 
         buildProject(project);
-        WorkflowRun masterBuild = verifyMasterBuild(project, 1);
-        verifyRecordSize(masterBuild, 2);
+        WorkflowRun mainBuild = verifyMainBuild(project, 1);
+        verifyRecordSize(mainBuild, 2);
 
         addAdditionalFileTo(MAIN);
 
@@ -397,7 +397,7 @@ class GitReferenceRecorderITest extends GitITest {
         String mainCommit = changeContentOfAdditionalFile(MAIN, CHANGED_CONTENT);
 
         buildProject(project);
-        WorkflowRun nextMaster = verifyMasterBuild(project, 2);
+        WorkflowRun nextMaster = verifyMainBuild(project, 2);
         verifyRecordSize(nextMaster, 2);
 
         WorkflowRun firstFeature = verifyFeatureBuild(project, 1);
@@ -451,8 +451,8 @@ class GitReferenceRecorderITest extends GitITest {
         WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject();
         buildProject(project);
 
-        WorkflowRun masterBuild = verifyMasterBuild(project, 1);
-        verifyRecordSize(masterBuild, 2);
+        WorkflowRun mainBuild = verifyMainBuild(project, 1);
+        verifyRecordSize(mainBuild, 2);
 
         String firstMainCommit = getHead();
 
@@ -462,9 +462,9 @@ class GitReferenceRecorderITest extends GitITest {
 
         String mainCommit = changeContentOfAdditionalFile(MAIN, CHANGED_CONTENT);
 
-        buildAgain(masterBuild.getParent());
+        buildAgain(mainBuild.getParent());
 
-        WorkflowRun nextMaster = verifyMasterBuild(project, 2);
+        WorkflowRun nextMaster = verifyMainBuild(project, 2);
         verifyRecordSize(nextMaster, 2);
 
         buildProject(project);
@@ -473,8 +473,8 @@ class GitReferenceRecorderITest extends GitITest {
 
         assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
                 .hasOwner(featureBuild)
-                .hasReferenceBuildId(masterBuild.getExternalizableId())
-                .hasReferenceBuild(Optional.of(masterBuild))
+                .hasReferenceBuildId(mainBuild.getExternalizableId())
+                .hasReferenceBuild(Optional.of(mainBuild))
                 .hasMessages(MULTI_BRANCH_PROJECT,
                         MAIN_IS_TARGET,
                         String.format("-> detected 4 commits in current branch (last one: '%s')", DECORATOR.asText(featureCommit)),
@@ -500,8 +500,8 @@ class GitReferenceRecorderITest extends GitITest {
         WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject();
 
         buildProject(project);
-        WorkflowRun masterBuild = verifyMasterBuild(project, 1);
-        verifyRecordSize(masterBuild, 2);
+        WorkflowRun mainBuild = verifyMainBuild(project, 1);
+        verifyRecordSize(mainBuild, 2);
 
         createFeatureBranchAndAddCommits("maxCommits: 1");
 
@@ -509,8 +509,8 @@ class GitReferenceRecorderITest extends GitITest {
 
         String mainHead = changeContentOfAdditionalFile(MAIN, CHANGED_CONTENT);
 
-        buildAgain(masterBuild.getParent());
-        WorkflowRun additionalMaster = verifyMasterBuild(project, 2);
+        buildAgain(mainBuild.getParent());
+        WorkflowRun additionalMaster = verifyMainBuild(project, 2);
         verifyRecordSize(additionalMaster, 1);
 
         buildProject(project);
@@ -545,13 +545,13 @@ class GitReferenceRecorderITest extends GitITest {
         WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject();
 
         buildProject(project);
-        WorkflowRun masterBuild = verifyMasterBuild(project, 1);
-        verifyRecordSize(masterBuild, 2);
+        WorkflowRun mainBuild = verifyMainBuild(project, 1);
+        verifyRecordSize(mainBuild, 2);
 
         addAdditionalFileTo(MAIN);
 
         buildProject(project);
-        WorkflowRun nextMaster = verifyMasterBuild(project, 2);
+        WorkflowRun nextMaster = verifyMainBuild(project, 2);
         verifyRecordSize(nextMaster, 1);
 
         createFeatureBranchAndAddCommits("maxCommits: 2", "latestBuildIfNotFound: true");
@@ -592,8 +592,8 @@ class GitReferenceRecorderITest extends GitITest {
         WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject();
 
         buildProject(project);
-        WorkflowRun masterBuild = verifyMasterBuild(project, 1);
-        verifyRecordSize(masterBuild, 2);
+        WorkflowRun mainBuild = verifyMainBuild(project, 1);
+        verifyRecordSize(mainBuild, 2);
 
         createFeatureBranchAndAddCommits();
 
@@ -602,8 +602,8 @@ class GitReferenceRecorderITest extends GitITest {
         verifyRecordSize(featureBuild, 3);
         assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
                 .hasOwner(featureBuild)
-                .hasReferenceBuildId(masterBuild.getExternalizableId())
-                .hasReferenceBuild(Optional.of(masterBuild));
+                .hasReferenceBuildId(mainBuild.getExternalizableId())
+                .hasReferenceBuild(Optional.of(mainBuild));
 
         checkoutNewBranch("feature2");
         addAdditionalFileTo("feature2");
@@ -614,8 +614,8 @@ class GitReferenceRecorderITest extends GitITest {
 
         assertThat(anotherBranch.getAction(ReferenceBuild.class)).isNotNull()
                 .hasOwner(anotherBranch)
-                .hasReferenceBuildId(masterBuild.getExternalizableId())
-                .hasReferenceBuild(Optional.of(masterBuild));
+                .hasReferenceBuildId(mainBuild.getExternalizableId())
+                .hasReferenceBuild(Optional.of(mainBuild));
     }
 
     /**
@@ -633,7 +633,7 @@ class GitReferenceRecorderITest extends GitITest {
         WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject();
 
         buildProject(project);
-        WorkflowRun toDelete = verifyMasterBuild(project, 1);
+        WorkflowRun toDelete = verifyMainBuild(project, 1);
         verifyRecordSize(toDelete, 2);
 
         String toDeleteId = toDelete.getExternalizableId();
@@ -644,7 +644,7 @@ class GitReferenceRecorderITest extends GitITest {
         addAdditionalFileTo(MAIN);
 
         WorkflowRun nextMaster = buildAgain(toDelete.getParent());
-        verifyMasterBuild(project, 2);
+        verifyMainBuild(project, 2);
         verifyRecordSize(nextMaster, 1);
 
         // Now delete Build before the feature branch is build.
@@ -675,7 +675,7 @@ class GitReferenceRecorderITest extends GitITest {
         WorkflowMultiBranchProject project = initializeGitAndMultiBranchProject();
 
         buildProject(project);
-        WorkflowRun toDelete = verifyMasterBuild(project, 1);
+        WorkflowRun toDelete = verifyMainBuild(project, 1);
         verifyRecordSize(toDelete, 2);
 
         String toDeleteId = toDelete.getExternalizableId();
@@ -690,7 +690,7 @@ class GitReferenceRecorderITest extends GitITest {
         addAdditionalFileTo(MAIN);
 
         buildProject(project);
-        WorkflowRun nextMaster = verifyMasterBuild(project, 2);
+        WorkflowRun nextMaster = verifyMainBuild(project, 2);
         verifyRecordSize(nextMaster, 1);
 
         changeContentOfAdditionalFile(FEATURE, CHANGED_CONTENT);
@@ -770,7 +770,7 @@ class GitReferenceRecorderITest extends GitITest {
         }
     }
 
-    private WorkflowRun verifyMasterBuild(final WorkflowMultiBranchProject project, final int buildNumber) {
+    private WorkflowRun verifyMainBuild(final WorkflowMultiBranchProject project, final int buildNumber) {
         return verifyBuild(project, buildNumber, GitITest.INITIAL_BRANCH, MAIN + " content");
     }
 
