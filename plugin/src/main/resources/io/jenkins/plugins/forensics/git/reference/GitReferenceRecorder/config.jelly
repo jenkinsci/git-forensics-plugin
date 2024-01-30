@@ -5,11 +5,11 @@
     <f:combobox />
   </f:entry>
 
-  <f:entry title="${%title.defaultBranch}" field="defaultBranch" description="${%description.defaultBranch}">
+  <f:entry title="${%title.targetBranch}" field="targetBranch">
     <f:textbox/>
   </f:entry>
 
-  <f:entry title="${%title.scm}" field="scm" description="${%description.scm}">
+  <f:entry title="${%title.scm}" field="scm" >
     <f:textbox/>
   </f:entry>
 
