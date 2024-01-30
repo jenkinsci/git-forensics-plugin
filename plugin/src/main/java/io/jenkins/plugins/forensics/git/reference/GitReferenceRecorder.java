@@ -147,6 +147,18 @@ public class GitReferenceRecorder extends ReferenceRecorder {
     @Extension
     @Symbol("discoverGitReferenceBuild")
     public static class Descriptor extends SimpleReferenceRecorderDescriptor {
+        /**
+         * Creates a new instance of {@link Descriptor}.
+         */
+        public Descriptor() {
+            this(new JenkinsFacade());
+        }
+
+        @VisibleForTesting
+        Descriptor(final JenkinsFacade jenkins) {
+            super(jenkins);
+        }
+
         @NonNull
         @Override
         public String getDisplayName() {
