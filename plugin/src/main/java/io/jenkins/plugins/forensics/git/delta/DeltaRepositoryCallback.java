@@ -13,6 +13,7 @@ import org.eclipse.jgit.diff.DiffEntry.ChangeType;
 import org.eclipse.jgit.diff.DiffFormatter;
 import org.eclipse.jgit.diff.Edit;
 import org.eclipse.jgit.diff.RawTextComparator;
+import org.eclipse.jgit.errors.LargeObjectException;
 import org.eclipse.jgit.lib.ObjectDatabase;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
@@ -208,8 +209,15 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
     private String getFileContent(final ObjectId fileId, final Repository repository) throws IOException {
         try (ObjectDatabase objectDatabase = repository.getObjectDatabase()) {
             ObjectLoader objectLoader = objectDatabase.open(fileId);
+            if (objectLoader.isLarge()) {
+                return new String(objectLoader.getCachedBytes(1000),
+                        StandardCharsets.UTF_8);
+            }
 
             return new String(objectLoader.getCachedBytes(), StandardCharsets.UTF_8);
+        }
+        catch (LargeObjectException exception) {
+            return "... skipped large file content ...";
         }
     }
 
