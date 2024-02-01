@@ -1,6 +1,6 @@
 def configurations = [
-  [ platform: "docker", jdk: "11" ],
-  [ platform: "windows", jdk: "11" ]
+  [ platform: "linux", jdk: "21" ],
+  [ platform: "windows", jdk: "17" ]
 ]
 
 buildPlugin(failFast: false, configurations: configurations,
