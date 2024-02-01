@@ -45,7 +45,11 @@ public class GitDeltaCalculator extends DeltaCalculator {
     @Override
     public Optional<Delta> calculateDelta(final Run<?, ?> build, final Run<?, ?> referenceBuild,
             final String scmKeyFilter, final FilteredLog log) {
+        log.logInfo("-> Obtaining commits in SCM '%s' for current build '%s'",
+                scmKeyFilter, build.getFullDisplayName());
         Optional<GitCommitsRecord> buildCommits = GitCommitsRecord.findRecordForScm(build, scmKeyFilter);
+        log.logInfo("-> Obtaining commits in SCM '%s' for reference build '%s'",
+                scmKeyFilter, referenceBuild.getFullDisplayName());
         Optional<GitCommitsRecord> referenceCommits = GitCommitsRecord.findRecordForScm(referenceBuild, scmKeyFilter);
         if (buildCommits.isPresent() && referenceCommits.isPresent()) {
             String currentCommit = getLatestCommit(build.getFullDisplayName(), buildCommits.get(), log);
