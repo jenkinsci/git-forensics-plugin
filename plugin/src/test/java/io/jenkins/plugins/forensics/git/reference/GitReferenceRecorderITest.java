@@ -157,47 +157,6 @@ class GitReferenceRecorderITest extends GitITest {
     }
 
     /**
-     * Creates a pipeline that checks if the reference build is found if the main is one commit and build ahead of the
-     * feature branch.
-     *
-     * <pre>
-     * {@code
-     * M:  [M1]#1 - [M2]#2
-     *       \
-     *   F:  [F1]#1}
-     * </pre>
-     * @see #shouldHandleExtraCommitsAfterBranchPointOnMain()
-     */
-    @Test
-    void shouldUseFailedBuildsByDefault() {
-        WorkflowJob mainBranch = createPipeline(MAIN);
-        mainBranch.setDefinition(asStage(createLocalGitCheckout(MAIN)
-                + "error('FAILURE')\n"));
-
-        Run<?, ?> mainBuild = buildWithResult(mainBranch, Result.FAILURE);
-
-        createFeatureBranchAndAddCommits();
-
-        addAdditionalFileTo(MAIN);
-
-        buildAgain(mainBranch);
-
-        WorkflowJob featureBranch = createPipeline(FEATURE);
-        featureBranch.setDefinition(asStage(createLocalGitCheckout(FEATURE),
-                "discoverGitReferenceBuild(referenceJob: '" + MAIN + "')"));
-
-        Run<?, ?> featureBuild = buildSuccessfully(featureBranch);
-        assertThat(featureBuild.getNumber()).isEqualTo(1);
-
-        assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
-                .hasOwner(featureBuild)
-                .hasReferenceBuildId(mainBuild.getExternalizableId())
-                .hasReferenceBuild(Optional.of(mainBuild))
-                .hasMessages("Configured reference job: 'main'",
-                        "Found reference build '#1' for target branch");
-    }
-
-    /**
      * Creates a pipeline that ignores failed builds.
      *
      * <pre>
@@ -213,7 +172,7 @@ class GitReferenceRecorderITest extends GitITest {
      * @see #shouldHandleExtraCommitsAfterBranchPointOnMain()
      */
     @ParameterizedTest
-    @ValueSource(strings = {"SUCCESS", "UNSTABLE"})
+    @ValueSource(strings = {"SUCCESS", "UNSTABLE", ""})
     @Issue("JENKINS-72015")
     void shouldSkipFailedBuildsIfStatusIsWorseThanRequired(final String requiredResult) {
         WorkflowJob mainBranch = createPipeline(MAIN);
@@ -229,21 +188,23 @@ class GitReferenceRecorderITest extends GitITest {
         buildAgain(mainBranch);
 
         WorkflowJob featureBranch = createPipeline(FEATURE);
+        var requiredParameter = StringUtils.isBlank(requiredResult) ? StringUtils.EMPTY : ", requiredResult: '" + requiredResult + "'";
         featureBranch.setDefinition(asStage(createLocalGitCheckout(FEATURE),
                 "discoverGitReferenceBuild("
-                        + "referenceJob: '" + MAIN + "', "
-                        + "requiredResult: '" + requiredResult + "')"));
+                        + "referenceJob: '" + MAIN + "'"
+                        + requiredParameter + ")"));
 
         Run<?, ?> featureBuild = buildSuccessfully(featureBranch);
         assertThat(featureBuild.getNumber()).isEqualTo(1);
 
+        var expectedResult = StringUtils.isBlank(requiredResult) ? "UNSTABLE" : requiredResult;
         assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
                 .hasOwner(featureBuild)
                 .hasReferenceBuild(Optional.empty())
                 .hasMessages("Configured reference job: 'main'",
                         "-> found build '#1' in reference job with matching commits",
                         "-> ignoring reference build '#1' since it has a result of FAILURE, but required is "
-                                + requiredResult + " or better",
+                                + expectedResult + " or better",
                         "-> no reference build found");
     }
 
