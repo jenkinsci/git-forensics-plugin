@@ -3,6 +3,6 @@ def configurations = [
   [ platform: "windows", jdk: "17" ]
 ]
 
-buildPlugin(failFast: false, configurations: configurations,
+buildPlugin(failFast: false, timeout: 90, configurations: configurations,
         checkstyle: [qualityGates: [[threshold: 1, type: 'NEW', unstable: true]]],
         pmd: [qualityGates: [[threshold: 1, type: 'NEW', unstable: true]]] )
