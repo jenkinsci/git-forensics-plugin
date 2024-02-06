@@ -10,6 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.junitpioneer.jupiter.Issue;
 
 import com.cloudbees.hudson.plugins.folder.computed.FolderComputation;
@@ -223,6 +224,60 @@ class GitReferenceRecorderITest extends GitITest {
             referenceBuildAssert
                     .hasReferenceBuild(Optional.empty());
         }
+    }
+
+    /**
+     * Creates a pipeline that uses a previous build of the actual reference build, because the reference build failed.
+     *
+     * <pre>
+     * {@code
+     * M:  [M1]#1 - [M2]#2
+     *               \
+     *            F:  [F1]#1}
+     * </pre>
+     *
+     * @param requiredResult
+     *         the required result
+     *
+     * @see #shouldHandleExtraCommitsAfterBranchPointOnMain()
+     */
+    @Issue("JENKINS-72015")
+    @ParameterizedTest(name = "should skip failed builds: status: {0}")
+    @ValueSource(strings = {"SUCCESS", "UNSTABLE", ""})
+    void shouldUseSkipFailedBuildsIfStatusIsWorseThanRequired(final String requiredResult) {
+        WorkflowJob mainBranch = createPipeline(MAIN);
+
+        mainBranch.setDefinition(asStage(createLocalGitCheckout(MAIN)));
+
+        Run<?, ?> successful = buildSuccessfully(mainBranch);
+
+        addAdditionalFileTo(MAIN);
+        mainBranch.setDefinition(asStage(createLocalGitCheckout(MAIN)
+                + "error('FAILURE')\n"));
+
+        buildWithResult(mainBranch, Result.FAILURE);
+
+        createFeatureBranchAndAddCommits();
+
+        WorkflowJob featureBranch = createPipeline(FEATURE);
+        var requiredParameter = StringUtils.isBlank(requiredResult) ? StringUtils.EMPTY : ", requiredResult: '" + requiredResult + "'";
+        featureBranch.setDefinition(asStage(createLocalGitCheckout(FEATURE),
+                "discoverGitReferenceBuild("
+                        + "referenceJob: '" + MAIN + "'"
+                        + requiredParameter + ")"));
+
+        Run<?, ?> featureBuild = buildSuccessfully(featureBranch);
+        assertThat(featureBuild.getNumber()).isEqualTo(1);
+
+        assertThat(featureBuild.getAction(ReferenceBuild.class))
+                .isNotNull()
+                .hasOwner(featureBuild)
+                .hasMessages("Configured reference job: 'main'",
+                        "-> found build '#2' in reference job with matching commits",
+                        "Found reference build '#2' for target branch",
+                        "-> Previous build '#1' has a result SUCCESS")
+                    .hasReferenceBuild(Optional.of(successful))
+                    .hasReferenceBuildId(successful.getExternalizableId());
     }
 
     /**
