@@ -108,9 +108,9 @@ public class GitReferenceRecorder extends ReferenceRecorder {
 
     private Optional<Run<?, ?>> findByCommits(final Run<?, ?> owner, final GitCommitsRecord referenceCommit,
             final FilteredLog log) {
-        Optional<GitCommitsRecord> thisCommit = GitCommitsRecord.findRecordForScm(owner, getScm());
-        if (thisCommit.isPresent()) {
-            GitCommitsRecord commitsRecord = thisCommit.get();
+        Optional<GitCommitsRecord> ownerCommits = GitCommitsRecord.findRecordForScm(owner, getScm());
+        if (ownerCommits.isPresent()) {
+            GitCommitsRecord commitsRecord = ownerCommits.get();
             Optional<Run<?, ?>> referencePoint = commitsRecord.getReferencePoint(
                     referenceCommit, getMaxCommits(), isSkipUnknownCommits(), log);
             if (referencePoint.isPresent()) {
@@ -118,19 +118,14 @@ public class GitReferenceRecorder extends ReferenceRecorder {
                 log.logInfo("-> found build '%s' in reference job with matching commits",
                         referenceBuild.getDisplayName());
 
-                if (hasRequiredResult(referenceBuild)) {
-                    return referencePoint;
-                }
-                else {
-                    log.logInfo(createStatusNotSufficientMessage(referenceBuild));
-                }
+                return referencePoint;
             }
             else {
                 log.logInfo("-> found no build with matching commits");
             }
         }
         else {
-            log.logError("-> found no `GitCommitsRecord` in current build '%s'", owner.getDisplayName());
+            log.logInfo("-> found no `GitCommitsRecord` in current build '%s'", owner.getDisplayName());
         }
         return Optional.empty();
     }

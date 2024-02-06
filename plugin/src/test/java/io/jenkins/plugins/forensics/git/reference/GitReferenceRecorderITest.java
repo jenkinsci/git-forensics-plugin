@@ -9,7 +9,7 @@ import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junitpioneer.jupiter.Issue;
 
 import com.cloudbees.hudson.plugins.folder.computed.FolderComputation;
@@ -168,49 +168,17 @@ class GitReferenceRecorderITest extends GitITest {
      *
      * @param requiredResult
      *         the required result
+     * @param latestBuildIfNotFound
+     *         determines whether the latest build should be used if the required result is not found
      *
      * @see #shouldHandleExtraCommitsAfterBranchPointOnMain()
      */
-    @ParameterizedTest
-    @ValueSource(strings = {"SUCCESS", "UNSTABLE", ""})
     @Issue("JENKINS-72015")
-    void shouldSkipFailedBuildsIfStatusIsWorseThanRequired(final String requiredResult) {
-        WorkflowJob mainBranch = createPipeline(MAIN);
-        mainBranch.setDefinition(asStage(createLocalGitCheckout(MAIN)
-                + "error('FAILURE')\n"));
-
-        buildWithResult(mainBranch, Result.FAILURE);
-
-        createFeatureBranchAndAddCommits();
-
-        addAdditionalFileTo(MAIN);
-
-        buildAgain(mainBranch);
-
-        WorkflowJob featureBranch = createPipeline(FEATURE);
-        var requiredParameter = StringUtils.isBlank(requiredResult) ? StringUtils.EMPTY : ", requiredResult: '" + requiredResult + "'";
-        featureBranch.setDefinition(asStage(createLocalGitCheckout(FEATURE),
-                "discoverGitReferenceBuild("
-                        + "referenceJob: '" + MAIN + "'"
-                        + requiredParameter + ")"));
-
-        Run<?, ?> featureBuild = buildSuccessfully(featureBranch);
-        assertThat(featureBuild.getNumber()).isEqualTo(1);
-
-        var expectedResult = StringUtils.isBlank(requiredResult) ? "UNSTABLE" : requiredResult;
-        assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
-                .hasOwner(featureBuild)
-                .hasReferenceBuild(Optional.empty())
-                .hasMessages("Configured reference job: 'main'",
-                        "-> found build '#1' in reference job with matching commits",
-                        "-> ignoring reference build '#1' since it has a result of FAILURE, but required is "
-                                + expectedResult + " or better",
-                        "-> no reference build found");
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"SUCCESS", "UNSTABLE"})
-    void shouldUseLastedBuildIfStatusOfReferenceIsWorseThanRequired(final String requiredResult) {
+    @ParameterizedTest(name = "should skip failed builds: status: {0} - latestBuildIfNotFound: {1}")
+    @CsvSource({
+            "SUCCESS, false", "UNSTABLE, false", ", false",
+            "SUCCESS, true ", "UNSTABLE, true ", ", true "})
+    void shouldSkipFailedBuildsIfStatusIsWorseThanRequired(final String requiredResult, final boolean latestBuildIfNotFound) {
         WorkflowJob mainBranch = createPipeline(MAIN);
         mainBranch.setDefinition(asStage(createLocalGitCheckout(MAIN)
                 + "error('FAILURE')\n"));
@@ -224,26 +192,37 @@ class GitReferenceRecorderITest extends GitITest {
         var latestBuild = buildAgain(mainBranch);
 
         WorkflowJob featureBranch = createPipeline(FEATURE);
+        var requiredParameter = StringUtils.isBlank(requiredResult) ? StringUtils.EMPTY : ", requiredResult: '" + requiredResult + "'";
         featureBranch.setDefinition(asStage(createLocalGitCheckout(FEATURE),
                 "discoverGitReferenceBuild("
-                        + "referenceJob: '" + MAIN + "', "
-                        + "requiredResult: '" + requiredResult + "',"
-                        + "latestBuildIfNotFound: true)"));
+                        + "referenceJob: '" + MAIN + "'"
+                        + requiredParameter
+                        + ", latestBuildIfNotFound: " + latestBuildIfNotFound + ")"));
 
         Run<?, ?> featureBuild = buildSuccessfully(featureBranch);
         assertThat(featureBuild.getNumber()).isEqualTo(1);
 
-        assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
+        var expectedResult = StringUtils.isBlank(requiredResult) ? "UNSTABLE" : requiredResult;
+
+        var referenceBuildAssert = assertThat(featureBuild.getAction(ReferenceBuild.class))
+                .isNotNull()
                 .hasOwner(featureBuild)
-                .hasReferenceBuild(Optional.of(latestBuild))
                 .hasMessages("Configured reference job: 'main'",
                         "-> found build '#1' in reference job with matching commits",
-                        "-> ignoring reference build '#1' since it has a result of FAILURE, but required is "
-                                + requiredResult + " or better",
-                        "-> no reference build found",
-                        "-> no reference build found",
-                        NOT_FOUND_MESSAGE,
-                        "Falling back to latest build of reference job: '#2'");
+                        "-> ignoring reference build '#1' or one of its predecessors since none have a result of "
+                                + expectedResult + " or better",
+                        NOT_FOUND_MESSAGE);
+
+        if (latestBuildIfNotFound) {
+            referenceBuildAssert
+                    .hasReferenceBuild(Optional.of(latestBuild))
+                    .hasReferenceBuildId(latestBuild.getExternalizableId())
+                    .hasMessages("Falling back to latest completed build of reference job: '#2'");
+        }
+        else {
+            referenceBuildAssert
+                    .hasReferenceBuild(Optional.empty());
+        }
     }
 
     /**
