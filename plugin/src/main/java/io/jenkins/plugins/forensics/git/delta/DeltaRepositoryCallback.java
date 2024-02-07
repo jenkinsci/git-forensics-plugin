@@ -13,6 +13,7 @@ import org.eclipse.jgit.diff.DiffEntry.ChangeType;
 import org.eclipse.jgit.diff.DiffFormatter;
 import org.eclipse.jgit.diff.Edit;
 import org.eclipse.jgit.diff.RawTextComparator;
+import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.errors.LargeObjectException;
 import org.eclipse.jgit.lib.ObjectDatabase;
 import org.eclipse.jgit.lib.ObjectId;
@@ -82,13 +83,14 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
      *         if communicating with Git failed
      */
     private RemoteResultWrapper<Delta> calculateDelta(final Repository repository) throws IOException {
+        FilteredLog log;
         try (RevWalk walk = new RevWalk(repository)) {
             RevCommit currentCommit = walk.parseCommit(ObjectId.fromString(currentCommitId));
             RevCommit referenceCommit = walk.parseCommit(ObjectId.fromString(referenceCommitId));
 
             ByteArrayOutputStream diffStream = new ByteArrayOutputStream();
 
-            FilteredLog log = new FilteredLog("Errors from Git Delta:");
+            log = new FilteredLog("Errors from Git Delta:");
             log.logInfo("-> Start scanning for differences between commits...");
 
             try (DiffFormatter diffFormatter = new DiffFormatter(diffStream)) {
@@ -121,6 +123,13 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
 
                 return wrapper;
             }
+        }
+        catch (MissingObjectException exception) {
+            GitDelta delta = new GitDelta(currentCommitId, referenceCommitId, Map.of(), exception.getMessage());
+            RemoteResultWrapper<Delta> wrapper = new RemoteResultWrapper<>(delta, "Errors from Git Delta:");
+
+            wrapper.logError("Could not find commit", exception);
+            return wrapper;
         }
     }
 
