@@ -16,7 +16,7 @@
   <name>UI Tests of Git Forensics Plugin</name>
 
   <properties>
-    <jenkins.version>2.441</jenkins.version>
+    <jenkins.version>2.443</jenkins.version>
     <hpi-plugin.version>3.51</hpi-plugin.version>
 
     <module.name>${project.groupId}.git.forensics.ui.tests</module.name>
@@ -36,7 +36,7 @@
         <!-- ClassNotFoundException if omitted -->
         <groupId>io.netty</groupId>
         <artifactId>netty-bom</artifactId>
-        <version>4.1.105.Final</version>
+        <version>4.1.106.Final</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
