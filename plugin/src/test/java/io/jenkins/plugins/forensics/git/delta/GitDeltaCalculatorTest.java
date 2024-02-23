@@ -22,13 +22,12 @@ import static org.mockito.Mockito.*;
  * @author Florian Orendi
  */
 class GitDeltaCalculatorTest {
-
     private static final String EMPTY_SCM_KEY = "";
 
     @Test
     void shouldAbortIfCommitsAreEmpty() {
         GitClient gitClient = mock(GitClient.class);
-        GitDeltaCalculator deltaCalculator = new GitDeltaCalculator(gitClient);
+        GitDeltaCalculator deltaCalculator = new GitDeltaCalculator(gitClient, StringUtils.EMPTY);
         FilteredLog log = new FilteredLog(StringUtils.EMPTY);
 
         Optional<Delta> result = deltaCalculator.calculateDelta(mock(Run.class), mock(Run.class), EMPTY_SCM_KEY, log);

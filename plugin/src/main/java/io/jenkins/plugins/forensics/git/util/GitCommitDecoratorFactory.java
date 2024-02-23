@@ -36,5 +36,4 @@ public class GitCommitDecoratorFactory extends CommitDecoratorFactory {
         }
         return Optional.empty();
     }
-
 }

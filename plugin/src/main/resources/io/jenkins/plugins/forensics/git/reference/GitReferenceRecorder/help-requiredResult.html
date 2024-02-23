@@ -1,0 +1,15 @@
+When a reference build is searched for in the baseline (see the parameter reference job) then it
+sometimes makes sense to only consider builds that have a certain result.
+For example, you may want to skip the computation of a delta coverage when the reference build has
+failed tests. Or you may want to skip the computation of new warnings when the reference build has
+a compilation error.
+
+The following enumeration shows the possible values for this parameter and the corresponding behavior:
+<dl>
+    <dt>SUCCESS</dt>
+    <dd>The selected build must be successful</dd>
+    <dt>UNSTABLE</dt>
+    <dd>The selected build must be successful or unstable</dd>
+    <dt>FAILURE</dt>
+    <dd>The result of the build is not relevant (this is the default behavior if unset)</dd>
+</dl>

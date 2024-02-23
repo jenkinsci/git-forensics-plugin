@@ -34,7 +34,6 @@ import static org.mockito.Mockito.*;
  * @author Florian Orendi
  */
 class GitDeltaCalculatorFactoryTest {
-
     private static final TaskListener NULL_LISTENER = TaskListener.NULL;
 
     @Test

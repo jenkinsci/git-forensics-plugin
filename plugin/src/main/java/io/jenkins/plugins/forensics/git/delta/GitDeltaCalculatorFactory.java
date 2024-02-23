@@ -31,7 +31,7 @@ public class GitDeltaCalculatorFactory extends DeltaCalculatorFactory {
             GitClient client = validator.createClient();
             logger.logInfo("-> Git delta calculator successfully created in working tree '%s'",
                     new PathUtil().getAbsolutePath(client.getWorkTree().getRemote()));
-            return Optional.of(new GitDeltaCalculator(client));
+            return Optional.of(new GitDeltaCalculator(client, scm.getKey()));
         }
         logger.logInfo("-> Git Delta Calculator could not be created for SCM '%s' in working tree '%s'", scm,
                 workspace);

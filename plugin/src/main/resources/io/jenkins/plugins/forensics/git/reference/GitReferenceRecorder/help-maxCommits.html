@@ -1,4 +1,4 @@
-The Default value is 100 commits, so if the branch has more than 100 commits since the last contact with the master branch
-the reference finder will stop. If for some reason the finder will not be able to find an intersection between the current branch
-and the master branch (for unknown reason) this check will ensure that the finder will not take forever to search for it. But
-this scenario should not occur and usually developing branches should not be that far from the master branch.
+Defines the maximum number of commits that will be inspected to find the intersection between the current branch
+and the target branch (main branch). The default value is 100 commits. If a branch has more than the specified number
+of commits (since the last merge with the main branch), then the reference finder will stop and return an empty result.
+This helps to skip computations of delta results that contain too many differences.

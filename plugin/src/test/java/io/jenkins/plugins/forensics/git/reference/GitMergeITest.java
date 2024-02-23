@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.*;
  * @author Florian Orendi
  */
 class GitMergeITest extends GitITest {
-
     private static final String EMPTY_COMMIT = ObjectId.zeroId().name();
 
     private static final String MAIN_JOB_NAME = "Main_Job";

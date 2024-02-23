@@ -1,0 +1,14 @@
+<p>
+    The reference job is the baseline used to determine the relative differences to the current build.
+    Several plugins that report build statistics (test results, code coverage, metrics, static
+    analysis warnings) typically show their reports in two different ways: either as absolute report
+    (e.g., total number of tests or warnings, overall code coverage) or as relative delta report (e.g., additional
+    tests, increased or decreased coverage, new or fixed warnings). To compute a relative delta report, a plugin needs
+    to select another build to compare the current results to (a so-called reference build). This reference build is
+    obtained from the specified reference job.
+</p>
+<p>
+    In Multibranch Pipelines this parameter can be left empty: in these jobs, the plugin selects the build automatically
+    from the associated job that builds the main target branch. For all other jobs, the last completed build of the
+    current job will be used as reference build if the reference job is not specified.
+</p>
