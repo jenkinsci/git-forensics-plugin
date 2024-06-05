@@ -42,7 +42,7 @@ class GitBlamerITest extends GitITest {
         create2RevisionsWithDifferentAuthors();
 
         FileLocations locations = new FileLocations();
-        String absolutePath = GitITest.ADDITIONAL_FILE;
+        String absolutePath = ADDITIONAL_FILE;
         locations.addLine(absolutePath, 2);
         locations.addLine(absolutePath, 3);
         locations.addLine(absolutePath, 4);
@@ -77,7 +77,7 @@ class GitBlamerITest extends GitITest {
         create2RevisionsWithDifferentAuthors();
 
         FileLocations locations = new FileLocations();
-        String absolutePath = GitITest.ADDITIONAL_FILE;
+        String absolutePath = ADDITIONAL_FILE;
         locations.addLine(absolutePath, 0);
 
         GitBlamer gitBlamer = createBlamer();
@@ -92,8 +92,8 @@ class GitBlamerITest extends GitITest {
         FileBlame request = blames.getBlame(absolutePath);
         assertThat(request).hasFileName(absolutePath);
 
-        assertThat(request.getName(0)).isEqualTo(GitITest.BAR_NAME);
-        assertThat(request.getEmail(0)).isEqualTo(GitITest.BAR_EMAIL);
+        assertThat(request.getName(0)).isEqualTo(BAR_NAME);
+        assertThat(request.getEmail(0)).isEqualTo(BAR_EMAIL);
         assertThat(request.getCommit(0)).isEqualTo(getHead());
     }
 
@@ -106,30 +106,30 @@ class GitBlamerITest extends GitITest {
     }
 
     private void create2RevisionsWithDifferentAuthors() {
-        writeFile(GitITest.ADDITIONAL_FILE, "OLD\nOLD\nOLD\nOLD\nOLD\nOLD\n");
-        git("add", GitITest.ADDITIONAL_FILE);
-        git("config", "user.name", GitITest.FOO_NAME);
-        git("config", "user.email", GitITest.FOO_EMAIL);
+        writeFile(ADDITIONAL_FILE, "OLD\nOLD\nOLD\nOLD\nOLD\nOLD\n");
+        git("add", ADDITIONAL_FILE);
+        git("config", "user.name", FOO_NAME);
+        git("config", "user.email", FOO_EMAIL);
         git("commit", "--message=Init");
         git("rev-parse", "HEAD");
 
-        writeFile(GitITest.ADDITIONAL_FILE, "OLD\nOLD\nNEW\nNEW\nOLD\nOLD\n");
-        git("add", GitITest.ADDITIONAL_FILE);
-        git("config", "user.name", GitITest.BAR_NAME);
-        git("config", "user.email", GitITest.BAR_EMAIL);
+        writeFile(ADDITIONAL_FILE, "OLD\nOLD\nNEW\nNEW\nOLD\nOLD\n");
+        git("add", ADDITIONAL_FILE);
+        git("config", "user.name", BAR_NAME);
+        git("config", "user.email", BAR_EMAIL);
         git("commit", "--message=Change");
         git("rev-parse", "HEAD");
     }
 
     private void assertThatBlameIsHeadWith(final FileBlame request, final int line) {
-        assertThat(request.getName(line)).isEqualTo(GitITest.BAR_NAME);
-        assertThat(request.getEmail(line)).isEqualTo(GitITest.BAR_EMAIL);
+        assertThat(request.getName(line)).isEqualTo(BAR_NAME);
+        assertThat(request.getEmail(line)).isEqualTo(BAR_EMAIL);
         assertThat(request.getCommit(line)).isEqualTo(getHead());
     }
 
     private void assertThatBlameIs(final FileBlame request, final int line) {
-        assertThat(request.getName(line)).isEqualTo(GitITest.FOO_NAME);
-        assertThat(request.getEmail(line)).isEqualTo(GitITest.FOO_EMAIL);
+        assertThat(request.getName(line)).isEqualTo(FOO_NAME);
+        assertThat(request.getEmail(line)).isEqualTo(FOO_EMAIL);
         assertThat(request.getCommit(line)).isNotEqualTo(getHead());
     }
 

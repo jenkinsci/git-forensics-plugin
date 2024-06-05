@@ -39,6 +39,7 @@ import io.jenkins.plugins.forensics.git.util.RemoteResultWrapper;
  *
  * @author Florian Orendi
  */
+@SuppressWarnings("PMD.CouplingBetweenObjects")
 public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteResultWrapper<Delta>> {
     private static final long serialVersionUID = -4561284338216569043L;
 

@@ -94,10 +94,8 @@ public class GitRepositoryValidator {
 
     private boolean isShallow(final GitSCM git) {
         CloneOption option = git.getExtensions().get(CloneOption.class);
-        if (option != null) {
-            return option.isShallow();
-        }
-        return false;
+
+        return option != null && option.isShallow();
     }
 
     /**

@@ -38,6 +38,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
     }
 
     @Override
+    @SuppressWarnings("PMD.LooseCoupling")
     public RepositoryStatistics mine(final RepositoryStatistics previous, final FilteredLog logger)
             throws InterruptedException {
         try {

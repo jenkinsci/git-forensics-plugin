@@ -16,7 +16,6 @@ import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.jupiter.api.Test;
 import org.junitpioneer.jupiter.Issue;
-import org.mockito.ArgumentMatchers;
 
 import edu.hm.hafner.util.FilteredLog;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -108,7 +107,7 @@ class GitBlamerTest {
 
         ObjectId id = mock(ObjectId.class);
         when(gitClient.revParse(HEAD)).thenReturn(id);
-        when(gitClient.withRepository(ArgumentMatchers.any())).thenThrow(exception);
+        when(gitClient.withRepository(any())).thenThrow(exception);
         FilePath workTree = createWorkTreeStub();
         when(gitClient.getWorkTree()).thenReturn(workTree);
 

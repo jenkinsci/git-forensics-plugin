@@ -372,16 +372,16 @@ class GitDeltaCalculatorITest extends GitITest {
     }
 
     /**
-     * Creates and commits a file with a fixed name and with the passed file content.
+     * Creates and commits a file with a fixed name and with the given file content.
      *
      * @param content
-     *         The file contend
+     *         the file content
      */
     private void commitFile(final String content) {
         writeFile(INITIAL_FILE, content);
         git("add", INITIAL_FILE);
-        git("config", "user.name", GitITest.FOO_NAME);
-        git("config", "user.email", GitITest.FOO_EMAIL);
+        git("config", "user.name", FOO_NAME);
+        git("config", "user.email", FOO_EMAIL);
         git("commit", "--message=Test");
     }
 
