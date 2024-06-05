@@ -938,7 +938,7 @@ class GitReferenceRecorderITest extends GitITest {
     }
 
     private WorkflowRun verifyMainBuild(final WorkflowMultiBranchProject project, final int buildNumber) {
-        return verifyBuild(project, buildNumber, GitITest.INITIAL_BRANCH, MAIN + " content");
+        return verifyBuild(project, buildNumber, INITIAL_BRANCH, MAIN + " content");
     }
 
     private WorkflowRun verifyFeatureBuild(final WorkflowMultiBranchProject project, final int buildNumber) {

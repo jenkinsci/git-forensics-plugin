@@ -19,6 +19,7 @@ import io.jenkins.plugins.forensics.miner.CommitDiffItem;
  *
  * @author Ullrich Hafner
  */
+@SuppressWarnings("PMD.LooseCoupling")
 class RepositoryStatisticsCallback
         extends AbstractRepositoryCallback<RemoteResultWrapper<ArrayList<CommitDiffItem>>> {
     private static final long serialVersionUID = 7667073858514128136L;
@@ -32,14 +33,13 @@ class RepositoryStatisticsCallback
     }
 
     @Override
-    @SuppressWarnings("PMD.UseTryWithResources")
     public RemoteResultWrapper<ArrayList<CommitDiffItem>> invoke(
             final Repository repository, final VirtualChannel channel) {
         ArrayList<CommitDiffItem> commits = new ArrayList<>();
         RemoteResultWrapper<ArrayList<CommitDiffItem>> wrapper = new RemoteResultWrapper<>(
                 commits, "Errors while mining the Git repository:");
 
-        try {
+        try (repository) {
             try (Git git = new Git(repository)) {
                 CommitAnalyzer commitAnalyzer = new CommitAnalyzer();
                 commits.addAll(commitAnalyzer.run(repository, git, previousCommitId, wrapper));
@@ -48,9 +48,6 @@ class RepositoryStatisticsCallback
                 wrapper.logException(exception,
                         "Can't analyze commits for the repository " + repository.getIdentifier());
             }
-        }
-        finally {
-            repository.close();
         }
 
         return wrapper;

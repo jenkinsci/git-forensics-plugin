@@ -188,6 +188,7 @@ public class CommitStatisticsStep extends Recorder implements SimpleBuildStep {
                 previousCompletedBuild);
     }
 
+    @SuppressWarnings("PMD.LooseCoupling")
     private void extractStats(final Run<?, ?> run, final SCM repository, final GitClient gitClient,
             final FilteredLog logger, final String ancestor) throws IOException, InterruptedException {
         RemoteResultWrapper<ArrayList<CommitDiffItem>> wrapped = gitClient.withRepository(
