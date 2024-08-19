@@ -7,9 +7,11 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
+import org.junitpioneer.jupiter.Issue;
 
 import edu.hm.hafner.util.FilteredLog;
 
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import hudson.model.FreeStyleProject;
 import hudson.model.Run;
 import hudson.plugins.git.GitSCM;
@@ -34,6 +36,32 @@ class GitDeltaCalculatorITest extends GitITest {
     private static final String EMPTY_SCM_KEY = "";
     private static final String EMPTY_FILE_PATH = "";
 
+    private static final String GIT_FORENSICS_URL = "https://github.com/jenkinsci/git-forensics-plugin.git";
+    private static final String GIT_FORENSICS_COMMIT = "86503e8bc0374e05e2cd32ed3bb8b4435d5fd757";
+
+    @Test @Issue("JENKINS-73297")
+    void shouldShowErrorIfCommitIsNotFound() {
+        WorkflowJob job = createPipeline();
+        job.setDefinition(asStage("checkout([$class: 'GitSCM', "
+                + "branches: [[name: '" + GIT_FORENSICS_COMMIT + "' ]],\n"
+                + "userRemoteConfigs: [[url: '" + GIT_FORENSICS_URL + "']],\n"
+                + "extensions: [[$class: 'RelativeTargetDirectory', \n"
+                + "            relativeTargetDir: '" + GIT_FORENSICS_COMMIT + "']]])"));
+
+        Run<?, ?> build = buildSuccessfully(job);
+        GitDeltaCalculator deltaCalculator = createDeltaCalculator();
+
+        var log = createLog();
+        Optional<Delta> result = deltaCalculator.calculateDelta(build, build, EMPTY_SCM_KEY, log);
+        assertThat(result).isNotEmpty();
+
+        assertThat(log.getInfoMessages())
+                .contains("-> Invoking Git delta calculator for determining the changes between commits '86503e8' and '86503e8'");
+        assertThat(log.getErrorMessages())
+                .contains("Could not find the specified commit - is the SCM parameter correctly set?",
+                        "org.eclipse.jgit.errors.MissingObjectException: Missing unknown 86503e8bc0374e05e2cd32ed3bb8b4435d5fd757");
+    }
+
     @Test
     void shouldCreateEmptyDeltaIfCommitsAreInvalid() {
         GitDeltaCalculator deltaCalculator = createDeltaCalculator();
@@ -46,7 +74,6 @@ class GitDeltaCalculatorITest extends GitITest {
     void shouldCreateDiffFile() {
         FreeStyleProject job = createJobWithReferenceRecorder();
 
-        GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         FilteredLog log = createLog();
 
         Run<?, ?> referenceBuild = buildSuccessfully(job);
@@ -59,6 +86,7 @@ class GitDeltaCalculatorITest extends GitITest {
         Run<?, ?> build = buildSuccessfully(job);
         String currentCommit = getHead();
 
+        GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
         assertThat(result).isNotEmpty();
 
@@ -86,7 +114,6 @@ class GitDeltaCalculatorITest extends GitITest {
     @Test
     void shouldDetermineAddedFile() {
         FreeStyleProject job = createJobWithReferenceRecorder();
-        GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         FilteredLog log = createLog();
 
         Run<?, ?> referenceBuild = buildSuccessfully(job);
@@ -98,6 +125,7 @@ class GitDeltaCalculatorITest extends GitITest {
         commit("test");
         Run<?, ?> build = buildSuccessfully(job);
 
+        GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
         assertThat(result).isNotEmpty();
 
@@ -117,7 +145,6 @@ class GitDeltaCalculatorITest extends GitITest {
     @Test
     void shouldDetermineModifiedFile() {
         FreeStyleProject job = createJobWithReferenceRecorder();
-        GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         FilteredLog log = createLog();
 
         String content = "modified";
@@ -126,6 +153,7 @@ class GitDeltaCalculatorITest extends GitITest {
         commitFile(content);
         Run<?, ?> build = buildSuccessfully(job);
 
+        GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
         assertThat(result).isNotEmpty();
 
@@ -145,7 +173,6 @@ class GitDeltaCalculatorITest extends GitITest {
     @Test
     void shouldDetermineDeletedFile() {
         FreeStyleProject job = createJobWithReferenceRecorder();
-        GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         FilteredLog log = createLog();
 
         String content = "content";
@@ -155,6 +182,7 @@ class GitDeltaCalculatorITest extends GitITest {
         commit("test");
         Run<?, ?> build = buildSuccessfully(job);
 
+        GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
         assertThat(result).isNotEmpty();
 
@@ -174,7 +202,6 @@ class GitDeltaCalculatorITest extends GitITest {
     @Test
     void shouldDetermineRenamedFile() {
         FreeStyleProject job = createJobWithReferenceRecorder();
-        GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         FilteredLog log = createLog();
 
         String content = "content";
@@ -184,6 +211,7 @@ class GitDeltaCalculatorITest extends GitITest {
         writeFileAsAuthorFoo(content);
         Run<?, ?> build = buildSuccessfully(job);
 
+        GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
         assertThat(result).isNotEmpty();
 
@@ -203,7 +231,6 @@ class GitDeltaCalculatorITest extends GitITest {
     @Test
     void shouldDetermineAddedLines() {
         FreeStyleProject job = createJobWithReferenceRecorder();
-        GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         FilteredLog log = createLog();
 
         String content = "Test\nTest\n";
@@ -213,6 +240,7 @@ class GitDeltaCalculatorITest extends GitITest {
         commitFile(insertedContent);
         Run<?, ?> build = buildSuccessfully(job);
 
+        GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
         assertThat(result).isNotEmpty();
 
@@ -234,7 +262,6 @@ class GitDeltaCalculatorITest extends GitITest {
     @Test
     void shouldDetermineModifiedLines() {
         FreeStyleProject job = createJobWithReferenceRecorder();
-        GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         FilteredLog log = createLog();
 
         String content = "Test\nTest\nTest\nTest";
@@ -244,6 +271,7 @@ class GitDeltaCalculatorITest extends GitITest {
         commitFile(modified);
         Run<?, ?> build = buildSuccessfully(job);
 
+        GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
         assertThat(result).isNotEmpty();
 
@@ -265,7 +293,6 @@ class GitDeltaCalculatorITest extends GitITest {
     @Test
     void shouldDetermineDeletedLines() {
         FreeStyleProject job = createJobWithReferenceRecorder();
-        GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         FilteredLog log = createLog();
 
         String content = "Test\nTest3\nTest";
@@ -275,6 +302,7 @@ class GitDeltaCalculatorITest extends GitITest {
         commitFile(modified);
         Run<?, ?> build = buildSuccessfully(job);
 
+        GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
         assertThat(result).isNotEmpty();
 
@@ -296,8 +324,6 @@ class GitDeltaCalculatorITest extends GitITest {
     @Test
     void shouldDetermineAllChangeTypesTogether() {
         FreeStyleProject job = createJobWithReferenceRecorder();
-        GitDeltaCalculator deltaCalculator = createDeltaCalculator();
-        FilteredLog log = createLog();
 
         String content = "Test1\nTest2\nTest3\nTest4";
         String newContent = "Modified\nTest2\nInserted\nTest3";
@@ -306,6 +332,8 @@ class GitDeltaCalculatorITest extends GitITest {
         commitFile(newContent);
         Run<?, ?> build = buildSuccessfully(job);
 
+        FilteredLog log = createLog();
+        GitDeltaCalculator deltaCalculator = createDeltaCalculator();
         Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
         assertThat(result).isNotEmpty();
 
