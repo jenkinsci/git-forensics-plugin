@@ -17,11 +17,16 @@
     <f:number default="100"/>
   </f:entry>
 
-  <f:entry field="skipUnknownCommits">
-    <f:checkbox title="${%title.skipUnknownCommits}"/>
+  <f:entry field="skipUnknownCommits" title="${%title.skipUnknownCommits}">
+    <f:checkbox />
   </f:entry>
 
-  <f:entry field="latestBuildIfNotFound">
-    <f:checkbox title="${%title.latestBuildIfNotFound}"/>
+  <f:entry field="latestBuildIfNotFound" title="${%title.latestBuildIfNotFound}">
+    <f:checkbox />
   </f:entry>
+
+  <f:entry title="${%title.considerRunningBuild}" field="considerRunningBuild">
+    <f:checkbox />
+  </f:entry>
+
 </j:jelly>
