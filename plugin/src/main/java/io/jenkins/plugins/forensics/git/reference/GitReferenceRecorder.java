@@ -12,7 +12,6 @@ import org.kohsuke.stapler.DataBoundSetter;
 import org.jenkinsci.Symbol;
 import hudson.Extension;
 import hudson.model.Run;
-import jenkins.scm.api.SCMHead;
 
 import io.jenkins.plugins.forensics.reference.ReferenceRecorder;
 import io.jenkins.plugins.util.JenkinsFacade;
@@ -78,8 +77,7 @@ public class GitReferenceRecorder extends ReferenceRecorder {
     @Override
     protected Optional<Run<?, ?>> find(final Run<?, ?> owner, final Run<?, ?> lastCompletedBuildOfReferenceJob,
             final FilteredLog log) {
-        Optional<GitCommitsRecord> referenceCommit
-                = GitCommitsRecord.findRecordForScm(lastCompletedBuildOfReferenceJob, getScm());
+        var referenceCommit = GitCommitsRecord.findRecordForScm(lastCompletedBuildOfReferenceJob, getScm());
 
         Optional<Run<?, ?>> referenceBuild;
         if (referenceCommit.isPresent()) {
@@ -95,7 +93,7 @@ public class GitReferenceRecorder extends ReferenceRecorder {
             return referenceBuild;
         }
 
-        Optional<SCMHead> targetBranchHead = findTargetBranchHead(owner.getParent());
+        var targetBranchHead = findTargetBranchHead(owner.getParent());
         if (targetBranchHead.isPresent()) {
             log.logInfo("-> falling back to latest build '%s' since a pull or merge request has been detected",
                     lastCompletedBuildOfReferenceJob.getDisplayName());
@@ -108,13 +106,12 @@ public class GitReferenceRecorder extends ReferenceRecorder {
 
     private Optional<Run<?, ?>> findByCommits(final Run<?, ?> owner, final GitCommitsRecord referenceCommit,
             final FilteredLog log) {
-        Optional<GitCommitsRecord> ownerCommits = GitCommitsRecord.findRecordForScm(owner, getScm());
+        var ownerCommits = GitCommitsRecord.findRecordForScm(owner, getScm());
         if (ownerCommits.isPresent()) {
-            GitCommitsRecord commitsRecord = ownerCommits.get();
-            Optional<Run<?, ?>> referencePoint = commitsRecord.getReferencePoint(
-                    referenceCommit, getMaxCommits(), isSkipUnknownCommits(), log);
+            var commitsRecord = ownerCommits.get();
+            var referencePoint = commitsRecord.getReferencePoint(referenceCommit, getMaxCommits(), isSkipUnknownCommits(), log);
             if (referencePoint.isPresent()) {
-                Run<?, ?> referenceBuild = referencePoint.get();
+                var referenceBuild = referencePoint.get();
                 log.logInfo("-> found build '%s' in reference job with matching commits",
                         referenceBuild.getDisplayName());
 
