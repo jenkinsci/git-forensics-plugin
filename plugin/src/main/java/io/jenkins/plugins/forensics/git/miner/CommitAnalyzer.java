@@ -3,6 +3,7 @@ package io.jenkins.plugins.forensics.git.miner;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
@@ -62,11 +63,11 @@ class CommitAnalyzer {
     private String getAuthor(final RevCommit commit) {
         PersonIdent author = commit.getAuthorIdent();
         if (author != null) {
-            return StringUtils.defaultString(author.getEmailAddress(), author.getName());
+            return Objects.toString(author.getEmailAddress(), author.getName());
         }
         PersonIdent committer = commit.getCommitterIdent();
         if (committer != null) {
-            return StringUtils.defaultString(committer.getEmailAddress(), committer.getName());
+            return Objects.toString(committer.getEmailAddress(), committer.getName());
         }
         return StringUtils.EMPTY;
     }
@@ -101,6 +102,11 @@ class CommitAnalyzer {
             }
             walk.dispose();
             return treeParser;
+        }
+        catch (IOException e) {
+            logger.logError("Could not create tree iterator for commit ID " + commitId, e);
+
+            return new EmptyTreeIterator();
         }
     }
 }
