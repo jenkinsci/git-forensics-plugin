@@ -64,6 +64,7 @@ public class GitDeltaCalculator extends DeltaCalculator {
                     RemoteResultWrapper<Delta> wrapped = git.withRepository(
                             new DeltaRepositoryCallback(currentCommit, referenceCommit));
                     wrapped.getInfoMessages().forEach(log::logInfo);
+                    wrapped.getErrorMessages().forEach(log::logError);
                     return Optional.of(wrapped.getResult());
                 }
                 catch (IOException | InterruptedException exception) {
@@ -77,12 +78,12 @@ public class GitDeltaCalculator extends DeltaCalculator {
     }
 
     /**
-     * Returns the latest commit of the {@link GitCommitsRecord commits record} of a Git repository.
+     * Returns the latest commit of the {@link GitCommitsRecord commit record} of a Git repository.
      *
      * @param buildName
      *         the name of the build the commits record corresponds to
      * @param record
-     *         the commits record
+     *         the commit record
      * @param log
      *         the log
      *

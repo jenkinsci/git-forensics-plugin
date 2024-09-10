@@ -7,9 +7,11 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
+import org.junitpioneer.jupiter.Issue;
 
 import edu.hm.hafner.util.FilteredLog;
 
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import hudson.model.FreeStyleProject;
 import hudson.model.Run;
 import hudson.plugins.git.GitSCM;
@@ -34,32 +36,58 @@ class GitDeltaCalculatorITest extends GitITest {
     private static final String EMPTY_SCM_KEY = "";
     private static final String EMPTY_FILE_PATH = "";
 
+    private static final String GIT_FORENSICS_URL = "https://github.com/jenkinsci/git-forensics-plugin.git";
+    private static final String GIT_FORENSICS_COMMIT = "86503e8bc0374e05e2cd32ed3bb8b4435d5fd757";
+
+    @Test @Issue("JENKINS-73297")
+    void shouldShowErrorIfCommitIsNotFound() {
+        WorkflowJob job = createPipeline();
+        job.setDefinition(asStage("checkout([$class: 'GitSCM', "
+                + "branches: [[name: '" + GIT_FORENSICS_COMMIT + "' ]],\n"
+                + "userRemoteConfigs: [[url: '" + GIT_FORENSICS_URL + "']],\n"
+                + "extensions: [[$class: 'RelativeTargetDirectory', \n"
+                + "            relativeTargetDir: '" + GIT_FORENSICS_COMMIT + "']]])"));
+
+        var build = buildSuccessfully(job);
+        var deltaCalculator = createDeltaCalculator();
+
+        var log = createLog();
+        var result = deltaCalculator.calculateDelta(build, build, EMPTY_SCM_KEY, log);
+        assertThat(result).isNotEmpty();
+
+        assertThat(log.getInfoMessages())
+                .contains("-> Invoking Git delta calculator for determining the changes between commits '86503e8' and '86503e8'");
+        assertThat(log.getErrorMessages())
+                .contains("Could not find the specified commit - is the SCM parameter correctly set?",
+                        "org.eclipse.jgit.errors.MissingObjectException: Missing unknown 86503e8bc0374e05e2cd32ed3bb8b4435d5fd757");
+    }
+
     @Test
     void shouldCreateEmptyDeltaIfCommitsAreInvalid() {
-        GitDeltaCalculator deltaCalculator = createDeltaCalculator();
+        var deltaCalculator = createDeltaCalculator();
 
-        FilteredLog log = createLog();
+        var log = createLog();
         assertThat(deltaCalculator.calculateDelta(mock(Run.class), mock(Run.class), EMPTY_SCM_KEY, log)).isEmpty();
     }
 
     @Test
     void shouldCreateDiffFile() {
-        FreeStyleProject job = createJobWithReferenceRecorder();
+        var job = createJobWithReferenceRecorder();
+        var referenceBuild = buildSuccessfully(job);
 
-        GitDeltaCalculator deltaCalculator = createDeltaCalculator();
-        FilteredLog log = createLog();
-
-        Run<?, ?> referenceBuild = buildSuccessfully(job);
         String referenceCommit = getHead();
         String fileName = "newFile";
         String content = "content";
         writeFile(fileName, content);
         addFile(fileName);
         commit("test");
-        Run<?, ?> build = buildSuccessfully(job);
+
+        var build = buildSuccessfully(job);
         String currentCommit = getHead();
 
-        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
+        var log = createLog();
+        var deltaCalculator = createDeltaCalculator();
+        var result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
         assertThat(result).isNotEmpty();
 
         Delta delta = result.get();
@@ -80,144 +108,126 @@ class GitDeltaCalculatorITest extends GitITest {
                         assertThat(fileChanges.getModifiedLines()).containsExactly(1));
     }
 
-    /**
-     * An added file should be determined.
-     */
     @Test
     void shouldDetermineAddedFile() {
-        FreeStyleProject job = createJobWithReferenceRecorder();
-        GitDeltaCalculator deltaCalculator = createDeltaCalculator();
-        FilteredLog log = createLog();
-
-        Run<?, ?> referenceBuild = buildSuccessfully(job);
+        var job = createJobWithReferenceRecorder();
+        var referenceBuild = buildSuccessfully(job);
 
         String newFileName = "newFile";
         String content = "added";
         writeFile(newFileName, content);
         addFile(newFileName);
         commit("test");
-        Run<?, ?> build = buildSuccessfully(job);
 
-        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
+        var build = buildSuccessfully(job);
+
+        var log = createLog();
+        var deltaCalculator = createDeltaCalculator();
+        var result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
+
         assertThat(result).isNotEmpty();
 
-        Delta delta = result.get();
-        FileChanges fileChanges = getSingleFileChanges(delta);
+        var fileChanges = getSingleFileChanges(result.get());
         assertThat(fileChanges.getModifiedLines()).containsExactly(1);
-
         assertThat(fileChanges.getFileName()).isEqualTo(newFileName);
         assertThat(fileChanges.getOldFileName()).isEqualTo(EMPTY_FILE_PATH);
         assertThat(fileChanges.getFileEditType()).isEqualTo(FileEditType.ADD);
         assertThat(fileChanges.getFileContent()).isEqualTo(content);
     }
 
-    /**
-     * A modified file should be determined.
-     */
     @Test
     void shouldDetermineModifiedFile() {
-        FreeStyleProject job = createJobWithReferenceRecorder();
-        GitDeltaCalculator deltaCalculator = createDeltaCalculator();
-        FilteredLog log = createLog();
+        var job = createJobWithReferenceRecorder();
 
         String content = "modified";
         commitFile("test");
-        Run<?, ?> referenceBuild = buildSuccessfully(job);
-        commitFile(content);
-        Run<?, ?> build = buildSuccessfully(job);
 
-        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
+        var referenceBuild = buildSuccessfully(job);
+        commitFile(content);
+
+        var build = buildSuccessfully(job);
+
+        var log = createLog();
+        var deltaCalculator = createDeltaCalculator();
+        var result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
         assertThat(result).isNotEmpty();
 
-        Delta delta = result.get();
-        FileChanges fileChanges = getSingleFileChanges(delta);
+        var fileChanges = getSingleFileChanges(result.get());
         assertThat(fileChanges.getModifiedLines()).containsExactly(1);
-
         assertThat(fileChanges.getFileName()).isEqualTo(INITIAL_FILE);
         assertThat(fileChanges.getOldFileName()).isEqualTo(INITIAL_FILE);
         assertThat(fileChanges.getFileEditType()).isEqualTo(FileEditType.MODIFY);
         assertThat(fileChanges.getFileContent()).isEqualTo(content);
     }
 
-    /**
-     * A deleted file should be determined.
-     */
     @Test
     void shouldDetermineDeletedFile() {
-        FreeStyleProject job = createJobWithReferenceRecorder();
-        GitDeltaCalculator deltaCalculator = createDeltaCalculator();
-        FilteredLog log = createLog();
+        var job = createJobWithReferenceRecorder();
 
         String content = "content";
         commitFile(content);
-        Run<?, ?> referenceBuild = buildSuccessfully(job);
+        var referenceBuild = buildSuccessfully(job);
         git("rm", INITIAL_FILE);
         commit("test");
-        Run<?, ?> build = buildSuccessfully(job);
 
-        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
+        var build = buildSuccessfully(job);
+
+        var log = createLog();
+        var deltaCalculator = createDeltaCalculator();
+        var result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
         assertThat(result).isNotEmpty();
 
-        Delta delta = result.get();
-        FileChanges fileChanges = getSingleFileChanges(delta);
+        var fileChanges = getSingleFileChanges(result.get());
         assertThat(fileChanges.getModifiedLines()).isEmpty();
-
         assertThat(fileChanges.getFileName()).isEqualTo(EMPTY_FILE_PATH);
         assertThat(fileChanges.getOldFileName()).isEqualTo(INITIAL_FILE);
         assertThat(fileChanges.getFileEditType()).isEqualTo(FileEditType.DELETE);
         assertThat(fileChanges.getFileContent()).isEqualTo(content);
     }
 
-    /**
-     * A renamed file should be determined.
-     */
     @Test
     void shouldDetermineRenamedFile() {
-        FreeStyleProject job = createJobWithReferenceRecorder();
-        GitDeltaCalculator deltaCalculator = createDeltaCalculator();
-        FilteredLog log = createLog();
+        var job = createJobWithReferenceRecorder();
 
         String content = "content";
         commitFile(content);
-        Run<?, ?> referenceBuild = buildSuccessfully(job);
+        var referenceBuild = buildSuccessfully(job);
         git("rm", INITIAL_FILE);
         writeFileAsAuthorFoo(content);
-        Run<?, ?> build = buildSuccessfully(job);
 
-        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
+        var build = buildSuccessfully(job);
+
+        var log = createLog();
+        var deltaCalculator = createDeltaCalculator();
+        var result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
         assertThat(result).isNotEmpty();
 
-        Delta delta = result.get();
-        FileChanges fileChanges = getSingleFileChanges(delta);
+        var fileChanges = getSingleFileChanges(result.get());
         assertThat(fileChanges.getModifiedLines()).isEmpty();
-
         assertThat(fileChanges.getFileName()).isEqualTo(ADDITIONAL_FILE);
         assertThat(fileChanges.getOldFileName()).isEqualTo(INITIAL_FILE);
         assertThat(fileChanges.getFileEditType()).isEqualTo(FileEditType.RENAME);
         assertThat(fileChanges.getFileContent()).isEqualTo(content);
     }
 
-    /**
-     * Added lines within a specific file should be determined.
-     */
     @Test
     void shouldDetermineAddedLines() {
-        FreeStyleProject job = createJobWithReferenceRecorder();
-        GitDeltaCalculator deltaCalculator = createDeltaCalculator();
-        FilteredLog log = createLog();
+        var job = createJobWithReferenceRecorder();
 
         String content = "Test\nTest\n";
         String insertedContent = "Test\nInsert1\nInsert2\nTest\n";
         commitFile(content);
-        Run<?, ?> referenceBuild = buildSuccessfully(job);
+        var referenceBuild = buildSuccessfully(job);
         commitFile(insertedContent);
-        Run<?, ?> build = buildSuccessfully(job);
 
-        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
+        var build = buildSuccessfully(job);
+
+        var log = createLog();
+        var deltaCalculator = createDeltaCalculator();
+        var result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
         assertThat(result).isNotEmpty();
 
-        Delta delta = result.get();
-        FileChanges fileChanges = getSingleFileChanges(delta);
+        var fileChanges = getSingleFileChanges(result.get());
         assertThat(fileChanges.getModifiedLines()).containsExactly(2, 3);
 
         Change change = getSingleChangeOfType(fileChanges, ChangeEditType.INSERT);
@@ -228,27 +238,24 @@ class GitDeltaCalculatorITest extends GitITest {
         assertThat(change.getToLine()).isEqualTo(3);
     }
 
-    /**
-     * Modified lines within a specific file should be determined.
-     */
     @Test
     void shouldDetermineModifiedLines() {
-        FreeStyleProject job = createJobWithReferenceRecorder();
-        GitDeltaCalculator deltaCalculator = createDeltaCalculator();
-        FilteredLog log = createLog();
+        var job = createJobWithReferenceRecorder();
 
         String content = "Test\nTest\nTest\nTest";
         String modified = "Test\nModified\nModified2\nTest";
         commitFile(content);
-        Run<?, ?> referenceBuild = buildSuccessfully(job);
+        var referenceBuild = buildSuccessfully(job);
         commitFile(modified);
-        Run<?, ?> build = buildSuccessfully(job);
 
-        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
+        var build = buildSuccessfully(job);
+
+        var log = createLog();
+        var deltaCalculator = createDeltaCalculator();
+        var result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
         assertThat(result).isNotEmpty();
 
-        Delta delta = result.get();
-        FileChanges fileChanges = getSingleFileChanges(delta);
+        var fileChanges = getSingleFileChanges(result.get());
         assertThat(fileChanges.getModifiedLines()).containsExactly(2, 3);
 
         Change change = getSingleChangeOfType(fileChanges, ChangeEditType.REPLACE);
@@ -259,27 +266,25 @@ class GitDeltaCalculatorITest extends GitITest {
         assertThat(change.getToLine()).isEqualTo(3);
     }
 
-    /**
-     * Deleted lines within a specific file should be determined.
-     */
     @Test
     void shouldDetermineDeletedLines() {
-        FreeStyleProject job = createJobWithReferenceRecorder();
-        GitDeltaCalculator deltaCalculator = createDeltaCalculator();
-        FilteredLog log = createLog();
+        var job = createJobWithReferenceRecorder();
 
         String content = "Test\nTest3\nTest";
         String modified = "Test\nTest";
         commitFile(content);
-        Run<?, ?> referenceBuild = buildSuccessfully(job);
+        var referenceBuild = buildSuccessfully(job);
         commitFile(modified);
-        Run<?, ?> build = buildSuccessfully(job);
 
-        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
+        var build = buildSuccessfully(job);
+
+        var log = createLog();
+        var deltaCalculator = createDeltaCalculator();
+        var result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
         assertThat(result).isNotEmpty();
 
         Delta delta = result.get();
-        FileChanges fileChanges = getSingleFileChanges(delta);
+        var fileChanges = getSingleFileChanges(delta);
         assertThat(fileChanges.getModifiedLines()).isEmpty();
 
         Change change = getSingleChangeOfType(fileChanges, ChangeEditType.DELETE);
@@ -290,27 +295,24 @@ class GitDeltaCalculatorITest extends GitITest {
         assertThat(change.getToLine()).isEqualTo(1);
     }
 
-    /**
-     * Added, modified and deleted lines within a specific file should be determined properly together.
-     */
     @Test
     void shouldDetermineAllChangeTypesTogether() {
-        FreeStyleProject job = createJobWithReferenceRecorder();
-        GitDeltaCalculator deltaCalculator = createDeltaCalculator();
-        FilteredLog log = createLog();
+        var job = createJobWithReferenceRecorder();
 
         String content = "Test1\nTest2\nTest3\nTest4";
         String newContent = "Modified\nTest2\nInserted\nTest3";
         commitFile(content);
-        Run<?, ?> referenceBuild = buildSuccessfully(job);
+        var referenceBuild = buildSuccessfully(job);
         commitFile(newContent);
-        Run<?, ?> build = buildSuccessfully(job);
 
-        Optional<Delta> result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
+        var build = buildSuccessfully(job);
+
+        var log = createLog();
+        var deltaCalculator = createDeltaCalculator();
+        var result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
         assertThat(result).isNotEmpty();
 
-        Delta delta = result.get();
-        FileChanges fileChanges = getSingleFileChanges(delta);
+        var fileChanges = getSingleFileChanges(result.get());
         assertThat(fileChanges.getModifiedLines()).containsExactly(1, 3);
 
         Change replace = getSingleChangeOfType(fileChanges, ChangeEditType.REPLACE);
@@ -410,7 +412,7 @@ class GitDeltaCalculatorITest extends GitITest {
      */
     private FreeStyleProject createJobWithReferenceRecorder() {
         try {
-            FreeStyleProject job = createFreeStyleProject();
+            var job = createFreeStyleProject();
             job.setScm(new GitSCM(getRepositoryRoot()));
             job.getPublishersList().add(new GitReferenceRecorder());
             return job;

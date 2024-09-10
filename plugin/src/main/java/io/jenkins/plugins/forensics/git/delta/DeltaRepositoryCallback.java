@@ -129,7 +129,8 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
             GitDelta delta = new GitDelta(currentCommitId, referenceCommitId, Map.of(), exception.getMessage());
             RemoteResultWrapper<Delta> wrapper = new RemoteResultWrapper<>(delta, "Errors from Git Delta:");
 
-            wrapper.logError("Could not find commit", exception);
+            wrapper.logException(exception, "Could not find the specified commit - is the SCM parameter correctly set?");
+
             return wrapper;
         }
     }
