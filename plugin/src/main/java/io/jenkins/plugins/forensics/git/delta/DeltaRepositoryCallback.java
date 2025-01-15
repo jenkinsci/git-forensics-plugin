@@ -3,6 +3,7 @@ package io.jenkins.plugins.forensics.git.delta;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -196,7 +197,8 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
 
         diffFormatter.format(diffEntry);
 
-        FileChanges fileChanges = new FileChanges(filePath, oldFilePath, fileContent, fileEditType, new HashMap<>());
+        FileChanges fileChanges = new FileChanges(filePath, oldFilePath, fileContent, fileEditType,
+                new EnumMap<>(ChangeEditType.class));
 
         for (Edit edit : diffFormatter.toFileHeader(diffEntry).toEditList()) {
             createChange(edit).ifPresent(fileChanges::addChange);
