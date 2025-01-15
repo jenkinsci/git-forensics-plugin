@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jvnet.hudson.plugins</groupId>
     <artifactId>analysis-pom</artifactId>
-    <version>8.4.0</version>
+    <version>10.2.0</version>
     <relativePath />
   </parent>
 
@@ -18,7 +18,7 @@
   <url>https://github.com/jenkinsci/git-forensics-plugin</url>
 
   <properties>
-    <revision>2.3.0</revision>
+    <revision>3.0.0</revision>
     <changelist>-SNAPSHOT</changelist>
 
     <module.name>${project.groupId}.git.forensics</module.name>
@@ -75,6 +75,7 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>plugin-util-api</artifactId>
+      <version>6.0.0-rc1031.7a_4203d33c1f</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
