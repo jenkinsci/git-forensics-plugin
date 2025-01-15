@@ -17,10 +17,10 @@ import com.cloudbees.hudson.plugins.folder.computed.FolderComputation;
 
 import edu.hm.hafner.util.PathUtil;
 
-import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
+import hudson.model.Descriptor.FormException;
 import hudson.model.Result;
 import hudson.model.Run;
 import jenkins.branch.BranchProperty;
@@ -72,13 +72,13 @@ class GitReferenceRecorderITest extends GitITest {
      */
     @Test
     @Issue("JENKINS-64545")
-    void shouldHandleJobsWithoutGitGracefully() {
+    void shouldHandleJobsWithoutGitGracefully() throws FormException {
         WorkflowJob job = createPipeline("no-git");
 
-        job.setDefinition(new CpsFlowDefinition("node {}", true));
+        job.setDefinition(createPipelineScript("node {}"));
         buildSuccessfully(job);
 
-        job.setDefinition(new CpsFlowDefinition("node {discoverGitReferenceBuild(referenceJob: 'no-git')}", true));
+        job.setDefinition(createPipelineScript("node {discoverGitReferenceBuild(referenceJob: 'no-git')}"));
         buildSuccessfully(job);
 
         assertThat(getConsoleLog(job.getLastBuild())).contains(NOT_FOUND_MESSAGE);

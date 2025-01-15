@@ -189,7 +189,6 @@ class GitBlamer extends Blamer {
                 log.logException(exception, "- error running git blame on '%s' with revision '%s'",
                         relativePath, headCommit);
             }
-            log.logSummary();
         }
 
         private void fillWithBlameResult(final String fileName, final FileBlame fileBlame, final BlameResult blame,
