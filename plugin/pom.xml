@@ -75,7 +75,7 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>plugin-util-api</artifactId>
-      <version>6.0.0-rc1031.7a_4203d33c1f</version>
+      <version>6.0.0-rc1032.7b_1a_930a_1e66</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
