@@ -12,15 +12,12 @@
   <groupId>io.jenkins.plugins</groupId>
   <packaging>hpi</packaging>
   <name>Git Forensics Plugin</name>
-  <version>${revision}${changelist}</version>
+  <version>3.1.0-SNAPSHOT</version>
 
   <description>Jenkins plug-in that mines and analyzes data from a Git repository.</description>
   <url>https://github.com/jenkinsci/git-forensics-plugin</url>
 
   <properties>
-    <revision>3.1.0</revision>
-    <changelist>-SNAPSHOT</changelist>
-
     <module.name>${project.groupId}.git.forensics</module.name>
 
     <!-- Library Dependencies Versions -->
