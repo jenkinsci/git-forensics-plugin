@@ -1,5 +1,6 @@
 package io.jenkins.plugins.forensics.git.reference;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.lib.ObjectId;
 
 import edu.hm.hafner.util.FilteredLog;
@@ -40,8 +41,9 @@ public class GitCommitsRecord implements RunAction2, Serializable {
      * @return the record with the commits if found, {@link Optional#empty()} otherwise
      */
     public static Optional<GitCommitsRecord> findRecordForScm(final Run<?, ?> build, final String scmKey) {
-        return build.getActions(GitCommitsRecord.class)
-                .stream().filter(record -> record.getScmKey().contains(scmKey)).findAny();
+        return build.getActions(GitCommitsRecord.class).stream()
+                .filter(record -> StringUtils.containsIgnoreCase(record.getScmKey(), scmKey))
+                .findAny();
     }
 
     private transient Run<?, ?> owner;
