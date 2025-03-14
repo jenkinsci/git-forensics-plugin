@@ -16,7 +16,7 @@ import io.jenkins.plugins.forensics.blame.BlamerFactory;
 import io.jenkins.plugins.forensics.git.util.GitRepositoryValidator;
 
 /**
- * A {@link BlamerFactory} for Git. Handles Git repositories that do not have option ShallowClone set.
+ * A {@link BlamerFactory} for Git. Handles Git repositories that do not have the option ShallowClone set.
  *
  * @author Ullrich Hafner
  */

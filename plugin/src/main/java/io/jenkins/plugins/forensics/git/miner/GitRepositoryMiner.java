@@ -4,6 +4,7 @@ import edu.hm.hafner.util.FilteredLog;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.io.IOException;
+import java.io.Serial;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -27,6 +28,7 @@ import io.jenkins.plugins.forensics.miner.RepositoryStatistics;
  */
 @SuppressFBWarnings(value = "SE", justification = "GitClient implementation is Serializable")
 public class GitRepositoryMiner extends RepositoryMiner {
+    @Serial
     private static final long serialVersionUID = 1157958118716013983L;
 
     private final GitClient gitClient;

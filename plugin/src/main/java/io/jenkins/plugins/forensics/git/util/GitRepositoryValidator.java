@@ -84,7 +84,7 @@ public class GitRepositoryValidator {
             }
         }
         catch (InterruptedException | GitException e) {
-            // ignore and skip working tree
+            // ignore and skip the working tree
         }
 
         logger.logInfo("Exception while creating a GitClient instance for work tree '%s'", workTree);

@@ -10,6 +10,7 @@ import org.eclipse.jgit.revwalk.RevWalk;
 import edu.hm.hafner.util.FilteredLog;
 
 import java.io.IOException;
+import java.io.Serial;
 
 import hudson.remoting.VirtualChannel;
 
@@ -18,9 +19,10 @@ import io.jenkins.plugins.forensics.git.util.GitCommitTextDecorator;
 import io.jenkins.plugins.forensics.git.util.RemoteResultWrapper;
 
 /**
- * Collects and records all commits since the last build.
+ * Collects all the commits since the last build.
  */
 class GitCommitsCollector extends AbstractRepositoryCallback<RemoteResultWrapper<BuildCommits>> {
+    @Serial
     private static final long serialVersionUID = -5980402198857923793L;
 
     private static final GitCommitTextDecorator DECORATOR = new GitCommitTextDecorator();

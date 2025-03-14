@@ -242,20 +242,13 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
      * @return the transformed general type
      */
     private FileEditType getFileEditType(final ChangeType type) {
-        switch (type) {
-            case ADD:
-                return FileEditType.ADD;
-            case DELETE:
-                return FileEditType.DELETE;
-            case MODIFY:
-                return FileEditType.MODIFY;
-            case RENAME:
-                return FileEditType.RENAME;
-            case COPY:
-                return FileEditType.COPY;
-            default:
-                throw new IllegalArgumentException(String.format(ERROR_MESSAGE_UNKNOWN_FILE_EDIT_TYPE, type));
-        }
+        return switch (type) {
+            case ADD -> FileEditType.ADD;
+            case DELETE -> FileEditType.DELETE;
+            case MODIFY -> FileEditType.MODIFY;
+            case RENAME -> FileEditType.RENAME;
+            case COPY -> FileEditType.COPY;
+        };
     }
 
     /**
@@ -267,18 +260,12 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
      * @return the transformed general type
      */
     private ChangeEditType getChangeEditType(final Edit.Type type) {
-        switch (type) {
-            case INSERT:
-                return ChangeEditType.INSERT;
-            case DELETE:
-                return ChangeEditType.DELETE;
-            case REPLACE:
-                return ChangeEditType.REPLACE;
-            case EMPTY:
-                return ChangeEditType.EMPTY;
-            default:
-                throw new IllegalArgumentException(String.format(ERROR_MESSAGE_UNKNOWN_CHANGE_TYPE, type));
-        }
+        return switch (type) {
+            case INSERT -> ChangeEditType.INSERT;
+            case DELETE -> ChangeEditType.DELETE;
+            case REPLACE -> ChangeEditType.REPLACE;
+            case EMPTY -> ChangeEditType.EMPTY;
+        };
     }
 
     /**
@@ -287,7 +274,7 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
      * @param edit
      *         The edit to be processed
      *
-     * @return the created change as an Optional if there is a edit which is not empty
+     * @return the created change if there is an edit that is not empty, or an empty optional otherwise
      */
     private Optional<Change> createChange(final Edit edit) {
         var changeEditType = getChangeEditType(edit.getType());

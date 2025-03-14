@@ -37,6 +37,16 @@ class GitDeltaCalculatorITest extends GitITest {
 
     private static final String GIT_FORENSICS_URL = "https://github.com/jenkinsci/git-forensics-plugin.git";
     private static final String GIT_FORENSICS_COMMIT = "86503e8bc0374e05e2cd32ed3bb8b4435d5fd757";
+    private static final String DIFF_OUTPUT = """
+            diff --git a/newFile b/newFile
+            new file mode 100644
+            index 0000000..6b584e8
+            --- /dev/null
+            +++ b/newFile
+            @@ -0,0 +1 @@
+            +content
+            \\ No newline at end of file
+            """;
 
     @Test @Issue("JENKINS-73297")
     void shouldShowErrorIfCommitIsNotFound() {
@@ -93,17 +103,7 @@ class GitDeltaCalculatorITest extends GitITest {
         assertThat(delta).hasCurrentCommit(currentCommit);
         assertThat(delta).hasReferenceCommit(referenceCommit);
         assertThat(delta).isInstanceOfSatisfying(GitDelta.class,
-                gitDelta -> assertThat(gitDelta.getDiffFile()).isEqualTo(
-                        """
-                        diff --git a/newFile b/newFile
-                        new file mode 100644
-                        index 0000000..6b584e8
-                        --- /dev/null
-                        +++ b/newFile
-                        @@ -0,0 +1 @@
-                        +content
-                        \\ No newline at end of file
-                        """));
+                gitDelta -> assertThat(gitDelta.getDiffFile()).isEqualTo(DIFF_OUTPUT));
         assertThat(delta.getFileChangesMap().values()).hasSize(1)
                 .first().satisfies(fileChanges ->
                         assertThat(fileChanges.getModifiedLines()).containsExactly(1));
@@ -340,7 +340,7 @@ class GitDeltaCalculatorITest extends GitITest {
 
     /**
      * Gets the first {@link Change} of a specific {@link ChangeEditType} within a file when there is only a single
-     * change and checks if the found values are properly.
+     * change and checks if the found values are proper.
      *
      * @param fileChanges
      *         The changes within a file
@@ -407,7 +407,7 @@ class GitDeltaCalculatorITest extends GitITest {
     }
 
     /**
-     * Creates a {@link FreeStyleProject} which contains a {@link GitReferenceRecorder} within the publishers list.
+     * Creates a {@link FreeStyleProject} which contains a {@link GitReferenceRecorder} within the publisher list.
      *
      * @return the created project
      */

@@ -23,7 +23,7 @@ import io.jenkins.plugins.forensics.git.util.RemoteResultWrapper;
 import io.jenkins.plugins.util.LogHandler;
 
 /**
- * Tracks all commits since the last build and writes them into a {@link GitCommitsRecord} action to be accessed
+ * Tracks all the commits since the last build and writes them into a {@link GitCommitsRecord} action to be accessed
  * later. This listener is called on every checkout of a Git Repository in a Jenkins build.
  *
  * @author Arne Schöntag

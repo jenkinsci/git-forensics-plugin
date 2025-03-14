@@ -15,6 +15,7 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.io.IOException;
+import java.io.Serial;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
 
@@ -44,6 +45,7 @@ import io.jenkins.plugins.forensics.git.util.RemoteResultWrapper;
 // TODO: Blame needs only run for new warnings
 @SuppressFBWarnings(value = "SE", justification = "GitClient implementation is Serializable")
 class GitBlamer extends Blamer {
+    @Serial
     private static final long serialVersionUID = -619059996626444900L;
 
     static final String NO_HEAD_ERROR = "Could not retrieve HEAD commit, aborting";
@@ -105,6 +107,7 @@ class GitBlamer extends Blamer {
      * Starts the blame commands.
      */
     static class BlameCallback extends AbstractRepositoryCallback<RemoteResultWrapper<Blames>> {
+        @Serial
         private static final long serialVersionUID = 8794666938104738260L;
         private static final int WHOLE_FILE = 0;
 

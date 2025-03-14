@@ -5,6 +5,7 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
 
 import java.io.IOException;
+import java.io.Serial;
 import java.util.ArrayList;
 
 import hudson.remoting.VirtualChannel;
@@ -22,6 +23,7 @@ import io.jenkins.plugins.forensics.miner.CommitDiffItem;
 @SuppressWarnings("PMD.LooseCoupling")
 class RepositoryStatisticsCallback
         extends AbstractRepositoryCallback<RemoteResultWrapper<ArrayList<CommitDiffItem>>> {
+    @Serial
     private static final long serialVersionUID = 7667073858514128136L;
 
     private final String previousCommitId;

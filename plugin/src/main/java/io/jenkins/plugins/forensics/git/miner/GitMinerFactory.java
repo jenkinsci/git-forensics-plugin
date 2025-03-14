@@ -15,7 +15,7 @@ import io.jenkins.plugins.forensics.miner.MinerFactory;
 import io.jenkins.plugins.forensics.miner.RepositoryMiner;
 
 /**
- * A {@link MinerFactory} for Git. Handles Git repositories that do not have option ShallowClone set.
+ * A {@link MinerFactory} for Git. Handles Git repositories that do not have the option ShallowClone set.
  *
  * @author Ullrich Hafner
  */
