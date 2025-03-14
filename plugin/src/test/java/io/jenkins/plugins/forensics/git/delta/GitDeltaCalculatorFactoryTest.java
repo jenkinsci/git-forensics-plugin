@@ -71,8 +71,9 @@ class GitDeltaCalculatorFactoryTest {
 
         assertThat(deltaCalculator).isNotEmpty().containsInstanceOf(GitDeltaCalculator.class);
         assertThat(logger.getErrorMessages()).isEmpty();
-        assertThat(logger.getInfoMessages()).contains(
-                "-> Git delta calculator successfully created in working tree '/working-tree'");
+        assertThat(logger.getInfoMessages())
+                .anyMatch(s -> s.contains("-> Git delta calculator successfully created for SCM 'Mock for GitSCM"))
+                .anyMatch(s -> s.contains("in working tree '/working-tree'"));
     }
 
     @Test
