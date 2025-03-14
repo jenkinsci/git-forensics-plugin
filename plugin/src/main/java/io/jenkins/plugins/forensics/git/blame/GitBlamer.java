@@ -1,16 +1,11 @@
 package io.jenkins.plugins.forensics.git.blame;
 
-import java.io.IOException;
-import java.util.Optional;
-import java.util.stream.StreamSupport;
-
 import org.eclipse.jgit.api.BlameCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.eclipse.jgit.blame.BlameResult;
 import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 
@@ -18,6 +13,10 @@ import edu.hm.hafner.util.FilteredLog;
 import edu.hm.hafner.util.VisibleForTesting;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import java.io.IOException;
+import java.util.Optional;
+import java.util.stream.StreamSupport;
 
 import org.jenkinsci.plugins.gitclient.GitClient;
 import hudson.plugins.git.GitException;
@@ -70,13 +69,13 @@ class GitBlamer extends Blamer {
 
     @Override
     public Blames blame(final FileLocations locations, final FilteredLog log) {
-        Blames blames = new Blames();
+        var blames = new Blames();
         try {
             log.logInfo("Invoking Git blamer to create author and commit information for %d affected files",
                     locations.size());
             log.logInfo("-> GIT_COMMIT env = '%s'", gitCommit);
 
-            ObjectId headCommit = git.revParse(gitCommit);
+            var headCommit = git.revParse(gitCommit);
             if (headCommit == null) {
                 log.logError(NO_HEAD_ERROR);
                 return blames;
@@ -129,15 +128,15 @@ class GitBlamer extends Blamer {
                 log.logInfo("-> Git commit ID = '%s'", headCommit.getName());
                 log.logInfo("-> Git working tree = '%s'", getWorkTree(repository));
 
-                BlameRunner blameRunner = new BlameRunner(repository, headCommit);
-                LastCommitRunner lastCommitRunner = new LastCommitRunner(repository);
+                var blameRunner = new BlameRunner(repository, headCommit);
+                var lastCommitRunner = new LastCommitRunner(repository);
 
-                FileBlameBuilder builder = new FileBlameBuilder();
+                var builder = new FileBlameBuilder();
                 for (String file : locations.getFiles()) {
                     run(builder, file, blameRunner, lastCommitRunner, log);
 
                     if (Thread.interrupted()) { // Cancel request by user
-                        String message = "Blaming has been interrupted while computing blame information";
+                        var message = "Blaming has been interrupted while computing blame information";
                         log.logInfo(message);
 
                         throw new InterruptedException(message);
@@ -168,13 +167,13 @@ class GitBlamer extends Blamer {
         void run(final FileBlameBuilder builder, final String relativePath, final BlameRunner blameRunner,
                 final LastCommitRunner lastCommitRunner, final FilteredLog log) {
             try {
-                BlameResult blame = blameRunner.run(relativePath);
+                var blame = blameRunner.run(relativePath);
                 if (blame == null) {
                     log.logError("- no blame results for file '%s'", relativePath);
                 }
                 else {
                     for (int line : locations.getLines(relativePath)) {
-                        FileBlame fileBlame = builder.build(relativePath);
+                        var fileBlame = builder.build(relativePath);
                         if (line <= 0) {
                             fillWithLastCommit(relativePath, fileBlame, lastCommitRunner);
                         }
@@ -194,7 +193,7 @@ class GitBlamer extends Blamer {
         private void fillWithBlameResult(final String fileName, final FileBlame fileBlame, final BlameResult blame,
                 final int line, final FilteredLog log) {
             int lineIndex = line - 1; // first line is index 0
-            PersonIdent who = blame.getSourceAuthor(lineIndex);
+            var who = blame.getSourceAuthor(lineIndex);
             if (who == null) {
                 who = blame.getSourceCommitter(lineIndex);
             }
@@ -206,7 +205,7 @@ class GitBlamer extends Blamer {
                 fileBlame.setName(line, who.getName());
                 fileBlame.setEmail(line, who.getEmailAddress());
             }
-            RevCommit commit = blame.getSourceCommit(lineIndex);
+            var commit = blame.getSourceCommit(lineIndex);
             if (commit == null) {
                 log.logError("- no commit ID and time found for line %d in file %s", lineIndex, fileName);
             }
@@ -220,9 +219,9 @@ class GitBlamer extends Blamer {
                 final LastCommitRunner lastCommitRunner) throws GitAPIException {
             Optional<RevCommit> commit = lastCommitRunner.run(relativePath);
             if (commit.isPresent()) {
-                RevCommit revCommit = commit.get();
+                var revCommit = commit.get();
                 fileBlame.setCommit(WHOLE_FILE, revCommit.getName());
-                PersonIdent who = revCommit.getAuthorIdent();
+                var who = revCommit.getAuthorIdent();
                 if (who == null) {
                     who = revCommit.getCommitterIdent();
                 }
@@ -248,7 +247,7 @@ class GitBlamer extends Blamer {
 
         @CheckForNull
         BlameResult run(final String fileName) throws GitAPIException {
-            BlameCommand blame = new BlameCommand(repo);
+            var blame = new BlameCommand(repo);
             blame.setFilePath(fileName);
             blame.setStartCommit(headCommit);
             return blame.call();
@@ -266,7 +265,7 @@ class GitBlamer extends Blamer {
         }
 
         Optional<RevCommit> run(final String fileName) throws GitAPIException {
-            try (Git git = new Git(repo)) {
+            try (var git = new Git(repo)) {
                 Iterable<RevCommit> commits = git.log().addPath(fileName).call();
 
                 return StreamSupport.stream(commits.spliterator(), false).findFirst();

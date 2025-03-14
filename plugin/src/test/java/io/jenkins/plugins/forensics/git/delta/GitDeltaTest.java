@@ -1,9 +1,8 @@
 package io.jenkins.plugins.forensics.git.delta;
 
-import java.util.HashMap;
-
 import org.junit.jupiter.api.Test;
 
+import java.util.HashMap;
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 import static org.assertj.core.api.Assertions.*;
@@ -18,7 +17,7 @@ class GitDeltaTest {
 
     @Test
     void testGitDeltaGetters() {
-        GitDelta delta = createGitDelta();
+        var delta = createGitDelta();
 
         assertThat(delta.getDiffFile()).isEqualTo(DIFF_FILE);
     }

@@ -1,15 +1,15 @@
 package io.jenkins.plugins.forensics.git.reference;
 
+import org.eclipse.jgit.lib.ObjectId;
+
+import edu.hm.hafner.util.FilteredLog;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-
-import org.eclipse.jgit.lib.ObjectId;
-
-import edu.hm.hafner.util.FilteredLog;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import hudson.model.Run;
 import hudson.scm.SCM;
@@ -259,7 +259,7 @@ public class GitCommitsRecord implements RunAction2, Serializable {
      */
     Optional<Run<?, ?>> getReferencePoint(final GitCommitsRecord referenceCommits, final int maxCommits,
             final boolean skipUnknownCommits, final FilteredLog logger) {
-        GitCommitTextDecorator textDecorator = new GitCommitTextDecorator();
+        var textDecorator = new GitCommitTextDecorator();
         List<String> branchCommits = collectBranchCommits(maxCommits);
         logger.logInfo("-> detected %d commits in current branch (last one: '%s')",
                 branchCommits.size(), getHeadCommitOf(branchCommits, textDecorator));

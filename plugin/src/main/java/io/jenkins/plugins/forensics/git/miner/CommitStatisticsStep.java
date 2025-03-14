@@ -1,14 +1,14 @@
 package io.jenkins.plugins.forensics.git.miner;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
 import org.apache.commons.lang3.StringUtils;
 
 import edu.hm.hafner.util.FilteredLog;
 import edu.umd.cs.findbugs.annotations.NonNull;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -92,8 +92,8 @@ public class CommitStatisticsStep extends Recorder implements SimpleBuildStep {
     @Override
     public void perform(@NonNull final Run<?, ?> run, @NonNull final FilePath workspace, @NonNull final EnvVars env,
             @NonNull final Launcher launcher, @NonNull final TaskListener listener) throws InterruptedException {
-        LogHandler logHandler = new LogHandler(listener, "Git DiffStats");
-        FilteredLog logger = new FilteredLog("Errors while computing diff statistics");
+        var logHandler = new LogHandler(listener, "Git DiffStats");
+        var logger = new FilteredLog("Errors while computing diff statistics");
 
         logger.logInfo("Analyzing commits to obtain diff statistics for affected repository files");
 
@@ -101,7 +101,7 @@ public class CommitStatisticsStep extends Recorder implements SimpleBuildStep {
             logger.logInfo("-> Checking SCM '%s'", repository.getKey());
             logHandler.log(logger);
 
-            GitRepositoryValidator validator = new GitRepositoryValidator(repository, run, workspace, listener, logger);
+            var validator = new GitRepositoryValidator(repository, run, workspace, listener, logger);
             if (validator.isGitRepository()) {
                 try {
                     computeStats(run, logger, repository, validator);
@@ -146,7 +146,7 @@ public class CommitStatisticsStep extends Recorder implements SimpleBuildStep {
     private void computeStatsBasedOnReferenceBuild(final Run<?, ?> run, final FilteredLog logger, final SCM repository,
             final GitRepositoryValidator validator, final GitCommitsRecord referenceCommits)
             throws IOException, InterruptedException {
-        String latestCommit = referenceCommits.getLatestCommit();
+        var latestCommit = referenceCommits.getLatestCommit();
         Optional<GitCommitsRecord> targetCommits = GitCommitsRecord.findRecordForScm(run, getScm());
         if (targetCommits.isPresent() && targetCommits.get().contains(latestCommit)) {
             logger.logInfo("-> Current branch already contains latest commit '%s' of target branch",
@@ -156,7 +156,7 @@ public class CommitStatisticsStep extends Recorder implements SimpleBuildStep {
             return;
         }
 
-        String ancestor = validator.createClient().withRepository(new MergeBaseSelector(latestCommit));
+        var ancestor = validator.createClient().withRepository(new MergeBaseSelector(latestCommit));
         if (StringUtils.isNotEmpty(ancestor)) {
             logger.logInfo("-> Found best common ancestor '%s' between HEAD and target branch commit '%s'",
                     renderCommit(ancestor), renderCommit(latestCommit));
@@ -175,7 +175,7 @@ public class CommitStatisticsStep extends Recorder implements SimpleBuildStep {
                 previousCompletedBuild);
         Optional<GitCommitsRecord> commitsRecord = GitCommitsRecord.findRecordForScm(previousCompletedBuild, getScm());
         if (commitsRecord.isPresent()) {
-            String latestCommit = commitsRecord.get().getLatestCommit();
+            var latestCommit = commitsRecord.get().getLatestCommit();
             if (StringUtils.isNotEmpty(latestCommit)) {
                 logger.logInfo("-> Found latest previous commit '%s'", renderCommit(latestCommit));
 
@@ -197,7 +197,7 @@ public class CommitStatisticsStep extends Recorder implements SimpleBuildStep {
         logger.merge(wrapped);
         CommitStatistics.logCommits(commits, logger);
 
-        RepositoryStatistics repositoryStatistics = new RepositoryStatistics(ancestor);
+        var repositoryStatistics = new RepositoryStatistics(ancestor);
         repositoryStatistics.addAll(commits);
         run.addAction(new CommitStatisticsBuildAction(run, repository.getKey(),
                 repositoryStatistics.getLatestStatistics()));

@@ -1,9 +1,5 @@
 package io.jenkins.plugins.forensics.git.miner;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.stream.Stream;
-
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.ObjectId;
@@ -12,6 +8,10 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.jupiter.api.Test;
 
 import edu.hm.hafner.util.FilteredLog;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Stream;
 
 import io.jenkins.plugins.forensics.git.util.GitITest;
 
@@ -37,9 +37,9 @@ class CommitCollectorITest extends GitITest {
     /** Verifies that additional commits are recorded and sorted correctly. */
     @Test
     void shouldFindAdditionalCommits() {
-        ObjectId start = getHeadCommit();
+        var start = getHeadCommit();
         writeFileAsAuthorFoo("Middle");
-        ObjectId middle = getHeadCommit();
+        var middle = getHeadCommit();
 
         runTest((repository, git) -> {
             List<RevCommit> actualCommits = findCommits(repository, git, "-");
@@ -48,7 +48,7 @@ class CommitCollectorITest extends GitITest {
         });
 
         writeFileAsAuthorBar("Second");
-        ObjectId head = getHeadCommit();
+        var head = getHeadCommit();
 
         runTest((repository, git) -> {
             List<RevCommit> actualCommits = findCommits(repository, git, "-");
@@ -60,11 +60,11 @@ class CommitCollectorITest extends GitITest {
     /** Verifies that commits are recorded only up to a given commit. */
     @Test
     void shouldFindCommitsUpToGivenCommit() {
-        ObjectId start = getHeadCommit();
+        var start = getHeadCommit();
         writeFileAsAuthorFoo("Middle");
-        ObjectId middle = getHeadCommit();
+        var middle = getHeadCommit();
         writeFileAsAuthorBar("Head");
-        ObjectId head = getHeadCommit();
+        var head = getHeadCommit();
 
         runTest((repository, git) -> {
             List<RevCommit> upToHeadCommits = findCommits(repository, git, start.getName());
@@ -83,7 +83,7 @@ class CommitCollectorITest extends GitITest {
 
     private List<RevCommit> findCommits(final Repository repository, final Git git, final String lastCommitId)
             throws IOException, GitAPIException {
-        CommitCollector collector = new CommitCollector();
+        var collector = new CommitCollector();
 
         return collector.findAllCommits(repository, git, lastCommitId, new FilteredLog("unused"));
     }

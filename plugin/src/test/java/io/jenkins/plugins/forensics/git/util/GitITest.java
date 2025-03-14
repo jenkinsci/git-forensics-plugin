@@ -1,14 +1,5 @@
 package io.jenkins.plugins.forensics.git.util;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -20,6 +11,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.io.TempDir;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.RepositoryCallback;
@@ -201,7 +201,7 @@ public abstract class GitITest extends IntegrationTestWithJenkinsPerTest {
         git("add", file);
         git("config", "user.name", authorName);
         git("config", "user.email", authorEmail);
-        git("commit", String.format("--message=%s", message));
+        git("commit", "--message=%s".formatted(message));
     }
 
     /**
@@ -220,7 +220,7 @@ public abstract class GitITest extends IntegrationTestWithJenkinsPerTest {
      */
     protected GitClient createGitClient() {
         try {
-            GitSCM scm = createGitScm("file:///" + getGitRepository().getBaseDirectory(), Collections.emptyList());
+            var scm = createGitScm("file:///" + getGitRepository().getBaseDirectory(), Collections.emptyList());
             Run<?, ?> run = mock(Run.class);
             Job<?, ?> job = mock(Job.class);
             when(run.getParent()).thenAnswer(i -> job);
@@ -256,9 +256,9 @@ public abstract class GitITest extends IntegrationTestWithJenkinsPerTest {
      */
     protected void runTest(final GitTestCase testCase) {
         try {
-            GitClient gitClient = createGitClient();
+            var gitClient = createGitClient();
             gitClient.withRepository((RepositoryCallback<Void>) (repository, virtualChannel) -> {
-                try (Git git = new Git(repository)) {
+                try (var git = new Git(repository)) {
                     testCase.run(repository, git);
                 }
                 catch (GitAPIException exception) {
@@ -363,7 +363,7 @@ public abstract class GitITest extends IntegrationTestWithJenkinsPerTest {
 
         @SuppressFBWarnings("BC")
         String head() {
-            try (Repository repository = new RepositoryBuilder().setWorkTree(baseDirectory).build()) {
+            try (var repository = new RepositoryBuilder().setWorkTree(baseDirectory).build()) {
                 return repository
                         .resolve("HEAD")
                         .name();

@@ -1,8 +1,5 @@
 package io.jenkins.plugins.forensics.git.miner;
 
-import java.io.IOException;
-import java.util.List;
-
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.treewalk.AbstractTreeIterator;
@@ -11,6 +8,9 @@ import org.junit.jupiter.api.Test;
 
 import edu.hm.hafner.util.FilteredLog;
 import edu.hm.hafner.util.TreeStringBuilder;
+
+import java.io.IOException;
+import java.util.List;
 
 import io.jenkins.plugins.forensics.git.util.GitITest;
 import io.jenkins.plugins.forensics.miner.CommitDiffItem;
@@ -32,7 +32,7 @@ class DiffsCollectorITest extends GitITest {
     @Test
     void shouldInitializeCounter() {
         runTest((repository, git) -> {
-            String head = getHead();
+            var head = getHead();
             List<CommitDiffItem> actualCommits = createDiff(repository, git, head, NULL_ITERATOR);
             assertThat(actualCommits).hasSize(1);
             assertThat(actualCommits.get(0))
@@ -47,11 +47,11 @@ class DiffsCollectorITest extends GitITest {
     /** Verifies that adding lines to the same file works. */
     @Test
     void shouldCountAddedLines() {
-        String firstCommit = getHead();
+        var firstCommit = getHead();
         writeFileAsAuthorBar("First Line\nSecond Line\n");
-        String secondCommit = getHead();
+        var secondCommit = getHead();
         writeFileAsAuthorBar("First Line\nSecond Line\nThird Line\n");
-        String head = getHead();
+        var head = getHead();
 
         runTest((repository, git) -> {
             List<CommitDiffItem> allDeltas = createDiff(repository, git, head, NULL_ITERATOR);
@@ -87,11 +87,11 @@ class DiffsCollectorITest extends GitITest {
     /** Verifies that deleting lines from the same file works. */
     @Test
     void shouldCountDeletedLines() {
-        String firstCommit = getHead();
+        var firstCommit = getHead();
         writeFileAsAuthorBar("First Line\nSecond Line\n");
-        String secondCommit = getHead();
+        var secondCommit = getHead();
         writeFileAsAuthorBar("First Line\n");
-        String head = getHead();
+        var head = getHead();
 
         runTest((repository, git) -> {
             List<CommitDiffItem> allDeltas = createDiff(repository, git, secondCommit, firstCommit);
@@ -118,9 +118,9 @@ class DiffsCollectorITest extends GitITest {
     @Test
     void shouldHandleMultipleSections() {
         writeFileAsAuthorBar("1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n");
-        String secondCommit = getHead();
+        var secondCommit = getHead();
         writeFileAsAuthorBar("1 =====\n3 =====\n5 =====\n");
-        String head = getHead();
+        var head = getHead();
 
         runTest((repository, git) -> {
             List<CommitDiffItem> allDeltas = createDiff(repository, git, head, secondCommit);
@@ -138,12 +138,12 @@ class DiffsCollectorITest extends GitITest {
     @Test
     void shouldHandleRemovedFiles() {
         writeFileAsAuthorBar("1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n");
-        String initialCommit = getHead();
+        var initialCommit = getHead();
         git("rm", ADDITIONAL_FILE);
         commit("Removed file");
 
         runTest((repository, git) -> {
-            String head = getHead();
+            var head = getHead();
             List<CommitDiffItem> allDeltas = createDiff(repository, git, head, initialCommit);
             assertThat(allDeltas).hasSize(1);
             assertThat(allDeltas.get(0))
@@ -159,12 +159,12 @@ class DiffsCollectorITest extends GitITest {
     @Test
     void shouldHandleMovedFiles() {
         writeFileAsAuthorBar("1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n");
-        String initialCommit = getHead();
+        var initialCommit = getHead();
         git("mv", ADDITIONAL_FILE, MOVED_FILE);
         commit("Moved file");
 
         runTest((repository, git) -> {
-            String head = getHead();
+            var head = getHead();
             List<CommitDiffItem> allDeltas = createDiff(repository, git, head, initialCommit);
             assertThat(allDeltas).hasSize(1);
             assertThat(allDeltas.get(0))
@@ -180,7 +180,7 @@ class DiffsCollectorITest extends GitITest {
     @Test
     void shouldHandleMovedAndChangedFiles() {
         writeFileAsAuthorBar("1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n");
-        String initialCommit = getHead();
+        var initialCommit = getHead();
         git("mv", ADDITIONAL_FILE, MOVED_FILE);
         writeFile(MOVED_FILE, "1 =====\n2a =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n2 =====\n3 =====\n4 =====\n5 =====\n");
         commit("Moved and changed file");
@@ -192,7 +192,7 @@ class DiffsCollectorITest extends GitITest {
     @Test
     void shouldHandleChangedAndMovedFiles() {
         writeFileAsAuthorBar("1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n");
-        String initialCommit = getHead();
+        var initialCommit = getHead();
         writeFile(ADDITIONAL_FILE, "1 =====\n2a =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n2 =====\n3 =====\n4 =====\n5 =====\n");
         git("mv", ADDITIONAL_FILE, MOVED_FILE);
         commit("Moved and changed file");
@@ -202,7 +202,7 @@ class DiffsCollectorITest extends GitITest {
 
     private void verifyMovedAndChangedFile(final String initialCommit) {
         runTest((repository, git) -> {
-            String head = getHead();
+            var head = getHead();
             List<CommitDiffItem> allDeltas = createDiff(repository, git, head, initialCommit);
             assertThat(allDeltas).hasSize(1);
             assertThat(allDeltas.get(0))
@@ -222,7 +222,7 @@ class DiffsCollectorITest extends GitITest {
 
     private List<CommitDiffItem> createDiff(final Repository repository, final Git git, final String newCommit,
             final AbstractTreeIterator toTree) {
-        DiffsCollector collector = new DiffsCollector();
+        var collector = new DiffsCollector();
         return collector.getDiffsForCommit(repository, git,
                 new CommitDiffItem(newCommit, AUTHOR, 0),
                 toTree, new TreeStringBuilder(), new FilteredLog("Errors")

@@ -1,17 +1,16 @@
 package io.jenkins.plugins.forensics.git.delta;
 
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.Set;
-
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 import org.junitpioneer.jupiter.Issue;
 
 import edu.hm.hafner.util.FilteredLog;
 
-import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Optional;
+import java.util.Set;
+
 import hudson.model.FreeStyleProject;
 import hudson.model.Run;
 import hudson.plugins.git.GitSCM;
@@ -41,7 +40,7 @@ class GitDeltaCalculatorITest extends GitITest {
 
     @Test @Issue("JENKINS-73297")
     void shouldShowErrorIfCommitIsNotFound() {
-        WorkflowJob job = createPipeline();
+        var job = createPipeline();
         job.setDefinition(asStage("checkout([$class: 'GitSCM', "
                 + "branches: [[name: '" + GIT_FORENSICS_COMMIT + "' ]],\n"
                 + "userRemoteConfigs: [[url: '" + GIT_FORENSICS_URL + "']],\n"
@@ -55,8 +54,8 @@ class GitDeltaCalculatorITest extends GitITest {
         var result = deltaCalculator.calculateDelta(build, build, EMPTY_SCM_KEY, log);
         assertThat(result).isNotEmpty();
 
-        assertThat(log.getInfoMessages())
-                .contains("-> Invoking Git delta calculator for determining the changes between commits '86503e8' and '86503e8'");
+        assertThat(log.getInfoMessages()).anyMatch(s ->
+                s.contains("-> Invoking Git delta calculator for determining the changes between commits '86503e8' and '86503e8'"));
         assertThat(log.getErrorMessages())
                 .contains("Could not find the specified commit - is the SCM parameter correctly set?",
                         "org.eclipse.jgit.errors.MissingObjectException: Missing unknown 86503e8bc0374e05e2cd32ed3bb8b4435d5fd757");
@@ -75,34 +74,36 @@ class GitDeltaCalculatorITest extends GitITest {
         var job = createJobWithReferenceRecorder();
         var referenceBuild = buildSuccessfully(job);
 
-        String referenceCommit = getHead();
-        String fileName = "newFile";
-        String content = "content";
+        var referenceCommit = getHead();
+        var fileName = "newFile";
+        var content = "content";
         writeFile(fileName, content);
         addFile(fileName);
         commit("test");
 
         var build = buildSuccessfully(job);
-        String currentCommit = getHead();
+        var currentCommit = getHead();
 
         var log = createLog();
         var deltaCalculator = createDeltaCalculator();
         var result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
         assertThat(result).isNotEmpty();
 
-        Delta delta = result.get();
+        var delta = result.get();
         assertThat(delta).hasCurrentCommit(currentCommit);
         assertThat(delta).hasReferenceCommit(referenceCommit);
         assertThat(delta).isInstanceOfSatisfying(GitDelta.class,
                 gitDelta -> assertThat(gitDelta.getDiffFile()).isEqualTo(
-                        "diff --git a/newFile b/newFile\n"
-                                + "new file mode 100644\n"
-                                + "index 0000000..6b584e8\n"
-                                + "--- /dev/null\n"
-                                + "+++ b/newFile\n"
-                                + "@@ -0,0 +1 @@\n"
-                                + "+content\n"
-                                + "\\ No newline at end of file\n"));
+                        """
+                        diff --git a/newFile b/newFile
+                        new file mode 100644
+                        index 0000000..6b584e8
+                        --- /dev/null
+                        +++ b/newFile
+                        @@ -0,0 +1 @@
+                        +content
+                        \\ No newline at end of file
+                        """));
         assertThat(delta.getFileChangesMap().values()).hasSize(1)
                 .first().satisfies(fileChanges ->
                         assertThat(fileChanges.getModifiedLines()).containsExactly(1));
@@ -113,8 +114,8 @@ class GitDeltaCalculatorITest extends GitITest {
         var job = createJobWithReferenceRecorder();
         var referenceBuild = buildSuccessfully(job);
 
-        String newFileName = "newFile";
-        String content = "added";
+        var newFileName = "newFile";
+        var content = "added";
         writeFile(newFileName, content);
         addFile(newFileName);
         commit("test");
@@ -139,7 +140,7 @@ class GitDeltaCalculatorITest extends GitITest {
     void shouldDetermineModifiedFile() {
         var job = createJobWithReferenceRecorder();
 
-        String content = "modified";
+        var content = "modified";
         commitFile("test");
 
         var referenceBuild = buildSuccessfully(job);
@@ -164,7 +165,7 @@ class GitDeltaCalculatorITest extends GitITest {
     void shouldDetermineDeletedFile() {
         var job = createJobWithReferenceRecorder();
 
-        String content = "content";
+        var content = "content";
         commitFile(content);
         var referenceBuild = buildSuccessfully(job);
         git("rm", INITIAL_FILE);
@@ -189,7 +190,7 @@ class GitDeltaCalculatorITest extends GitITest {
     void shouldDetermineRenamedFile() {
         var job = createJobWithReferenceRecorder();
 
-        String content = "content";
+        var content = "content";
         commitFile(content);
         var referenceBuild = buildSuccessfully(job);
         git("rm", INITIAL_FILE);
@@ -214,8 +215,8 @@ class GitDeltaCalculatorITest extends GitITest {
     void shouldDetermineAddedLines() {
         var job = createJobWithReferenceRecorder();
 
-        String content = "Test\nTest\n";
-        String insertedContent = "Test\nInsert1\nInsert2\nTest\n";
+        var content = "Test\nTest\n";
+        var insertedContent = "Test\nInsert1\nInsert2\nTest\n";
         commitFile(content);
         var referenceBuild = buildSuccessfully(job);
         commitFile(insertedContent);
@@ -230,7 +231,7 @@ class GitDeltaCalculatorITest extends GitITest {
         var fileChanges = getSingleFileChanges(result.get());
         assertThat(fileChanges.getModifiedLines()).containsExactly(2, 3);
 
-        Change change = getSingleChangeOfType(fileChanges, ChangeEditType.INSERT);
+        var change = getSingleChangeOfType(fileChanges, ChangeEditType.INSERT);
         assertThat(change.getEditType()).isEqualTo(ChangeEditType.INSERT);
         assertThat(change.getChangedFromLine()).isEqualTo(1);
         assertThat(change.getChangedToLine()).isEqualTo(1);
@@ -242,8 +243,8 @@ class GitDeltaCalculatorITest extends GitITest {
     void shouldDetermineModifiedLines() {
         var job = createJobWithReferenceRecorder();
 
-        String content = "Test\nTest\nTest\nTest";
-        String modified = "Test\nModified\nModified2\nTest";
+        var content = "Test\nTest\nTest\nTest";
+        var modified = "Test\nModified\nModified2\nTest";
         commitFile(content);
         var referenceBuild = buildSuccessfully(job);
         commitFile(modified);
@@ -258,7 +259,7 @@ class GitDeltaCalculatorITest extends GitITest {
         var fileChanges = getSingleFileChanges(result.get());
         assertThat(fileChanges.getModifiedLines()).containsExactly(2, 3);
 
-        Change change = getSingleChangeOfType(fileChanges, ChangeEditType.REPLACE);
+        var change = getSingleChangeOfType(fileChanges, ChangeEditType.REPLACE);
         assertThat(change.getEditType()).isEqualTo(ChangeEditType.REPLACE);
         assertThat(change.getChangedFromLine()).isEqualTo(2);
         assertThat(change.getChangedToLine()).isEqualTo(3);
@@ -270,8 +271,8 @@ class GitDeltaCalculatorITest extends GitITest {
     void shouldDetermineDeletedLines() {
         var job = createJobWithReferenceRecorder();
 
-        String content = "Test\nTest3\nTest";
-        String modified = "Test\nTest";
+        var content = "Test\nTest3\nTest";
+        var modified = "Test\nTest";
         commitFile(content);
         var referenceBuild = buildSuccessfully(job);
         commitFile(modified);
@@ -283,11 +284,11 @@ class GitDeltaCalculatorITest extends GitITest {
         var result = deltaCalculator.calculateDelta(build, referenceBuild, EMPTY_SCM_KEY, log);
         assertThat(result).isNotEmpty();
 
-        Delta delta = result.get();
+        var delta = result.get();
         var fileChanges = getSingleFileChanges(delta);
         assertThat(fileChanges.getModifiedLines()).isEmpty();
 
-        Change change = getSingleChangeOfType(fileChanges, ChangeEditType.DELETE);
+        var change = getSingleChangeOfType(fileChanges, ChangeEditType.DELETE);
         assertThat(change.getEditType()).isEqualTo(ChangeEditType.DELETE);
         assertThat(change.getChangedFromLine()).isEqualTo(2);
         assertThat(change.getChangedToLine()).isEqualTo(2);
@@ -299,8 +300,8 @@ class GitDeltaCalculatorITest extends GitITest {
     void shouldDetermineAllChangeTypesTogether() {
         var job = createJobWithReferenceRecorder();
 
-        String content = "Test1\nTest2\nTest3\nTest4";
-        String newContent = "Modified\nTest2\nInserted\nTest3";
+        var content = "Test1\nTest2\nTest3\nTest4";
+        var newContent = "Modified\nTest2\nInserted\nTest3";
         commitFile(content);
         var referenceBuild = buildSuccessfully(job);
         commitFile(newContent);
@@ -315,21 +316,21 @@ class GitDeltaCalculatorITest extends GitITest {
         var fileChanges = getSingleFileChanges(result.get());
         assertThat(fileChanges.getModifiedLines()).containsExactly(1, 3);
 
-        Change replace = getSingleChangeOfType(fileChanges, ChangeEditType.REPLACE);
+        var replace = getSingleChangeOfType(fileChanges, ChangeEditType.REPLACE);
         assertThat(replace.getEditType()).isEqualTo(ChangeEditType.REPLACE);
         assertThat(replace.getChangedFromLine()).isEqualTo(1);
         assertThat(replace.getChangedToLine()).isEqualTo(1);
         assertThat(replace.getFromLine()).isEqualTo(1);
         assertThat(replace.getToLine()).isEqualTo(1);
 
-        Change insert = getSingleChangeOfType(fileChanges, ChangeEditType.INSERT);
+        var insert = getSingleChangeOfType(fileChanges, ChangeEditType.INSERT);
         assertThat(insert.getEditType()).isEqualTo(ChangeEditType.INSERT);
         assertThat(insert.getChangedFromLine()).isEqualTo(2);
         assertThat(insert.getChangedToLine()).isEqualTo(2);
         assertThat(insert.getFromLine()).isEqualTo(3);
         assertThat(insert.getToLine()).isEqualTo(3);
 
-        Change delete = getSingleChangeOfType(fileChanges, ChangeEditType.DELETE);
+        var delete = getSingleChangeOfType(fileChanges, ChangeEditType.DELETE);
         assertThat(delete.getEditType()).isEqualTo(ChangeEditType.DELETE);
         assertThat(delete.getChangedFromLine()).isEqualTo(4);
         assertThat(delete.getChangedToLine()).isEqualTo(4);

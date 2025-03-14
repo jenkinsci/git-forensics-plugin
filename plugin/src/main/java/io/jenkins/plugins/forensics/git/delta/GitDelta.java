@@ -53,7 +53,7 @@ public class GitDelta extends Delta {
         if (!super.equals(o)) {
             return false;
         }
-        GitDelta gitDelta = (GitDelta) o;
+        var gitDelta = (GitDelta) o;
         return Objects.equals(diffFile, gitDelta.diffFile);
     }
 

@@ -1,19 +1,17 @@
 package io.jenkins.plugins.forensics.git.miner;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 
 import edu.hm.hafner.util.FilteredLog;
 
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 import one.util.streamex.StreamEx;
 
 /**
@@ -26,7 +24,7 @@ import one.util.streamex.StreamEx;
 class CommitCollector {
     List<RevCommit> findAllCommits(final Repository repository, final Git git, final String latestCommitId,
             final FilteredLog logger) throws IOException, GitAPIException {
-        ObjectId head = repository.resolve(Constants.HEAD);
+        var head = repository.resolve(Constants.HEAD);
         if (head == null) {
             logger.logError("No HEAD commit found in " + repository);
             return Collections.emptyList();

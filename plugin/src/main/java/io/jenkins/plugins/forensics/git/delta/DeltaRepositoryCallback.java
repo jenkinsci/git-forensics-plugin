@@ -1,14 +1,5 @@
 package io.jenkins.plugins.forensics.git.delta;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
 import org.eclipse.jgit.diff.DiffFormatter;
@@ -16,14 +7,21 @@ import org.eclipse.jgit.diff.Edit;
 import org.eclipse.jgit.diff.RawTextComparator;
 import org.eclipse.jgit.errors.LargeObjectException;
 import org.eclipse.jgit.errors.MissingObjectException;
-import org.eclipse.jgit.lib.ObjectDatabase;
 import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 
 import edu.hm.hafner.util.FilteredLog;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.Serial;
+import java.nio.charset.StandardCharsets;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import hudson.remoting.VirtualChannel;
 
@@ -42,6 +40,7 @@ import io.jenkins.plugins.forensics.git.util.RemoteResultWrapper;
  */
 @SuppressWarnings("PMD.CouplingBetweenObjects")
 public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteResultWrapper<Delta>> {
+    @Serial
     private static final long serialVersionUID = -4561284338216569043L;
 
     static final String ERROR_MESSAGE_UNKNOWN_FILE_EDIT_TYPE = "Detected unknown file edit type '%s'";
@@ -85,17 +84,17 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
      *         if communicating with Git failed
      */
     private RemoteResultWrapper<Delta> calculateDelta(final Repository repository) throws IOException {
-        FilteredLog log;
-        try (RevWalk walk = new RevWalk(repository)) {
-            RevCommit currentCommit = walk.parseCommit(ObjectId.fromString(currentCommitId));
-            RevCommit referenceCommit = walk.parseCommit(ObjectId.fromString(referenceCommitId));
+        var title = "Errors while computing Git delta in %s:".formatted(repository.getIdentifier());
+        try (var walk = new RevWalk(repository)) {
+            var currentCommit = walk.parseCommit(ObjectId.fromString(currentCommitId));
+            var referenceCommit = walk.parseCommit(ObjectId.fromString(referenceCommitId));
 
-            ByteArrayOutputStream diffStream = new ByteArrayOutputStream();
+            var diffStream = new ByteArrayOutputStream();
 
-            log = new FilteredLog("Errors from Git Delta:");
+            FilteredLog log = new FilteredLog(title);
             log.logInfo("-> Start scanning for differences between commits...");
 
-            try (DiffFormatter diffFormatter = new DiffFormatter(diffStream)) {
+            try (var diffFormatter = new DiffFormatter(diffStream)) {
                 diffFormatter.setDiffComparator(RawTextComparator.WS_IGNORE_ALL);
                 diffFormatter.setRepository(repository);
                 // enabling rename detection requires a set repository
@@ -107,18 +106,18 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
                 log.logInfo("-> %d files contain changes", diffEntries.size());
 
                 for (DiffEntry diffEntry : diffEntries) {
-                    FileEditType fileEditType = getFileEditType(diffEntry.getChangeType());
-                    FileChanges fileChanges = createFileChanges(fileEditType, diffEntry, diffFormatter, repository);
+                    var fileEditType = getFileEditType(diffEntry.getChangeType());
+                    var fileChanges = createFileChanges(fileEditType, diffEntry, diffFormatter, repository);
 
-                    String fileId = getFileId(diffEntry, fileEditType);
+                    var fileId = getFileId(diffEntry, fileEditType);
                     fileChangesMap.put(fileId, fileChanges);
                 }
 
                 log.logInfo("-> Creating the Git diff file");
-                String diffFile = diffStream.toString(StandardCharsets.UTF_8);
+                var diffFile = diffStream.toString(StandardCharsets.UTF_8);
 
-                GitDelta delta = new GitDelta(currentCommitId, referenceCommitId, fileChangesMap, diffFile);
-                RemoteResultWrapper<Delta> wrapper = new RemoteResultWrapper<>(delta, "Errors from Git Delta:");
+                var delta = new GitDelta(currentCommitId, referenceCommitId, fileChangesMap, diffFile);
+                RemoteResultWrapper<Delta> wrapper = new RemoteResultWrapper<>(delta, title);
 
                 log.logInfo("-> Git code delta successfully calculated");
                 wrapper.merge(log);
@@ -127,8 +126,8 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
             }
         }
         catch (MissingObjectException exception) {
-            GitDelta delta = new GitDelta(currentCommitId, referenceCommitId, Map.of(), exception.getMessage());
-            RemoteResultWrapper<Delta> wrapper = new RemoteResultWrapper<>(delta, "Errors from Git Delta:");
+            var delta = new GitDelta(currentCommitId, referenceCommitId, Map.of(), exception.getMessage());
+            RemoteResultWrapper<Delta> wrapper = new RemoteResultWrapper<>(delta, title);
 
             wrapper.logException(exception, "Could not find the specified commit - is the SCM parameter correctly set?");
 
@@ -197,7 +196,7 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
 
         diffFormatter.format(diffEntry);
 
-        FileChanges fileChanges = new FileChanges(filePath, oldFilePath, fileContent, fileEditType,
+        var fileChanges = new FileChanges(filePath, oldFilePath, fileContent, fileEditType,
                 new EnumMap<>(ChangeEditType.class));
 
         for (Edit edit : diffFormatter.toFileHeader(diffEntry).toEditList()) {
@@ -220,8 +219,8 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
      *         if reading failed
      */
     private String getFileContent(final ObjectId fileId, final Repository repository) throws IOException {
-        try (ObjectDatabase objectDatabase = repository.getObjectDatabase()) {
-            ObjectLoader objectLoader = objectDatabase.open(fileId);
+        try (var objectDatabase = repository.getObjectDatabase()) {
+            var objectLoader = objectDatabase.open(fileId);
             if (objectLoader.isLarge()) {
                 return new String(objectLoader.getCachedBytes(1000),
                         StandardCharsets.UTF_8);
@@ -291,7 +290,7 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
      * @return the created change as an Optional if there is a edit which is not empty
      */
     private Optional<Change> createChange(final Edit edit) {
-        ChangeEditType changeEditType = getChangeEditType(edit.getType());
+        var changeEditType = getChangeEditType(edit.getType());
         // add 1 to the 'begin' of the interval which is relevant for determining the made change since the begin is
         // included and the index is zero based ('end' does not need this because the value is excluded anyway)
         if (changeEditType.equals(ChangeEditType.DELETE)) {

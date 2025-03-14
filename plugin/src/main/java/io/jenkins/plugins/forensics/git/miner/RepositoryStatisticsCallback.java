@@ -1,11 +1,11 @@
 package io.jenkins.plugins.forensics.git.miner;
 
-import java.io.IOException;
-import java.util.ArrayList;
-
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
+
+import java.io.IOException;
+import java.util.ArrayList;
 
 import hudson.remoting.VirtualChannel;
 
@@ -40,8 +40,8 @@ class RepositoryStatisticsCallback
                 commits, "Errors while mining the Git repository:");
 
         try (repository) {
-            try (Git git = new Git(repository)) {
-                CommitAnalyzer commitAnalyzer = new CommitAnalyzer();
+            try (var git = new Git(repository)) {
+                var commitAnalyzer = new CommitAnalyzer();
                 commits.addAll(commitAnalyzer.run(repository, git, previousCommitId, wrapper));
             }
             catch (IOException | GitAPIException exception) {

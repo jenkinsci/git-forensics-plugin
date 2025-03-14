@@ -8,25 +8,14 @@
     <relativePath />
   </parent>
 
-  <artifactId>git-forensics</artifactId>
   <groupId>io.jenkins.plugins</groupId>
+  <artifactId>git-forensics</artifactId>
+  <version>3.2.0-SNAPSHOT</version>
   <packaging>hpi</packaging>
   <name>Git Forensics Plugin</name>
-  <version>3.2.0-SNAPSHOT</version>
 
   <description>Jenkins plug-in that mines and analyzes data from a Git repository.</description>
   <url>https://github.com/jenkinsci/git-forensics-plugin</url>
-
-  <properties>
-    <module.name>${project.groupId}.git.forensics</module.name>
-
-    <!-- Library Dependencies Versions -->
-    <eclipse-collections.version>9.2.0</eclipse-collections.version>
-    <testcontainers.version>1.20.5</testcontainers.version>
-
-    <!-- Maven Surefire ArgLine -->
-    <argLine>-Djava.awt.headless=true -Xmx1024m -Djenkins.test.timeout=1000 --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.util.concurrent=ALL-UNNAMED</argLine>
-  </properties>
 
   <licenses>
     <license>
@@ -42,6 +31,24 @@
       <email>ullrich.hafner@gmail.com</email>
     </developer>
   </developers>
+
+  <scm>
+    <connection>scm:git:https://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
+    <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
+    <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
+    <tag>v1.6.0</tag>
+  </scm>
+
+  <properties>
+    <module.name>${project.groupId}.git.forensics</module.name>
+
+    <!-- Library Dependencies Versions -->
+    <eclipse-collections.version>9.2.0</eclipse-collections.version>
+    <testcontainers.version>1.20.5</testcontainers.version>
+
+    <!-- Maven Surefire ArgLine -->
+    <argLine>-Djava.awt.headless=true -Xmx1024m -Djenkins.test.timeout=1000 --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.util.concurrent=ALL-UNNAMED</argLine>
+  </properties>
 
   <dependencies>
     <!-- Project Dependencies -->
@@ -65,7 +72,6 @@
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>forensics-api</artifactId>
       <!-- TODO: remove the version when a matching BOM is available -->
-      <version>3.0.0</version>
     </dependency>
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
@@ -75,7 +81,6 @@
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>plugin-util-api</artifactId>
       <!-- TODO: remove the version when a matching BOM is available -->
-      <version>6.0.0</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -87,7 +92,6 @@
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>forensics-api</artifactId>
       <!-- TODO: remove the version when a matching BOM is available -->
-      <version>3.0.0</version>
       <scope>test</scope>
       <classifier>tests</classifier>
     </dependency>
@@ -119,7 +123,6 @@
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>plugin-util-api</artifactId>
       <!-- TODO: remove the version when a matching BOM is available -->
-      <version>6.0.0</version>
       <scope>test</scope>
       <classifier>tests</classifier>
     </dependency>
@@ -154,6 +157,23 @@
     </dependency>
 
   </dependencies>
+  <repositories>
+    <repository>
+      <id>incrementals.jenkins-ci.org</id>
+      <url>https://repo.jenkins-ci.org/incrementals/</url>
+    </repository>
+    <repository>
+      <id>repo.jenkins-ci.org</id>
+      <url>https://repo.jenkins-ci.org/public/</url>
+    </repository>
+  </repositories>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>repo.jenkins-ci.org</id>
+      <url>https://repo.jenkins-ci.org/public/</url>
+    </pluginRepository>
+  </pluginRepositories>
 
   <build>
     <plugins>
@@ -182,30 +202,6 @@
 
     </plugins>
   </build>
-  <scm>
-    <connection>scm:git:https://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
-    <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
-    <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
-    <tag>v1.6.0</tag>
-  </scm>
-
-  <repositories>
-    <repository>
-      <id>incrementals.jenkins-ci.org</id>
-      <url>https://repo.jenkins-ci.org/incrementals/</url>
-    </repository>
-    <repository>
-      <id>repo.jenkins-ci.org</id>
-      <url>https://repo.jenkins-ci.org/public/</url>
-    </repository>
-  </repositories>
-
-  <pluginRepositories>
-    <pluginRepository>
-      <id>repo.jenkins-ci.org</id>
-      <url>https://repo.jenkins-ci.org/public/</url>
-    </pluginRepository>
-  </pluginRepositories>
 
 </project>
 

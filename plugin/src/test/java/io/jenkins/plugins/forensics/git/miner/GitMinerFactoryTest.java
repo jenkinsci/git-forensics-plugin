@@ -1,14 +1,14 @@
 package io.jenkins.plugins.forensics.git.miner;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Optional;
-
 import org.assertj.core.util.Lists;
 import org.eclipse.jgit.lib.ObjectId;
 import org.junit.jupiter.api.Test;
 
 import edu.hm.hafner.util.FilteredLog;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Optional;
 
 import org.jenkinsci.plugins.gitclient.GitClient;
 import hudson.EnvVars;
@@ -37,9 +37,9 @@ class GitMinerFactoryTest {
 
     @Test
     void shouldSkipIfScmIsNotGit() {
-        FilteredLog logger = createLogger();
+        var logger = createLogger();
 
-        GitMinerFactory factory = new GitMinerFactory();
+        var factory = new GitMinerFactory();
         assertThat(factory.createMiner(new NullSCM(), null, createWorkTreeStub(), NULL_LISTENER, logger)).isEmpty();
 
         assertThat(logger.getErrorMessages()).isEmpty();
@@ -52,19 +52,19 @@ class GitMinerFactoryTest {
         when(gitSCM.getExtensions()).thenReturn(new DescribableList<>(Saveable.NOOP));
 
         Run<?, ?> run = mock(Run.class);
-        EnvVars envVars = new EnvVars();
+        var envVars = new EnvVars();
         envVars.put("GIT_COMMIT", "test_commit");
         when(run.getEnvironment(NULL_LISTENER)).thenReturn(envVars);
 
-        FilePath workspace = createWorkTreeStub();
+        var workspace = createWorkTreeStub();
         GitClient gitClient = mock(GitClient.class);
         when(gitSCM.createClient(NULL_LISTENER, envVars, run, workspace)).thenReturn(gitClient);
         ObjectId commit = mock(ObjectId.class);
         when(gitClient.revParse(anyString())).thenReturn(commit);
 
-        FilteredLog logger = createLogger();
+        var logger = createLogger();
 
-        GitMinerFactory factory = new GitMinerFactory();
+        var factory = new GitMinerFactory();
         Optional<RepositoryMiner> blamer = factory.createMiner(gitSCM, run, workspace, NULL_LISTENER, logger);
 
         assertThat(blamer).isNotEmpty().containsInstanceOf(GitRepositoryMiner.class);
@@ -81,9 +81,9 @@ class GitMinerFactoryTest {
         when(gitSCM.getExtensions()).thenReturn(
                 new DescribableList<>(Saveable.NOOP, Lists.list(shallowCloneOption)));
 
-        FilteredLog logger = createLogger();
+        var logger = createLogger();
 
-        GitMinerFactory gitChecker = new GitMinerFactory();
+        var gitChecker = new GitMinerFactory();
 
         assertThat(gitChecker.createMiner(gitSCM, mock(Run.class), createWorkTreeStub(), NULL_LISTENER, logger))
                 .isEmpty();
@@ -96,9 +96,9 @@ class GitMinerFactoryTest {
         Run<?, ?> run = mock(Run.class);
         when(run.getEnvironment(NULL_LISTENER)).thenThrow(new IOException("Error"));
 
-        FilteredLog logger = createLogger();
+        var logger = createLogger();
 
-        GitMinerFactory gitChecker = new GitMinerFactory();
+        var gitChecker = new GitMinerFactory();
 
         GitSCM git = mock(GitSCM.class);
         when(git.getExtensions()).thenReturn(new DescribableList<>(Saveable.NOOP));

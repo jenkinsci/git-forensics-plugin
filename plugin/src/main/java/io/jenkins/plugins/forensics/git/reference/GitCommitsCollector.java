@@ -1,16 +1,15 @@
 package io.jenkins.plugins.forensics.git.reference;
 
-import java.io.IOException;
-
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 
 import edu.hm.hafner.util.FilteredLog;
+
+import java.io.IOException;
 
 import hudson.remoting.VirtualChannel;
 
@@ -38,13 +37,13 @@ class GitCommitsCollector extends AbstractRepositoryCallback<RemoteResultWrapper
     @Override
     public RemoteResultWrapper<BuildCommits> invoke(final Repository repository, final VirtualChannel channel)
             throws IOException {
-        try (Git git = new Git(repository)) {
-            BuildCommits commits = new BuildCommits(latestRecordedCommit);
+        try (var git = new Git(repository)) {
+            var commits = new BuildCommits(latestRecordedCommit);
             RemoteResultWrapper<BuildCommits> result = new RemoteResultWrapper<>(commits,
                     "Errors while collecting commits");
             findHeadCommit(repository, commits, result);
             for (RevCommit commit : git.log().add(commits.getHead()).call()) {
-                String commitId = commit.getName();
+                var commitId = commit.getName();
                 if (commitId.equals(latestRecordedCommit) || commits.size() >= MAX_COMMITS) {
                     return result;
                 }
@@ -59,8 +58,8 @@ class GitCommitsCollector extends AbstractRepositoryCallback<RemoteResultWrapper
 
     private void findHeadCommit(final Repository repository, final BuildCommits commits, final FilteredLog logger)
             throws IOException {
-        RevCommit head = getHead(repository);
-        RevCommit[] parents = head.getParents();
+        var head = getHead(repository);
+        var parents = head.getParents();
         if (parents.length < 1) {
             logger.logInfo("-> No parent commits found - detected the first commit in the branch");
             logger.logInfo("-> Using head commit '%s' as starting point",
@@ -87,7 +86,7 @@ class GitCommitsCollector extends AbstractRepositoryCallback<RemoteResultWrapper
     }
 
     private RevCommit getHead(final Repository repository) throws IOException {
-        ObjectId head = repository.resolve(Constants.HEAD);
+        var head = repository.resolve(Constants.HEAD);
         if (head == null) {
             throw new IOException("No HEAD commit found in " + repository);
         }

@@ -1,14 +1,14 @@
 package io.jenkins.plugins.forensics.git.delta;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Optional;
-
 import org.assertj.core.util.Lists;
 import org.eclipse.jgit.lib.ObjectId;
 import org.junit.jupiter.api.Test;
 
 import edu.hm.hafner.util.FilteredLog;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Optional;
 
 import org.jenkinsci.plugins.gitclient.GitClient;
 import hudson.EnvVars;
@@ -38,9 +38,9 @@ class GitDeltaCalculatorFactoryTest {
 
     @Test
     void shouldSkipIfScmIsNotGit() {
-        FilteredLog logger = createLogger();
+        var logger = createLogger();
 
-        GitDeltaCalculatorFactory factory = new GitDeltaCalculatorFactory();
+        var factory = new GitDeltaCalculatorFactory();
 
         assertThat(factory.createDeltaCalculator(new NullSCM(), null, null, NULL_LISTENER, logger)).isEmpty();
         assertThat(logger.getErrorMessages()).isEmpty();
@@ -49,23 +49,23 @@ class GitDeltaCalculatorFactoryTest {
 
     @Test
     void shouldCreateDeltaCalculatorForGit() throws IOException, InterruptedException {
-        GitSCM gitSCM = createGitScm();
+        var gitSCM = createGitScm();
 
         Run<?, ?> run = mock(Run.class);
 
-        EnvVars envVars = new EnvVars();
+        var envVars = new EnvVars();
         when(run.getEnvironment(NULL_LISTENER)).thenReturn(envVars);
 
         GitClient gitClient = mock(GitClient.class);
-        FilePath workspace = createWorkTreeStub();
+        var workspace = createWorkTreeStub();
         ObjectId commit = mock(ObjectId.class);
         when(gitClient.revParse(anyString())).thenReturn(commit);
         when(gitClient.getWorkTree()).thenReturn(new FilePath(new File("/working-tree")));
 
         when(gitSCM.createClient(NULL_LISTENER, envVars, run, workspace)).thenReturn(gitClient);
-        FilteredLog logger = createLogger();
+        var logger = createLogger();
 
-        GitDeltaCalculatorFactory factory = new GitDeltaCalculatorFactory();
+        var factory = new GitDeltaCalculatorFactory();
         Optional<DeltaCalculator> deltaCalculator = factory.createDeltaCalculator(gitSCM, run, workspace, NULL_LISTENER,
                 logger);
 
@@ -83,9 +83,9 @@ class GitDeltaCalculatorFactoryTest {
         GitSCM git = mock(GitSCM.class);
         when(git.getExtensions()).thenReturn(new DescribableList<>(Saveable.NOOP, Lists.list(shallowCloneOption)));
 
-        FilteredLog logger = createLogger();
+        var logger = createLogger();
 
-        GitDeltaCalculatorFactory factory = new GitDeltaCalculatorFactory();
+        var factory = new GitDeltaCalculatorFactory();
 
         assertThat(factory.createDeltaCalculator(git, mock(Run.class), null, NULL_LISTENER, logger)).isEmpty();
         assertThat(logger.getInfoMessages()).contains(GitRepositoryValidator.INFO_SHALLOW_CLONE);
@@ -94,12 +94,12 @@ class GitDeltaCalculatorFactoryTest {
 
     @Test
     void shouldCreateNullDeltaCalculatorOnError() throws IOException, InterruptedException {
-        GitDeltaCalculatorFactory factory = new GitDeltaCalculatorFactory();
+        var factory = new GitDeltaCalculatorFactory();
 
         Run<?, ?> run = mock(Run.class);
         when(run.getEnvironment(NULL_LISTENER)).thenThrow(new IOException("Error"));
 
-        FilteredLog logger = createLogger();
+        var logger = createLogger();
 
         assertThat(factory.createDeltaCalculator(createGitScm(), run, null, NULL_LISTENER, logger)).isEmpty();
         assertThat(logger.getErrorMessages()).isEmpty();
