@@ -346,6 +346,26 @@ class GitReferenceRecorderITest extends GitITest {
         verifyPipelineResult(mainBuild, featureBranch);
     }
 
+    @Test
+    @Issue("JENKINS-75429")
+    void shouldMatchCaseInsensitive() {
+        var mainBranch = createPipeline(MAIN);
+        mainBranch.setDefinition(asStage(
+                createForensicsCheckoutStep(),
+                createLocalGitCheckout(MAIN)));
+
+        Run<?, ?> mainBuild = buildSuccessfully(mainBranch);
+
+        createFeatureBranchAndAddCommits();
+
+        var featureBranch = createPipeline(FEATURE);
+        featureBranch.setDefinition(asStage(
+                createLocalGitCheckout(FEATURE),
+                "discoverGitReferenceBuild(referenceJob: '" + MAIN + "', scm: 'GIT FILE')"));
+
+        verifyPipelineResult(mainBuild, featureBranch);
+    }
+
     /**
      * Creates a pipeline for the main branch and another pipeline for the feature branch, builds them and checks if
      * the correct reference build is found. The main branch contains an additional but unrelated SCM

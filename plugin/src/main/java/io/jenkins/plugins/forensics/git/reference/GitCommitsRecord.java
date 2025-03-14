@@ -1,5 +1,6 @@
 package io.jenkins.plugins.forensics.git.reference;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.lib.ObjectId;
 
 import edu.hm.hafner.util.FilteredLog;
@@ -40,8 +41,9 @@ public class GitCommitsRecord implements RunAction2, Serializable {
      * @return the record with the commits if found, {@link Optional#empty()} otherwise
      */
     public static Optional<GitCommitsRecord> findRecordForScm(final Run<?, ?> build, final String scmKey) {
-        return build.getActions(GitCommitsRecord.class)
-                .stream().filter(record -> record.getScmKey().contains(scmKey)).findAny();
+        return build.getActions(GitCommitsRecord.class).stream()
+                .filter(record -> StringUtils.containsIgnoreCase(record.getScmKey(), scmKey))
+                .findAny();
     }
 
     private transient Run<?, ?> owner;
@@ -70,7 +72,7 @@ public class GitCommitsRecord implements RunAction2, Serializable {
      * Creates a new {@link GitCommitsRecord} instance with the specified list of new commits.
      *
      * @param owner
-     *         the current build as owner of the Git commits
+     *         the current build as the owner of the Git commits
      * @param scmKey
      *         the ID of the SCM repository
      * @param logger
@@ -80,7 +82,7 @@ public class GitCommitsRecord implements RunAction2, Serializable {
      * @param latestCommitLink
      *         hyperlink to the latest commit
      */
-    public GitCommitsRecord(final Run<?, ?> owner, final String scmKey, final FilteredLog logger,
+    GitCommitsRecord(final Run<?, ?> owner, final String scmKey, final FilteredLog logger,
             final BuildCommits commits, final String latestCommitLink) {
         this.owner = owner;
         this.scmKey = scmKey;

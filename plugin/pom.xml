@@ -1,11 +1,12 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
     <groupId>org.jvnet.hudson.plugins</groupId>
     <artifactId>analysis-pom</artifactId>
     <version>10.5.0</version>
-    <relativePath />
+    <relativePath/>
   </parent>
 
   <groupId>io.jenkins.plugins</groupId>
@@ -47,7 +48,10 @@
     <testcontainers.version>1.20.6</testcontainers.version>
 
     <!-- Maven Surefire ArgLine -->
-    <argLine>-Djava.awt.headless=true -Xmx1024m -Djenkins.test.timeout=1000 --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.util.concurrent=ALL-UNNAMED</argLine>
+    <argLine>-Djava.awt.headless=true -Xmx1024m -Djenkins.test.timeout=1000 --add-opens java.base/java.lang=ALL-UNNAMED
+      --add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED --add-opens
+      java.base/java.util.concurrent=ALL-UNNAMED
+    </argLine>
   </properties>
 
   <dependencies>
@@ -181,6 +185,30 @@
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.revapi</groupId>
+        <artifactId>revapi-maven-plugin</artifactId>
+        <configuration>
+          <analysisConfiguration>
+            <revapi.differences id="manually-vetted">
+              <ignore>true</ignore>
+              <differences combine.children="append">
+                <difference>
+                  <code>java.method.visibilityReduced</code>
+                  <classQualifiedName>io.jenkins.plugins.forensics.git.reference.GitCommitsRecord</classQualifiedName>
+                  <elementKind>constructor</elementKind>
+                  <justification>This class is internal and not part of the API</justification>
+                </difference>
+                <item>
+                  <code>java.class.nonPublicPartOfAPI</code>
+                  <classQualifiedName>com.googlecode.javaewah.Buffer</classQualifiedName>
+                  <justification>This class is exposed by GitPlugin</justification>
+                </item>
+              </differences>
+            </revapi.differences>
+          </analysisConfiguration>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.assertj</groupId>
         <artifactId>assertj-assertions-generator-maven-plugin</artifactId>
