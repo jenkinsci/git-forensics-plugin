@@ -10,10 +10,6 @@ jobs:
     name: Build, test and monitor quality on Ubuntu
 
     steps:
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJSON(github) }}
-        run: echo "$GITHUB_CONTEXT"
       - name: 'Checkout merge commit'
         uses: actions/checkout@v4
         with:
