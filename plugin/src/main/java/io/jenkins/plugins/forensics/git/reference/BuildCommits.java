@@ -1,22 +1,24 @@
 package io.jenkins.plugins.forensics.git.reference;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.revwalk.RevCommit;
 
+import java.io.Serial;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
 import io.jenkins.plugins.forensics.git.reference.GitCommitsRecord.RecordingType;
 
 /**
- * The commits of a given build. If these commits are part of a pull request then a target commit ID might be stored
+ * The commits of a given build. If these commits are part of a pull request, then a target commit ID might be stored
  * that defines the parent commit of the head in the target branch.
  *
  * @author Ullrich Hafner
  */
 class BuildCommits implements Serializable {
+    @Serial
     private static final long serialVersionUID = -580006422072874429L;
 
     private final String previousBuildCommit;
@@ -96,7 +98,7 @@ class BuildCommits implements Serializable {
 
     /**
      * Returns a merge commit if existent or the latest commit if not. In case that there is a merge commit, it is the
-     * head of the commits of this record.
+     * head of this commits record.
      *
      * @return the found commit
      */

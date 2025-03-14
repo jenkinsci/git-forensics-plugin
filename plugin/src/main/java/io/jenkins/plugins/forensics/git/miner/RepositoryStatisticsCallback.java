@@ -1,11 +1,12 @@
 package io.jenkins.plugins.forensics.git.miner;
 
-import java.io.IOException;
-import java.util.ArrayList;
-
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
+
+import java.io.IOException;
+import java.io.Serial;
+import java.util.ArrayList;
 
 import hudson.remoting.VirtualChannel;
 
@@ -22,6 +23,7 @@ import io.jenkins.plugins.forensics.miner.CommitDiffItem;
 @SuppressWarnings("PMD.LooseCoupling")
 class RepositoryStatisticsCallback
         extends AbstractRepositoryCallback<RemoteResultWrapper<ArrayList<CommitDiffItem>>> {
+    @Serial
     private static final long serialVersionUID = 7667073858514128136L;
 
     private final String previousCommitId;
@@ -40,8 +42,8 @@ class RepositoryStatisticsCallback
                 commits, "Errors while mining the Git repository:");
 
         try (repository) {
-            try (Git git = new Git(repository)) {
-                CommitAnalyzer commitAnalyzer = new CommitAnalyzer();
+            try (var git = new Git(repository)) {
+                var commitAnalyzer = new CommitAnalyzer();
                 commits.addAll(commitAnalyzer.run(repository, git, previousCommitId, wrapper));
             }
             catch (IOException | GitAPIException exception) {

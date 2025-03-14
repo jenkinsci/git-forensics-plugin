@@ -5,9 +5,9 @@
  * Several plugins that report build statistics (test results, code coverage, metrics, static analysis warnings)
  * typically show their reports in two different ways: either as absolute report (e.g., total number of tests or
  * warnings, overall code coverage) or as relative delta report (e.g., additional tests, increased or decreased
- * coverage, new or fixed warnings). In order to compute a relative delta report a plugin needs to carefully select the
- * other build to compare the current results to (a so called reference build). For simple Jenkins jobs that build the
- * main branch of an SCM the reference build will be selected from one of the previous builds of the same job. For more
+ * coverage, new or fixed warnings). To compute a relative delta report, a plugin needs to carefully select the
+ * other build to compare the current results to (a so-called reference build). For simple Jenkins jobs that build the
+ * main branch of an SCM, the reference build will be selected from one of the previous builds of the same job. For more
  * complex branch source projects (i.e., projects that build several branches and pull requests in a connected job
  * hierarchy) it makes more sense to select a reference build from a job that builds the actual target branch (i.e., the
  * branch the current changes will be merged into). Here one typically is interested what changed in a branch or pull

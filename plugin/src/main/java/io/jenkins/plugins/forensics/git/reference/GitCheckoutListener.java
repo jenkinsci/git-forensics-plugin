@@ -1,12 +1,12 @@
 package io.jenkins.plugins.forensics.git.reference;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Optional;
-
 import org.apache.commons.lang3.StringUtils;
 
 import edu.hm.hafner.util.FilteredLog;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Optional;
 
 import hudson.Extension;
 import hudson.FilePath;
@@ -20,11 +20,10 @@ import io.jenkins.plugins.forensics.git.util.GitCommitDecoratorFactory;
 import io.jenkins.plugins.forensics.git.util.GitCommitTextDecorator;
 import io.jenkins.plugins.forensics.git.util.GitRepositoryValidator;
 import io.jenkins.plugins.forensics.git.util.RemoteResultWrapper;
-import io.jenkins.plugins.forensics.util.CommitDecorator;
 import io.jenkins.plugins.util.LogHandler;
 
 /**
- * Tracks all commits since the last build and writes them into a {@link GitCommitsRecord} action to be accessed
+ * Tracks all the commits since the last build and writes them into a {@link GitCommitsRecord} action to be accessed
  * later. This listener is called on every checkout of a Git Repository in a Jenkins build.
  *
  * @author Arne Schöntag
@@ -37,20 +36,20 @@ public class GitCheckoutListener extends SCMListener {
     @Override
     public void onCheckout(final Run<?, ?> build, final SCM scm, final FilePath workspace,
             final TaskListener listener, final File changelogFile, final SCMRevisionState pollingBaseline) {
-        FilteredLog logger = new FilteredLog("Git checkout listener errors:");
+        var logger = new FilteredLog("Git checkout listener errors:");
 
-        String scmKey = scm.getKey();
+        var scmKey = scm.getKey();
         if (hasRecordForScm(build, scmKey)) {
             logSkipping(logger, scmKey);
         }
         else {
-            GitRepositoryValidator validator = new GitRepositoryValidator(scm, build, workspace, listener, logger);
+            var validator = new GitRepositoryValidator(scm, build, workspace, listener, logger);
             if (validator.isGitRepository()) {
                 recordNewCommits(build, validator, logger);
             }
         }
 
-        LogHandler logHandler = new LogHandler(listener, "GitCheckoutListener");
+        var logHandler = new LogHandler(listener, "GitCheckoutListener");
         logHandler.log(logger);
     }
 
@@ -64,11 +63,11 @@ public class GitCheckoutListener extends SCMListener {
 
     private void recordNewCommits(final Run<?, ?> build, final GitRepositoryValidator gitRepository,
             final FilteredLog logger) {
-        String id = gitRepository.getId();
+        var id = gitRepository.getId();
         logger.logInfo("Recording commits of '%s'", id);
 
-        String latestRecordedCommit = getLatestCommitOfPreviousBuild(build, id, logger);
-        GitCommitsRecord commitsRecord = recordNewCommits(build, gitRepository, logger, latestRecordedCommit);
+        var latestRecordedCommit = getLatestCommitOfPreviousBuild(build, id, logger);
+        var commitsRecord = recordNewCommits(build, gitRepository, logger, latestRecordedCommit);
         if (hasRecordForScm(build, id)) { // In case a parallel step has added the same result in the meanwhile
             logSkipping(logger, id);
         }
@@ -80,7 +79,7 @@ public class GitCheckoutListener extends SCMListener {
     private String getLatestCommitOfPreviousBuild(final Run<?, ?> build, final String scmKey, final FilteredLog logger) {
         Optional<GitCommitsRecord> record = getPreviousRecord(build, scmKey);
         if (record.isPresent()) {
-            GitCommitsRecord previous = record.get();
+            var previous = record.get();
             logger.logInfo("Found previous build '%s' that contains recorded Git commits", previous.getOwner());
             logger.logInfo("-> Starting recording of new commits since '%s'",
                     DECORATOR.asText(previous.getLatestCommit()));
@@ -97,10 +96,10 @@ public class GitCheckoutListener extends SCMListener {
 
     private GitCommitsRecord recordNewCommits(final Run<?, ?> build, final GitRepositoryValidator gitRepository,
             final FilteredLog logger, final String latestCommit) {
-        BuildCommits commits = recordCommitsSincePreviousBuild(latestCommit, gitRepository, logger);
-        String calculatedLatestCommit = commits.getMergeOrLatestCommit();
+        var commits = recordCommitsSincePreviousBuild(latestCommit, gitRepository, logger);
+        var calculatedLatestCommit = commits.getMergeOrLatestCommit();
 
-        String id = gitRepository.getId();
+        var id = gitRepository.getId();
         if (commits.isEmpty()) {
             logger.logInfo("-> No new commits found");
         }
@@ -114,7 +113,7 @@ public class GitCheckoutListener extends SCMListener {
             logger.logInfo("-> The latest commit '%s' is a merge commit", calculatedLatestCommit);
         }
 
-        CommitDecorator commitDecorator = GitCommitDecoratorFactory.findCommitDecorator(gitRepository.getScm(), logger);
+        var commitDecorator = GitCommitDecoratorFactory.findCommitDecorator(gitRepository.getScm(), logger);
         return new GitCommitsRecord(build, id, logger, commits, commitDecorator.asLink(calculatedLatestCommit));
     }
 

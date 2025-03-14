@@ -1,8 +1,5 @@
 package io.jenkins.plugins.forensics.git.blame;
 
-import java.io.File;
-import java.io.IOException;
-
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
@@ -19,6 +16,9 @@ import org.junitpioneer.jupiter.Issue;
 
 import edu.hm.hafner.util.FilteredLog;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import java.io.File;
+import java.io.IOException;
 
 import org.jenkinsci.plugins.gitclient.GitClient;
 import hudson.FilePath;
@@ -54,10 +54,10 @@ class GitBlamerTest {
 
     @Test
     void shouldAbortIfHeadCommitIsMissing() {
-        GitBlamer blamer = new GitBlamer(createGitClient(), HEAD);
+        var blamer = new GitBlamer(createGitClient(), HEAD);
 
-        FilteredLog log = new FilteredLog(StringUtils.EMPTY);
-        Blames blames = blamer.blame(new FileLocations(), log);
+        var log = new FilteredLog(StringUtils.EMPTY);
+        var blames = blamer.blame(new FileLocations(), log);
 
         assertThat(blames).isEmpty();
         assertThat(log.getErrorMessages()).contains(GitBlamer.NO_HEAD_ERROR);
@@ -65,13 +65,13 @@ class GitBlamerTest {
 
     @Test
     void shouldAbortIfRefParseThrowsException() throws InterruptedException {
-        GitClient gitClient = createGitClient();
+        var gitClient = createGitClient();
         when(gitClient.revParse(HEAD)).thenThrow(new GitException("Error"));
 
-        GitBlamer blamer = new GitBlamer(gitClient, HEAD);
+        var blamer = new GitBlamer(gitClient, HEAD);
 
-        FilteredLog log = new FilteredLog(StringUtils.EMPTY);
-        Blames blames = blamer.blame(new FileLocations(), log);
+        var log = new FilteredLog(StringUtils.EMPTY);
+        var blames = blamer.blame(new FileLocations(), log);
 
         assertThat(blames.isEmpty()).isTrue();
         assertThat(log.getErrorMessages()).contains(GitBlamer.NO_HEAD_ERROR);
@@ -79,11 +79,11 @@ class GitBlamerTest {
 
     @Test
     void shouldAbortIfWithRepositoryThrowsException() throws InterruptedException, IOException {
-        GitClient gitClient = createStubbedClientWithException(new IOException("Error"));
+        var gitClient = createStubbedClientWithException(new IOException("Error"));
 
-        GitBlamer blamer = new GitBlamer(gitClient, HEAD);
-        FilteredLog log = new FilteredLog(StringUtils.EMPTY);
-        Blames blames = blamer.blame(new FileLocations(), log);
+        var blamer = new GitBlamer(gitClient, HEAD);
+        var log = new FilteredLog(StringUtils.EMPTY);
+        var blames = blamer.blame(new FileLocations(), log);
 
         assertThat(blames.isEmpty()).isTrue();
         assertThat(log.getErrorMessages()).contains(GitBlamer.BLAME_ERROR);
@@ -91,11 +91,11 @@ class GitBlamerTest {
 
     @Test
     void shouldFinishWithIntermediateResultIfInterrupted() throws InterruptedException, IOException {
-        GitClient gitClient = createStubbedClientWithException(new InterruptedException("Error"));
+        var gitClient = createStubbedClientWithException(new InterruptedException("Error"));
 
-        GitBlamer blamer = new GitBlamer(gitClient, HEAD);
-        FilteredLog log = new FilteredLog(StringUtils.EMPTY);
-        Blames blames = blamer.blame(new FileLocations(), log);
+        var blamer = new GitBlamer(gitClient, HEAD);
+        var log = new FilteredLog(StringUtils.EMPTY);
+        var blames = blamer.blame(new FileLocations(), log);
 
         assertThat(blames.isEmpty()).isTrue();
         assertThat(log.getErrorMessages()).isEmpty();
@@ -108,7 +108,7 @@ class GitBlamerTest {
         ObjectId id = mock(ObjectId.class);
         when(gitClient.revParse(HEAD)).thenReturn(id);
         when(gitClient.withRepository(any())).thenThrow(exception);
-        FilePath workTree = createWorkTreeStub();
+        var workTree = createWorkTreeStub();
         when(gitClient.getWorkTree()).thenReturn(workTree);
 
         return gitClient;
@@ -128,10 +128,10 @@ class GitBlamerTest {
     }
 
     private void verifyExceptionHandling(final Class<? extends Exception> exception) throws GitAPIException {
-        Blames blames = new Blames();
-        FileLocations blamerInput = new FileLocations();
-        FilteredLog log = new FilteredLog(StringUtils.EMPTY);
-        BlameCallback callback = createCallback(blames, blamerInput);
+        var blames = new Blames();
+        var blamerInput = new FileLocations();
+        var log = new FilteredLog(StringUtils.EMPTY);
+        var callback = createCallback(blames, blamerInput);
 
         BlameRunner runner = mock(BlameRunner.class);
         when(runner.run(RELATIVE_PATH)).thenThrow(exception);
@@ -145,14 +145,14 @@ class GitBlamerTest {
 
     @Test
     void shouldMapResultToRequestWithOneLine() throws GitAPIException {
-        FileLocations locations = new FileLocations();
+        var locations = new FileLocations();
         locations.addLine(RELATIVE_PATH, 1);
 
-        Blames blames = new Blames();
-        FilteredLog log = new FilteredLog(StringUtils.EMPTY);
-        BlameCallback callback = createCallback(blames, locations);
+        var blames = new Blames();
+        var log = new FilteredLog(StringUtils.EMPTY);
+        var callback = createCallback(blames, locations);
 
-        BlameResult result = createResult(1);
+        var result = createResult(1);
 
         stubResultForIndex(result, 0);
 
@@ -167,15 +167,15 @@ class GitBlamerTest {
 
     @Test
     void shouldMapResultToRequestWithTwoLinesOfAbsolutePaths() throws GitAPIException {
-        FileLocations locations = new FileLocations();
+        var locations = new FileLocations();
         locations.addLine(RELATIVE_PATH, 1);
         locations.addLine(RELATIVE_PATH, 2);
 
-        Blames blames = new Blames();
-        FilteredLog log = new FilteredLog(StringUtils.EMPTY);
-        BlameCallback callback = createCallback(blames, locations);
+        var blames = new Blames();
+        var log = new FilteredLog(StringUtils.EMPTY);
+        var callback = createCallback(blames, locations);
 
-        BlameResult result = createResult(2);
+        var result = createResult(2);
 
         stubResultForIndex(result, 0);
         stubResultForIndex(result, 1);
@@ -183,7 +183,7 @@ class GitBlamerTest {
         callback.run(BUILDER, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner(), log);
 
         assertThat(blames.contains(RELATIVE_PATH)).isTrue();
-        FileBlame blame = blames.getBlame(RELATIVE_PATH);
+        var blame = blames.getBlame(RELATIVE_PATH);
         verifyResult(blame, 1);
         verifyResult(blame, 2);
     }
@@ -200,23 +200,23 @@ class GitBlamerTest {
 
     @Test
     void shouldMapResultToRequestOutOfRange() throws GitAPIException {
-        FileLocations locations = new FileLocations();
+        var locations = new FileLocations();
         locations.addLine(RELATIVE_PATH, 1);
         locations.addLine(RELATIVE_PATH, 2);
 
-        Blames blames = new Blames();
-        FilteredLog log = new FilteredLog(StringUtils.EMPTY);
-        BlameCallback callback = createCallback(blames, locations);
+        var blames = new Blames();
+        var log = new FilteredLog(StringUtils.EMPTY);
+        var callback = createCallback(blames, locations);
 
-        BlameResult result = createResult(1);
+        var result = createResult(1);
         stubResultForIndex(result, 0);
 
-        BlameRunner blameRunner = createBlameRunner(result);
-        LastCommitRunner lastCommitRunner = createLastCommitRunner();
+        var blameRunner = createBlameRunner(result);
+        var lastCommitRunner = createLastCommitRunner();
 
         callback.run(BUILDER, RELATIVE_PATH, blameRunner, lastCommitRunner, log);
 
-        FileBlame blame = blames.getBlame(RELATIVE_PATH);
+        var blame = blames.getBlame(RELATIVE_PATH);
         verifyResult(blame, 1);
 
         assertThat(blame.getEmail(3)).isEqualTo(EMPTY);
@@ -230,19 +230,19 @@ class GitBlamerTest {
 
     @Test
     void shouldIgnoreMissingCommit() throws GitAPIException {
-        FileLocations locations = new FileLocations();
+        var locations = new FileLocations();
         locations.addLine(RELATIVE_PATH, 1);
 
-        Blames blames = new Blames();
-        FilteredLog log = new FilteredLog(StringUtils.EMPTY);
-        BlameCallback callback = createCallback(blames, locations);
+        var blames = new Blames();
+        var log = new FilteredLog(StringUtils.EMPTY);
+        var callback = createCallback(blames, locations);
 
-        BlameResult result = createResult(1);
+        var result = createResult(1);
         when(result.getSourceAuthor(0)).thenReturn(new PersonIdent(NAME, EMAIL));
 
         callback.run(BUILDER, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner(), log);
 
-        FileBlame blame = blames.getBlame(RELATIVE_PATH);
+        var blame = blames.getBlame(RELATIVE_PATH);
         assertThat(blame.getEmail(1)).isEqualTo(EMAIL);
         assertThat(blame.getName(1)).isEqualTo(NAME);
         assertThat(blame.getCommit(1)).isEqualTo(EMPTY);
@@ -251,20 +251,20 @@ class GitBlamerTest {
 
     @Test
     void shouldIgnoreMissingAuthorAndCommitter() throws GitAPIException {
-        FileLocations locations = new FileLocations();
+        var locations = new FileLocations();
         locations.addLine(RELATIVE_PATH, 1);
 
-        Blames blames = new Blames();
-        FilteredLog log = new FilteredLog(StringUtils.EMPTY);
-        BlameCallback callback = createCallback(blames, locations);
+        var blames = new Blames();
+        var log = new FilteredLog(StringUtils.EMPTY);
+        var callback = createCallback(blames, locations);
 
-        BlameResult result = createResult(1);
-        RevCommit commit = createCommit();
+        var result = createResult(1);
+        var commit = createCommit();
         when(result.getSourceCommit(0)).thenReturn(commit);
 
         callback.run(BUILDER, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner(), log);
 
-        FileBlame blame = blames.getBlame(RELATIVE_PATH);
+        var blame = blames.getBlame(RELATIVE_PATH);
         assertThat(blame.getEmail(1)).isEqualTo(EMPTY);
         assertThat(blame.getName(1)).isEqualTo(EMPTY);
         assertThat(blame.getCommit(1)).isEqualTo(getCommitID());
@@ -273,22 +273,22 @@ class GitBlamerTest {
 
     @Test
     void shouldUseCommitterIfAuthorIsMissing() throws GitAPIException {
-        FileLocations locations = new FileLocations();
+        var locations = new FileLocations();
         locations.addLine(RELATIVE_PATH, 1);
 
-        Blames blames = new Blames();
-        FilteredLog log = new FilteredLog(StringUtils.EMPTY);
-        BlameCallback callback = createCallback(blames, locations);
+        var blames = new Blames();
+        var log = new FilteredLog(StringUtils.EMPTY);
+        var callback = createCallback(blames, locations);
 
-        BlameResult result = createResult(1);
-        RevCommit commit = createCommit(TIME + 1);
+        var result = createResult(1);
+        var commit = createCommit(TIME + 1);
         when(result.getSourceCommit(0)).thenReturn(commit);
         when(result.getSourceAuthor(0)).thenReturn(null);
         when(result.getSourceCommitter(0)).thenReturn(new PersonIdent(NAME + 1, EMAIL + 1));
 
         callback.run(BUILDER, RELATIVE_PATH, createBlameRunner(result), createLastCommitRunner(), log);
 
-        FileBlame blame = blames.getBlame(RELATIVE_PATH);
+        var blame = blames.getBlame(RELATIVE_PATH);
         verifyResult(blame, 1);
     }
 
@@ -305,24 +305,26 @@ class GitBlamerTest {
     }
 
     private String getCommitID(final int commitTime) {
-        try (ObjectInserter.Formatter fmt = new ObjectInserter.Formatter()) {
+        try (var fmt = new ObjectInserter.Formatter()) {
             return fmt.idFor(Constants.OBJ_COMMIT, getRawCommit(commitTime)).getName();
         }
     }
 
     @SuppressFBWarnings(value = "VA_FORMAT_STRING_USES_NEWLINE", justification = "JGit apparently can't parse windows line-endings (\r\n)")
     private byte[] getRawCommit(final int commitTime) {
-        return String.format("tree 216785864a817e2c5d9d5b54881a1f153da52096\n"
-                        + "author Foo Bar <foo@bar.com> %d +0000\n"
-                        + "committer Foo Bar <foo@bar.com> %d +0000\n\n"
-                        + "Commit message",
+        return """
+                        tree 216785864a817e2c5d9d5b54881a1f153da52096
+                        author Foo Bar <foo@bar.com> %d +0000
+                        committer Foo Bar <foo@bar.com> %d +0000
+                        
+                        Commit message""".formatted(
                 commitTime,
                 commitTime)
                 .getBytes();
     }
 
     private BlameResult createResult(final int size) {
-        RawText resultSize = createResultSize(size);
+        var resultSize = createResultSize(size);
         BlameResult result = mock(BlameResult.class);
         when(result.getResultContents()).thenReturn(resultSize);
         return result;
@@ -343,7 +345,7 @@ class GitBlamerTest {
     private void stubResultForIndex(final BlameResult result, final int index) {
         int line = index + 1;
         when(result.getSourceAuthor(index)).thenReturn(new PersonIdent(NAME + line, EMAIL + line));
-        RevCommit commit = createCommit(TIME + line);
+        var commit = createCommit(TIME + line);
         when(result.getSourceCommit(index)).thenReturn(commit);
     }
 

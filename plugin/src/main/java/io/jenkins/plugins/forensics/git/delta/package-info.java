@@ -1,5 +1,5 @@
 /**
- * Git implementation for determining the code difference - so called 'delta' - between two commits.
+ * Git implementation for determining the code difference - the so-called 'delta' - between two commits.
  */
 @DefaultAnnotation(NonNull.class)
 package io.jenkins.plugins.forensics.git.delta;

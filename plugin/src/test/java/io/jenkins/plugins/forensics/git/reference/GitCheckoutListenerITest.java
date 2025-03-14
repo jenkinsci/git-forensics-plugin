@@ -1,12 +1,11 @@
 package io.jenkins.plugins.forensics.git.reference;
 
+import org.junit.jupiter.api.Test;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.jupiter.api.Test;
-
-import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import hudson.model.FreeStyleProject;
 import hudson.plugins.git.GitSCM;
 
@@ -44,11 +43,11 @@ class GitCheckoutListenerITest extends GitITest {
         createAndCommitFile("Second.java", "second commit after init");
         expectedCommits.add(getHead());
 
-        FreeStyleProject job = createFreeStyleProject("listener");
+        var job = createFreeStyleProject("listener");
 
-        String referenceBuildHead = getHead();
+        var referenceBuildHead = getHead();
 
-        GitCommitsRecord referenceBuild = buildSuccessfully(job).getAction(GitCommitsRecord.class);
+        var referenceBuild = buildSuccessfully(job).getAction(GitCommitsRecord.class);
         assertThat(referenceBuild).isNotNull()
                 .hasOnlyCommits(expectedCommits)
                 .isNotEmpty()
@@ -59,19 +58,19 @@ class GitCheckoutListenerITest extends GitITest {
 
         createAndCommitFile("Third.java", "third commit after init");
 
-        GitCommitsRecord nextBuild = buildSuccessfully(job).getAction(GitCommitsRecord.class);
+        var nextBuild = buildSuccessfully(job).getAction(GitCommitsRecord.class);
 
-        String nextBuildHead = getHead();
+        var nextBuildHead = getHead();
         assertThat(nextBuild).isNotEmpty()
                 .hasLatestCommit(getHead())
                 .hasOnlyCommits(nextBuildHead)
                 .hasNoErrorMessages().hasInfoMessages("-> Recorded one new commit",
-                        String.format("Found previous build '%s' that contains recorded Git commits",
-                                referenceBuild.getOwner()),
-                        String.format("-> Starting recording of new commits since '%s'",
-                                RENDERER.asText(referenceBuildHead)),
-                        String.format("-> Using head commit '%s' as starting point",
-                                RENDERER.asText(nextBuildHead)));
+                "Found previous build '%s' that contains recorded Git commits".formatted(
+                        referenceBuild.getOwner()),
+                "-> Starting recording of new commits since '%s'".formatted(
+                        RENDERER.asText(referenceBuildHead)),
+                "-> Using head commit '%s' as starting point".formatted(
+                        RENDERER.asText(nextBuildHead)));
     }
 
     /**
@@ -85,19 +84,19 @@ class GitCheckoutListenerITest extends GitITest {
     void shouldFindReferencePoint() throws Exception {
         createAndCommitFile("Test.java", "public class Test {}");
 
-        FreeStyleProject reference = createFreeStyleProject("reference");
+        var reference = createFreeStyleProject("reference");
         buildSuccessfully(reference);
 
         createAndCommitFile("first-after-start", "first commit in reference");
-        GitCommitsRecord first = buildSuccessfully(reference).getAction(GitCommitsRecord.class);
-        String firstHead = getHead();
+        var first = buildSuccessfully(reference).getAction(GitCommitsRecord.class);
+        var firstHead = getHead();
         assertThat(first).isNotEmpty()
                 .hasLatestCommit(firstHead)
                 .hasOnlyCommits(firstHead);
 
         createAndCommitFile("second-after-start", "second commit in reference");
-        GitCommitsRecord second = buildSuccessfully(reference).getAction(GitCommitsRecord.class);
-        String secondHead = getHead();
+        var second = buildSuccessfully(reference).getAction(GitCommitsRecord.class);
+        var secondHead = getHead();
         assertThat(second).isNotEmpty()
                 .hasLatestCommit(secondHead)
                 .hasOnlyCommits(secondHead);
@@ -113,7 +112,7 @@ class GitCheckoutListenerITest extends GitITest {
      */
     @Test
     void shouldDecorateSeveralRepositories() {
-        WorkflowJob job = createPipeline();
+        var job = createPipeline();
         job.setDefinition(asStage(
                 "checkout([$class: 'GitSCM', "
                         + "branches: [[name: 'a6d0ef09ab3c418e370449a884da99b8190ae950' ]],\n"
@@ -138,7 +137,7 @@ class GitCheckoutListenerITest extends GitITest {
      */
     @Test
     void shouldSkipDuplicateRepositories() {
-        WorkflowJob job = createPipeline();
+        var job = createPipeline();
         job.setDefinition(asStage(
                 "checkout([$class: 'GitSCM', "
                         + "branches: [[name: 'a6d0ef09ab3c418e370449a884da99b8190ae950' ]],\n"
@@ -174,7 +173,7 @@ class GitCheckoutListenerITest extends GitITest {
     }
 
     private FreeStyleProject createFreeStyleProject(final String name) throws IOException {
-        FreeStyleProject project = createProject(FreeStyleProject.class, name);
+        var project = createProject(FreeStyleProject.class, name);
         project.setScm(new GitSCM(getGitRepositoryPath()));
         return project;
     }

@@ -1,11 +1,11 @@
 package io.jenkins.plugins.forensics.git.delta;
 
-import java.util.Optional;
-
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 
 import edu.hm.hafner.util.FilteredLog;
+
+import java.util.Optional;
 
 import org.jenkinsci.plugins.gitclient.GitClient;
 import hudson.model.Run;
@@ -27,8 +27,8 @@ class GitDeltaCalculatorTest {
     @Test
     void shouldAbortIfCommitsAreEmpty() {
         GitClient gitClient = mock(GitClient.class);
-        GitDeltaCalculator deltaCalculator = new GitDeltaCalculator(gitClient, StringUtils.EMPTY);
-        FilteredLog log = new FilteredLog(StringUtils.EMPTY);
+        var deltaCalculator = new GitDeltaCalculator(gitClient, StringUtils.EMPTY);
+        var log = new FilteredLog(StringUtils.EMPTY);
 
         Optional<Delta> result = deltaCalculator.calculateDelta(mock(Run.class), mock(Run.class), EMPTY_SCM_KEY, log);
 

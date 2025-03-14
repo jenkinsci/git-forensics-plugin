@@ -15,7 +15,7 @@ import io.jenkins.plugins.util.PluginArchitectureRules;
  */
 @SuppressWarnings("hideutilityclassconstructor")
 @AnalyzeClasses(packages = "io.jenkins.plugins.forensics.git")
-class PluginArchitectureTest {
+final class PluginArchitectureTest {
     @ArchTest
     static final ArchRule NO_EXCEPTIONS_WITH_NO_ARG_CONSTRUCTOR = ArchitectureRules.NO_EXCEPTIONS_WITH_NO_ARG_CONSTRUCTOR;
 
@@ -57,4 +57,7 @@ class PluginArchitectureTest {
 
     @ArchTest
     static final ArchRule USE_POST_FOR_LIST_MODELS_RULE = PluginArchitectureRules.USE_POST_FOR_LIST_AND_COMBOBOX_FILL;
+
+    private PluginArchitectureTest() {
+    }
 }

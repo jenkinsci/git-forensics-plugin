@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import edu.hm.hafner.util.FilteredLog;
 
 import io.jenkins.plugins.forensics.git.util.GitITest;
-import io.jenkins.plugins.forensics.miner.FileStatistics;
 import io.jenkins.plugins.forensics.miner.RepositoryStatistics;
 
 import static io.jenkins.plugins.forensics.assertions.Assertions.*;
@@ -28,7 +27,7 @@ class GitRepositoryMinerITest extends GitITest {
      */
     @Test
     void shouldCollectSingleFile() throws InterruptedException {
-        RepositoryStatistics statisticsPerFile = createRepositoryStatistics();
+        var statisticsPerFile = createRepositoryStatistics();
 
         assertThat(statisticsPerFile).hasFiles(OTHER_FILE);
 
@@ -44,17 +43,17 @@ class GitRepositoryMinerITest extends GitITest {
     @Test
     void shouldCountNumberOfCommits() throws InterruptedException {
         writeFileAsAuthorFoo("First\n");
-        String firstCommit = getHead();
+        var firstCommit = getHead();
         writeFileAsAuthorFoo("Second\nLine\n");
-        String head = getHead();
+        var head = getHead();
 
-        RepositoryStatistics statisticsPerFile = createRepositoryStatistics();
+        var statisticsPerFile = createRepositoryStatistics();
 
         assertThat(statisticsPerFile).hasFiles(OTHER_FILE, ADDITIONAL_FILE);
 
         assertDefaultFileStatistics(statisticsPerFile);
 
-        FileStatistics fileStatistics = statisticsPerFile.get(ADDITIONAL_FILE);
+        var fileStatistics = statisticsPerFile.get(ADDITIONAL_FILE);
         assertThat(fileStatistics)
                 .hasFileName(ADDITIONAL_FILE)
                 .hasNumberOfAuthors(1)
@@ -85,13 +84,13 @@ class GitRepositoryMinerITest extends GitITest {
         writeFileAsAuthorFoo("First");
         writeFileAsAuthorBar("Second");
 
-        RepositoryStatistics statisticsPerFile = createRepositoryStatistics();
+        var statisticsPerFile = createRepositoryStatistics();
 
         assertThat(statisticsPerFile).hasFiles(OTHER_FILE, ADDITIONAL_FILE);
 
         assertDefaultFileStatistics(statisticsPerFile);
 
-        FileStatistics fileStatistics = statisticsPerFile.get(ADDITIONAL_FILE);
+        var fileStatistics = statisticsPerFile.get(ADDITIONAL_FILE);
         assertThat(fileStatistics).hasFileName(ADDITIONAL_FILE)
                 .hasNumberOfAuthors(2)
                 .hasNumberOfCommits(4)
@@ -105,7 +104,7 @@ class GitRepositoryMinerITest extends GitITest {
     }
 
     private void assertDefaultFileStatistics(final RepositoryStatistics statistics) {
-        FileStatistics fileStatistics = statistics.get(OTHER_FILE);
+        var fileStatistics = statistics.get(OTHER_FILE);
         assertThat(fileStatistics).hasFileName(OTHER_FILE)
                 .hasNumberOfAuthors(1)
                 .hasNumberOfCommits(1)

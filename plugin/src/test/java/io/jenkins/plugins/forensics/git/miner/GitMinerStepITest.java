@@ -1,13 +1,12 @@
 package io.jenkins.plugins.forensics.git.miner;
 
+import org.junit.jupiter.api.Test;
+
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-import org.junit.jupiter.api.Test;
-
-import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import hudson.model.FreeStyleProject;
 import hudson.model.Run;
 import hudson.plugins.git.BranchSpec;
@@ -15,7 +14,6 @@ import hudson.plugins.git.GitSCM;
 
 import io.jenkins.plugins.datatables.TableModel;
 import io.jenkins.plugins.forensics.git.util.GitITest;
-import io.jenkins.plugins.forensics.miner.FileStatistics;
 import io.jenkins.plugins.forensics.miner.ForensicsBuildAction;
 import io.jenkins.plugins.forensics.miner.ForensicsTableModel.ForensicsRow;
 import io.jenkins.plugins.forensics.miner.ForensicsViewModel;
@@ -49,18 +47,18 @@ class GitMinerStepITest extends GitITest {
         writeFileAsAuthorFoo("First");
         writeFileAsAuthorBar("Second");
 
-        FreeStyleProject job = createJobWithMiner();
+        var job = createJobWithMiner();
 
         Run<?, ?> build = buildSuccessfully(job);
 
-        RepositoryStatistics statistics = getStatistics(build);
+        var statistics = getStatistics(build);
         assertThat(statistics).hasFiles(INITIAL_FILE, ADDITIONAL_FILE);
         assertThat(statistics).hasLatestCommitId(getHead());
 
         verifyStatistics(statistics, INITIAL_FILE, 1, 1);
         verifyStatistics(statistics, ADDITIONAL_FILE, 2, 4);
 
-        TableModel forensics = getTableModel(build);
+        var forensics = getTableModel(build);
         assertThat(forensics.getRows()).hasSize(2);
 
         verifyInitialFile(forensics);
@@ -70,7 +68,7 @@ class GitMinerStepITest extends GitITest {
     }
 
     private void verifyInitialFile(final TableModel forensics) {
-        String wrappedInitialFileName = "<a href=\"fileName." + INITIAL_FILE.hashCode() + "\" data-bs-toggle=\"tooltip\" data-bs-placement=\"left\" title=\"file\">" + INITIAL_FILE + "</a>";
+        var wrappedInitialFileName = "<a href=\"fileName." + INITIAL_FILE.hashCode() + "\" data-bs-toggle=\"tooltip\" data-bs-placement=\"left\" title=\"file\">" + INITIAL_FILE + "</a>";
         assertThat(getRow(forensics, 0))
                 .hasFileName(wrappedInitialFileName)
                 .hasAuthorsSize(1)
@@ -83,12 +81,12 @@ class GitMinerStepITest extends GitITest {
     @Test
     void shouldMineRepositoryIncrementally() {
         writeFileAsAuthorFoo("1\n2\n3\n");
-        String secondCommit = getHead();
+        var secondCommit = getHead();
 
-        FreeStyleProject job = createJobWithMiner();
+        var job = createJobWithMiner();
         Run<?, ?> firstBuild = buildSuccessfully(job);
 
-        RepositoryStatistics statistics = getStatistics(firstBuild);
+        var statistics = getStatistics(firstBuild);
         assertThat(statistics).hasFiles(INITIAL_FILE, ADDITIONAL_FILE);
         assertThat(statistics).hasLatestCommitId(getHead());
 
@@ -100,7 +98,7 @@ class GitMinerStepITest extends GitITest {
         Run<?, ?> secondBuild = buildSuccessfully(job);
 
         assertThat(getConsoleLog(secondBuild)).contains(
-                String.format("No commits found since previous commit '%s'", secondCommit));
+                "No commits found since previous commit '%s'".formatted(secondCommit));
         verifyStatistics(getStatistics(secondBuild), ADDITIONAL_FILE, 1, 1);
 
         writeFileAsAuthorFoo("Third");
@@ -122,22 +120,22 @@ class GitMinerStepITest extends GitITest {
     /** Verifies that the history of moved files will be preserved. */
     @Test
     void shouldPreserveHistoryOfMovedFiles() {
-        FreeStyleProject job = buildJob();
+        var job = buildJob();
 
-        String moved = "moved";
+        var moved = "moved";
         git("mv", ADDITIONAL_FILE, moved);
         commit("Moved file");
 
         Run<?, ?> build = buildSuccessfully(job);
 
-        RepositoryStatistics statistics = getStatistics(build);
+        var statistics = getStatistics(build);
         assertThat(statistics).hasFiles(INITIAL_FILE, moved);
         assertThat(statistics).hasLatestCommitId(getHead());
 
         assertThat(getConsoleLog(build)).contains("1 commits with differences analyzed", "1 RENAME commit diff items");
         verifyStatistics(statistics, moved, 2, 5);
 
-        TableModel forensics = getTableModel(build);
+        var forensics = getTableModel(build);
         assertThat(forensics.getRows()).hasSize(2);
 
         verifyInitialFile(forensics);
@@ -145,7 +143,7 @@ class GitMinerStepITest extends GitITest {
     }
 
     private void verifyAdditionalFile(final String fileName, final TableModel forensics, final int commitsSize) {
-        String wrappedFileName = "<a href=\"fileName." + fileName.hashCode() + "\" data-bs-toggle=\"tooltip\" data-bs-placement=\"left\" title=\""
+        var wrappedFileName = "<a href=\"fileName." + fileName.hashCode() + "\" data-bs-toggle=\"tooltip\" data-bs-placement=\"left\" title=\""
                 + fileName
                 + "\">" + fileName + "</a>";
         assertThat(getRow(forensics, 1))
@@ -159,20 +157,20 @@ class GitMinerStepITest extends GitITest {
     /** Verifies that deleted files are not shown anymore. */
     @Test
     void shouldNotShowDeletedFiles() {
-        FreeStyleProject job = buildJob();
+        var job = buildJob();
 
         git("rm", ADDITIONAL_FILE);
         commit("Deleted file");
 
         Run<?, ?> build = buildSuccessfully(job);
 
-        RepositoryStatistics statistics = getStatistics(build);
+        var statistics = getStatistics(build);
         assertThat(statistics).hasFiles(INITIAL_FILE);
         assertThat(statistics).hasLatestCommitId(getHead());
 
         assertThat(getConsoleLog(build)).contains("1 commits with differences analyzed", "1 DELETE commit diff items");
 
-        TableModel forensics = getTableModel(build);
+        var forensics = getTableModel(build);
         assertThat(forensics.getRows()).hasSize(1);
 
         verifyInitialFile(forensics);
@@ -183,7 +181,7 @@ class GitMinerStepITest extends GitITest {
     void shouldCalculateLocAndChurn() {
         writeFileAsAuthorFoo("First\n");
 
-        FreeStyleProject job = createJobWithMiner();
+        var job = createJobWithMiner();
         Run<?, ?> build = buildSuccessfully(job);
 
         verifyLocAndChurn(build, ADDITIONAL_FILE, 1, 1);
@@ -200,21 +198,21 @@ class GitMinerStepITest extends GitITest {
     /** Run on existing project. */
     @Test
     void shouldRunOnExistingProject() throws IOException {
-        FreeStyleProject job = createFreeStyleProject();
-        GitSCM scm = createGitScm("https://github.com/jenkinsci/git-forensics-plugin.git",
+        var job = createFreeStyleProject();
+        var scm = createGitScm("https://github.com/jenkinsci/git-forensics-plugin.git",
                 Collections.singletonList(new BranchSpec(GIT_FORENSICS_COMMIT)));
         job.setScm(scm);
         job.getPublishersList().add(new RepositoryMinerStep());
 
         Run<?, ?> build = buildSuccessfully(job);
-        RepositoryStatistics statistics = getStatistics(build);
+        var statistics = getStatistics(build);
         assertThat(statistics.getFiles()).hasSize(EXPECTED_FILES_GIT_FORENSICS);
     }
 
     /** Run on existing project. */
     @Test
     void shouldRunInPipelineOnExistingProject() {
-        WorkflowJob job = createPipeline();
+        var job = createPipeline();
         job.setDefinition(asStage(checkout(GIT_FORENSICS_COMMIT, GIT_FORENSICS_URL), "mineRepository()"));
 
         assertThat(buildSuccessfully(job).getActions(ForensicsBuildAction.class))
@@ -227,7 +225,7 @@ class GitMinerStepITest extends GitITest {
      */
     @Test
     void shouldMineMultipleRepositories() {
-        WorkflowJob job = createPipeline();
+        var job = createPipeline();
         job.setDefinition(asStage(
                 checkout(GIT_FORENSICS_COMMIT, GIT_FORENSICS_URL),
                 checkout(FORENSICS_API_COMMIT, FORENSICS_API_URL),
@@ -245,7 +243,7 @@ class GitMinerStepITest extends GitITest {
      */
     @Test
     void shouldSkipDuplicateRepository() {
-        WorkflowJob job = createPipeline();
+        var job = createPipeline();
         job.setDefinition(asStage(
                 checkout(GIT_FORENSICS_COMMIT, GIT_FORENSICS_URL),
                 checkout(GIT_FORENSICS_COMMIT, GIT_FORENSICS_URL),
@@ -266,7 +264,7 @@ class GitMinerStepITest extends GitITest {
      */
     @Test
     void shouldMineSelectedRepository() {
-        WorkflowJob job = createPipeline();
+        var job = createPipeline();
         job.setDefinition(asStage(
                 checkout(GIT_FORENSICS_COMMIT, GIT_FORENSICS_URL),
                 checkout(FORENSICS_API_COMMIT, FORENSICS_API_URL),
@@ -312,7 +310,7 @@ class GitMinerStepITest extends GitITest {
 
     private void verifyStatistics(final RepositoryStatistics statistics, final String fileName,
             final int authorsSize, final int commitsSize) {
-        FileStatistics additionalFileStatistics = statistics.get(fileName);
+        var additionalFileStatistics = statistics.get(fileName);
         assertThat(additionalFileStatistics).hasFileName(fileName);
         assertThat(additionalFileStatistics).hasNumberOfAuthors(authorsSize);
         assertThat(additionalFileStatistics).hasNumberOfCommits(commitsSize);
@@ -320,8 +318,8 @@ class GitMinerStepITest extends GitITest {
 
     private void verifyLocAndChurn(final Run<?, ?> build, final String fileName, final int churn,
             final int linesOfCode) {
-        RepositoryStatistics statistics = getStatistics(build);
-        FileStatistics fileStatistics = statistics.get(fileName);
+        var statistics = getStatistics(build);
+        var fileStatistics = statistics.get(fileName);
 
         assertThat(fileStatistics.getAbsoluteChurn()).isEqualTo(churn);
         assertThat(fileStatistics.getLinesOfCode()).isEqualTo(linesOfCode);
@@ -332,7 +330,7 @@ class GitMinerStepITest extends GitITest {
     }
 
     private TableModel getTableModel(final Run<?, ?> build) {
-        ForensicsBuildAction forensicsBuildAction = getAction(build);
+        var forensicsBuildAction = getAction(build);
 
         return ((ForensicsViewModel) forensicsBuildAction.getTarget()).getTableModel("forensics");
     }
@@ -345,7 +343,7 @@ class GitMinerStepITest extends GitITest {
     private ForensicsRow getRow(final TableModel forensics, final int rowIndex) {
         List<Object> rows = forensics.getRows();
         rows.sort(this::sort);
-        Object actual = rows.get(rowIndex);
+        var actual = rows.get(rowIndex);
         assertThat(actual).isInstanceOf(ForensicsRow.class);
         return (ForensicsRow) actual;
     }
@@ -356,7 +354,7 @@ class GitMinerStepITest extends GitITest {
 
     private FreeStyleProject createJobWithMiner() {
         try {
-            FreeStyleProject job = createFreeStyleProject();
+            var job = createFreeStyleProject();
             job.setScm(new GitSCM(getRepositoryRoot()));
             job.getPublishersList().add(new RepositoryMinerStep());
             return job;
