@@ -1,12 +1,13 @@
 package io.jenkins.plugins.forensics.git.miner;
 
+import edu.hm.hafner.util.FilteredLog;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import java.io.IOException;
+import java.io.Serial;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import edu.hm.hafner.util.FilteredLog;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import org.jenkinsci.plugins.gitclient.GitClient;
 
@@ -27,6 +28,7 @@ import io.jenkins.plugins.forensics.miner.RepositoryStatistics;
  */
 @SuppressFBWarnings(value = "SE", justification = "GitClient implementation is Serializable")
 public class GitRepositoryMiner extends RepositoryMiner {
+    @Serial
     private static final long serialVersionUID = 1157958118716013983L;
 
     private final GitClient gitClient;
@@ -60,7 +62,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
             else {
                 latestCommitId = commits.get(0).getId();
             }
-            RepositoryStatistics current = new RepositoryStatistics(latestCommitId);
+            var current = new RepositoryStatistics(latestCommitId);
             current.addAll(previous);
             Collections.reverse(commits); // make sure that we start with old commits to preserve the history
             current.addAll(commits);

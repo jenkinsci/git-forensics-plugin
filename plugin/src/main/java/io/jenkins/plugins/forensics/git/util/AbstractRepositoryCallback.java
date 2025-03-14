@@ -1,11 +1,12 @@
 package io.jenkins.plugins.forensics.git.util;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.LinkOption;
-
 import org.eclipse.jgit.dircache.InvalidPathException;
 import org.eclipse.jgit.lib.Repository;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.Serial;
+import java.nio.file.LinkOption;
 
 import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 
@@ -19,6 +20,7 @@ import org.jenkinsci.plugins.gitclient.RepositoryCallback;
  * @author Ullrich Hafner
  */
 public abstract class AbstractRepositoryCallback<T> implements RepositoryCallback<T> {
+    @Serial
     private static final long serialVersionUID = -5059963457602091209L;
 
     private static final String SLASH = "/";

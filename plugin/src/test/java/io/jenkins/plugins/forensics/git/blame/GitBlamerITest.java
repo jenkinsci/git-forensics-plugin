@@ -6,7 +6,6 @@ import org.junitpioneer.jupiter.Issue;
 
 import edu.hm.hafner.util.FilteredLog;
 
-import io.jenkins.plugins.forensics.blame.Blames;
 import io.jenkins.plugins.forensics.blame.FileBlame;
 import io.jenkins.plugins.forensics.blame.FileLocations;
 import io.jenkins.plugins.forensics.git.util.GitITest;
@@ -24,10 +23,10 @@ class GitBlamerITest extends GitITest {
      */
     @Test
     void shouldCreateEmptyBlamesIfRequestIsEmpty() {
-        GitBlamer gitBlamer = createBlamer();
+        var gitBlamer = createBlamer();
 
-        FilteredLog log = createLog();
-        Blames blames = gitBlamer.blame(new FileLocations(), log);
+        var log = createLog();
+        var blames = gitBlamer.blame(new FileLocations(), log);
 
         assertThat(blames).isEmpty();
         assertThat(log.getInfoMessages()).contains("-> Git commit ID = '" + getHead() + "'");
@@ -41,23 +40,23 @@ class GitBlamerITest extends GitITest {
     void shouldCreateBlamesIfRequestIsExistingFile() {
         create2RevisionsWithDifferentAuthors();
 
-        FileLocations locations = new FileLocations();
-        String absolutePath = ADDITIONAL_FILE;
+        var locations = new FileLocations();
+        var absolutePath = ADDITIONAL_FILE;
         locations.addLine(absolutePath, 2);
         locations.addLine(absolutePath, 3);
         locations.addLine(absolutePath, 4);
         locations.addLine(absolutePath, 5);
 
-        GitBlamer gitBlamer = createBlamer();
+        var gitBlamer = createBlamer();
 
-        FilteredLog log = createLog();
-        Blames blames = gitBlamer.blame(locations, log);
+        var log = createLog();
+        var blames = gitBlamer.blame(locations, log);
 
         assertThat(blames).hasOnlyFiles(absolutePath);
         assertThat(log.getErrorMessages()).isEmpty();
         assertThat(log.getInfoMessages()).contains("-> blamed authors of issues in 1 files");
 
-        FileBlame request = blames.getBlame(absolutePath);
+        var request = blames.getBlame(absolutePath);
         assertThat(request).hasFileName(absolutePath);
 
         assertThatBlameIsEmpty(request, 1);
@@ -76,20 +75,20 @@ class GitBlamerITest extends GitITest {
     void shouldAssignLastCommitterIfNoLineNumberIsGiven() {
         create2RevisionsWithDifferentAuthors();
 
-        FileLocations locations = new FileLocations();
-        String absolutePath = ADDITIONAL_FILE;
+        var locations = new FileLocations();
+        var absolutePath = ADDITIONAL_FILE;
         locations.addLine(absolutePath, 0);
 
-        GitBlamer gitBlamer = createBlamer();
+        var gitBlamer = createBlamer();
 
-        FilteredLog log = createLog();
-        Blames blames = gitBlamer.blame(locations, log);
+        var log = createLog();
+        var blames = gitBlamer.blame(locations, log);
 
         assertThat(blames).hasOnlyFiles(absolutePath);
         assertThat(log.getErrorMessages()).isEmpty();
         assertThat(log.getInfoMessages()).contains("-> blamed authors of issues in 1 files");
 
-        FileBlame request = blames.getBlame(absolutePath);
+        var request = blames.getBlame(absolutePath);
         assertThat(request).hasFileName(absolutePath);
 
         assertThat(request.getName(0)).isEqualTo(BAR_NAME);

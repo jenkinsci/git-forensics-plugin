@@ -1,12 +1,13 @@
 package io.jenkins.plugins.forensics.git.delta;
 
-import java.io.IOException;
-import java.util.Optional;
-
 import org.apache.commons.lang3.StringUtils;
 
 import edu.hm.hafner.util.FilteredLog;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import java.io.IOException;
+import java.io.Serial;
+import java.util.Optional;
 
 import org.jenkinsci.plugins.gitclient.GitClient;
 import hudson.model.Run;
@@ -24,6 +25,7 @@ import io.jenkins.plugins.forensics.git.util.RemoteResultWrapper;
  */
 @SuppressFBWarnings(value = "SE", justification = "GitClient implementation is Serializable")
 public class GitDeltaCalculator extends DeltaCalculator {
+    @Serial
     private static final long serialVersionUID = -7303579046266608368L;
     private static final GitCommitTextDecorator DECORATOR = new GitCommitTextDecorator();
 
@@ -51,15 +53,17 @@ public class GitDeltaCalculator extends DeltaCalculator {
     @Override
     public Optional<Delta> calculateDelta(final Run<?, ?> build, final Run<?, ?> referenceBuild,
             final String scmKeyFilter, final FilteredLog log) {
-        String scm = StringUtils.defaultIfEmpty(scmKeyFilter, scmKey);
+        var scm = StringUtils.defaultIfEmpty(scmKeyFilter, scmKey);
         Optional<GitCommitsRecord> buildCommits = GitCommitsRecord.findRecordForScm(build, scm);
         Optional<GitCommitsRecord> referenceCommits = GitCommitsRecord.findRecordForScm(referenceBuild, scm);
         if (buildCommits.isPresent() && referenceCommits.isPresent()) {
-            String currentCommit = getLatestCommit(build.getFullDisplayName(), buildCommits.get(), log);
-            String referenceCommit = getLatestCommit(referenceBuild.getFullDisplayName(), referenceCommits.get(), log);
+            var currentCommit = getLatestCommit(build.getFullDisplayName(), buildCommits.get(), log);
+            var referenceCommit = getLatestCommit(referenceBuild.getFullDisplayName(), referenceCommits.get(), log);
             if (!currentCommit.isEmpty() && !referenceCommit.isEmpty()) {
-                log.logInfo("-> Invoking Git delta calculator for determining the changes between commits '%s' and '%s'",
-                        DECORATOR.asText(currentCommit), DECORATOR.asText(referenceCommit));
+                log.logInfo("-> Invoking Git delta calculator for determining the changes between "
+                                + "commits '%s' and '%s' in repository '%s'",
+                        DECORATOR.asText(currentCommit), DECORATOR.asText(referenceCommit),
+                        git.getWorkTree().getRemote());
                 try {
                     RemoteResultWrapper<Delta> wrapped = git.withRepository(
                             new DeltaRepositoryCallback(currentCommit, referenceCommit));
@@ -90,7 +94,7 @@ public class GitDeltaCalculator extends DeltaCalculator {
      * @return the latest commit
      */
     private String getLatestCommit(final String buildName, final GitCommitsRecord record, final FilteredLog log) {
-        String latestCommitId = record.getLatestCommit();
+        var latestCommitId = record.getLatestCommit();
         log.logInfo("-> Using commit '%s' as latest commit for build '%s'", DECORATOR.asText(latestCommitId), buildName);
         return latestCommitId;
     }

@@ -1,8 +1,8 @@
 package io.jenkins.plugins.forensics.git.miner;
 
-import java.util.Optional;
-
 import edu.hm.hafner.util.FilteredLog;
+
+import java.util.Optional;
 
 import hudson.Extension;
 import hudson.FilePath;
@@ -15,7 +15,7 @@ import io.jenkins.plugins.forensics.miner.MinerFactory;
 import io.jenkins.plugins.forensics.miner.RepositoryMiner;
 
 /**
- * A {@link MinerFactory} for Git. Handles Git repositories that do not have option ShallowClone set.
+ * A {@link MinerFactory} for Git. Handles Git repositories that do not have the option ShallowClone set.
  *
  * @author Ullrich Hafner
  */
@@ -24,7 +24,7 @@ public class GitMinerFactory extends MinerFactory {
     @Override
     public Optional<RepositoryMiner> createMiner(final SCM scm, final Run<?, ?> build, final FilePath workTree,
             final TaskListener listener, final FilteredLog logger) {
-        GitRepositoryValidator validator = new GitRepositoryValidator(scm, build, workTree, listener, logger);
+        var validator = new GitRepositoryValidator(scm, build, workTree, listener, logger);
         if (validator.isGitRepository()) {
             logger.logInfo("-> Git miner successfully created in working tree '%s'", workTree);
 

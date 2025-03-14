@@ -1,19 +1,10 @@
 package io.jenkins.plugins.forensics.git.miner;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.ObjectReader;
-import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.treewalk.AbstractTreeIterator;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
@@ -21,6 +12,11 @@ import org.eclipse.jgit.treewalk.EmptyTreeIterator;
 
 import edu.hm.hafner.util.FilteredLog;
 import edu.hm.hafner.util.TreeStringBuilder;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 import io.jenkins.plugins.forensics.miner.CommitDiffItem;
 
@@ -42,12 +38,12 @@ class CommitAnalyzer {
         }
         logger.logInfo("Found %d commits", newRevCommits.size());
 
-        TreeStringBuilder fileNameBuilder = new TreeStringBuilder();
+        var fileNameBuilder = new TreeStringBuilder();
         List<CommitDiffItem> commitsOfBuild = new ArrayList<>();
         for (int i = 0; i < newRevCommits.size(); i++) {
-            AbstractTreeIterator toTree = createTreeIteratorToCompareTo(
+            var toTree = createTreeIteratorToCompareTo(
                     repository, newRevCommits, i, latestCommitOfPreviousBuild, logger);
-            CommitDiffItem commit = createFromRevCommit(newRevCommits.get(i));
+            var commit = createFromRevCommit(newRevCommits.get(i));
             commitsOfBuild.addAll(new DiffsCollector().getDiffsForCommit(
                     repository, git, commit, toTree, fileNameBuilder, logger));
         }
@@ -61,11 +57,11 @@ class CommitAnalyzer {
     }
 
     private String getAuthor(final RevCommit commit) {
-        PersonIdent author = commit.getAuthorIdent();
+        var author = commit.getAuthorIdent();
         if (author != null) {
             return Objects.toString(author.getEmailAddress(), author.getName());
         }
-        PersonIdent committer = commit.getCommitterIdent();
+        var committer = commit.getCommitterIdent();
         if (committer != null) {
             return Objects.toString(committer.getEmailAddress(), committer.getName());
         }
@@ -87,17 +83,17 @@ class CommitAnalyzer {
 
     static AbstractTreeIterator createTreeIteratorFor(final String commitId, final Repository repository,
             final FilteredLog logger) throws IOException {
-        try (RevWalk walk = new RevWalk(repository)) {
-            ObjectId resolve = repository.resolve(commitId);
+        try (var walk = new RevWalk(repository)) {
+            var resolve = repository.resolve(commitId);
             if (resolve == null) {
                 logger.logError("No commit found with ID " + commitId);
                 return new EmptyTreeIterator();
             }
-            RevCommit commit = walk.parseCommit(resolve);
-            RevTree tree = walk.parseTree(commit.getTree().getId());
+            var commit = walk.parseCommit(resolve);
+            var tree = walk.parseTree(commit.getTree().getId());
 
-            CanonicalTreeParser treeParser = new CanonicalTreeParser();
-            try (ObjectReader reader = repository.newObjectReader()) {
+            var treeParser = new CanonicalTreeParser();
+            try (var reader = repository.newObjectReader()) {
                 treeParser.reset(reader, tree.getId());
             }
             walk.dispose();

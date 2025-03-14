@@ -1,12 +1,11 @@
 package io.jenkins.plugins.forensics.git.util;
 
-import java.io.IOException;
-
 import edu.hm.hafner.util.FilteredLog;
 import edu.hm.hafner.util.VisibleForTesting;
 
+import java.io.IOException;
+
 import org.jenkinsci.plugins.gitclient.GitClient;
-import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -79,13 +78,13 @@ public class GitRepositoryValidator {
         }
 
         try {
-            GitClient gitClient = createClient();
+            var gitClient = createClient();
             if (gitClient.revParse(getHead()) != null) {
                 return true;
             }
         }
         catch (InterruptedException | GitException e) {
-            // ignore and skip working tree
+            // ignore and skip the working tree
         }
 
         logger.logInfo("Exception while creating a GitClient instance for work tree '%s'", workTree);
@@ -93,7 +92,7 @@ public class GitRepositoryValidator {
     }
 
     private boolean isShallow(final GitSCM git) {
-        CloneOption option = git.getExtensions().get(CloneOption.class);
+        var option = git.getExtensions().get(CloneOption.class);
 
         return option != null && option.isShallow();
     }
@@ -105,7 +104,7 @@ public class GitRepositoryValidator {
      */
     public GitClient createClient() {
         try {
-            EnvVars environment = build.getEnvironment(listener);
+            var environment = build.getEnvironment(listener);
             return ((GitSCM) scm).createClient(listener, environment, build, workTree);
         }
         catch (IOException | InterruptedException e) {
@@ -120,7 +119,7 @@ public class GitRepositoryValidator {
      */
     public String getHead() {
         try {
-            EnvVars environment = build.getEnvironment(listener);
+            var environment = build.getEnvironment(listener);
             return environment.getOrDefault("GIT_COMMIT", HEAD);
         }
         catch (IOException | InterruptedException e) {

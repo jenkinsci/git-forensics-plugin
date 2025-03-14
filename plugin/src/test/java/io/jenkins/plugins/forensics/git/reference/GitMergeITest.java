@@ -1,12 +1,12 @@
 package io.jenkins.plugins.forensics.git.reference;
 
-import java.io.IOException;
-import java.util.Collections;
-
 import org.eclipse.jgit.lib.ObjectId;
 import org.junit.jupiter.api.Test;
 
 import edu.hm.hafner.util.FilteredLog;
+
+import java.io.IOException;
+import java.util.Collections;
 
 import hudson.model.FreeStyleProject;
 import hudson.model.Run;
@@ -45,9 +45,9 @@ class GitMergeITest extends GitITest {
      */
     @Test
     void shouldHandleMergeFromMainIntoPullRequest() throws IOException {
-        FreeStyleProject mainJob = createFreeStyleProject(
+        var mainJob = createFreeStyleProject(
                 MAIN_JOB_NAME, MAIN_JOB_NAME, "origin/" + INITIAL_BRANCH);
-        FreeStyleProject pullRequestJob = createFreeStyleProject(
+        var pullRequestJob = createFreeStyleProject(
                 PR_JOB_NAME, MAIN_JOB_NAME, "origin/" + PR_BRANCH_NAME);
 
         buildSuccessfully(mainJob);
@@ -63,7 +63,7 @@ class GitMergeITest extends GitITest {
         buildSuccessfully(mainJob);
         writeFileWithNameAsAuthorFoo(MAIN_FILE, "Commit 2 in main");
         Run<?, ?> latestMainBuild = buildSuccessfully(mainJob);
-        GitCommitsRecord latestMainRecord = latestMainBuild.getAction(GitCommitsRecord.class);
+        var latestMainRecord = latestMainBuild.getAction(GitCommitsRecord.class);
         assertThat(latestMainRecord)
                 .isNotNull()
                 .satisfies(commit -> {
@@ -74,7 +74,7 @@ class GitMergeITest extends GitITest {
         checkout(PR_BRANCH_NAME);
         writeFileWithNameAsAuthorFoo("anotherFile", "Commit 3 in PR");
         Run<?, ?> latestPullRequestBuild = buildSuccessfully(pullRequestJob);
-        GitCommitsRecord latestPullRequestRecord = latestPullRequestBuild.getAction(GitCommitsRecord.class);
+        var latestPullRequestRecord = latestPullRequestBuild.getAction(GitCommitsRecord.class);
         assertThat(latestPullRequestRecord)
                 .isNotNull()
                 .satisfies(commit -> {
@@ -104,9 +104,9 @@ class GitMergeITest extends GitITest {
      */
     @Test
     void shouldHandleMergeFromPullRequestIntoMain() throws IOException {
-        FreeStyleProject mainJob = createFreeStyleProject(
+        var mainJob = createFreeStyleProject(
                 MAIN_JOB_NAME, MAIN_JOB_NAME, "origin/" + INITIAL_BRANCH);
-        FreeStyleProject pullRequestJob = createFreeStyleProject(
+        var pullRequestJob = createFreeStyleProject(
                 PR_JOB_NAME, MAIN_JOB_NAME, "origin/" + PR_BRANCH_NAME);
 
         checkout(INITIAL_BRANCH);
@@ -118,7 +118,7 @@ class GitMergeITest extends GitITest {
         buildSuccessfully(pullRequestJob);
         writeFileWithNameAsAuthorFoo("additionalFile", "Commit 2 in PR");
         Run<?, ?> latestPullRequestBuild = buildSuccessfully(pullRequestJob);
-        GitCommitsRecord latestPullRequestRecord = latestPullRequestBuild.getAction(GitCommitsRecord.class);
+        var latestPullRequestRecord = latestPullRequestBuild.getAction(GitCommitsRecord.class);
 
         checkout(INITIAL_BRANCH);
         writeFileWithNameAsAuthorFoo(MAIN_FILE, "Commit 2 in main");
@@ -134,7 +134,7 @@ class GitMergeITest extends GitITest {
                     assertThat(commit.getTargetParentCommit()).isEqualTo(latestPullRequestRecord.getLatestCommit());
                 });
         // verify reference
-        GitReferenceRecorder recorder = createGitReferenceRecorder(mainJob, INITIAL_BRANCH);
+        var recorder = createGitReferenceRecorder(mainJob, INITIAL_BRANCH);
         assertThat(recorder.find(mergeBuild, mainJob.getLastCompletedBuild(), createLog()))
                 .isNotEmpty()
                 .satisfies(reference -> assertThat(
@@ -158,9 +158,9 @@ class GitMergeITest extends GitITest {
      */
     @Test
     void shouldHandleFastForwardFromPullRequestIntoMain() throws IOException {
-        FreeStyleProject mainJob = createFreeStyleProject(
+        var mainJob = createFreeStyleProject(
                 MAIN_JOB_NAME, MAIN_JOB_NAME, "origin/" + INITIAL_BRANCH);
-        FreeStyleProject pullRequestJob = createFreeStyleProject(
+        var pullRequestJob = createFreeStyleProject(
                 PR_JOB_NAME, MAIN_JOB_NAME, "origin/" + PR_BRANCH_NAME);
 
         checkout(INITIAL_BRANCH);
@@ -172,7 +172,7 @@ class GitMergeITest extends GitITest {
         buildSuccessfully(pullRequestJob);
         writeFileWithNameAsAuthorFoo("anotherFile", "Commit 2 in PR");
         Run<?, ?> latestPullRequestBuild = buildSuccessfully(pullRequestJob);
-        GitCommitsRecord latestPullRequestRecord = latestPullRequestBuild.getAction(GitCommitsRecord.class);
+        var latestPullRequestRecord = latestPullRequestBuild.getAction(GitCommitsRecord.class);
 
         checkout(INITIAL_BRANCH);
         // merge PR into main without creating a merge commit
@@ -197,9 +197,9 @@ class GitMergeITest extends GitITest {
      */
     @Test
     void shouldHandleDescendantCommit() throws IOException {
-        FreeStyleProject mainJob = createFreeStyleProject(
+        var mainJob = createFreeStyleProject(
                 MAIN_JOB_NAME, MAIN_JOB_NAME, "origin/" + INITIAL_BRANCH);
-        FreeStyleProject pullRequestJob = createFreeStyleProject(
+        var pullRequestJob = createFreeStyleProject(
                 PR_JOB_NAME, MAIN_JOB_NAME, "origin/" + PR_BRANCH_NAME);
 
         checkout(INITIAL_BRANCH);
@@ -248,7 +248,7 @@ class GitMergeITest extends GitITest {
      */
     private void verifyReference(final FreeStyleProject targetJob,
             final Run<?, ?> currentBuild, final Run<?, ?> referenceBuild) {
-        GitReferenceRecorder recorder = createGitReferenceRecorder(targetJob, INITIAL_BRANCH);
+        var recorder = createGitReferenceRecorder(targetJob, INITIAL_BRANCH);
         assertThat(recorder.find(currentBuild, targetJob.getLastCompletedBuild(), createLog()))
                 .isNotEmpty()
                 .satisfies(reference -> assertThat(
@@ -271,14 +271,14 @@ class GitMergeITest extends GitITest {
      */
     private FreeStyleProject createFreeStyleProject(final String jobName, final String referenceJobName,
             final String branchSpec) throws IOException {
-        FreeStyleProject project = createProject(FreeStyleProject.class, jobName);
+        var project = createProject(FreeStyleProject.class, jobName);
 
-        GitReferenceRecorder recorder = new GitReferenceRecorder();
+        var recorder = new GitReferenceRecorder();
         recorder.setReferenceJob(referenceJobName);
         recorder.setTargetBranch("origin/" + INITIAL_BRANCH);
         project.getPublishersList().add(recorder);
 
-        GitSCM scm = createGitScm(getGitRepositoryPath(), Collections.singletonList(new BranchSpec(branchSpec)));
+        var scm = createGitScm(getGitRepositoryPath(), Collections.singletonList(new BranchSpec(branchSpec)));
         project.setScm(scm);
 
         return project;
@@ -296,7 +296,7 @@ class GitMergeITest extends GitITest {
      */
     private GitReferenceRecorder createGitReferenceRecorder(final FreeStyleProject reference,
             final String targetBranch) {
-        GitReferenceRecorder recorder = new GitReferenceRecorder();
+        var recorder = new GitReferenceRecorder();
         recorder.setTargetBranch(targetBranch);
         recorder.setMaxCommits(50);
         recorder.setReferenceJob(reference.getName());

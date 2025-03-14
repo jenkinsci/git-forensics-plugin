@@ -1,5 +1,6 @@
 package io.jenkins.plugins.forensics.git.delta;
 
+import java.io.Serial;
 import java.util.Map;
 import java.util.Objects;
 
@@ -12,6 +13,7 @@ import io.jenkins.plugins.forensics.delta.FileChanges;
  * @author Florian Orendi
  */
 public class GitDelta extends Delta {
+    @Serial
     private static final long serialVersionUID = 4075956106966630282L;
 
     /**
@@ -53,7 +55,7 @@ public class GitDelta extends Delta {
         if (!super.equals(o)) {
             return false;
         }
-        GitDelta gitDelta = (GitDelta) o;
+        var gitDelta = (GitDelta) o;
         return Objects.equals(diffFile, gitDelta.diffFile);
     }
 

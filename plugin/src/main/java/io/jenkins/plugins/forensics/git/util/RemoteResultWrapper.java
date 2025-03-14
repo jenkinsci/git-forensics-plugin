@@ -1,9 +1,10 @@
 package io.jenkins.plugins.forensics.git.util;
 
+import edu.hm.hafner.util.FilteredLog;
+
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
-
-import edu.hm.hafner.util.FilteredLog;
 
 /**
  * A serializable result combined with a logger. Enables remote calls to return a result and a corresponding log.
@@ -14,6 +15,7 @@ import edu.hm.hafner.util.FilteredLog;
  * @author Ullrich Hafner
  */
 public class RemoteResultWrapper<T extends Serializable> extends FilteredLog {
+    @Serial
     private static final long serialVersionUID = -6411417555105688927L;
 
     private final T result;

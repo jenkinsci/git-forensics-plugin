@@ -1,15 +1,16 @@
 package io.jenkins.plugins.forensics.git.reference;
 
+import org.eclipse.jgit.lib.ObjectId;
+
+import edu.hm.hafner.util.FilteredLog;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-
-import org.eclipse.jgit.lib.ObjectId;
-
-import edu.hm.hafner.util.FilteredLog;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import hudson.model.Run;
 import hudson.scm.SCM;
@@ -18,13 +19,14 @@ import jenkins.model.RunAction2;
 import io.jenkins.plugins.forensics.git.util.GitCommitTextDecorator;
 
 /**
- * Stores all commits for a given build and provides a link to the latest commit. For each {@link SCM} repository a
+ * Stores all the commits for a given build and provides a link to the latest commit. For each {@link SCM} repository a
  * unique {@link GitCommitsRecord} instance will be used.
  *
  * @author Arne Schöntag
  */
 @SuppressFBWarnings(value = "SE", justification = "transient field owner is restored using a Jenkins callback")
 public class GitCommitsRecord implements RunAction2, Serializable {
+    @Serial
     private static final long serialVersionUID = 8994811233847179343L;
 
     /**
@@ -35,7 +37,7 @@ public class GitCommitsRecord implements RunAction2, Serializable {
      * @param scmKey
      *         the ID of the SCM repository
      *
-     * @return the commits record, if found
+     * @return the record with the commits if found, {@link Optional#empty()} otherwise
      */
     public static Optional<GitCommitsRecord> findRecordForScm(final Run<?, ?> build, final String scmKey) {
         return build.getActions(GitCommitsRecord.class)
@@ -259,7 +261,7 @@ public class GitCommitsRecord implements RunAction2, Serializable {
      */
     Optional<Run<?, ?>> getReferencePoint(final GitCommitsRecord referenceCommits, final int maxCommits,
             final boolean skipUnknownCommits, final FilteredLog logger) {
-        GitCommitTextDecorator textDecorator = new GitCommitTextDecorator();
+        var textDecorator = new GitCommitTextDecorator();
         List<String> branchCommits = collectBranchCommits(maxCommits);
         logger.logInfo("-> detected %d commits in current branch (last one: '%s')",
                 branchCommits.size(), getHeadCommitOf(branchCommits, textDecorator));
