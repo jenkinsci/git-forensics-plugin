@@ -72,7 +72,7 @@ public class GitCommitsRecord implements RunAction2, Serializable {
      * Creates a new {@link GitCommitsRecord} instance with the specified list of new commits.
      *
      * @param owner
-     *         the current build as owner of the Git commits
+     *         the current build as the owner of the Git commits
      * @param scmKey
      *         the ID of the SCM repository
      * @param logger
@@ -82,7 +82,7 @@ public class GitCommitsRecord implements RunAction2, Serializable {
      * @param latestCommitLink
      *         hyperlink to the latest commit
      */
-    public GitCommitsRecord(final Run<?, ?> owner, final String scmKey, final FilteredLog logger,
+    GitCommitsRecord(final Run<?, ?> owner, final String scmKey, final FilteredLog logger,
             final BuildCommits commits, final String latestCommitLink) {
         this.owner = owner;
         this.scmKey = scmKey;
