@@ -74,8 +74,6 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>forensics-api</artifactId>
-      <!-- TODO: remove the version when a matching BOM is available -->
-      <version>3.0.0</version>
     </dependency>
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
@@ -84,8 +82,6 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>plugin-util-api</artifactId>
-      <!-- TODO: remove the version when a matching BOM is available -->
-      <version>6.0.0</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -96,8 +92,6 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>forensics-api</artifactId>
-      <!-- TODO: remove the version when a matching BOM is available -->
-      <version>3.1.0</version>
       <scope>test</scope>
       <classifier>tests</classifier>
     </dependency>
@@ -128,8 +122,6 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>plugin-util-api</artifactId>
-      <!-- TODO: remove the version when a matching BOM is available -->
-      <version>6.0.0</version>
       <scope>test</scope>
       <classifier>tests</classifier>
     </dependency>
