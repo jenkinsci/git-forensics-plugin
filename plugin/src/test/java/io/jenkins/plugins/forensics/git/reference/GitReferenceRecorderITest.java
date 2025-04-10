@@ -9,10 +9,7 @@ import org.junitpioneer.jupiter.Issue;
 
 import com.cloudbees.hudson.plugins.folder.computed.FolderComputation;
 
-import edu.hm.hafner.util.PathUtil;
-
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
@@ -53,11 +50,6 @@ import static org.jvnet.hudson.test.JenkinsRule.*;
 class GitReferenceRecorderITest extends GitITest {
     private static final String FORENSICS_API_URL = "https://github.com/jenkinsci/forensics-api-plugin.git";
 
-    private static final String JENKINS_FILE = "Jenkinsfile";
-    private static final String SOURCE_FILE = "file";
-    private static final String FEATURE = "feature";
-    private static final String MAIN = "main";
-    private static final String ADDITIONAL_SOURCE_FILE = "test.txt";
     private static final String CHANGED_CONTENT = "changed content";
     private static final GitCommitTextDecorator DECORATOR = new GitCommitTextDecorator();
 
@@ -399,14 +391,6 @@ class GitReferenceRecorderITest extends GitITest {
         verifyPipelineResult(mainBuild, featureBranch);
     }
 
-    private String createLocalGitCheckout(final String branch) {
-        return "checkout([$class: 'GitSCM', "
-                + "branches: [[name: '" + branch + "' ]],\n"
-                + getUrl()
-                + "extensions: [[$class: 'RelativeTargetDirectory', \n"
-                + "            relativeTargetDir: 'forensics-api']]])\n";
-    }
-
     private String createForensicsCheckoutStep() {
         return "checkout([$class: 'GitSCM', "
                 + "branches: [[name: 'a6d0ef09ab3c418e370449a884da99b8190ae950' ]],\n"
@@ -432,10 +416,6 @@ class GitReferenceRecorderITest extends GitITest {
                 "-> adding 1 commits from build '#1' of reference job (last one: '%s')".formatted(DECORATOR.asText(mainCommit)),
                 "-> found a matching commit in current branch and target branch: '%s'".formatted(DECORATOR.asText(mainCommit)),
                         "Found reference build '#1' for target branch");
-    }
-
-    private String getUrl() {
-        return "userRemoteConfigs: [[url: 'file://" + new PathUtil().getAbsolutePath(getGitRepositoryPath()) + "']],\n";
     }
 
     /**
@@ -912,42 +892,6 @@ class GitReferenceRecorderITest extends GitITest {
         }
     }
 
-    private String createFeatureBranchAndAddCommits(final String... parameters) {
-        String[] actual = Arrays.copyOf(parameters, parameters.length + 1);
-        actual[parameters.length] = "targetBranch: '" + MAIN + "'";
-        return createBranchAndAddCommits(FEATURE, actual);
-    }
-
-    private String createBranchAndAddCommits(final String branch, final String... parameters) {
-        try {
-            checkoutNewBranch(branch);
-            writeFile(JENKINS_FILE,
-                    String.format("echo \"branch=${env.BRANCH_NAME}\";"
-                            + "node {checkout scm; echo readFile('file').toUpperCase(); "
-                            + "echo \"GitForensics\"; "
-                            + "discoverGitReferenceBuild(%s);"
-                            + "gitDiffStat()}", String.join(",", parameters)));
-            writeFile(SOURCE_FILE, branch + " content");
-            commit(branch + " changes");
-            return getHead();
-        }
-        catch (Exception exception) {
-            throw new AssertionError(exception);
-        }
-    }
-
-    private String addAdditionalFileTo(final String branch) {
-        return changeContentOfAdditionalFile(branch, "test");
-    }
-
-    private String changeContentOfAdditionalFile(final String branch, final String content) {
-        checkout(branch);
-        writeFile(ADDITIONAL_SOURCE_FILE, content);
-        addFile(ADDITIONAL_SOURCE_FILE);
-        commit("Add additional file");
-        return getHead();
-    }
-
     private void delete(final String toDeleteId) {
         try {
             Objects.requireNonNull(Run.fromExternalizableId(toDeleteId)).delete();
@@ -988,15 +932,6 @@ class GitReferenceRecorderITest extends GitITest {
 
     private void assertThatLogContains(final WorkflowRun build, final String value) throws IOException {
         getJenkins().assertLogContains(value, build);
-    }
-
-    private WorkflowRun buildAgain(final WorkflowJob build) {
-        try {
-            return Objects.requireNonNull(build.scheduleBuild2(0)).get();
-        }
-        catch (Exception exception) {
-            throw new AssertionError(exception);
-        }
     }
 
     private void buildProject(final WorkflowMultiBranchProject project) {
