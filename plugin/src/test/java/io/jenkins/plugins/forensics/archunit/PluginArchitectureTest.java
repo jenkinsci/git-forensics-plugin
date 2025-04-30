@@ -1,4 +1,4 @@
-package io.jenkins.plugins.forensics.git;
+package io.jenkins.plugins.forensics.archunit;
 
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;

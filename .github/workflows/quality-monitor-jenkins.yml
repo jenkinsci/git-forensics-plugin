@@ -57,7 +57,7 @@ jobs:
                   {
                     "id": "junit",
                     "name": "Unit Tests",
-                    "pattern": "**/target/surefire-reports/TEST*forensics*.xml"
+                    "pattern": "**/target/surefire-reports/TEST*git*.xml"
                   },
                   {
                     "id": "junit",
