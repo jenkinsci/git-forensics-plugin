@@ -43,7 +43,7 @@ import static org.mockito.Mockito.*;
  *
  * @author Ullrich Hafner
  */
-@SuppressWarnings({"IllegalCatch", "PMD.SignatureDeclareThrowsException"})
+@SuppressWarnings("IllegalCatch")
 public abstract class GitITest extends IntegrationTestWithJenkinsPerTest {
     /** File name of a source file that will be modified by two authors. */
     protected static final String ADDITIONAL_FILE = "source.txt";
