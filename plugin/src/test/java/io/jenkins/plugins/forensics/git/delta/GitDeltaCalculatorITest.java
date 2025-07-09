@@ -22,6 +22,7 @@ import io.jenkins.plugins.forensics.delta.FileChanges;
 import io.jenkins.plugins.forensics.delta.FileEditType;
 import io.jenkins.plugins.forensics.git.reference.GitReferenceRecorder;
 import io.jenkins.plugins.forensics.git.util.GitITest;
+import io.jenkins.plugins.forensics.reference.ReferenceBuild;
 
 import static io.jenkins.plugins.forensics.assertions.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -48,7 +49,61 @@ class GitDeltaCalculatorITest extends GitITest {
             \\ No newline at end of file
             """;
 
-    @Test @Issue("JENKINS-73297")
+    /**
+     * Creates a pipeline that checks if the delta computation works as expected when the main is one commit and build
+     * ahead of the feature branch.
+     *
+     * <pre>
+     * {@code
+     * M:  [M1]#1 - [M2]#2
+     *       \
+     *   F:  [F1]#1}
+     * </pre>
+     */
+    @Test
+    void shouldFindDeltaEvenWhenTheMainBranchEvolves() {
+        var mainBranch = createPipeline(MAIN);
+        mainBranch.setDefinition(asStage(createLocalGitCheckout(MAIN)));
+
+        Run<?, ?> mainBuild = buildSuccessfully(mainBranch);
+
+        var mainHash = getHead();
+        var featureHash = createFeatureBranchAndAddCommits();
+        addAdditionalFileTo(MAIN);
+
+        buildAgain(mainBranch);
+
+        var featureBranch = createPipeline(FEATURE);
+        featureBranch.setDefinition(asStage(createLocalGitCheckout(FEATURE),
+                "discoverGitReferenceBuild(referenceJob: '" + MAIN + "')"));
+
+        Run<?, ?> featureBuild = buildSuccessfully(featureBranch);
+        assertThat(featureBuild.getNumber()).isEqualTo(1);
+
+        assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
+                .hasOwner(featureBuild)
+                .hasReferenceBuildId(mainBuild.getExternalizableId())
+                .hasReferenceBuild(Optional.of(mainBuild))
+                .hasMessages("Configured reference job: 'main'",
+                        "Found reference build '#1' for target branch");
+
+        var log = createLog();
+        var deltaCalculator = createDeltaCalculator();
+        deltaCalculator.calculateDelta(featureBuild, mainBuild, EMPTY_SCM_KEY, log);
+        assertThat(log.getErrorMessages()).isEmpty();
+        assertThat(log.getInfoMessages()).contains(String.format(
+                "-> Using commit '%7.7s' as latest commit for build 'main #1'", mainHash));
+        assertThat(log.getInfoMessages()).contains(String.format(
+                "-> Using commit '%7.7s' as latest commit for build 'feature #1'", featureHash));
+        assertThat(log.getInfoMessages()).contains(
+                "-> 1 files contain changes",
+                "-> Creating the Git diff file",
+                "-> Git code delta successfully calculated"
+        );
+    }
+
+    @Test
+    @Issue("JENKINS-73297")
     void shouldShowErrorIfCommitIsNotFound() {
         var job = createPipeline();
         job.setDefinition(asStage("checkout([$class: 'GitSCM', "
@@ -65,7 +120,8 @@ class GitDeltaCalculatorITest extends GitITest {
         assertThat(result).isNotEmpty();
 
         assertThat(log.getInfoMessages()).anyMatch(s ->
-                s.contains("-> Invoking Git delta calculator for determining the changes between commits '86503e8' and '86503e8'"));
+                s.contains(
+                        "-> Invoking Git delta calculator for determining the changes between commits '86503e8' and '86503e8'"));
         assertThat(log.getErrorMessages())
                 .contains("Could not find the specified commit - is the SCM parameter correctly set?",
                         "org.eclipse.jgit.errors.MissingObjectException: Missing unknown 86503e8bc0374e05e2cd32ed3bb8b4435d5fd757");
