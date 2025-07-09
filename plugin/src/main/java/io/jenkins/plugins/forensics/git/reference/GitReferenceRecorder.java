@@ -1,11 +1,11 @@
 package io.jenkins.plugins.forensics.git.reference;
 
-import java.util.Optional;
-
 import edu.hm.hafner.util.FilteredLog;
 import edu.hm.hafner.util.VisibleForTesting;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import java.util.Optional;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -22,7 +22,6 @@ import io.jenkins.plugins.util.JenkinsFacade;
  * @author Arne Schöntag
  * @author Ullrich Hafner
  */
-@SuppressWarnings("PMD.DataClass")
 public class GitReferenceRecorder extends ReferenceRecorder {
     private int maxCommits = 100;
     private boolean skipUnknownCommits = false;

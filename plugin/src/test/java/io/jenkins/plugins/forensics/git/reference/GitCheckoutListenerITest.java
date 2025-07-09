@@ -20,7 +20,6 @@ import static io.jenkins.plugins.forensics.git.assertions.Assertions.*;
  *
  * @author Arne Schöntag
  */
-@SuppressWarnings("PMD.SignatureDeclareThrowsException")
 class GitCheckoutListenerITest extends GitITest {
     private static final GitCommitTextDecorator RENDERER = new GitCommitTextDecorator();
 

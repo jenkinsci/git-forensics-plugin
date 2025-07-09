@@ -41,7 +41,7 @@ import static org.mockito.Mockito.*;
  *
  * @author Ullrich Hafner
  */
-@SuppressWarnings({"checkstyle:ClassDataAbstractionCoupling", "PMD.ExcessiveImports", "checkstyle:ClassFanOutComplexity"})
+@SuppressWarnings({"checkstyle:ClassDataAbstractionCoupling", "checkstyle:ClassFanOutComplexity"})
 class GitBlamerTest {
     private static final String EMAIL = "email";
     private static final String NAME = "name";

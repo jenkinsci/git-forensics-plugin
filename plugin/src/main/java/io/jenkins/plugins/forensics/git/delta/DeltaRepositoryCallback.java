@@ -38,17 +38,11 @@ import io.jenkins.plugins.forensics.git.util.RemoteResultWrapper;
  *
  * @author Florian Orendi
  */
-@SuppressWarnings("PMD.CouplingBetweenObjects")
 public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteResultWrapper<Delta>> {
     @Serial
     private static final long serialVersionUID = -4561284338216569043L;
 
-    static final String ERROR_MESSAGE_UNKNOWN_FILE_EDIT_TYPE = "Detected unknown file edit type '%s'";
-
-    static final String ERROR_MESSAGE_UNKNOWN_CHANGE_TYPE = "Detected unknown change type '%s'";
-
     private final String currentCommitId;
-
     private final String referenceCommitId;
 
     /**
