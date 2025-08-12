@@ -1,47 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.jvnet.hudson.plugins</groupId>
-    <artifactId>analysis-pom</artifactId>
-    <version>10.14.0</version>
-    <relativePath />
+  <groupId>io.jenkins.plugins</groupId>
+    <artifactId>git-forensics-parent</artifactId>
+    <version>${revision}.${changelist}</version>
   </parent>
 
-  <groupId>io.jenkins.plugins</groupId>
   <artifactId>git-forensics</artifactId>
-  <version>3.3.0-SNAPSHOT</version>
   <packaging>hpi</packaging>
-  <name>Git Forensics Plugin</name>
 
+  <name>Git Forensics Plugin</name>
   <description>Jenkins plug-in that mines and analyzes data from a Git repository.</description>
   <url>https://github.com/jenkinsci/git-forensics-plugin</url>
 
   <licenses>
     <license>
-      <name>MIT license</name>
-      <comments>All source code is under the MIT license.</comments>
+      <name>MIT License</name>
+      <url>https://opensource.org/licenses/MIT</url>
     </license>
   </licenses>
 
   <developers>
     <developer>
-      <name>Ullrich Hafner</name>
       <id>uhafner</id>
+      <name>Ullrich Hafner</name>
       <email>ullrich.hafner@gmail.com</email>
     </developer>
   </developers>
 
-  <scm>
-    <connection>scm:git:https://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
-    <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
-    <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
-    <tag>v1.6.0</tag>
-  </scm>
-
   <properties>
-    <module.name>${project.groupId}.git.forensics</module.name>
-
     <!-- Library Dependencies Versions -->
     <eclipse-collections.version>9.2.0</eclipse-collections.version>
     <testcontainers.version>1.21.3</testcontainers.version>
