@@ -165,7 +165,7 @@ class GitCheckoutListenerITest extends GitITest {
                                 "-> Git commit decorator successfully obtained 'hudson.plugins.git.browser.GithubWeb"));
     }
 
-    private void createAndCommitFile(final String fileName, final String content) throws Exception {
+    private void createAndCommitFile(final String fileName, final String content) {
         writeFile(fileName, content);
         addFile(fileName);
         commit(fileName + " created");
