@@ -12,8 +12,7 @@ This Git Forensics Jenkins plugin mines and analyzes data from a Git repository.
 - **Blames**: Provides an API for `git blame` to show in which Git revisions the lines of a file 
   have been modified by what authors. This information can be used to discover the original commit 
   that is the origin for a piece of problematic code. 
-- **File statistics**: Incrementally collects global commit statistics for all repository files in the style of
-  [Code as a Crime Scene](https://www.adamtornhill.com/articles/crimescene/codeascrimescene.htm)
+- **File statistics**: Incrementally collects global commit statistics for all repository files in the style of Code as a Crime Scene
   \[Adam Tornhill, November 2013\]. This includes:
   - commits count
   - different authors count
@@ -37,7 +36,7 @@ This Git Forensics Jenkins plugin mines and analyzes data from a Git repository.
 ## File statistics
 
 The Git Forensics plugin will collect commit statistics for all repository files in the style of
-[Code as a Crime Scene](https://www.adamtornhill.com/articles/crimescene/codeascrimescene.htm)
+Code as a Crime Scene
 [Adam Tornhill, November 2013] if you enable the post build step *Mine SCM repository*. If you are using a pipeline,
 then you can start the repository mining using the `mineRepository` step. This step has an `scm` parameter value that 
 can be used to filter the SCM(s) to use. Please
