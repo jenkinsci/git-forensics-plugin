@@ -31,6 +31,8 @@
   </developers>
 
   <properties>
+    <maven.deploy.skip>false</maven.deploy.skip>
+
     <!-- Library Dependencies Versions -->
     <eclipse-collections.version>9.2.0</eclipse-collections.version>
     <testcontainers.version>1.21.3</testcontainers.version>
