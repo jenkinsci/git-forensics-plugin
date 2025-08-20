@@ -6,8 +6,8 @@
   <parent>
     <groupId>org.jvnet.hudson.plugins</groupId>
     <artifactId>analysis-pom</artifactId>
-    <version>10.2709.veb_37ccb_4e2ef</version>
-    <relativePath/>
+    <version>10.2711.v429198c1f71e</version>
+    <relativePath />
   </parent>
 
   <groupId>io.jenkins.plugins</groupId>
