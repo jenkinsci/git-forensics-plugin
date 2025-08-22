@@ -73,7 +73,7 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>plugin-util-api</artifactId>
-      <version>6.1165.v322e76215b_a_4</version>
+      <version>6.1167.v022176c7e0ca_</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -114,7 +114,7 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>plugin-util-api</artifactId>
-      <version>6.1165.v322e76215b_a_4</version>
+      <version>6.1167.v022176c7e0ca_</version>
       <scope>test</scope>
       <classifier>tests</classifier>
     </dependency>
