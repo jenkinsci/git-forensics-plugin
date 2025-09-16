@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<?xml version='1.0' encoding='UTF-8'?>
+<project xsi:schemaLocation='http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd' xmlns='http://maven.apache.org/POM/4.0.0' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -73,7 +73,7 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>plugin-util-api</artifactId>
-      <version>6.1167.v022176c7e0ca_</version>
+      <version>6.1172.v6807cfc7f547</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -174,9 +174,9 @@
         <artifactId>revapi-maven-plugin</artifactId>
         <configuration>
           <analysisConfiguration>
-            <revapi.differences id="manually-vetted">
+            <revapi.differences id='manually-vetted'>
               <ignore>true</ignore>
-              <differences combine.children="append">
+              <differences combine.children='append'>
                 <difference>
                   <code>java.method.visibilityReduced</code>
                   <classQualifiedName>io.jenkins.plugins.forensics.git.reference.GitCommitsRecord</classQualifiedName>
@@ -192,7 +192,7 @@
             </revapi.differences>
             <revapi.filter>
               <elements>
-                <exclude combine.children="append">
+                <exclude combine.children='append'>
                   <item>
                     <matcher>java-package</matcher>
                     <match>/org\.eclipse(\..*)?/</match>
@@ -215,10 +215,10 @@
         <groupId>org.assertj</groupId>
         <artifactId>assertj-assertions-generator-maven-plugin</artifactId>
         <configuration>
-          <packages combine.children="append">
+          <packages combine.children='append'>
             <package>io.jenkins.plugins.forensics.git</package>
           </packages>
-          <excludes combine.children="append">
+          <excludes combine.children='append'>
             <exclude>.*Test</exclude>
             <exclude>.*Recorder</exclude>
             <exclude>.*RemoteResultWrapper.*</exclude>
@@ -229,5 +229,14 @@
     </plugins>
   </build>
 
-</project>
 
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>io.jenkins.plugins</groupId>
+        <artifactId>plugin-util-api</artifactId>
+        <version>6.1172.v6807cfc7f547</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+</project>
