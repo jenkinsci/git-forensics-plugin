@@ -19,6 +19,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import org.jenkinsci.plugins.gitclient.GitClient;
 import hudson.FilePath;
@@ -320,7 +321,7 @@ class GitBlamerTest {
                         Commit message""".formatted(
                 commitTime,
                 commitTime)
-                .getBytes();
+                .getBytes(StandardCharsets.UTF_8);
     }
 
     private BlameResult createResult(final int size) {
