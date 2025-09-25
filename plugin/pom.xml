@@ -73,7 +73,7 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>plugin-util-api</artifactId>
-      <version>6.1177.v5e6e0b_6569f7</version>
+      <version>6.1183.vdfd884091c0e</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -235,12 +235,17 @@
       <dependency>
         <groupId>io.jenkins.plugins</groupId>
         <artifactId>plugin-util-api</artifactId>
-        <version>6.1177.v5e6e0b_6569f7</version>
+        <version>6.1183.vdfd884091c0e</version>
       </dependency>
       <dependency>
         <groupId>io.jenkins.plugins</groupId>
         <artifactId>plugin-util-api</artifactId>
-        <version>6.1177.v5e6e0b_6569f7</version>
+        <version>6.1183.vdfd884091c0e</version>
+      </dependency>
+      <dependency>
+        <groupId>io.jenkins.plugins</groupId>
+        <artifactId>plugin-util-api</artifactId>
+        <version>6.1183.vdfd884091c0e</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
