@@ -5,7 +5,7 @@
   <parent>
     <groupId>edu.hm.hafner</groupId>
     <artifactId>codingstyle-pom</artifactId>
-    <version>5.35.0</version>
+    <version>5.36.0</version>
     <relativePath/>
   </parent>
 
@@ -16,7 +16,7 @@
   <name>UI Tests of Git Forensics Plugin</name>
 
   <properties>
-    <jenkins.version>2.528</jenkins.version>
+    <jenkins.version>2.529</jenkins.version>
     <hpi-plugin.version>3.1762.vd3ff902a_5b_c4</hpi-plugin.version>
     <json-smart.version>2.3</json-smart.version>
     <json-unit-assertj.version>4.1.1</json-unit-assertj.version>
