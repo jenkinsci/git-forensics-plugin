@@ -1,6 +1,6 @@
 package io.jenkins.plugins.forensics.git.reference;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.eclipse.jgit.lib.ObjectId;
 
 import edu.hm.hafner.util.FilteredLog;
@@ -42,7 +42,7 @@ public class GitCommitsRecord implements RunAction2, Serializable {
      */
     public static Optional<GitCommitsRecord> findRecordForScm(final Run<?, ?> build, final String scmKey) {
         return build.getActions(GitCommitsRecord.class).stream()
-                .filter(record -> StringUtils.containsIgnoreCase(record.getScmKey(), scmKey))
+                .filter(record -> Strings.CI.contains(record.getScmKey(), scmKey))
                 .findAny();
     }
 
@@ -58,9 +58,12 @@ public class GitCommitsRecord implements RunAction2, Serializable {
     private final RecordingType recordingType;
     private final String latestCommitLink;
     private final String targetParentCommit;
-    private final List<String> commits;
-    private final List<String> errorMessages;
-    private final List<String> infoMessages;
+    @SuppressWarnings("LooseCoupling")
+    private final ArrayList<String> commits;
+    @SuppressWarnings("LooseCoupling")
+    private final ArrayList<String> errorMessages;
+    @SuppressWarnings("LooseCoupling")
+    private final ArrayList<String> infoMessages;
 
     /** Determines if this record is the starting point or an incremental record that is based on the previous record. */
     enum RecordingType {

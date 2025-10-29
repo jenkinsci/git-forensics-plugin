@@ -23,7 +23,8 @@ class BuildCommits implements Serializable {
 
     private final String previousBuildCommit;
 
-    private final List<String> commits = new ArrayList<>();
+    @SuppressWarnings("LooseCoupling")
+    private final ArrayList<String> commits = new ArrayList<>();
 
     private ObjectId head = ObjectId.zeroId();
     private ObjectId target = ObjectId.zeroId();
