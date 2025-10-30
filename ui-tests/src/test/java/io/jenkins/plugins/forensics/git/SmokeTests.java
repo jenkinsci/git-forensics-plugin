@@ -1,7 +1,5 @@
 package io.jenkins.plugins.forensics.git;
 
-import java.util.List;
-
 import org.junit.Test;
 
 import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
@@ -30,8 +28,8 @@ public class SmokeTests extends AbstractJUnitTest {
      */
     @Test
     public void shouldMineGitHubRepository() {
-        WorkflowJob job = createJob();
-        Build build = buildSuccessfully(job);
+        var job = createJob();
+        var build = buildSuccessfully(job);
 
         assertThat(build.getConsole()).contains(
                 "Found 428 commits",
@@ -40,14 +38,14 @@ public class SmokeTests extends AbstractJUnitTest {
 
         build.open();
 
-        Summary commitStatistics = new Summary(build, "commits-of-" + SCM_HASH);
+        var commitStatistics = new Summary(build, "commits-of-" + SCM_HASH);
         assertThat(commitStatistics).hasTitle("SCM: " + SCM_KEY);
         assertThat(commitStatistics).hasDetails("Initial recording of 200 commits", "Latest commit: 28af63d");
         assertThat(commitStatistics.openLinkByText("28af63d")).isEqualTo("https://github.com/jenkinsci/git-forensics-plugin/commit/28af63def44286729e3b19b03464d100fd1d0587");
 
         build.open();
 
-        Summary scmForensics = new Summary(build, "scm-forensics-of-" + SCM_HASH);
+        var scmForensics = new Summary(build, "scm-forensics-of-" + SCM_HASH);
         assertThat(scmForensics).hasTitle("SCM Forensics: " + SCM_KEY);
         assertThat(scmForensics).hasDetails("51 repository files (total lines of code: 6066, total churn: 16966)",
                 "New commits: 402 (from 4 authors in 131 files)",
@@ -57,11 +55,11 @@ public class SmokeTests extends AbstractJUnitTest {
 
         // TODO: navigate from summary
 
-        ScmForensics forensicsDetails = new ScmForensics(build, "forensics");
+        var forensicsDetails = new ScmForensics(build, "forensics");
         forensicsDetails.open();
         assertThat(forensicsDetails.getTotal()).isEqualTo(51);
 
-        DetailsTable detailsTable = new DetailsTable(forensicsDetails);
+        var detailsTable = new DetailsTable(forensicsDetails);
         assertTableHeaders(detailsTable);
         assertTableEntriesAndSorting(detailsTable);
         assertSearch(detailsTable);
@@ -89,7 +87,7 @@ public class SmokeTests extends AbstractJUnitTest {
     private void assertTableHeaders(final DetailsTable detailsTable) {
         assertThat(detailsTable.getHeaderSize()).isEqualTo(7);
 
-        List<String> tableHeaders = detailsTable.getHeaders();
+        var tableHeaders = detailsTable.getHeaders();
         assertThat(tableHeaders.get(0)).isEqualTo(FILE_NAME);
         assertThat(tableHeaders.get(1)).isEqualTo(AUTHORS);
         assertThat(tableHeaders.get(2)).isEqualTo(COMMITS);
@@ -179,7 +177,7 @@ public class SmokeTests extends AbstractJUnitTest {
 
     private void assertRow(final DetailsTable detailsTable,
             final int rowNum, final String fileName, final int numAuthors, final int numCommits) {
-        DetailsTableRow secondRow = detailsTable.getTableRows().get(rowNum);
+        var secondRow = detailsTable.getTableRows().get(rowNum);
 
         assertThat(secondRow.getFileName()).isEqualTo(fileName);
         assertThat(secondRow.getNumberOfAuthors()).isEqualTo(numAuthors);

@@ -225,6 +225,7 @@ public class CommitStatisticsStep extends Recorder implements SimpleBuildStep {
         }
 
         @Override
+        @SuppressWarnings("rawtypes")
         public boolean isApplicable(final Class<? extends AbstractProject> jobType) {
             return true;
         }

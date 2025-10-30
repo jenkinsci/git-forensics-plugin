@@ -32,6 +32,7 @@ public class GitDeltaCalculator extends DeltaCalculator {
     static final String DELTA_ERROR = "Computing delta information failed with an exception:";
     static final String EMPTY_COMMIT_ERROR = "Calculating the Git code delta is not possible due to an unknown commit ID";
 
+    @SuppressWarnings("serial")
     private final GitClient git;
     private final String scmKey;
 
@@ -51,6 +52,7 @@ public class GitDeltaCalculator extends DeltaCalculator {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public Optional<Delta> calculateDelta(final Run<?, ?> build, final Run<?, ?> referenceBuild,
             final String scmKeyFilter, final FilteredLog log) {
         var scm = StringUtils.defaultIfEmpty(scmKeyFilter, scmKey);
