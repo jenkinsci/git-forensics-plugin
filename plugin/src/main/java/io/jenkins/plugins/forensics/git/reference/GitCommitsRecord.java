@@ -58,11 +58,11 @@ public class GitCommitsRecord implements RunAction2, Serializable {
     private final RecordingType recordingType;
     private final String latestCommitLink;
     private final String targetParentCommit;
-    @SuppressWarnings("LooseCoupling")
+    @SuppressWarnings("PMD.LooseCoupling")
     private final ArrayList<String> commits;
-    @SuppressWarnings("LooseCoupling")
+    @SuppressWarnings("PMD.LooseCoupling")
     private final ArrayList<String> errorMessages;
-    @SuppressWarnings("LooseCoupling")
+    @SuppressWarnings("PMD.LooseCoupling")
     private final ArrayList<String> infoMessages;
 
     /** Determines if this record is the starting point or an incremental record that is based on the previous record. */
