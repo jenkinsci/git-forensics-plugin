@@ -1,11 +1,11 @@
 package io.jenkins.plugins.forensics.git;
 
-import java.net.URL;
-
 import org.apache.commons.lang3.StringUtils;
 import org.openqa.selenium.By;
 
 import com.google.inject.Injector;
+
+import java.net.URL;
 
 import org.jenkinsci.test.acceptance.po.Build;
 import org.jenkinsci.test.acceptance.po.PageObject;
@@ -52,7 +52,7 @@ public class ScmForensics extends PageObject {
     public int getTotal() {
         String total = find(By.id("forensics_info")).getText();
 
-        return Integer.parseInt(StringUtils.substringAfter(total, "of ").split(" ")[0]);
+        return Integer.parseInt(StringUtils.substringAfter(total, "of ").split(" ", 0)[0]);
     }
 }
 

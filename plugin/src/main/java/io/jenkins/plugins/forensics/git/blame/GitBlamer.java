@@ -51,6 +51,7 @@ class GitBlamer extends Blamer {
     static final String NO_HEAD_ERROR = "Could not retrieve HEAD commit, aborting";
     static final String BLAME_ERROR = "Computing blame information failed with an exception:";
 
+    @SuppressWarnings("serial")
     private final GitClient git;
     private final String gitCommit;
 

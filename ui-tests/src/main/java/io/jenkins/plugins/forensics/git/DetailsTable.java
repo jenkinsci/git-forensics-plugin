@@ -1,20 +1,21 @@
 package io.jenkins.plugins.forensics.git;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebElement;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
 
 /**
  * Page object for the details-table of the forensics view.
  *
  * @author Mitja Oldenbourg
  */
-public class DetailsTable {
+public final class DetailsTable {
     static final String FILE_NAME = "File";
     static final String AUTHORS = "#Authors";
     static final String COMMITS = "#Commits";
@@ -165,6 +166,6 @@ public class DetailsTable {
     }
 
     private WebElement getHeaderAsWebElement(final int option) {
-        return page.findElement(By.xpath(String.format(".//thead/tr/th[%d]", option)));
+        return page.findElement(By.xpath(String.format(Locale.ENGLISH, ".//thead/tr/th[%d]", option)));
     }
 }
