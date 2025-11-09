@@ -31,6 +31,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
     @Serial
     private static final long serialVersionUID = 1157958118716013983L;
 
+    @SuppressWarnings("serial")
     private final GitClient gitClient;
 
     GitRepositoryMiner(final GitClient gitClient) {

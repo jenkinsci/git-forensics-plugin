@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-  <groupId>io.jenkins.plugins</groupId>
+    <groupId>io.jenkins.plugins</groupId>
     <artifactId>git-forensics-parent</artifactId>
     <version>${revision}.${changelist}</version>
   </parent>
