@@ -141,7 +141,7 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
      * @return the file ID
      */
     private String getFileId(final DiffEntry diffEntry, final FileEditType fileEditType) {
-        if (FileEditType.DELETE.equals(fileEditType)) {
+        if (FileEditType.DELETE == fileEditType) {
             return diffEntry.getOldId().name();
         }
         else {
@@ -172,13 +172,13 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
         String filePath;
         String oldFilePath;
         String fileContent;
-        if (fileEditType.equals(FileEditType.DELETE)) {
+        if (fileEditType == FileEditType.DELETE) {
             fileContent = getFileContent(diffEntry.getOldId().toObjectId(), repository);
             oldFilePath = diffEntry.getOldPath();
             filePath = "";
         }
         else {
-            if (fileEditType.equals(FileEditType.ADD)) {
+            if (fileEditType == FileEditType.ADD) {
                 oldFilePath = "";
             }
             else {
@@ -274,17 +274,17 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
         var changeEditType = getChangeEditType(edit.getType());
         // add 1 to the 'begin' of the interval which is relevant for determining the made change since the begin is
         // included and the index is zero based ('end' does not need this because the value is excluded anyway)
-        if (changeEditType.equals(ChangeEditType.DELETE)) {
+        if (changeEditType == ChangeEditType.DELETE) {
             return Optional.of(new Change(changeEditType,
                     edit.getBeginA() + 1, edit.getEndA(),
                     edit.getBeginB(), edit.getEndB()));
         }
-        else if (changeEditType.equals(ChangeEditType.INSERT)) {
+        else if (changeEditType == ChangeEditType.INSERT) {
             return Optional.of(new Change(changeEditType,
                     edit.getBeginA(), edit.getEndA(),
                     edit.getBeginB() + 1, edit.getEndB()));
         }
-        else if (changeEditType.equals(ChangeEditType.REPLACE)) {
+        else if (changeEditType == ChangeEditType.REPLACE) {
             return Optional.of(new Change(changeEditType,
                     edit.getBeginA() + 1, edit.getEndA(),
                     edit.getBeginB() + 1, edit.getEndB()));
