@@ -5,13 +5,19 @@
       {
         "id": "junit",
         "name": "Unit Tests",
-        "pattern": "**/target/surefire-reports/TEST*.xml"
+        "pattern": "**/target/surefire-reports/TEST*forensics*.xml"
+      },
+      {
+        "id": "junit",
+        "icon": "rocket",
+        "name": "Integration Tests",
+        "pattern": "**/target/failsafe-reports/TEST*.xml"
       },
       {
         "id": "junit",
         "icon": "no_entry",
         "name": "Architecture Tests",
-        "pattern": "**/target/archunit-reports/TEST*.xml"
+        "pattern": "**/target/surefire-reports/TEST*archunit*.xml"
       }
     ]
   },
@@ -93,20 +99,6 @@
           "scope": "new",
           "sourcePath": "src/main/java",
           "pattern": "**/target/site/jacoco/jacoco.xml"
-        },
-        {
-          "id": "pit",
-          "scope": "new",
-          "metric": "mutation",
-          "sourcePath": "src/main/java",
-          "pattern": "**/target/pit-reports/mutations.xml"
-        },
-        {
-          "id": "pit",
-          "metric": "test-strength",
-          "scope": "new",
-          "sourcePath": "src/main/java",
-          "pattern": "**/target/pit-reports/mutations.xml"
         }
       ]
     },
@@ -124,18 +116,6 @@
           "metric": "branch",
           "sourcePath": "src/main/java",
           "pattern": "**/target/site/jacoco/jacoco.xml"
-        },
-        {
-          "id": "pit",
-          "metric": "mutation",
-          "sourcePath": "src/main/java",
-          "pattern": "**/target/pit-reports/mutations.xml"
-        },
-        {
-          "id": "pit",
-          "metric": "test-strength",
-          "sourcePath": "src/main/java",
-          "pattern": "**/target/pit-reports/mutations.xml"
         }
       ]
     }
