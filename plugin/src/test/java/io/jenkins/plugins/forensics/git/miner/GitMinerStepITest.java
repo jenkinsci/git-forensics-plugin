@@ -363,9 +363,9 @@ class GitMinerStepITest extends GitITest {
         return (ForensicsRow) actual;
     }
 
-    private <T> int sort(final Object left, final Object right) {
-        return -((String)((ForensicsRow) right).getFileName().getSort())
-                .compareTo((String)((ForensicsRow) left).getFileName().getSort());
+    private int sort(final Object left, final Object right) {
+        return ((String)((ForensicsRow) left).getFileName().getSort())
+                .compareTo((String)((ForensicsRow) right).getFileName().getSort());
     }
 
     private FreeStyleProject createJobWithMiner() {
