@@ -109,7 +109,6 @@ public class SmokeTests extends AbstractJUnitTest {
 
         detailsTable.showFiftyEntries();
         assertThat(detailsTable.getNumberOfTableEntries()).isEqualTo(50);
-
         detailsTable.sortColumn(FILE_NAME);
         assertRow(detailsTable,
                 0,

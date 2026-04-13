@@ -50,11 +50,11 @@ class BuildCommits implements Serializable {
         return target;
     }
 
-    public ObjectId getMerge() {
+    ObjectId getMerge() {
         return merge;
     }
 
-    public void setMerge(final ObjectId merge) {
+    void setMerge(final ObjectId merge) {
         this.merge = merge;
     }
 
@@ -63,7 +63,7 @@ class BuildCommits implements Serializable {
      *
      * @return {@code true} if a merge commit exists
      */
-    public boolean hasMerge() {
+    boolean hasMerge() {
         return !merge.equals(ObjectId.zeroId());
     }
 

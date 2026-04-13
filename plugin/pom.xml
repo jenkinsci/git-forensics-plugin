@@ -53,6 +53,7 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>forensics-api</artifactId>
+      <version>4.1873.vdd4a_4ede278a_</version>
     </dependency>
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
@@ -61,6 +62,12 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>plugin-util-api</artifactId>
+      <version>7.1320.v684dd26fca_19</version>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>data-tables-api</artifactId>
+      <version>2.3.7-1554.v6113418a_6935</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -71,6 +78,7 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>forensics-api</artifactId>
+      <version>4.1873.vdd4a_4ede278a_</version>
       <scope>test</scope>
       <classifier>tests</classifier>
     </dependency>
@@ -101,12 +109,14 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>plugin-util-api</artifactId>
+      <version>7.1320.v684dd26fca_19</version>
       <scope>test</scope>
       <classifier>tests</classifier>
     </dependency>
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>data-tables-api</artifactId>
+      <version>2.3.7-1554.v6113418a_6935</version>
       <scope>test</scope>
       <classifier>tests</classifier>
     </dependency>

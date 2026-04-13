@@ -12,6 +12,7 @@ import hudson.model.Run;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
 
+import io.jenkins.plugins.datatables.DetailedCell;
 import io.jenkins.plugins.datatables.TableModel;
 import io.jenkins.plugins.forensics.git.util.GitITest;
 import io.jenkins.plugins.forensics.miner.ForensicsBuildAction;
@@ -68,13 +69,19 @@ class GitMinerStepITest extends GitITest {
     }
 
     private void verifyInitialFile(final TableModel forensics) {
-        var wrappedInitialFileName = "<a href=\"fileName." + INITIAL_FILE.hashCode() + "\" data-bs-toggle=\"tooltip\" data-bs-placement=\"left\" title=\"file\">" + INITIAL_FILE + "</a>";
-        assertThat(getRow(forensics, 0))
-                .hasFileName(wrappedInitialFileName)
+        var wrappedInitialFileName = "<a href=\"fileName." + INITIAL_FILE.hashCode()
+                + "\" data-bs-toggle=\"tooltip\" data-bs-placement=\"left\" title=\"file\">" + INITIAL_FILE + "</a>";
+        var row = getRow(forensics, 0);
+        assertThat(row)
                 .hasAuthorsSize(1)
                 .hasCommitsSize(1)
                 .hasLinesOfCode(0)
                 .hasChurn(0);
+        assertThat(row.getFileName()).isInstanceOfSatisfying(DetailedCell.class,
+                cell -> {
+                    assertThat(cell.getDisplay()).isEqualTo(wrappedInitialFileName);
+                    assertThat(cell.getSort()).isEqualTo(INITIAL_FILE);
+                });
     }
 
     /** Verifies that the mining process is incremental and scans only new commits. */
@@ -113,7 +120,8 @@ class GitMinerStepITest extends GitITest {
         writeFileAsAuthorBar("Another content");
         Run<?, ?> build = buildSuccessfully(job);
 
-        assertThat(getConsoleLog(thirdBuild)).contains("1 commits with differences analyzed", "1 MODIFY commit diff items");
+        assertThat(getConsoleLog(thirdBuild)).contains("1 commits with differences analyzed",
+                "1 MODIFY commit diff items");
         verifyStatistics(getStatistics(build), ADDITIONAL_FILE, 2, 3);
     }
 
@@ -143,15 +151,21 @@ class GitMinerStepITest extends GitITest {
     }
 
     private void verifyAdditionalFile(final String fileName, final TableModel forensics, final int commitsSize) {
-        var wrappedFileName = "<a href=\"fileName." + fileName.hashCode() + "\" data-bs-toggle=\"tooltip\" data-bs-placement=\"left\" title=\""
+        var wrappedFileName = "<a href=\"fileName." + fileName.hashCode()
+                + "\" data-bs-toggle=\"tooltip\" data-bs-placement=\"left\" title=\""
                 + fileName
                 + "\">" + fileName + "</a>";
-        assertThat(getRow(forensics, 1))
-                .hasFileName(wrappedFileName)
+        var row = getRow(forensics, 1);
+        assertThat(row)
                 .hasAuthorsSize(2)
                 .hasCommitsSize(commitsSize)
                 .hasLinesOfCode(1)
                 .hasChurn(7);
+        assertThat(row.getFileName()).isInstanceOfSatisfying(DetailedCell.class,
+                cell -> {
+                    assertThat(cell.getDisplay()).isEqualTo(wrappedFileName);
+                    assertThat(cell.getSort()).isEqualTo(fileName);
+                });
     }
 
     /** Verifies that deleted files are not shown anymore. */
@@ -239,7 +253,8 @@ class GitMinerStepITest extends GitITest {
     }
 
     /**
-     * Creates a pipeline that checks out the same repository twice and verifies that the repository is mined only once.
+     * Creates a pipeline that checks out the same repository twice and verifies that the repository is mined only
+     * once.
      */
     @Test
     void shouldSkipDuplicateRepository() {
@@ -348,8 +363,9 @@ class GitMinerStepITest extends GitITest {
         return (ForensicsRow) actual;
     }
 
-    private <T> int sort(final Object left, final Object right) {
-        return ((ForensicsRow) right).getFileName().compareTo(((ForensicsRow) left).getFileName());
+    private int sort(final Object left, final Object right) {
+        return ((String)((ForensicsRow) left).getFileName().getSort())
+                .compareTo((String)((ForensicsRow) right).getFileName().getSort());
     }
 
     private FreeStyleProject createJobWithMiner() {
