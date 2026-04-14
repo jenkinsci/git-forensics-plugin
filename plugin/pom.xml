@@ -53,7 +53,7 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>forensics-api</artifactId>
-      <version>4.1873.vdd4a_4ede278a_</version>
+      <version>4.1875.vefb_f97cb_4987</version>
     </dependency>
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
@@ -78,7 +78,7 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>forensics-api</artifactId>
-      <version>4.1873.vdd4a_4ede278a_</version>
+      <version>4.1875.vefb_f97cb_4987</version>
       <scope>test</scope>
       <classifier>tests</classifier>
     </dependency>
