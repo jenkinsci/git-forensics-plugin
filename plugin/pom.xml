@@ -67,7 +67,7 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>data-tables-api</artifactId>
-      <version>2.3.7-1554.v6113418a_6935</version>
+      <version>2.3.7-1561.vb_a_43a_5627208</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -116,7 +116,7 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>data-tables-api</artifactId>
-      <version>2.3.7-1554.v6113418a_6935</version>
+      <version>2.3.7-1561.vb_a_43a_5627208</version>
       <scope>test</scope>
       <classifier>tests</classifier>
     </dependency>
