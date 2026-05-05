@@ -78,6 +78,11 @@
       <scope>test</scope>
       <classifier>tests</classifier>
     </dependency>
+    <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>jackson3-api</artifactId>
+      <scope>test</scope>
+    </dependency>
 
     <!-- Custom for Integration Test-->
     <dependency>
