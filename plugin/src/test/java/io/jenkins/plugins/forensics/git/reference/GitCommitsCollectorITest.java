@@ -1,10 +1,6 @@
 package io.jenkins.plugins.forensics.git.reference;
 
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.lib.Repository;
 import org.junit.jupiter.api.Test;
-
-import edu.hm.hafner.util.FilteredLog;
 
 import java.io.IOException;
 
