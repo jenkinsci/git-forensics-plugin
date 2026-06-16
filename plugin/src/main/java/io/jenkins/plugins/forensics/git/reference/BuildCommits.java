@@ -34,6 +34,10 @@ class BuildCommits implements Serializable {
         this.previousBuildCommit = previousBuildCommit;
     }
 
+    String getPreviousBuildCommit() {
+        return previousBuildCommit;
+    }
+
     void setHead(final RevCommit head) {
         this.head = head;
     }

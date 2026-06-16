@@ -165,6 +165,97 @@ class GitCheckoutListenerITest extends GitITest {
                                 "-> Git commit decorator successfully obtained 'hudson.plugins.git.browser.GithubWeb"));
     }
 
+    /**
+     * Verifies that when the commit recorded in the previous build no longer exists in the repository (e.g., after a
+     * {@code git commit --amend} followed by a force-push), the plugin does NOT report the incorrect value of 200
+     * commits since the last build. Instead it should treat the situation as a fresh start and record commits from
+     * scratch (JENKINS-67281).
+     *
+     * @throws Exception
+     *         in case of an IO exception
+     */
+    @Test
+    void shouldRestartRecordingWhenPreviousBuildCommitNoLongerExists() throws Exception {
+        writeFile("Initial.java", "initial content");
+        addFile("Initial.java");
+        commit("Initial commit");
+
+        var job = createFreeStyleProject("restart-on-missing-commit");
+
+        // Build #1: record the initial commit
+        var firstBuild = buildSuccessfully(job).getAction(GitCommitsRecord.class);
+        assertThat(firstBuild).isNotNull()
+                .hasNoErrorMessages()
+                .isNotEmpty();
+
+        var firstBuildHead = getHead();
+        assertThat(firstBuild.getLatestCommit()).isEqualTo(firstBuildHead);
+
+        // Amend the last commit — this creates a new commit ID, making the old one vanish
+        amendLatestCommit("Amended initial commit");
+        var amendedHead = getHead();
+
+        assertThat(amendedHead).isNotEqualTo(firstBuildHead);
+
+        // Build #2: the previous build's commit no longer exists
+        var secondBuild = buildSuccessfully(job).getAction(GitCommitsRecord.class);
+        assertThat(secondBuild).isNotNull()
+                .hasNoErrorMessages()
+                // Must NOT report 200 — should be treated as a fresh start
+                .isFirstBuild()
+                .hasLatestCommit(amendedHead);
+
+        // The commit count must not equal MAX_COMMITS (200) due to the bug
+        assertThat(secondBuild.getSize()).isNotEqualTo(200);
+        assertThat(secondBuild.getInfoMessages())
+                .anySatisfy(message -> assertThat(message)
+                        .contains("no longer exists in the repository"));
+    }
+
+    /**
+     * Verifies that when there is a normal build without any force-push/amend, the commit count is computed
+     * correctly (regression guard for the fix of JENKINS-67281).
+     *
+     * @throws Exception
+     *         in case of an IO exception
+     */
+    @Test
+    void shouldCountCommitsCorrectlyWithNoForcePush() throws Exception {
+        writeFile("Base.java", "base content");
+        addFile("Base.java");
+        commit("Base commit");
+
+        var job = createFreeStyleProject("normal-count");
+
+        var firstBuild = buildSuccessfully(job).getAction(GitCommitsRecord.class);
+        assertThat(firstBuild).isNotNull().isNotEmpty();
+        var firstHead = getHead();
+
+        // Add exactly two commits after the first build
+        writeFile("A.java", "class A {}");
+        addFile("A.java");
+        commit("Add A");
+        var commitA = getHead();
+
+        writeFile("B.java", "class B {}");
+        addFile("B.java");
+        commit("Add B");
+        var commitB = getHead();
+
+        var secondBuild = buildSuccessfully(job).getAction(GitCommitsRecord.class);
+        assertThat(secondBuild).isNotNull()
+                .hasNoErrorMessages()
+                .hasLatestCommit(commitB);
+
+        // Should have exactly 2 new commits, not 200
+        assertThat(secondBuild.getSize()).isEqualTo(2);
+        assertThat(secondBuild.getCommits()).containsExactly(commitB, commitA);
+    }
+
+    private void amendLatestCommit(final String newMessage) {
+        getGitRepository().git("commit", "--amend", "--message=" + newMessage);
+    }
+
     private void createAndCommitFile(final String fileName, final String content) {
         writeFile(fileName, content);
         addFile(fileName);

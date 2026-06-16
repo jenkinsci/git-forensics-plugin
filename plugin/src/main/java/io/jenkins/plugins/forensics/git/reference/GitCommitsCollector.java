@@ -1,5 +1,6 @@
 package io.jenkins.plugins.forensics.git.reference;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Constants;
@@ -40,13 +41,20 @@ class GitCommitsCollector extends AbstractRepositoryCallback<RemoteResultWrapper
     public RemoteResultWrapper<BuildCommits> invoke(final Repository repository, final VirtualChannel channel)
             throws IOException {
         try (var git = new Git(repository)) {
-            var commits = new BuildCommits(latestRecordedCommit);
+            var effectivePreviousCommit = resolveLatestRecordedCommit(repository);
+            var commits = new BuildCommits(effectivePreviousCommit);
             RemoteResultWrapper<BuildCommits> result = new RemoteResultWrapper<>(commits,
                     "Errors while collecting commits");
+            if (!StringUtils.isBlank(latestRecordedCommit) && StringUtils.isBlank(effectivePreviousCommit)) {
+                result.logInfo(
+                        "-> Previous build commit '%s' no longer exists in the repository (possibly due to a "
+                                + "force-push after an amend) - restarting commit recording from scratch",
+                        DECORATOR.asText(latestRecordedCommit));
+            }
             findHeadCommit(repository, commits, result);
             for (RevCommit commit : git.log().add(commits.getHead()).call()) {
                 var commitId = commit.getName();
-                if (commitId.equals(latestRecordedCommit) || commits.size() >= MAX_COMMITS) {
+                if (commitId.equals(effectivePreviousCommit) || commits.size() >= MAX_COMMITS) {
                     return result;
                 }
                 commits.add(commitId);
@@ -56,6 +64,31 @@ class GitCommitsCollector extends AbstractRepositoryCallback<RemoteResultWrapper
         catch (GitAPIException e) {
             throw new IOException("Unable to record commits of git repository.", e);
         }
+    }
+
+    /**
+     * Resolves the latest recorded commit. If the commit no longer exists in the repository (e.g., after a force-push
+     * with an amended commit), an empty string is returned so that the recording is treated as a fresh start rather
+     * than incorrectly reporting up to {@value MAX_COMMITS} new commits.
+     *
+     * @param repository
+     *         the Git repository
+     *
+     * @return the latest recorded commit ID if it still exists in the repository, or an empty string if the commit can
+     *         no longer be found
+     *
+     * @throws IOException
+     *         in case of an IO error while accessing the repository
+     */
+    String resolveLatestRecordedCommit(final Repository repository) throws IOException {
+        if (StringUtils.isBlank(latestRecordedCommit)) {
+            return latestRecordedCommit; // no previous commit recorded; treat as fresh start
+        }
+        var resolved = repository.resolve(latestRecordedCommit);
+        if (resolved == null) {
+            return StringUtils.EMPTY; // commit no longer exists (e.g. force-push after amend); treat as fresh start
+        }
+        return latestRecordedCommit;
     }
 
     private void findHeadCommit(final Repository repository, final BuildCommits commits, final FilteredLog logger)
