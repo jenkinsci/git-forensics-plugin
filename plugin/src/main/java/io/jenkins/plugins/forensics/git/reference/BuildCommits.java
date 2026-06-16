@@ -33,7 +33,7 @@ class BuildCommits implements Serializable {
     /**
      * Set to {@code true} when the commit collector hit the maximum number of commits to scan without finding the
      * previous build's anchor commit. In this situation the "commits since last build" value is indeterminate and
-     * must not be displayed (JENKINS-67281).
+     * must not be displayed. 
      */
     private boolean maxCommitsReached = false;
 

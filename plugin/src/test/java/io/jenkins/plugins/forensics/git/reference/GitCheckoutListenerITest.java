@@ -182,29 +182,24 @@ class GitCheckoutListenerITest extends GitITest {
 
         var job = createFreeStyleProject("max-commits-on-missing-commit");
 
-        // Build #1: records the current HEAD as anchor
         var firstRecord = buildSuccessfully(job).getAction(GitCommitsRecord.class);
         assertThat(firstRecord).isNotNull()
                 .hasNoErrorMessages()
                 .isNotEmpty();
         assertThat(firstRecord.isMaxCommitsReached()).isFalse();
 
-        // Amend the last commit: replaces the old commit ID, making it unreachable from HEAD
         amendLatestCommit("Amended initial commit");
         var amendedHead = getHead();
         assertThat(amendedHead).isNotEqualTo(firstRecord.getLatestCommit());
 
-        // Build #2: anchor commit is gone — maxCommitsReached must be set
         var secondRecord = buildSuccessfully(job).getAction(GitCommitsRecord.class);
         assertThat(secondRecord).isNotNull()
                 .hasNoErrorMessages();
 
-        // The flag tells the UI: do not display a commit count
         assertThat(secondRecord.isMaxCommitsReached())
                 .as("maxCommitsReached must be true when anchor commit was replaced by force-push/amend")
                 .isTrue();
 
-        // The log must contain the "could not determine" message, not a raw commit count
         assertThat(secondRecord.getInfoMessages())
                 .anySatisfy(msg -> assertThat(msg).contains("Could not determine commits since last build"));
     }
@@ -228,7 +223,6 @@ class GitCheckoutListenerITest extends GitITest {
         assertThat(firstRecord).isNotNull().isNotEmpty();
         assertThat(firstRecord.isMaxCommitsReached()).isFalse();
 
-        // Exactly two new commits
         writeFile("A.java", "class A {}");
         addFile("A.java");
         commit("Add A");

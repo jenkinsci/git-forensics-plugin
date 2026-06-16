@@ -47,12 +47,9 @@ class GitCommitsCollector extends AbstractRepositoryCallback<RemoteResultWrapper
             for (RevCommit commit : git.log().add(commits.getHead()).call()) {
                 var commitId = commit.getName();
                 if (commitId.equals(latestRecordedCommit)) {
-                    return result; // anchor commit found — count is exact
+                    return result;
                 }
                 if (commits.size() >= MAX_COMMITS) {
-                    // Scanned MAX_COMMITS commits without finding the anchor. The previous build's commit may have
-                    // been replaced by a force-push/amend, or the branch simply has more than MAX_COMMITS new commits.
-                    // Either way the count is indeterminate; flag it so the UI can suppress the misleading number.
                     commits.setMaxCommitsReached();
                     return result;
                 }

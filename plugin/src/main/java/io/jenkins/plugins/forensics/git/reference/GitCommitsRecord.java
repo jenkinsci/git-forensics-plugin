@@ -66,7 +66,7 @@ public class GitCommitsRecord implements RunAction2, Serializable {
     private final List<String> infoMessages;
     /**
      * Set to {@code true} when the commit scan reached the maximum limit without finding the previous build's anchor
-     * commit, making the "commits since last build" count indeterminate (JENKINS-67281).
+     * commit, making the "commits since last build" count indeterminate.
      */
     private final boolean maxCommitsReached;
 
@@ -115,7 +115,7 @@ public class GitCommitsRecord implements RunAction2, Serializable {
     /**
      * Returns {@code true} if the commit scan stopped because the maximum number of commits was reached before
      * finding the previous build's anchor commit. In this case the "commits since last build" count is indeterminate
-     * and must not be shown in the UI (JENKINS-67281).
+     * and must not be shown in the UI.
      *
      * @return {@code true} if the commit count cannot be determined
      */
