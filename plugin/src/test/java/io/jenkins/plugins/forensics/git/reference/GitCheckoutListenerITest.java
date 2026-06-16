@@ -167,71 +167,68 @@ class GitCheckoutListenerITest extends GitITest {
 
     /**
      * Verifies that when the commit recorded in the previous build no longer exists in the repository (e.g., after a
-     * {@code git commit --amend} followed by a force-push), the plugin does NOT report the incorrect value of 200
-     * commits since the last build. Instead it should treat the situation as a fresh start and record commits from
-     * scratch (JENKINS-67281).
+     * {@code git commit --amend} followed by a force-push), the plugin sets the {@code maxCommitsReached} flag on the
+     * {@link GitCommitsRecord} so that the UI can suppress the misleading "Commits since last build: 200" message.
+     * (JENKINS-67281)
      *
      * @throws Exception
      *         in case of an IO exception
      */
     @Test
-    void shouldRestartRecordingWhenPreviousBuildCommitNoLongerExists() throws Exception {
+    void shouldSetMaxCommitsReachedWhenPreviousBuildCommitNoLongerExists() throws Exception {
         writeFile("Initial.java", "initial content");
         addFile("Initial.java");
         commit("Initial commit");
 
-        var job = createFreeStyleProject("restart-on-missing-commit");
+        var job = createFreeStyleProject("max-commits-on-missing-commit");
 
-        // Build #1: record the initial commit
-        var firstBuild = buildSuccessfully(job).getAction(GitCommitsRecord.class);
-        assertThat(firstBuild).isNotNull()
+        // Build #1: records the current HEAD as anchor
+        var firstRecord = buildSuccessfully(job).getAction(GitCommitsRecord.class);
+        assertThat(firstRecord).isNotNull()
                 .hasNoErrorMessages()
                 .isNotEmpty();
+        assertThat(firstRecord.isMaxCommitsReached()).isFalse();
 
-        var firstBuildHead = getHead();
-        assertThat(firstBuild.getLatestCommit()).isEqualTo(firstBuildHead);
-
-        // Amend the last commit — this creates a new commit ID, making the old one vanish
+        // Amend the last commit: replaces the old commit ID, making it unreachable from HEAD
         amendLatestCommit("Amended initial commit");
         var amendedHead = getHead();
+        assertThat(amendedHead).isNotEqualTo(firstRecord.getLatestCommit());
 
-        assertThat(amendedHead).isNotEqualTo(firstBuildHead);
+        // Build #2: anchor commit is gone — maxCommitsReached must be set
+        var secondRecord = buildSuccessfully(job).getAction(GitCommitsRecord.class);
+        assertThat(secondRecord).isNotNull()
+                .hasNoErrorMessages();
 
-        // Build #2: the previous build's commit no longer exists
-        var secondBuild = buildSuccessfully(job).getAction(GitCommitsRecord.class);
-        assertThat(secondBuild).isNotNull()
-                .hasNoErrorMessages()
-                // Must NOT report 200 — should be treated as a fresh start
-                .isFirstBuild()
-                .hasLatestCommit(amendedHead);
+        // The flag tells the UI: do not display a commit count
+        assertThat(secondRecord.isMaxCommitsReached())
+                .as("maxCommitsReached must be true when anchor commit was replaced by force-push/amend")
+                .isTrue();
 
-        // The commit count must not equal MAX_COMMITS (200) due to the bug
-        assertThat(secondBuild.getSize()).isNotEqualTo(200);
-        assertThat(secondBuild.getInfoMessages())
-                .anySatisfy(message -> assertThat(message)
-                        .contains("no longer exists in the repository"));
+        // The log must contain the "could not determine" message, not a raw commit count
+        assertThat(secondRecord.getInfoMessages())
+                .anySatisfy(msg -> assertThat(msg).contains("Could not determine commits since last build"));
     }
 
     /**
-     * Verifies that when there is a normal build without any force-push/amend, the commit count is computed
-     * correctly (regression guard for the fix of JENKINS-67281).
+     * Regression guard for JENKINS-67281: verifies that the normal (no force-push) case still works correctly —
+     * the commit count is exact, the flag is not set, and the count is not 200.
      *
      * @throws Exception
      *         in case of an IO exception
      */
     @Test
-    void shouldCountCommitsCorrectlyWithNoForcePush() throws Exception {
+    void shouldNotSetMaxCommitsReachedForNormalBuilds() throws Exception {
         writeFile("Base.java", "base content");
         addFile("Base.java");
         commit("Base commit");
 
-        var job = createFreeStyleProject("normal-count");
+        var job = createFreeStyleProject("normal-no-flag");
 
-        var firstBuild = buildSuccessfully(job).getAction(GitCommitsRecord.class);
-        assertThat(firstBuild).isNotNull().isNotEmpty();
-        var firstHead = getHead();
+        var firstRecord = buildSuccessfully(job).getAction(GitCommitsRecord.class);
+        assertThat(firstRecord).isNotNull().isNotEmpty();
+        assertThat(firstRecord.isMaxCommitsReached()).isFalse();
 
-        // Add exactly two commits after the first build
+        // Exactly two new commits
         writeFile("A.java", "class A {}");
         addFile("A.java");
         commit("Add A");
@@ -242,14 +239,14 @@ class GitCheckoutListenerITest extends GitITest {
         commit("Add B");
         var commitB = getHead();
 
-        var secondBuild = buildSuccessfully(job).getAction(GitCommitsRecord.class);
-        assertThat(secondBuild).isNotNull()
+        var secondRecord = buildSuccessfully(job).getAction(GitCommitsRecord.class);
+        assertThat(secondRecord).isNotNull()
                 .hasNoErrorMessages()
                 .hasLatestCommit(commitB);
 
-        // Should have exactly 2 new commits, not 200
-        assertThat(secondBuild.getSize()).isEqualTo(2);
-        assertThat(secondBuild.getCommits()).containsExactly(commitB, commitA);
+        assertThat(secondRecord.isMaxCommitsReached()).isFalse();
+        assertThat(secondRecord.getSize()).isEqualTo(2);
+        assertThat(secondRecord.getCommits()).containsExactly(commitB, commitA);
     }
 
     private void amendLatestCommit(final String newMessage) {
