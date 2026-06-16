@@ -14,9 +14,7 @@ import io.jenkins.plugins.forensics.git.util.RemoteResultWrapper;
 import static org.assertj.core.api.Assertions.*;
 
 /**
- * Integration tests for {@link GitCommitsCollector} — in particular the fix for JENKINS-67281 which caused the plugin
- * to display "Commits since last build: 200" whenever the previous build's anchor commit could not be found in the
- * commit history (e.g., after a {@code git commit --amend} followed by a force-push).
+ * Integration tests for {@link GitCommitsCollector}.
  *
  * @author Akash Manna
  */
