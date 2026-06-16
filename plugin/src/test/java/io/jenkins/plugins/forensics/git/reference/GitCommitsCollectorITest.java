@@ -33,7 +33,7 @@ class GitCommitsCollectorITest extends GitITest {
         var stalePreviousCommit = getHead();
 
         writeFile("V1.java", "v1 amended");
-        getGitRepository().git("commit", "--amend", "--message=Version 1 amended");
+        git("commit", "--amend", "--message=Version 1 amended");
         var newHead = getHead();
         assertThat(newHead).isNotEqualTo(stalePreviousCommit);
 

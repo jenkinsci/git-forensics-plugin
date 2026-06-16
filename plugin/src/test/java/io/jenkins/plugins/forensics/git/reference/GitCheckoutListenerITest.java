@@ -244,7 +244,7 @@ class GitCheckoutListenerITest extends GitITest {
     }
 
     private void amendLatestCommit(final String newMessage) {
-        getGitRepository().git("commit", "--amend", "--message=" + newMessage);
+        git("commit", "--amend", "--message=" + newMessage);
     }
 
     private void createAndCommitFile(final String fileName, final String content) {
