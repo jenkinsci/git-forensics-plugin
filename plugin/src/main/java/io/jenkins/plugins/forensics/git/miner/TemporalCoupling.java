@@ -8,17 +8,9 @@ import java.util.Objects;
 import java.util.StringJoiner;
 
 /**
- * Represents the temporal coupling between two files in a Git repository. Two files are temporally coupled if they are
- * frequently changed together in the same commit. This metric is described in "Your Code as a Crime Scene" by Adam
- * Tornhill (page 72) and reveals hidden architectural dependencies: files that are always modified together likely
- * share responsibilities and should potentially be merged or refactored.
- *
- * <p>The coupling strength is measured by two values:
- * <ul>
- *   <li>{@code coChanges}: the absolute number of commits in which both files appeared together</li>
- *   <li>{@code couplingRatio}: the ratio of co-changes to the total commits of the less-frequently-committed file,
- *       expressed as a value between 0.0 and 1.0 (1.0 = always changed together)</li>
- * </ul>
+ * Represents the temporal coupling between two files in a Git repository. Files that are frequently changed together 
+ * are considered temporally coupled; the coupling is characterized by the number of shared commits and a coupling 
+ * ratio indicating how often the less frequently modified file changes together with the other.
  *
  * @author Akash Manna
  */

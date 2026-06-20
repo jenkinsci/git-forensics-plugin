@@ -14,20 +14,9 @@ import java.util.stream.Collectors;
 import io.jenkins.plugins.forensics.miner.CommitDiffItem;
 
 /**
- * Computes the <em>temporal coupling</em> metric for all file pairs found in a list of {@link CommitDiffItem} objects.
- * Temporal coupling is described in "Your Code as a Crime Scene" (Adam Tornhill, page 72): files that are modified
- * together in the same commit frequently are considered temporally coupled, which often reveals hidden architectural
- * dependencies.
- *
- * <p>For each pair of files that share at least one commit, this miner produces a {@link TemporalCoupling} entry
- * containing:
- * <ul>
- *   <li>the absolute co-change count (number of commits that touched both files), and</li>
- *   <li>the coupling ratio: {@code coChanges / min(totalCommits(fileA), totalCommits(fileB))}.</li>
- * </ul>
- *
- * <p>Only pairs that appear in at least {@code minimumCoChanges} shared commits are included in the result,
- * allowing callers to filter out spurious couplings due to coincidental simultaneous changes.
+ * Computes the temporal coupling between files based on a list of {@link CommitDiffItem} objects. Files that are 
+ * frequently modified together are considered temporally coupled. For each file pair, this miner records the number of 
+ * shared commits and the coupling ratio, and returns only pairs with at least the specified minimum number of co-changes.
  *
  * @author Akash Manna
  */
@@ -64,10 +53,9 @@ public class TemporalCouplingMiner {
     }
 
     /**
-     * Computes temporal coupling for all file pairs in the supplied commit diff items.
-     *
-     * <p>The algorithm groups diff items by commit ID, then counts for each unordered file pair how many commits
-     * contain both files. Pairs that occur fewer than {@code minimumCoChanges} times are discarded.
+     * Computes temporal coupling for all file pairs in the supplied commit diff items. The algorithm groups diff 
+     * items by commit ID, then counts for each unordered file pair how many commits contain both files. Pairs that 
+     * occur fewer than {@code minimumCoChanges} times are discarded.
      *
      * @param commitDiffItems
      *         the list of commit diff items as produced by {@link CommitAnalyzer}; must not be {@code null}

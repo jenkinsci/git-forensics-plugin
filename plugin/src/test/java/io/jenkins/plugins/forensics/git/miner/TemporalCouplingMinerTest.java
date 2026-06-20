@@ -105,13 +105,6 @@ class TemporalCouplingMinerTest {
     /** Verifies that the coupling ratio is correctly computed when files sometimes diverge. */
     @Test
     void shouldComputePartialCouplingRatioWhenFilesOccasionallyDiverge() {
-        // FILE_A appears in commits 1, 2, 3, 4 → total 4 commits
-        // FILE_B appears in commits 1, 2, 3   → total 3 commits  (min = 3)
-        // co-changes = 3 (commits 1, 2, 3)
-        // ratio = 3 / 3 = 1.0 … recalculate: min(4,3)=3, ratio=3/3=1.0
-        // Let's set FILE_A in 3 commits, FILE_B in 2, co-changes = 2 → ratio = 2/2 = 1.0
-        // Adjust: FILE_A in COMMIT_1,2,3,4 (4), FILE_B in COMMIT_1,2 (2) co-changes=2 → ratio=2/2=1.0
-        // For partial ratio: A in 4 commits, B in 4 commits, co-changes=2 → ratio=2/4=0.5
         List<CommitDiffItem> items = List.of(
                 createItem(COMMIT_1, FILE_A),
                 createItem(COMMIT_1, FILE_B),
@@ -127,7 +120,6 @@ class TemporalCouplingMinerTest {
         assertThat(result).hasSize(1);
         TemporalCoupling coupling = result.get(0);
         assertThat(coupling.getCoChanges()).isEqualTo(2);
-        // FILE_A: 3 commits, FILE_B: 3 commits, min=3, ratio=2/3
         assertThat(coupling.getCouplingRatio()).isCloseTo(2.0 / 3.0, within(0.0001));
     }
 
@@ -154,8 +146,6 @@ class TemporalCouplingMinerTest {
     /** Verifies that independent file pairs are each computed correctly. */
     @Test
     void shouldHandleIndependentFilePairs() {
-        // COMMIT_1: A + B   COMMIT_2: A + B   → A-B coupled
-        // COMMIT_3: C alone → no additional coupling
         List<CommitDiffItem> items = List.of(
                 createItem(COMMIT_1, FILE_A),
                 createItem(COMMIT_1, FILE_B),
@@ -208,7 +198,7 @@ class TemporalCouplingMinerTest {
     void shouldDeduplicateMultipleEntriesForSameFileInSameCommit() {
         List<CommitDiffItem> items = List.of(
                 createItem(COMMIT_1, FILE_A),
-                createItem(COMMIT_1, FILE_A),   // duplicate for same commit, same file
+                createItem(COMMIT_1, FILE_A),
                 createItem(COMMIT_1, FILE_B),
                 createItem(COMMIT_2, FILE_A),
                 createItem(COMMIT_2, FILE_B)
@@ -236,7 +226,6 @@ class TemporalCouplingMinerTest {
     /** Verifies that deleted files (oldPath set, newPath is /dev/null) are included in the coupling computation. */
     @Test
     void shouldIncludeDeletedFilesUsingOldPath() {
-        // When a file is deleted: newPath stays "/dev/null", oldPath holds the real name
         CommitDiffItem deleted1 = new CommitDiffItem(COMMIT_1, "author@example.com", 1000);
         deleted1.setOldPath(TreeString.valueOf(FILE_A));
 

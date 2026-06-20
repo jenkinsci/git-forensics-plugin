@@ -17,9 +17,8 @@ import static org.assertj.core.api.Assertions.*;
 
 /**
  * Integration tests for {@link TemporalCouplingMiner} using a real Git repository.
- *
- * <p>These tests verify that temporal coupling — files frequently changed in the same commit — is correctly detected
- * from actual Git commit history, as described in "Your Code as a Crime Scene" (Adam Tornhill, page 72).
+ * These tests verify that temporal coupling — files frequently changed in the same commit — is correctly detected
+ * from actual Git commit history. 
  *
  * @author Akash Manna
  */
@@ -150,7 +149,6 @@ class TemporalCouplingMinerITest extends GitITest {
             TemporalCoupling xyCoupling = findCoupling(couplings, FILE_X, FILE_Y);
             assertThat(xyCoupling).isNotNull();
             assertThat(xyCoupling.getCoChanges()).isEqualTo(2);
-            // FILE_Y: 2 commits, FILE_X: 4 commits → min = 2, ratio = 2/2 = 1.0
             assertThat(xyCoupling.getCouplingRatio()).isCloseTo(1.0, within(0.0001));
         });
     }
@@ -182,8 +180,6 @@ class TemporalCouplingMinerITest extends GitITest {
             }
         });
     }
-
-    // ---- helpers ----
 
     private void commitSingleFile(final String file, final String content, final String message) {
         git("config", "user.name", FOO_NAME);
