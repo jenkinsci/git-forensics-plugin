@@ -1,5 +1,8 @@
 package io.jenkins.plugins.forensics.git.miner;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
+
 import edu.hm.hafner.util.FilteredLog;
 
 import java.util.ArrayList;
@@ -25,6 +28,10 @@ public class TemporalCouplingMiner {
      * Default minimum number of co-changes required before a file pair is considered temporally coupled.
      */
     public static final int DEFAULT_MINIMUM_CO_CHANGES = 2;
+
+    private static final int MINIMUM_FILES_FOR_COUPLING = 2;
+    private static final String NO_FILE_NAME = "/dev/null";
+    private static final String PAIR_KEY_SEPARATOR = "\u0000";
 
     private final int minimumCoChanges;
 
@@ -88,13 +95,14 @@ public class TemporalCouplingMiner {
         return commitToFiles;
     }
 
-    private String resolveFileName(final CommitDiffItem item) {
+    @CheckForNull
+    private String resolveFileName(@NonNull final CommitDiffItem item) {
         String newPath = item.getNewPath();
-        if (!"/dev/null".equals(newPath)) {
+        if (!NO_FILE_NAME.equals(newPath)) {
             return newPath;
         }
         String oldPath = item.getOldPath();
-        if (!"/dev/null".equals(oldPath)) {
+        if (!NO_FILE_NAME.equals(oldPath)) {
             return oldPath;
         }
         return null;
@@ -113,7 +121,7 @@ public class TemporalCouplingMiner {
     private Map<String, Integer> countCoChanges(final Map<String, Set<String>> commitToFiles) {
         Map<String, Integer> pairCounts = new HashMap<>();
         for (Set<String> files : commitToFiles.values()) {
-            if (files.size() < 2) {
+            if (files.size() < MINIMUM_FILES_FOR_COUPLING) {
                 continue;
             }
             List<String> sorted = files.stream().sorted().collect(Collectors.toList());
@@ -150,10 +158,10 @@ public class TemporalCouplingMiner {
     }
 
     private String pairKey(final String fileA, final String fileB) {
-        return fileA + "\u0000" + fileB;
+        return fileA + PAIR_KEY_SEPARATOR + fileB;
     }
 
     private String[] splitPairKey(final String key) {
-        return key.split("\u0000", 2);
+        return key.split(PAIR_KEY_SEPARATOR, 2);
     }
 }
