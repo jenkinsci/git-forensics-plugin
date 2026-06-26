@@ -96,10 +96,8 @@ public class GitRepositoryValidator {
      * @return {@code true} if the repository is a shallow clone, {@code false} otherwise
      */
     public boolean isShallowClone() {
-        if (scm instanceof GitSCM) {
-            return isShallow((GitSCM) scm);
-        }
-        return false;
+        return scm instanceof GitSCM 
+                && isShallow((GitSCM) scm);
     }
 
     private boolean isValidGitRoot(final GitSCM git, final boolean rejectShallowClone) {
