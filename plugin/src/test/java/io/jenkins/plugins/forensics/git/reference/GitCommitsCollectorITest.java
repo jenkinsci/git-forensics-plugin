@@ -23,9 +23,7 @@ class GitCommitsCollectorITest extends GitITest {
     @Test
     void shouldSetMaxCommitsReachedFlagWhenAnchorCommitIsNotFoundInHistory()
             throws IOException, InterruptedException {
-        writeFile("V1.java", "v1");
-        addFile("V1.java");
-        commit("Version 1");
+        createAndCommitFile("V1.java", "v1");
         var stalePreviousCommit = getHead();
 
         writeFile("V1.java", "v1 amended");
@@ -51,19 +49,13 @@ class GitCommitsCollectorITest extends GitITest {
     @Test
     void shouldNotSetMaxCommitsReachedFlagWhenAnchorCommitIsFoundNormally()
             throws IOException, InterruptedException {
-        writeFile("Base.java", "base");
-        addFile("Base.java");
-        commit("Base");
+        createAndCommitFile("Base.java", "base");
         var anchorCommit = getHead();
 
-        writeFile("New1.java", "new1");
-        addFile("New1.java");
-        commit("Add New1");
+        createAndCommitFile("New1.java", "new1");
         var commit1 = getHead();
 
-        writeFile("New2.java", "new2");
-        addFile("New2.java");
-        commit("Add New2");
+        createAndCommitFile("New2.java", "new2");
         var commit2 = getHead();
 
         var collector = new GitCommitsCollector(anchorCommit);
@@ -87,9 +79,7 @@ class GitCommitsCollectorITest extends GitITest {
      */
     @Test
     void shouldNotSetMaxCommitsReachedFlagForFirstBuild() throws IOException, InterruptedException {
-        writeFile("Init.java", "init");
-        addFile("Init.java");
-        commit("Init");
+        createAndCommitFile("Init.java", "init");
 
         var collector = new GitCommitsCollector("");
         var gitClient = createGitClient();
@@ -100,5 +90,19 @@ class GitCommitsCollectorITest extends GitITest {
         assertThat(result.isMaxCommitsReached()).isFalse();
         assertThat(result.getRecordingType()).isEqualTo(GitCommitsRecord.RecordingType.START);
         assertThat(result.size()).isGreaterThan(0);
+    }
+
+    /**
+     * Creates a file, stages it and commits it.
+     *
+     * @param fileName
+     *         the file name
+     * @param content
+     *         the file content
+     */
+    private void createAndCommitFile(final String fileName, final String content) {
+        writeFile(fileName, content);
+        addFile(fileName);
+        commit(fileName + " created");
     }
 }
