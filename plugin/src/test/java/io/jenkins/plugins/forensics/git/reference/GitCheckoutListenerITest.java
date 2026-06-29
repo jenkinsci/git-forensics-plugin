@@ -254,21 +254,14 @@ class GitCheckoutListenerITest extends GitITest {
         assertThat(firstRecord).isNotNull().isNotEmpty();
         assertThat(firstRecord.isMaxCommitsReached()).isFalse();
 
-        writeFile("A.java", "class A {}");
-        addFile("A.java");
-        commit("Add A");
+        createAndCommitFile("A.java", "class A {}");
         var commitA = getHead();
-
-        writeFile("B.java", "class B {}");
-        addFile("B.java");
-        commit("Add B");
+        createAndCommitFile("B.java", "class B {}");
         var commitB = getHead();
-
         var secondRecord = buildSuccessfully(job).getAction(GitCommitsRecord.class);
         assertThat(secondRecord).isNotNull()
                 .hasNoErrorMessages()
                 .hasLatestCommit(commitB);
-
         assertThat(secondRecord.isMaxCommitsReached()).isFalse();
         assertThat(secondRecord.getSize()).isEqualTo(2);
         assertThat(secondRecord.getCommits()).containsExactly(commitB, commitA);
