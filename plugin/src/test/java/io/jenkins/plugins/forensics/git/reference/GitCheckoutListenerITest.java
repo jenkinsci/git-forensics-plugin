@@ -4,13 +4,16 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import hudson.model.FreeStyleProject;
 import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.extensions.impl.CloneOption;
 
 import io.jenkins.plugins.forensics.git.util.GitCommitTextDecorator;
 import io.jenkins.plugins.forensics.git.util.GitITest;
+import io.jenkins.plugins.forensics.git.util.GitRepositoryValidator;
 
 import static io.jenkins.plugins.forensics.git.assertions.Assertions.*;
 
@@ -165,6 +168,34 @@ class GitCheckoutListenerITest extends GitITest {
                                 "-> Git commit decorator successfully obtained 'hudson.plugins.git.browser.GithubWeb"));
     }
 
+    /**
+     * Verifies that a build using a shallow clone (depth=1) still records a {@link GitCommitsRecord}.
+     * Previously, the {@link io.jenkins.plugins.forensics.git.util.GitRepositoryValidator#isGitRepository()}
+     * method incorrectly returned {@code false} for shallow clones, preventing commit recording and thus
+     * breaking {@code discoverGitReferenceBuild}.
+     *
+     * @throws Exception
+     *         in case of an IO exception
+     */
+    @Test
+    void shouldRecordCommitsForShallowClone() throws Exception {
+        createAndCommitFile("First.java", "first commit");
+        createAndCommitFile("Second.java", "second commit");
+
+        var job = createFreeStyleProjectWithShallowClone("shallow-listener");
+
+        var record = buildSuccessfully(job).getAction(GitCommitsRecord.class);
+        assertThat(record)
+                .as("GitCommitsRecord must be present even for shallow-clone builds (JENKINS-74921)")
+                .isNotNull()
+                .isNotEmpty()
+                .hasNoErrorMessages()
+                .hasInfoMessages(
+                        GitRepositoryValidator.INFO_SHALLOW_CLONE_COMMIT_RECORDING,
+                        "Found no previous build with recorded Git commits",
+                        "-> Starting initial recording of commits");
+    }
+
     private void createAndCommitFile(final String fileName, final String content) {
         writeFile(fileName, content);
         addFile(fileName);
@@ -174,6 +205,15 @@ class GitCheckoutListenerITest extends GitITest {
     private FreeStyleProject createFreeStyleProject(final String name) throws IOException {
         var project = createProject(FreeStyleProject.class, name);
         project.setScm(new GitSCM(getGitRepositoryPath()));
+        return project;
+    }
+
+    private FreeStyleProject createFreeStyleProjectWithShallowClone(final String name) throws IOException {
+        var project = createProject(FreeStyleProject.class, name);
+        var cloneOption = new CloneOption(true, null, null);
+        var scm = new GitSCM(GitSCM.createRepoList(getGitRepositoryPath(), null),
+                Collections.emptyList(), null, null, Collections.singletonList(cloneOption));
+        project.setScm(scm);
         return project;
     }
 }
