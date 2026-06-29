@@ -14,6 +14,7 @@ import static org.assertj.core.api.Assertions.*;
  *
  * @author Akash Manna
  */
+@SuppressWarnings("PMD.VariableDeclarationUsageDistance")
 class GitCommitsCollectorITest extends GitITest {
     /**
      * Verifies that the {@code maxCommitsReached} flag is set (so the UI can suppress the count) and the count
