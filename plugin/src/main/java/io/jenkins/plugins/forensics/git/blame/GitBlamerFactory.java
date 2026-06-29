@@ -26,7 +26,7 @@ public class GitBlamerFactory extends BlamerFactory {
     public Optional<Blamer> createBlamer(final SCM scm, final Run<?, ?> build,
             final FilePath workTree, final TaskListener listener, final FilteredLog logger) {
         var validator = new GitRepositoryValidator(scm, build, workTree, listener, logger);
-        if (validator.isGitRepository()) {
+        if (validator.isFullGitRepository()) {
             var client = validator.createClient();
             logger.logInfo("-> Git blamer successfully created in working tree '%s'",
                     new PathUtil().getAbsolutePath(client.getWorkTree().getRemote()));

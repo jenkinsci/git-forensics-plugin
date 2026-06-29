@@ -102,7 +102,7 @@ public class CommitStatisticsStep extends Recorder implements SimpleBuildStep {
             logHandler.log(logger);
 
             var validator = new GitRepositoryValidator(repository, run, workspace, listener, logger);
-            if (validator.isGitRepository()) {
+            if (validator.isFullGitRepository()) {
                 try {
                     computeStats(run, logger, repository, validator);
                 }
