@@ -122,13 +122,13 @@ class IndentationLevelCalculatorTest {
     @Test
     void shouldHandleRealisticJavaSnippet() {
         var content = String.join("\n", List.of(
-                "public class Example {",                  // 0
+                "public class Example {",                   // 0
                 "    public void run() {",                  // 1 (4 spaces)
                 "        if (isValid()) {",                 // 2 (8 spaces)
-                "            doSomething();",                // 3 (12 spaces)
-                "        }",                                 // 2
-                "    }",                                     // 1
-                "}"                                          // 0
+                "            doSomething();",               // 3 (12 spaces)
+                "        }",                                // 2
+                "    }",                                    // 1
+                "}"                                         // 0
         ));
 
         var level = calculator.compute(content);

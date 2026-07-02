@@ -11,32 +11,12 @@ import java.util.Objects;
 import java.util.StringJoiner;
 
 /**
- * Aggregates the logical indentation levels of all non-blank lines of a single source file into a single
- * statistical summary. Indentation is used as a simple, language-agnostic proxy for the complexity of a file: the
- * more deeply nested the code is, the more "negative space" (leading whitespace) each line tends to have.
+ * Aggregates the logical indentation levels of all non-blank lines in a source file into a statistical summary.
+ * Indentation is used as a language-agnostic proxy for code complexity.
  *
- * <p>
- * This metric is described in detail in chapter 3 ("The Evolution of Software") of Adam Tornhill's book
- * <i>Your Code as a Crime Scene</i>, which in turn is based on the research published in Hindle, Godfrey, and
- * Holt, <i>Reading Beside the Lines: Indentation as a Proxy for Complexity Metric</i>, Program Comprehension, 2008.
- * ICPC 2008.
- * </p>
- *
- * <p>
- * Following the recipe from the book, an instance of this class stores, for the lines of a single file:
- * </p>
- * <ul>
- *     <li>{@code n}: the {@link #getNumberOfLines() number of (non-blank) lines}</li>
- *     <li>{@code total}: the {@link #getTotal() sum of the indentation levels} of all lines</li>
- *     <li>{@code mean}: the {@link #getMean() average indentation level} per line</li>
- *     <li>{@code sd}: the {@link #getStandardDeviation() standard deviation} of the indentation levels</li>
- *     <li>{@code max}: the {@link #getMaximum() maximum indentation level} found in the file</li>
- * </ul>
- *
- * <p>
- * Instances of this class are created by {@link IndentationLevelCalculator}, which also defines what a "logical
- * indentation level" actually is.
- * </p>
+ * <p>Stores summary statistics such as the number of lines, total, mean, standard deviation, and maximum
+ * indentation level. Instances are created by {@link IndentationLevelCalculator}, which defines how logical
+ * indentation levels are computed.</p>
  *
  * @author Akash Manna
  * @see IndentationLevelCalculator

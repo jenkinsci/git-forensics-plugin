@@ -6,20 +6,8 @@ import java.util.List;
 /**
  * Computes the {@link IndentationLevel} metric for the textual content of a single file.
  *
- * <p>
- * The algorithm follows the recipe described in chapter 3 of Adam Tornhill's book <i>Your Code as a Crime
- * Scene</i>: for every non-blank line of a file, the <i>logical indentation level</i> of the leading whitespace is
- * determined, where one logical indentation level corresponds to either a single tab character or four consecutive
- * space characters at the start of the line. Blank (or whitespace-only) lines are skipped entirely, since they do
- * not carry any indentation signal. The per-line levels are then aggregated by {@link IndentationLevel}.
- * </p>
- *
- * <p>
- * Indentation correlates with the shape of the code: deeply nested {@code if}/{@code for}/{@code while} blocks push
- * the following lines further to the right. Since the analysis only looks at the "negative space" of a file rather
- * than its actual tokens, it is completely language-agnostic and very cheap to compute, which makes it a useful,
- * lightweight complement to more precise (but language-specific) complexity metrics such as cyclomatic complexity.
- * </p>
+ * <p>Determines the logical indentation level of each non-blank line and aggregates the results into an
+ * {@link IndentationLevel}.</p>
  *
  * @author Akash Manna
  * @see IndentationLevel
@@ -72,12 +60,6 @@ public class IndentationLevelCalculator {
      * Determines the logical indentation level of a single line, i.e. the number of complete indentation units
      * (one tab, or four consecutive spaces) found at the start of the line, before the first non-whitespace
      * character (or the end of the line) is reached.
-     *
-     * <p>
-     * Tabs and spaces are counted independently: a run of leading spaces that is shorter than
-     * {@link #SPACES_PER_LEVEL} does not contribute a level, and a tab character does not "absorb" any pending
-     * spaces that preceded it (each is counted using its own rule).
-     * </p>
      *
      * @param line
      *         a single, non-blank line of a file

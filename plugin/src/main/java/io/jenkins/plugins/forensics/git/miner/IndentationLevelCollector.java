@@ -21,22 +21,11 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Collects the {@link IndentationLevel} metric for every regular (non-binary) file that is present in a given
- * commit of a Git repository.
+ * Collects the {@link IndentationLevel} metric for each regular (non-binary) file in a Git commit.
  *
- * <p>
- * Unlike {@link DiffsCollector}, which only looks at the lines that have been <b>changed</b> by a commit, this
- * class reads the complete content of every file as it exists in the snapshot of the analyzed commit. This is
- * required because indentation, as a proxy for complexity, is a property of a whole file rather than of the lines
- * touched by a single change.
- * </p>
- *
- * <p>
- * Binary files are skipped automatically (detected using the same heuristic that Git itself uses: the presence of
- * a {@code NUL} byte within the first chunk of the file), since indentation has no meaning for them. Files that
- * are too large to be read safely into memory, or that cannot be read for any other reason, are also skipped; in
- * both cases a message is added to the supplied {@link FilteredLog}.
- * </p>
+ * <p>Unlike {@link DiffsCollector}, which analyzes only modified lines, this collector reads the complete
+ * contents of each file because indentation is a property of the entire file. Binary, unreadable, or oversized
+ * files are skipped, and the reason is recorded in the provided {@link FilteredLog}.</p>
  *
  * @author Akash Manna
  * @see IndentationLevelCalculator

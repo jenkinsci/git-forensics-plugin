@@ -24,11 +24,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.*;
 
 /**
- * Integration tests for {@link IndentationLevelCollector}. Unlike {@link DiffsCollectorITest} (which relies on the
- * heavyweight {@link io.jenkins.plugins.forensics.git.util.GitITest} base class and a full Jenkins test harness),
- * these tests use a plain, temporary Git repository created directly with JGit's porcelain API. This is sufficient
- * here since {@link IndentationLevelCollector} only depends on plain JGit types ({@link Repository}, {@link
- * ObjectId}) and does not require a configured {@code GitClient} or Jenkins job.
+ * Integration tests for the class {@link IndentationLevelCollector}. 
  *
  * @author Akash Manna
  */
