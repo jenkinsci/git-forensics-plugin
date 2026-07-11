@@ -16,6 +16,9 @@ public class IndentationLevelCalculator {
     /** The number of consecutive leading space characters that count as a single logical indentation level. */
     static final int SPACES_PER_LEVEL = 4;
 
+    private static final char TAB_CHARACTER = '\t';
+    private static final char SPACE_CHARACTER = ' ';
+
     /**
      * Computes the {@link IndentationLevel} for the specified lines of a file.
      *
@@ -72,11 +75,11 @@ public class IndentationLevelCalculator {
 
         for (int i = 0; i < line.length(); i++) {
             char character = line.charAt(i);
-            if (character == '\t') {
+            if (character == TAB_CHARACTER) {
                 level++;
                 pendingSpaces = 0;
             }
-            else if (character == ' ') {
+            else if (character == SPACE_CHARACTER) {
                 pendingSpaces++;
                 if (pendingSpaces == SPACES_PER_LEVEL) {
                     level++;
