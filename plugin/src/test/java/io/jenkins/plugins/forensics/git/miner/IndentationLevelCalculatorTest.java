@@ -57,7 +57,7 @@ class IndentationLevelCalculatorTest {
             "'\t    foo()',                 2",   // 1 tab + 4 spaces
             "'    \tfoo()',                 2",   // 4 spaces + 1 tab
             "'  \tfoo()',                   1",   // 2 spaces (not enough) + 1 tab
-            "'\t\t    foo()',               3",   // 2 tabs + 4 spaces
+            "'\t\t    foo()',               3"    // 2 tabs + 4 spaces
     })
     void shouldCountIndentationLevelOfSingleLine(final String line, final int expectedLevel) {
         assertThat(calculator.countIndentationLevel(line)).isEqualTo(expectedLevel);
