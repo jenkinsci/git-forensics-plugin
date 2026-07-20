@@ -103,6 +103,10 @@ public class GitCheckoutListener extends SCMListener {
         if (commits.isEmpty()) {
             logger.logInfo("-> No new commits found");
         }
+        else if (commits.isMaxCommitsReached()) {
+            logger.logInfo("-> Could not determine commits since last build: "
+                    + "last build commit was not found within the last %d commits", commits.size());
+        }
         else if (commits.size() == 1) {
             logger.logInfo("-> Recorded one new commit", commits.size());
         }
