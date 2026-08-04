@@ -16,6 +16,7 @@ import static org.mockito.Mockito.*;
 class RepositoryStatisticsCallbackTest {
 
     @Test
+    @SuppressWarnings("PMD.ClosedResource")
     @Issue("JENKINS-74804")
     void invokeShouldNotCloseTheRepository() throws Exception {
         var repository = mock(Repository.class);
