@@ -359,7 +359,7 @@ class GitBlamerTest {
     }
 
     @Test
-    @SuppressWarnings("PMD.ClosedResource")
+    @SuppressWarnings("PMD.CloseResource")
     @Issue("JENKINS-74804")
     void blameCallbackInvokeShouldNotCloseTheRepository() throws InterruptedException {
         var repository = mock(Repository.class);
