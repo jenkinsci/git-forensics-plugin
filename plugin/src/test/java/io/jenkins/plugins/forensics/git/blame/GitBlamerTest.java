@@ -356,4 +356,20 @@ class GitBlamerTest {
         assertThat(request.getCommit(line)).isEqualTo(getCommitID(TIME + line));
         assertThat(request.getTime(line)).isEqualTo(TIME + line);
     }
+
+    @Test
+    @Issue("JENKINS-74804")
+    void blameCallbackInvokeShouldNotCloseTheRepository() throws InterruptedException {
+        var repository = mock(org.eclipse.jgit.lib.Repository.class);
+    
+        when(repository.getWorkTree()).thenReturn(new java.io.File("/"));
+
+        var locations = new FileLocations();   
+        var blames = new Blames();
+        var callback = new BlameCallback(locations, blames, mock(ObjectId.class));
+
+        callback.invoke(repository, mock(VirtualChannel.class));
+
+        verify(repository, never()).close();
+    }
 }

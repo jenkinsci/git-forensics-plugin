@@ -41,15 +41,13 @@ class RepositoryStatisticsCallback
         RemoteResultWrapper<ArrayList<CommitDiffItem>> wrapper = new RemoteResultWrapper<>(
                 commits, "Errors while mining the Git repository:");
 
-        try (repository) {
-            try (var git = new Git(repository)) {
-                var commitAnalyzer = new CommitAnalyzer();
-                commits.addAll(commitAnalyzer.run(repository, git, previousCommitId, wrapper));
-            }
-            catch (IOException | GitAPIException exception) {
-                wrapper.logException(exception,
-                        "Can't analyze commits for the repository " + repository.getIdentifier());
-            }
+        try (var git = new Git(repository)) {
+            var commitAnalyzer = new CommitAnalyzer();
+            commits.addAll(commitAnalyzer.run(repository, git, previousCommitId, wrapper));
+        }
+        catch (IOException | GitAPIException exception) {
+            wrapper.logException(exception,
+                    "Can't analyze commits for the repository " + repository.getIdentifier());
         }
 
         return wrapper;
