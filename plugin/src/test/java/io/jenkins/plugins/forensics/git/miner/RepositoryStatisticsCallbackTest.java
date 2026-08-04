@@ -14,7 +14,6 @@ import static org.mockito.Mockito.*;
  * @author Akash Manna
  */
 class RepositoryStatisticsCallbackTest {
-
     @Test
     @SuppressWarnings("PMD.CloseResource")
     @Issue("JENKINS-74804")
