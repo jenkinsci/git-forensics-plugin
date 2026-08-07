@@ -92,6 +92,8 @@ class GitCommitsCollector extends AbstractRepositoryCallback<RemoteResultWrapper
         if (head == null) {
             throw new IOException("No HEAD commit found in " + repository);
         }
-        return new RevWalk(repository).parseCommit(head);
+        try (var walk = new RevWalk(repository)) {
+            return walk.parseCommit(head);
+        }
     }
 }
