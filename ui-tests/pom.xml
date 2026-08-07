@@ -16,7 +16,7 @@
   <name>UI Tests of Git Forensics Plugin</name>
 
   <properties>
-    <jenkins.version>2.573</jenkins.version>
+    <jenkins.version>2.576</jenkins.version>
     <hpi-plugin.version>3.1849.vcc39cdb_880b_f</hpi-plugin.version>
     <json-smart.version>2.3</json-smart.version>
     <json-unit-assertj.version>6.0.1</json-unit-assertj.version>
