@@ -12,7 +12,7 @@
   <groupId>io.jenkins.plugins</groupId>
   <artifactId>git-forensics-ui-tests</artifactId>
   <packaging>jar</packaging>
-  <version>UNVERSIONED</version>
+  <version>UNVERSIONED-SNAPSHOT</version>
   <name>UI Tests of Git Forensics Plugin</name>
 
   <properties>
@@ -87,10 +87,6 @@
       <id>maven.jenkins-ci.org</id>
       <url>https://repo.jenkins-ci.org/releases/</url>
     </repository>
-    <repository>
-      <id>incrementals.jenkins-ci.org</id>
-      <url>https://repo.jenkins-ci.org/incrementals/</url>
-    </repository>
   </repositories>
 
   <pluginRepositories>
@@ -153,12 +149,6 @@
       <properties>
         <maven.test.skip>false</maven.test.skip>
       </properties>
-    </profile>
-    <profile>
-      <id>consume-incrementals</id>
-    </profile>
-    <profile>
-      <id>might-produce-incrementals</id>
     </profile>
   </profiles>
 
