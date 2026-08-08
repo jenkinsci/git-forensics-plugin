@@ -1,5 +1,6 @@
 package io.jenkins.plugins.forensics.git.reference;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Constants;
@@ -44,13 +45,27 @@ class GitCommitsCollector extends AbstractRepositoryCallback<RemoteResultWrapper
             RemoteResultWrapper<BuildCommits> result = new RemoteResultWrapper<>(commits,
                     "Errors while collecting commits");
             findHeadCommit(repository, commits, result);
+
+            var hasAnchor = StringUtils.isNotBlank(latestRecordedCommit);
+
             for (RevCommit commit : git.log().add(commits.getHead()).call()) {
                 var commitId = commit.getName();
-                if (commitId.equals(latestRecordedCommit) || commits.size() >= MAX_COMMITS) {
+                if (hasAnchor && commitId.equals(latestRecordedCommit)) {
+                    return result;
+                }
+                if (commits.size() >= MAX_COMMITS) {
+                    if (hasAnchor) {
+                        commits.setMaxCommitsReached();
+                    }
                     return result;
                 }
                 commits.add(commitId);
             }
+
+            if (hasAnchor) {
+                commits.setMaxCommitsReached();
+            }
+
             return result;
         }
         catch (GitAPIException e) {

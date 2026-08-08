@@ -196,6 +196,81 @@ class GitCheckoutListenerITest extends GitITest {
                         "-> Starting initial recording of commits");
     }
 
+    /**
+     * Verifies that when the commit recorded in the previous build no longer exists in the repository (e.g., after a
+     * {@code git commit --amend} followed by a force-push), the plugin sets the {@code maxCommitsReached} flag on the
+     * {@link GitCommitsRecord} so that the UI can suppress the misleading "Commits since last build: 200" message.
+     * (JENKINS-67281)
+     *
+     * @throws Exception
+     *         in case of an IO exception
+     */
+    @Test
+    void shouldSetMaxCommitsReachedWhenPreviousBuildCommitNoLongerExists() throws Exception {
+        writeFile("Initial.java", "initial content");
+        addFile("Initial.java");
+        commit("Initial commit");
+
+        var job = createFreeStyleProject("max-commits-on-missing-commit");
+
+        var firstRecord = buildSuccessfully(job).getAction(GitCommitsRecord.class);
+        assertThat(firstRecord).isNotNull()
+                .hasNoErrorMessages()
+                .isNotEmpty();
+        assertThat(firstRecord.isMaxCommitsReached()).isFalse();
+
+        amendLatestCommit("Amended initial commit");
+        var amendedHead = getHead();
+        assertThat(amendedHead).isNotEqualTo(firstRecord.getLatestCommit());
+
+        var secondRecord = buildSuccessfully(job).getAction(GitCommitsRecord.class);
+        assertThat(secondRecord).isNotNull()
+                .hasNoErrorMessages();
+
+        assertThat(secondRecord.isMaxCommitsReached())
+                .as("maxCommitsReached must be true when anchor commit was replaced by force-push/amend")
+                .isTrue();
+
+        assertThat(secondRecord.getInfoMessages())
+                .anySatisfy(msg -> assertThat(msg).contains("Could not determine commits since last build"));
+    }
+
+    /**
+     * Regression guard for JENKINS-67281: verifies that the normal (no force-push) case still works correctly —
+     * the commit count is exact, the flag is not set, and the count is not 200.
+     *
+     * @throws Exception
+     *         in case of an IO exception
+     */
+    @Test
+    void shouldNotSetMaxCommitsReachedForNormalBuilds() throws Exception {
+        writeFile("Base.java", "base content");
+        addFile("Base.java");
+        commit("Base commit");
+
+        var job = createFreeStyleProject("normal-no-flag");
+
+        var firstRecord = buildSuccessfully(job).getAction(GitCommitsRecord.class);
+        assertThat(firstRecord).isNotNull().isNotEmpty();
+        assertThat(firstRecord.isMaxCommitsReached()).isFalse();
+
+        createAndCommitFile("A.java", "class A {}");
+        var commitA = getHead();
+        createAndCommitFile("B.java", "class B {}");
+        var commitB = getHead();
+        var secondRecord = buildSuccessfully(job).getAction(GitCommitsRecord.class);
+        assertThat(secondRecord).isNotNull()
+                .hasNoErrorMessages()
+                .hasLatestCommit(commitB);
+        assertThat(secondRecord.isMaxCommitsReached()).isFalse();
+        assertThat(secondRecord.getSize()).isEqualTo(2);
+        assertThat(secondRecord.getCommits()).containsExactly(commitB, commitA);
+    }
+
+    private void amendLatestCommit(final String newMessage) {
+        git("commit", "--amend", "--message=" + newMessage);
+    }
+
     private void createAndCommitFile(final String fileName, final String content) {
         writeFile(fileName, content);
         addFile(fileName);

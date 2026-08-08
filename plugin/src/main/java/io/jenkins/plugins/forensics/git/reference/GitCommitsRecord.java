@@ -64,6 +64,11 @@ public class GitCommitsRecord implements RunAction2, Serializable {
     private final List<String> errorMessages;
     @SuppressWarnings("serial")
     private final List<String> infoMessages;
+    /**
+     * Set to {@code true} when the commit scan reached the maximum limit without finding the previous build's anchor
+     * commit, making the "commits since last build" count indeterminate.
+     */
+    private final boolean maxCommitsReached;
 
     /** Determines if this record is the starting point or an incremental record that is based on the previous record. */
     enum RecordingType {
@@ -95,6 +100,7 @@ public class GitCommitsRecord implements RunAction2, Serializable {
         this.latestCommitLink = latestCommitLink;
         this.commits = new ArrayList<>(commits.getCommits());
         this.recordingType = commits.getRecordingType();
+        this.maxCommitsReached = commits.isMaxCommitsReached();
         targetParentCommit = commits.getTarget().name();
     }
 
@@ -104,6 +110,17 @@ public class GitCommitsRecord implements RunAction2, Serializable {
 
     public boolean isFirstBuild() {
         return recordingType == RecordingType.START;
+    }
+
+    /**
+     * Returns {@code true} if the commit scan stopped because the maximum number of commits was reached before
+     * finding the previous build's anchor commit. In this case the "commits since last build" count is indeterminate
+     * and must not be shown in the UI.
+     *
+     * @return {@code true} if the commit count cannot be determined
+     */
+    public boolean isMaxCommitsReached() {
+        return maxCommitsReached;
     }
 
     public String getScmKey() {
