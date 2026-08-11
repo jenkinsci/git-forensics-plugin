@@ -19,6 +19,8 @@
  *     <li> last modification time </li>
  *     <li> lines of code (from the commit details) </li>
  *     <li> code churn (changed lines since created) </li>
+ *     <li> indentation level (a language-agnostic proxy for the complexity of a file, see
+ *          {@link io.jenkins.plugins.forensics.git.miner.IndentationLevel}) </li>
  * </ul>
  */
 @DefaultAnnotation(NonNull.class)
