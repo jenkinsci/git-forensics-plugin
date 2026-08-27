@@ -13,6 +13,7 @@ import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.jupiter.api.Test;
 import org.junitpioneer.jupiter.Issue;
+import org.eclipse.jgit.lib.Repository;
 
 import edu.hm.hafner.util.FilteredLog;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -355,5 +356,22 @@ class GitBlamerTest {
         assertThat(request.getName(line)).isEqualTo(NAME + line);
         assertThat(request.getCommit(line)).isEqualTo(getCommitID(TIME + line));
         assertThat(request.getTime(line)).isEqualTo(TIME + line);
+    }
+
+    @Test
+    @SuppressWarnings("PMD.CloseResource")
+    @Issue("JENKINS-74804")
+    void blameCallbackInvokeShouldNotCloseTheRepository() throws InterruptedException {
+        var repository = mock(Repository.class);
+    
+        when(repository.getWorkTree()).thenReturn(new File("/"));
+
+        var locations = new FileLocations();   
+        var blames = new Blames();
+        var callback = new BlameCallback(locations, blames, mock(ObjectId.class));
+
+        callback.invoke(repository, mock(VirtualChannel.class));
+
+        verify(repository, never()).close();
     }
 }

@@ -31,6 +31,7 @@ import static org.mockito.Mockito.*;
  *
  * @author Florian Orendi
  */
+@SuppressWarnings("PMD.VariableDeclarationUsageDistance") // we need to keep track of the old commit hashes
 class GitDeltaCalculatorITest extends GitITest {
     private static final String EMPTY_SCM_KEY = "";
     private static final String EMPTY_FILE_PATH = "";

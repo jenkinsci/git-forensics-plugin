@@ -28,6 +28,7 @@ import static io.jenkins.plugins.forensics.assertions.Assertions.*;
  *
  * @author Ullrich Hafner
  */
+@SuppressWarnings("PMD.VariableDeclarationUsageDistance")
 class GitMinerStepITest extends GitITest {
     private static final String GIT_FORENSICS_URL = "https://github.com/jenkinsci/git-forensics-plugin.git";
     private static final String FORENSICS_API_URL = "https://github.com/jenkinsci/forensics-api-plugin.git";

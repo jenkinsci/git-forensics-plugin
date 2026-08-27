@@ -17,6 +17,7 @@ import static io.jenkins.plugins.forensics.git.DetailsTable.*;
  * @author Ullrich Hafner
  */
 @WithPlugins({"forensics-api", "git-forensics", "git", "workflow-durable-task-step", "workflow-basic-steps"})
+@SuppressWarnings("PMD.WrongTestAnnotation")
 public class SmokeTests extends AbstractJUnitTest {
     private static final String REPOSITORY_URL = "https://github.com/jenkinsci/git-forensics-plugin.git";
     private static final String SCM_KEY = "git " + REPOSITORY_URL;

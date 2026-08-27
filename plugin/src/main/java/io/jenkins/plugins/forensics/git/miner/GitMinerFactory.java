@@ -25,7 +25,7 @@ public class GitMinerFactory extends MinerFactory {
     public Optional<RepositoryMiner> createMiner(final SCM scm, final Run<?, ?> build, final FilePath workTree,
             final TaskListener listener, final FilteredLog logger) {
         var validator = new GitRepositoryValidator(scm, build, workTree, listener, logger);
-        if (validator.isGitRepository()) {
+        if (validator.isFullGitRepository()) {
             logger.logInfo("-> Git miner successfully created in working tree '%s'", workTree);
 
             return Optional.of(new GitRepositoryMiner(validator.createClient()));

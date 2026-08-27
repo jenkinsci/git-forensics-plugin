@@ -26,7 +26,7 @@ public class GitDeltaCalculatorFactory extends DeltaCalculatorFactory {
     public Optional<DeltaCalculator> createDeltaCalculator(final SCM scm, final Run<?, ?> run, final FilePath workspace,
             final TaskListener listener, final FilteredLog logger) {
         var validator = new GitRepositoryValidator(scm, run, workspace, listener, logger);
-        if (validator.isGitRepository()) {
+        if (validator.isFullGitRepository()) {
             var client = validator.createClient();
             logger.logInfo("-> Git delta calculator successfully created for SCM '%s' in working tree '%s'",
                     scm, new PathUtil().getAbsolutePath(client.getWorkTree().getRemote()));

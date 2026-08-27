@@ -30,8 +30,19 @@ class BuildCommits implements Serializable {
     private ObjectId target = ObjectId.zeroId();
     private ObjectId merge = ObjectId.zeroId();
 
+    /**
+     * Set to {@code true} when the commit collector hit the maximum number of commits to scan without finding the
+     * previous build's anchor commit. In this situation the "commits since last build" value is indeterminate and
+     * must not be displayed. 
+     */
+    private boolean maxCommitsReached = false;
+
     BuildCommits(final String previousBuildCommit) {
         this.previousBuildCommit = previousBuildCommit;
+    }
+
+    String getPreviousBuildCommit() {
+        return previousBuildCommit;
     }
 
     void setHead(final RevCommit head) {
@@ -81,6 +92,24 @@ class BuildCommits implements Serializable {
 
     boolean isEmpty() {
         return commits.isEmpty();
+    }
+
+    /**
+     * Marks that the commit scan hit the configurable limit without finding the previous build's anchor commit. This
+     * means the "commits since last build" count is indeterminate and should not be surfaced in the UI.
+     */
+    void setMaxCommitsReached() {
+        this.maxCommitsReached = true;
+    }
+
+    /**
+     * Returns {@code true} if the scan stopped because the maximum number of commits was reached before finding the
+     * previous build's anchor commit — i.e., the "commits since last build" count is indeterminate.
+     *
+     * @return {@code true} if the commit count is indeterminate
+     */
+    boolean isMaxCommitsReached() {
+        return maxCommitsReached;
     }
 
     RecordingType getRecordingType() {

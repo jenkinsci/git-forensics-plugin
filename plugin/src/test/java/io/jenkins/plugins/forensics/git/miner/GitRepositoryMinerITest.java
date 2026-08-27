@@ -15,6 +15,7 @@ import static io.jenkins.plugins.forensics.assertions.Assertions.*;
  *
  * @author Ullrich Hafner
  */
+@SuppressWarnings("PMD.VariableDeclarationUsageDistance")
 class GitRepositoryMinerITest extends GitITest {
     private static final String OTHER_FILE = "file";
     private static final FilteredLog LOG = new FilteredLog(StringUtils.EMPTY);

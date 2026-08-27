@@ -127,30 +127,28 @@ class GitBlamer extends Blamer {
         @Override @SuppressWarnings("PMD.DoNotUseThreads")
         public RemoteResultWrapper<Blames> invoke(final Repository repository, final VirtualChannel channel)
                 throws InterruptedException {
-            try (repository) {
-                RemoteResultWrapper<Blames> log = new RemoteResultWrapper<>(blames, "Errors while running Git blame:");
-                log.logInfo("-> Git commit ID = '%s'", headCommit.getName());
-                log.logInfo("-> Git working tree = '%s'", getWorkTree(repository));
+            RemoteResultWrapper<Blames> log = new RemoteResultWrapper<>(blames, "Errors while running Git blame:");
+            log.logInfo("-> Git commit ID = '%s'", headCommit.getName());
+            log.logInfo("-> Git working tree = '%s'", getWorkTree(repository));
 
-                var blameRunner = new BlameRunner(repository, headCommit);
-                var lastCommitRunner = new LastCommitRunner(repository);
+            var blameRunner = new BlameRunner(repository, headCommit);
+            var lastCommitRunner = new LastCommitRunner(repository);
 
-                var builder = new FileBlameBuilder();
-                for (String file : locations.getFiles()) {
-                    run(builder, file, blameRunner, lastCommitRunner, log);
+            var builder = new FileBlameBuilder();
+            for (String file : locations.getFiles()) {
+                run(builder, file, blameRunner, lastCommitRunner, log);
 
-                    if (Thread.interrupted()) { // Cancel request by user
-                        var message = "Blaming has been interrupted while computing blame information";
-                        log.logInfo(message);
+                if (Thread.interrupted()) { // Cancel request by user
+                    var message = "Blaming has been interrupted while computing blame information";
+                    log.logInfo(message);
 
-                        throw new InterruptedException(message);
-                    }
+                    throw new InterruptedException(message);
                 }
-
-                log.logInfo("-> blamed authors of issues in %d files", blames.size());
-
-                return log;
             }
+
+            log.logInfo("-> blamed authors of issues in %d files", blames.size());
+
+            return log;
         }
 
         /**

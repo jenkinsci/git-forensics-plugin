@@ -21,9 +21,13 @@ import hudson.scm.SCM;
  * @author Ullrich Hafner
  */
 public class GitRepositoryValidator {
-    /** Error message. */
+    /** Info message when a shallow clone is detected and blame/mining is skipped. */
     @VisibleForTesting
     public static final String INFO_SHALLOW_CLONE = "Skipping issues blame since Git has been configured with shallow clone";
+
+    /** Info message when a shallow clone is detected but commit recording is still performed. */
+    @VisibleForTesting
+    public static final String INFO_SHALLOW_CLONE_COMMIT_RECORDING = "Git has been configured with shallow clone - commit recording will be limited to the available commits";
 
     private static final String HEAD = "HEAD";
 
@@ -57,24 +61,52 @@ public class GitRepositoryValidator {
     }
 
     /**
-     * Returns whether the specified working tree contains a valid Git repository that can be used to run one of the
-     * forensics analyzers.
+     * Returns whether the specified working tree contains a valid Git repository. Shallow clones are accepted
+     * for operations that do not require full history (e.g., commit recording).
      *
-     * @return {@code true} if the working tree contains a valid repository, {@code false} otherwise
+     * @return {@code true} if the working tree contains a valid repository (including shallow clones),
+     *         {@code false} otherwise
      */
     public boolean isGitRepository() {
         if (scm instanceof GitSCM) {
-            return isValidGitRoot((GitSCM) scm);
+            return isValidGitRoot((GitSCM) scm, false);
         }
         logger.logInfo("SCM '%s' is not of type GitSCM", scm.getType());
         return false;
     }
 
-    private boolean isValidGitRoot(final GitSCM git) {
-        if (isShallow(git)) {
-            logger.logInfo(INFO_SHALLOW_CLONE);
+    /**
+     * Returns whether the specified working tree contains a valid Git repository with full history (no shallow
+     * clone). This is required for operations that need full commit history, such as blame analysis and
+     * repository mining.
+     *
+     * @return {@code true} if the working tree contains a valid non-shallow repository, {@code false} otherwise
+     */
+    public boolean isFullGitRepository() {
+        if (scm instanceof GitSCM) {
+            return isValidGitRoot((GitSCM) scm, true);
+        }
+        logger.logInfo("SCM '%s' is not of type GitSCM", scm.getType());
+        return false;
+    }
 
-            return false;
+    /**
+     * Returns whether the Git repository is configured as a shallow clone.
+     *
+     * @return {@code true} if the repository is a shallow clone, {@code false} otherwise
+     */
+    public boolean isShallowClone() {
+        return scm instanceof GitSCM 
+                && isShallow((GitSCM) scm);
+    }
+
+    private boolean isValidGitRoot(final GitSCM git, final boolean rejectShallowClone) {
+        if (isShallow(git)) {
+            if (rejectShallowClone) {
+                logger.logInfo(INFO_SHALLOW_CLONE);
+                return false;
+            }
+            logger.logInfo(INFO_SHALLOW_CLONE_COMMIT_RECORDING);
         }
 
         try {
