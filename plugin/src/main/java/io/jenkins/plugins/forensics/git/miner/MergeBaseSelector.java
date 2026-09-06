@@ -35,11 +35,14 @@ class MergeBaseSelector implements RepositoryCallback<String> {
         }
 
         var target = repository.resolve(latestCommit);
+        if (target == null) {
+            return "";
+        }
 
         try (var walk = new RevWalk(repository)) {
             walk.setRevFilter(RevFilter.MERGE_BASE);
-            walk.markStart(repository.parseCommit(head));
-            walk.markStart(repository.parseCommit(target));
+            walk.markStart(walk.parseCommit(head));
+            walk.markStart(walk.parseCommit(target));
 
             var next = walk.next();
             if (next == null) {
