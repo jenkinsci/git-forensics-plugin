@@ -53,6 +53,7 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>forensics-api</artifactId>
+      <version>4.1930.v5a_b_9a_7c5e248</version>
     </dependency>
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
