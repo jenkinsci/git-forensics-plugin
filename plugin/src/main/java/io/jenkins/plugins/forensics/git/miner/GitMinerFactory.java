@@ -28,7 +28,7 @@ public class GitMinerFactory extends MinerFactory {
         if (validator.isFullGitRepository()) {
             logger.logInfo("-> Git miner successfully created in working tree '%s'", workTree);
 
-            return Optional.of(new GitRepositoryMiner(validator.createClient()));
+            return Optional.of(new GitRepositoryMiner(validator.createClient(), build, scm));
         }
         logger.logInfo("-> Git miner could not be created for SCM '%s' in working tree '%s'", scm, workTree);
         return Optional.empty();

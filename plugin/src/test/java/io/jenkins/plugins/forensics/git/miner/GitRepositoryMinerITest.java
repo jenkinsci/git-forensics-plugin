@@ -101,7 +101,7 @@ class GitRepositoryMinerITest extends GitITest {
     }
 
     private RepositoryStatistics createRepositoryStatistics() throws InterruptedException {
-        return new GitRepositoryMiner(createGitClient()).mine(new RepositoryStatistics(), LOG);
+        return new GitRepositoryMiner(createGitClient(), null, null).mine(new RepositoryStatistics(), LOG);
     }
 
     private void assertDefaultFileStatistics(final RepositoryStatistics statistics) {
