@@ -1,20 +1,12 @@
 package io.jenkins.plugins.forensics.git.delta;
 
-import org.apache.commons.lang3.StringUtils;
-import org.junit.jupiter.api.Test;
-import org.junitpioneer.jupiter.Issue;
+import static io.jenkins.plugins.forensics.assertions.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import edu.hm.hafner.util.FilteredLog;
-
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.Set;
-
 import hudson.model.FreeStyleProject;
 import hudson.model.Run;
 import hudson.plugins.git.GitSCM;
-
 import io.jenkins.plugins.forensics.delta.Change;
 import io.jenkins.plugins.forensics.delta.ChangeEditType;
 import io.jenkins.plugins.forensics.delta.Delta;
@@ -22,9 +14,13 @@ import io.jenkins.plugins.forensics.delta.FileChanges;
 import io.jenkins.plugins.forensics.delta.FileEditType;
 import io.jenkins.plugins.forensics.git.reference.GitReferenceRecorder;
 import io.jenkins.plugins.forensics.git.util.GitITest;
-
-import static io.jenkins.plugins.forensics.assertions.Assertions.*;
-import static org.mockito.Mockito.*;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Optional;
+import java.util.Set;
+import org.apache.commons.lang3.StringUtils;
+import org.junit.jupiter.api.Test;
+import org.junitpioneer.jupiter.Issue;
 
 /**
  * Integration test for the class {@link GitDeltaCalculator}.
@@ -49,7 +45,8 @@ class GitDeltaCalculatorITest extends GitITest {
             \\ No newline at end of file
             """;
 
-    @Test @Issue("JENKINS-73297")
+    @Test
+    @Issue("JENKINS-73297")
     void shouldShowErrorIfCommitIsNotFound() {
         var job = createPipeline();
         job.setDefinition(asStage("checkout([$class: 'GitSCM', "
@@ -65,10 +62,13 @@ class GitDeltaCalculatorITest extends GitITest {
         var result = deltaCalculator.calculateDelta(build, build, EMPTY_SCM_KEY, log);
         assertThat(result).isNotEmpty();
 
-        assertThat(log.getInfoMessages()).anyMatch(s ->
-                s.contains("-> Invoking Git delta calculator for determining the changes between commits '86503e8' and '86503e8'"));
+        assertThat(log.getInfoMessages())
+                .anyMatch(
+                        s -> s.contains(
+                                "-> Invoking Git delta calculator for determining the changes between commits '86503e8' and '86503e8'"));
         assertThat(log.getErrorMessages())
-                .contains("Could not find the specified commit - is the SCM parameter correctly set?",
+                .contains(
+                        "Could not find the specified commit - is the SCM parameter correctly set?",
                         "org.eclipse.jgit.errors.MissingObjectException: Missing unknown 86503e8bc0374e05e2cd32ed3bb8b4435d5fd757");
     }
 
@@ -77,7 +77,8 @@ class GitDeltaCalculatorITest extends GitITest {
         var deltaCalculator = createDeltaCalculator();
 
         var log = createLog();
-        assertThat(deltaCalculator.calculateDelta(mock(Run.class), mock(Run.class), EMPTY_SCM_KEY, log)).isEmpty();
+        assertThat(deltaCalculator.calculateDelta(mock(Run.class), mock(Run.class), EMPTY_SCM_KEY, log))
+                .isEmpty();
     }
 
     @Test
@@ -103,10 +104,14 @@ class GitDeltaCalculatorITest extends GitITest {
         var delta = result.get();
         assertThat(delta).hasCurrentCommit(currentCommit);
         assertThat(delta).hasReferenceCommit(referenceCommit);
-        assertThat(delta).isInstanceOfSatisfying(GitDelta.class,
-                gitDelta -> assertThat(gitDelta.getDiffFile()).isEqualTo(DIFF_OUTPUT));
-        assertThat(delta.getFileChangesMap().values()).hasSize(1)
-                .first().satisfies(fileChanges ->
+        assertThat(delta)
+                .isInstanceOfSatisfying(
+                        GitDelta.class,
+                        gitDelta -> assertThat(gitDelta.getDiffFile()).isEqualTo(DIFF_OUTPUT));
+        assertThat(delta.getFileChangesMap().values())
+                .hasSize(1)
+                .first()
+                .satisfies(fileChanges ->
                         assertThat(fileChanges.getModifiedLines()).containsExactly(1));
     }
 
@@ -418,8 +423,7 @@ class GitDeltaCalculatorITest extends GitITest {
             job.setScm(new GitSCM(getRepositoryRoot()));
             job.getPublishersList().add(new GitReferenceRecorder());
             return job;
-        }
-        catch (IOException exception) {
+        } catch (IOException exception) {
             throw new AssertionError(exception);
         }
     }

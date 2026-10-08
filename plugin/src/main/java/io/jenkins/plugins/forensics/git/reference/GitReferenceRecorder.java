@@ -4,17 +4,14 @@ import edu.hm.hafner.util.FilteredLog;
 import edu.hm.hafner.util.VisibleForTesting;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
-import java.util.Optional;
-
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
-import org.jenkinsci.Symbol;
 import hudson.Extension;
 import hudson.model.Run;
-
 import io.jenkins.plugins.forensics.reference.ReferenceRecorder;
 import io.jenkins.plugins.util.JenkinsFacade;
+import java.util.Optional;
+import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 /**
  * Recorder that finds a reference build that matches best with the current build of a given Git branch.
@@ -74,16 +71,16 @@ public class GitReferenceRecorder extends ReferenceRecorder {
     }
 
     @Override
-    protected Optional<Run<?, ?>> find(final Run<?, ?> owner, final Run<?, ?> lastCompletedBuildOfReferenceJob,
-            final FilteredLog log) {
+    protected Optional<Run<?, ?>> find(
+            final Run<?, ?> owner, final Run<?, ?> lastCompletedBuildOfReferenceJob, final FilteredLog log) {
         var referenceCommit = GitCommitsRecord.findRecordForScm(lastCompletedBuildOfReferenceJob, getScm());
 
         Optional<Run<?, ?>> referenceBuild;
         if (referenceCommit.isPresent()) {
             referenceBuild = findByCommits(owner, referenceCommit.get(), log);
-        }
-        else {
-            log.logInfo("-> selected build '%s' of reference job does not yet contain a `GitCommitsRecord`",
+        } else {
+            log.logInfo(
+                    "-> selected build '%s' of reference job does not yet contain a `GitCommitsRecord`",
                     lastCompletedBuildOfReferenceJob.getDisplayName());
             referenceBuild = Optional.empty();
         }
@@ -94,7 +91,8 @@ public class GitReferenceRecorder extends ReferenceRecorder {
 
         var targetBranchHead = findTargetBranchHead(owner.getParent());
         if (targetBranchHead.isPresent()) {
-            log.logInfo("-> falling back to latest build '%s' since a pull or merge request has been detected",
+            log.logInfo(
+                    "-> falling back to latest build '%s' since a pull or merge request has been detected",
                     lastCompletedBuildOfReferenceJob.getDisplayName());
             return Optional.of(lastCompletedBuildOfReferenceJob);
         }
@@ -103,24 +101,23 @@ public class GitReferenceRecorder extends ReferenceRecorder {
         return Optional.empty();
     }
 
-    private Optional<Run<?, ?>> findByCommits(final Run<?, ?> owner, final GitCommitsRecord referenceCommit,
-            final FilteredLog log) {
+    private Optional<Run<?, ?>> findByCommits(
+            final Run<?, ?> owner, final GitCommitsRecord referenceCommit, final FilteredLog log) {
         var ownerCommits = GitCommitsRecord.findRecordForScm(owner, getScm());
         if (ownerCommits.isPresent()) {
             var commitsRecord = ownerCommits.get();
-            var referencePoint = commitsRecord.getReferencePoint(referenceCommit, getMaxCommits(), isSkipUnknownCommits(), log);
+            var referencePoint =
+                    commitsRecord.getReferencePoint(referenceCommit, getMaxCommits(), isSkipUnknownCommits(), log);
             if (referencePoint.isPresent()) {
                 var referenceBuild = referencePoint.get();
-                log.logInfo("-> found build '%s' in reference job with matching commits",
-                        referenceBuild.getDisplayName());
+                log.logInfo(
+                        "-> found build '%s' in reference job with matching commits", referenceBuild.getDisplayName());
 
                 return referencePoint;
-            }
-            else {
+            } else {
                 log.logInfo("-> found no build with matching commits");
             }
-        }
-        else {
+        } else {
             log.logInfo("-> found no `GitCommitsRecord` in current build '%s'", owner.getDisplayName());
         }
         return Optional.empty();

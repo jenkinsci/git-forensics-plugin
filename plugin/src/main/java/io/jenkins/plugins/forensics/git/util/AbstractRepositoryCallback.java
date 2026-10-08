@@ -1,13 +1,11 @@
 package io.jenkins.plugins.forensics.git.util;
 
-import org.eclipse.jgit.dircache.InvalidPathException;
-import org.eclipse.jgit.lib.Repository;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.Serial;
 import java.nio.file.LinkOption;
-
+import org.eclipse.jgit.dircache.InvalidPathException;
+import org.eclipse.jgit.lib.Repository;
 import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 
 /**
@@ -58,8 +56,7 @@ public abstract class AbstractRepositoryCallback<T> implements RepositoryCallbac
                     .normalize()
                     .toRealPath(LinkOption.NOFOLLOW_LINKS)
                     .toString();
-        }
-        catch (IOException | InvalidPathException exception) {
+        } catch (IOException | InvalidPathException exception) {
             return absolute.toString();
         }
     }

@@ -1,15 +1,13 @@
 package io.jenkins.plugins.forensics.git.reference;
 
-import org.apache.commons.lang3.StringUtils;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.revwalk.RevCommit;
-
+import io.jenkins.plugins.forensics.git.reference.GitCommitsRecord.RecordingType;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-
-import io.jenkins.plugins.forensics.git.reference.GitCommitsRecord.RecordingType;
+import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.revwalk.RevCommit;
 
 /**
  * The commits of a given build. If these commits are part of a pull request, then a target commit ID might be stored
@@ -33,7 +31,7 @@ class BuildCommits implements Serializable {
     /**
      * Set to {@code true} when the commit collector hit the maximum number of commits to scan without finding the
      * previous build's anchor commit. In this situation the "commits since last build" value is indeterminate and
-     * must not be displayed. 
+     * must not be displayed.
      */
     private boolean maxCommitsReached = false;
 

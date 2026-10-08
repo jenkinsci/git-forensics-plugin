@@ -1,11 +1,10 @@
 package io.jenkins.plugins.forensics.git.delta;
 
+import io.jenkins.plugins.forensics.delta.Delta;
+import io.jenkins.plugins.forensics.delta.FileChanges;
 import java.io.Serial;
 import java.util.Map;
 import java.util.Objects;
-
-import io.jenkins.plugins.forensics.delta.Delta;
-import io.jenkins.plugins.forensics.delta.FileChanges;
 
 /**
  * A Git specific extension of {@link Delta}.
@@ -33,8 +32,11 @@ public class GitDelta extends Delta {
      * @param diffFile
      *         the Diff-File which has been created by Git and wraps up all made changes between two commits.
      */
-    public GitDelta(final String currentCommit, final String referenceCommit,
-            final Map<String, FileChanges> fileChanges, final String diffFile) {
+    public GitDelta(
+            final String currentCommit,
+            final String referenceCommit,
+            final Map<String, FileChanges> fileChanges,
+            final String diffFile) {
         super(currentCommit, referenceCommit, fileChanges);
 
         this.diffFile = diffFile;

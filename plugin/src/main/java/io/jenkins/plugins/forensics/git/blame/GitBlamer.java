@@ -1,5 +1,22 @@
 package io.jenkins.plugins.forensics.git.blame;
 
+import edu.hm.hafner.util.FilteredLog;
+import edu.hm.hafner.util.VisibleForTesting;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import hudson.plugins.git.GitException;
+import hudson.remoting.VirtualChannel;
+import io.jenkins.plugins.forensics.blame.Blamer;
+import io.jenkins.plugins.forensics.blame.Blames;
+import io.jenkins.plugins.forensics.blame.FileBlame;
+import io.jenkins.plugins.forensics.blame.FileBlame.FileBlameBuilder;
+import io.jenkins.plugins.forensics.blame.FileLocations;
+import io.jenkins.plugins.forensics.git.util.AbstractRepositoryCallback;
+import io.jenkins.plugins.forensics.git.util.RemoteResultWrapper;
+import java.io.IOException;
+import java.io.Serial;
+import java.util.Optional;
+import java.util.stream.StreamSupport;
 import org.eclipse.jgit.api.BlameCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -8,28 +25,7 @@ import org.eclipse.jgit.blame.BlameResult;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
-
-import edu.hm.hafner.util.FilteredLog;
-import edu.hm.hafner.util.VisibleForTesting;
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
-import java.io.IOException;
-import java.io.Serial;
-import java.util.Optional;
-import java.util.stream.StreamSupport;
-
 import org.jenkinsci.plugins.gitclient.GitClient;
-import hudson.plugins.git.GitException;
-import hudson.remoting.VirtualChannel;
-
-import io.jenkins.plugins.forensics.blame.Blamer;
-import io.jenkins.plugins.forensics.blame.Blames;
-import io.jenkins.plugins.forensics.blame.FileBlame;
-import io.jenkins.plugins.forensics.blame.FileBlame.FileBlameBuilder;
-import io.jenkins.plugins.forensics.blame.FileLocations;
-import io.jenkins.plugins.forensics.git.util.AbstractRepositoryCallback;
-import io.jenkins.plugins.forensics.git.util.RemoteResultWrapper;
 
 /**
  * Assigns git blames to warnings. Based on the solution by John Gibson, see JENKINS-6748. This code is intended to run
@@ -53,6 +49,7 @@ class GitBlamer extends Blamer {
 
     @SuppressWarnings("serial")
     private final GitClient git;
+
     private final String gitCommit;
 
     /**
@@ -74,7 +71,8 @@ class GitBlamer extends Blamer {
     public Blames blame(final FileLocations locations, final FilteredLog log) {
         var blames = new Blames();
         try {
-            log.logInfo("Invoking Git blamer to create author and commit information for %d affected files",
+            log.logInfo(
+                    "Invoking Git blamer to create author and commit information for %d affected files",
                     locations.size());
             log.logInfo("-> GIT_COMMIT env = '%s'", gitCommit);
 
@@ -91,14 +89,11 @@ class GitBlamer extends Blamer {
 
             log.logInfo("Blaming of authors took %d seconds", 1 + (System.nanoTime() - nano) / 1_000_000_000L);
             return wrapped.getResult();
-        }
-        catch (IOException exception) {
+        } catch (IOException exception) {
             log.logException(exception, BLAME_ERROR);
-        }
-        catch (GitException exception) {
+        } catch (GitException exception) {
             log.logException(exception, NO_HEAD_ERROR);
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             // nothing to do, already logged
         }
         return blames;
@@ -110,6 +105,7 @@ class GitBlamer extends Blamer {
     static class BlameCallback extends AbstractRepositoryCallback<RemoteResultWrapper<Blames>> {
         @Serial
         private static final long serialVersionUID = 8794666938104738260L;
+
         private static final int WHOLE_FILE = 0;
 
         private final ObjectId headCommit;
@@ -124,7 +120,8 @@ class GitBlamer extends Blamer {
             this.headCommit = headCommit;
         }
 
-        @Override @SuppressWarnings("PMD.DoNotUseThreads")
+        @Override
+        @SuppressWarnings("PMD.DoNotUseThreads")
         public RemoteResultWrapper<Blames> invoke(final Repository repository, final VirtualChannel channel)
                 throws InterruptedException {
             RemoteResultWrapper<Blames> log = new RemoteResultWrapper<>(blames, "Errors while running Git blame:");
@@ -166,59 +163,62 @@ class GitBlamer extends Blamer {
          *         the log
          */
         @VisibleForTesting
-        void run(final FileBlameBuilder builder, final String relativePath, final BlameRunner blameRunner,
-                final LastCommitRunner lastCommitRunner, final FilteredLog log) {
+        void run(
+                final FileBlameBuilder builder,
+                final String relativePath,
+                final BlameRunner blameRunner,
+                final LastCommitRunner lastCommitRunner,
+                final FilteredLog log) {
             try {
                 var blame = blameRunner.run(relativePath);
                 if (blame == null) {
                     log.logError("- no blame results for file '%s'", relativePath);
-                }
-                else {
+                } else {
                     for (int line : locations.getLines(relativePath)) {
                         var fileBlame = builder.build(relativePath);
                         if (line <= 0) {
                             fillWithLastCommit(relativePath, fileBlame, lastCommitRunner);
-                        }
-                        else if (line <= blame.getResultContents().size()) {
+                        } else if (line <= blame.getResultContents().size()) {
                             fillWithBlameResult(relativePath, fileBlame, blame, line, log);
                         }
                         blames.add(fileBlame);
                     }
                 }
-            }
-            catch (GitAPIException | JGitInternalException exception) {
-                log.logException(exception, "- error running git blame on '%s' with revision '%s'",
-                        relativePath, headCommit);
+            } catch (GitAPIException | JGitInternalException exception) {
+                log.logException(
+                        exception, "- error running git blame on '%s' with revision '%s'", relativePath, headCommit);
             }
         }
 
-        private void fillWithBlameResult(final String fileName, final FileBlame fileBlame, final BlameResult blame,
-                final int line, final FilteredLog log) {
+        private void fillWithBlameResult(
+                final String fileName,
+                final FileBlame fileBlame,
+                final BlameResult blame,
+                final int line,
+                final FilteredLog log) {
             int lineIndex = line - 1; // first line is index 0
             var who = blame.getSourceAuthor(lineIndex);
             if (who == null) {
                 who = blame.getSourceCommitter(lineIndex);
             }
             if (who == null) {
-                log.logError("- no author or committer information found for line %d in file %s",
-                        lineIndex, fileName);
-            }
-            else {
+                log.logError("- no author or committer information found for line %d in file %s", lineIndex, fileName);
+            } else {
                 fileBlame.setName(line, who.getName());
                 fileBlame.setEmail(line, who.getEmailAddress());
             }
             var commit = blame.getSourceCommit(lineIndex);
             if (commit == null) {
                 log.logError("- no commit ID and time found for line %d in file %s", lineIndex, fileName);
-            }
-            else {
+            } else {
                 fileBlame.setCommit(line, commit.getName());
                 fileBlame.setTime(line, commit.getCommitTime());
             }
         }
 
-        private void fillWithLastCommit(final String relativePath, final FileBlame fileBlame,
-                final LastCommitRunner lastCommitRunner) throws GitAPIException {
+        private void fillWithLastCommit(
+                final String relativePath, final FileBlame fileBlame, final LastCommitRunner lastCommitRunner)
+                throws GitAPIException {
             Optional<RevCommit> commit = lastCommitRunner.run(relativePath);
             if (commit.isPresent()) {
                 var revCommit = commit.get();

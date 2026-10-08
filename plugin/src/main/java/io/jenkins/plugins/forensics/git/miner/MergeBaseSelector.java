@@ -1,15 +1,13 @@
 package io.jenkins.plugins.forensics.git.miner;
 
+import hudson.remoting.VirtualChannel;
+import java.io.IOException;
+import java.io.Serial;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.revwalk.filter.RevFilter;
-
-import java.io.IOException;
-import java.io.Serial;
-
 import org.jenkinsci.plugins.gitclient.RepositoryCallback;
-import hudson.remoting.VirtualChannel;
 
 /**
  * Finds as good common ancestors as possible for a merge.

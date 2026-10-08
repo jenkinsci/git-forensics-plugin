@@ -1,21 +1,18 @@
 package io.jenkins.plugins.forensics.git.miner;
 
+import static org.assertj.core.api.Assertions.*;
+
+import edu.hm.hafner.util.FilteredLog;
+import io.jenkins.plugins.forensics.git.util.GitITest;
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Stream;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.jupiter.api.Test;
-
-import edu.hm.hafner.util.FilteredLog;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.stream.Stream;
-
-import io.jenkins.plugins.forensics.git.util.GitITest;
-
-import static org.assertj.core.api.Assertions.*;
 
 /**
  * Tests the class {@link CommitCollector}.

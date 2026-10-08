@@ -1,16 +1,9 @@
 package io.jenkins.plugins.forensics.git.miner;
 
-import org.assertj.core.util.Lists;
-import org.eclipse.jgit.lib.ObjectId;
-import org.junit.jupiter.api.Test;
+import static io.jenkins.plugins.forensics.assertions.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import edu.hm.hafner.util.FilteredLog;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Optional;
-
-import org.jenkinsci.plugins.gitclient.GitClient;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.model.Run;
@@ -20,12 +13,15 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.impl.CloneOption;
 import hudson.scm.NullSCM;
 import hudson.util.DescribableList;
-
 import io.jenkins.plugins.forensics.git.util.GitRepositoryValidator;
 import io.jenkins.plugins.forensics.miner.RepositoryMiner;
-
-import static io.jenkins.plugins.forensics.assertions.Assertions.*;
-import static org.mockito.Mockito.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.Optional;
+import org.assertj.core.util.Lists;
+import org.eclipse.jgit.lib.ObjectId;
+import org.jenkinsci.plugins.gitclient.GitClient;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests the class {@link GitMinerFactory}.
@@ -40,7 +36,8 @@ class GitMinerFactoryTest {
         var logger = createLogger();
 
         var factory = new GitMinerFactory();
-        assertThat(factory.createMiner(new NullSCM(), null, createWorkTreeStub(), NULL_LISTENER, logger)).isEmpty();
+        assertThat(factory.createMiner(new NullSCM(), null, createWorkTreeStub(), NULL_LISTENER, logger))
+                .isEmpty();
 
         assertThat(logger.getErrorMessages()).isEmpty();
         assertThat(logger.getInfoMessages()).contains("SCM 'hudson.scm.NullSCM' is not of type GitSCM");
@@ -78,8 +75,7 @@ class GitMinerFactoryTest {
         when(shallowCloneOption.isShallow()).thenReturn(true);
 
         GitSCM gitSCM = mock(GitSCM.class);
-        when(gitSCM.getExtensions()).thenReturn(
-                new DescribableList<>(Saveable.NOOP, Lists.list(shallowCloneOption)));
+        when(gitSCM.getExtensions()).thenReturn(new DescribableList<>(Saveable.NOOP, Lists.list(shallowCloneOption)));
 
         var logger = createLogger();
 
@@ -103,10 +99,11 @@ class GitMinerFactoryTest {
         GitSCM git = mock(GitSCM.class);
         when(git.getExtensions()).thenReturn(new DescribableList<>(Saveable.NOOP));
 
-        assertThat(gitChecker.createMiner(git, run, createWorkTreeStub(), NULL_LISTENER, logger)).isEmpty();
+        assertThat(gitChecker.createMiner(git, run, createWorkTreeStub(), NULL_LISTENER, logger))
+                .isEmpty();
         assertThat(logger.getErrorMessages()).isEmpty();
-        assertThat(logger.getInfoMessages()).contains(
-                "Exception while creating a GitClient instance for work tree '/'");
+        assertThat(logger.getInfoMessages())
+                .contains("Exception while creating a GitClient instance for work tree '/'");
     }
 
     private FilePath createWorkTreeStub() {

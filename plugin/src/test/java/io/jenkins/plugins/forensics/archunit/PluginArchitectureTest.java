@@ -3,9 +3,7 @@ package io.jenkins.plugins.forensics.archunit;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
-
 import edu.hm.hafner.archunit.ArchitectureRules;
-
 import io.jenkins.plugins.util.PluginArchitectureRules;
 
 /**
@@ -17,7 +15,8 @@ import io.jenkins.plugins.util.PluginArchitectureRules;
 @AnalyzeClasses(packages = "io.jenkins.plugins.forensics.git")
 final class PluginArchitectureTest {
     @ArchTest
-    static final ArchRule NO_EXCEPTIONS_WITH_NO_ARG_CONSTRUCTOR = ArchitectureRules.NO_EXCEPTIONS_WITH_NO_ARG_CONSTRUCTOR;
+    static final ArchRule NO_EXCEPTIONS_WITH_NO_ARG_CONSTRUCTOR =
+            ArchitectureRules.NO_EXCEPTIONS_WITH_NO_ARG_CONSTRUCTOR;
 
     @ArchTest
     static final ArchRule NO_PUBLIC_TEST_CLASSES = ArchitectureRules.NO_PUBLIC_TEST_CLASSES;
@@ -35,7 +34,8 @@ final class PluginArchitectureTest {
     static final ArchRule NO_FORBIDDEN_CLASSES_CALLED = ArchitectureRules.NO_FORBIDDEN_CLASSES_CALLED;
 
     @ArchTest
-    static final ArchRule ONLY_PACKAGE_PRIVATE_ARCHITECTURE_TESTS = ArchitectureRules.ONLY_PACKAGE_PRIVATE_ARCHITECTURE_TESTS;
+    static final ArchRule ONLY_PACKAGE_PRIVATE_ARCHITECTURE_TESTS =
+            ArchitectureRules.ONLY_PACKAGE_PRIVATE_ARCHITECTURE_TESTS;
 
     @ArchTest
     static final ArchRule NO_JENKINS_INSTANCE_CALL = PluginArchitectureRules.NO_JENKINS_INSTANCE_CALL;
@@ -44,20 +44,23 @@ final class PluginArchitectureTest {
     static final ArchRule NO_FORBIDDEN_PACKAGE_ACCESSED = PluginArchitectureRules.NO_FORBIDDEN_PACKAGE_ACCESSED;
 
     @ArchTest
-    static final ArchRule AJAX_PROXY_METHOD_MUST_BE_IN_PUBLIC_CLASS = PluginArchitectureRules.AJAX_PROXY_METHOD_MUST_BE_IN_PUBLIC_CLASS;
+    static final ArchRule AJAX_PROXY_METHOD_MUST_BE_IN_PUBLIC_CLASS =
+            PluginArchitectureRules.AJAX_PROXY_METHOD_MUST_BE_IN_PUBLIC_CLASS;
 
     @ArchTest
-    static final ArchRule DATA_BOUND_CONSTRUCTOR_MUST_BE_IN_PUBLIC_CLASS = PluginArchitectureRules.DATA_BOUND_CONSTRUCTOR_MUST_BE_IN_PUBLIC_CLASS;
+    static final ArchRule DATA_BOUND_CONSTRUCTOR_MUST_BE_IN_PUBLIC_CLASS =
+            PluginArchitectureRules.DATA_BOUND_CONSTRUCTOR_MUST_BE_IN_PUBLIC_CLASS;
 
     @ArchTest
-    static final ArchRule DATA_BOUND_SETTER_MUST_BE_IN_PUBLIC_CLASS = PluginArchitectureRules.DATA_BOUND_SETTER_MUST_BE_IN_PUBLIC_CLASS;
+    static final ArchRule DATA_BOUND_SETTER_MUST_BE_IN_PUBLIC_CLASS =
+            PluginArchitectureRules.DATA_BOUND_SETTER_MUST_BE_IN_PUBLIC_CLASS;
 
     @ArchTest
-    static final ArchRule USE_POST_FOR_VALIDATION_END_POINTS = PluginArchitectureRules.USE_POST_FOR_VALIDATION_END_POINTS;
+    static final ArchRule USE_POST_FOR_VALIDATION_END_POINTS =
+            PluginArchitectureRules.USE_POST_FOR_VALIDATION_END_POINTS;
 
     @ArchTest
     static final ArchRule USE_POST_FOR_LIST_MODELS_RULE = PluginArchitectureRules.USE_POST_FOR_LIST_AND_COMBOBOX_FILL;
 
-    private PluginArchitectureTest() {
-    }
+    private PluginArchitectureTest() {}
 }

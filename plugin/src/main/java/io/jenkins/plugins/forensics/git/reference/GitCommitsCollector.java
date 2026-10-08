@@ -1,5 +1,12 @@
 package io.jenkins.plugins.forensics.git.reference;
 
+import edu.hm.hafner.util.FilteredLog;
+import hudson.remoting.VirtualChannel;
+import io.jenkins.plugins.forensics.git.util.AbstractRepositoryCallback;
+import io.jenkins.plugins.forensics.git.util.GitCommitTextDecorator;
+import io.jenkins.plugins.forensics.git.util.RemoteResultWrapper;
+import java.io.IOException;
+import java.io.Serial;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -7,17 +14,6 @@ import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
-
-import edu.hm.hafner.util.FilteredLog;
-
-import java.io.IOException;
-import java.io.Serial;
-
-import hudson.remoting.VirtualChannel;
-
-import io.jenkins.plugins.forensics.git.util.AbstractRepositoryCallback;
-import io.jenkins.plugins.forensics.git.util.GitCommitTextDecorator;
-import io.jenkins.plugins.forensics.git.util.RemoteResultWrapper;
 
 /**
  * Collects all the commits since the last build.
@@ -42,8 +38,8 @@ class GitCommitsCollector extends AbstractRepositoryCallback<RemoteResultWrapper
             throws IOException {
         try (var git = new Git(repository)) {
             var commits = new BuildCommits(latestRecordedCommit);
-            RemoteResultWrapper<BuildCommits> result = new RemoteResultWrapper<>(commits,
-                    "Errors while collecting commits");
+            RemoteResultWrapper<BuildCommits> result =
+                    new RemoteResultWrapper<>(commits, "Errors while collecting commits");
             findHeadCommit(repository, commits, result);
 
             var hasAnchor = StringUtils.isNotBlank(latestRecordedCommit);
@@ -67,8 +63,7 @@ class GitCommitsCollector extends AbstractRepositoryCallback<RemoteResultWrapper
             }
 
             return result;
-        }
-        catch (GitAPIException e) {
+        } catch (GitAPIException e) {
             throw new IOException("Unable to record commits of git repository.", e);
         }
     }
@@ -79,23 +74,20 @@ class GitCommitsCollector extends AbstractRepositoryCallback<RemoteResultWrapper
         var parents = head.getParents();
         if (parents.length < 1) {
             logger.logInfo("-> No parent commits found - detected the first commit in the branch");
-            logger.logInfo("-> Using head commit '%s' as starting point",
-                    DECORATOR.asText(head));
+            logger.logInfo("-> Using head commit '%s' as starting point", DECORATOR.asText(head));
             commits.setHead(head);
-        }
-        else if (parents.length == 1) {
+        } else if (parents.length == 1) {
             logger.logInfo("-> Single parent commit found - branch is already descendant of target branch head");
-            logger.logInfo("-> Using head commit '%s' as starting point",
-                    DECORATOR.asText(head));
+            logger.logInfo("-> Using head commit '%s' as starting point", DECORATOR.asText(head));
             commits.setHead(head);
-        }
-        else {
-            logger.logInfo("-> Multiple parent commits found - storing latest commit of local merge '%s'",
+        } else {
+            logger.logInfo(
+                    "-> Multiple parent commits found - storing latest commit of local merge '%s'",
                     DECORATOR.asText(head));
-            logger.logInfo("-> Using parent commit '%s' of local merge as starting point",
-                    DECORATOR.asText(parents[0]));
-            logger.logInfo("-> Storing target branch head '%s' (second parent of local merge) ",
-                    DECORATOR.asText(parents[1]));
+            logger.logInfo(
+                    "-> Using parent commit '%s' of local merge as starting point", DECORATOR.asText(parents[0]));
+            logger.logInfo(
+                    "-> Storing target branch head '%s' (second parent of local merge) ", DECORATOR.asText(parents[1]));
             commits.setHead(parents[0]);
             commits.setTarget(parents[1]);
             commits.setMerge(head);

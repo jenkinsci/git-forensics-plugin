@@ -1,12 +1,11 @@
 package io.jenkins.plugins.forensics.git.miner;
 
+import static org.mockito.Mockito.*;
+
+import hudson.remoting.VirtualChannel;
 import org.eclipse.jgit.lib.Repository;
 import org.junit.jupiter.api.Test;
 import org.junitpioneer.jupiter.Issue;
-
-import hudson.remoting.VirtualChannel;
-
-import static org.mockito.Mockito.*;
 
 /**
  * Tests the class {@link RepositoryStatisticsCallback}.

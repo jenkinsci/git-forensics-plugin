@@ -1,11 +1,10 @@
 package io.jenkins.plugins.forensics.git.delta;
 
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.HashMap;
 import nl.jqno.equalsverifier.EqualsVerifier;
-
-import static org.assertj.core.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test class for {@link GitDelta}.

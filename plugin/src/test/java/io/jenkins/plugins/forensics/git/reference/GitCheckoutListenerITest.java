@@ -1,21 +1,19 @@
 package io.jenkins.plugins.forensics.git.reference;
 
-import org.junit.jupiter.api.Test;
+import static io.jenkins.plugins.forensics.git.assertions.Assertions.assertThat;
 
+import hudson.model.FreeStyleProject;
+import hudson.plugins.git.BranchSpec;
+import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.extensions.impl.CloneOption;
+import io.jenkins.plugins.forensics.git.util.GitCommitTextDecorator;
+import io.jenkins.plugins.forensics.git.util.GitITest;
+import io.jenkins.plugins.forensics.git.util.GitRepositoryValidator;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import hudson.model.FreeStyleProject;
-import hudson.plugins.git.GitSCM;
-import hudson.plugins.git.extensions.impl.CloneOption;
-
-import io.jenkins.plugins.forensics.git.util.GitCommitTextDecorator;
-import io.jenkins.plugins.forensics.git.util.GitITest;
-import io.jenkins.plugins.forensics.git.util.GitRepositoryValidator;
-
-import static io.jenkins.plugins.forensics.git.assertions.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 /**
  * Integration tests of the recording of Git commits using the classes {@link GitCheckoutListener} and
@@ -50,12 +48,14 @@ class GitCheckoutListenerITest extends GitITest {
         var referenceBuildHead = getHead();
 
         var referenceBuild = buildSuccessfully(job).getAction(GitCommitsRecord.class);
-        assertThat(referenceBuild).isNotNull()
+        assertThat(referenceBuild)
+                .isNotNull()
                 .hasOnlyCommits(expectedCommits)
                 .isNotEmpty()
                 .hasLatestCommit(referenceBuildHead)
                 .hasNoErrorMessages()
-                .hasInfoMessages("Found no previous build with recorded Git commits",
+                .hasInfoMessages(
+                        "Found no previous build with recorded Git commits",
                         "-> Starting initial recording of commits");
 
         createAndCommitFile("Third.java", "third commit after init");
@@ -63,16 +63,18 @@ class GitCheckoutListenerITest extends GitITest {
         var nextBuild = buildSuccessfully(job).getAction(GitCommitsRecord.class);
 
         var nextBuildHead = getHead();
-        assertThat(nextBuild).isNotEmpty()
+        assertThat(nextBuild)
+                .isNotEmpty()
                 .hasLatestCommit(getHead())
                 .hasOnlyCommits(nextBuildHead)
-                .hasNoErrorMessages().hasInfoMessages("-> Recorded one new commit",
-                "Found previous build '%s' that contains recorded Git commits".formatted(
-                        referenceBuild.getOwner()),
-                "-> Starting recording of new commits since '%s'".formatted(
-                        RENDERER.asText(referenceBuildHead)),
-                "-> Using head commit '%s' as starting point".formatted(
-                        RENDERER.asText(nextBuildHead)));
+                .hasNoErrorMessages()
+                .hasInfoMessages(
+                        "-> Recorded one new commit",
+                        "Found previous build '%s' that contains recorded Git commits"
+                                .formatted(referenceBuild.getOwner()),
+                        "-> Starting recording of new commits since '%s'"
+                                .formatted(RENDERER.asText(referenceBuildHead)),
+                        "-> Using head commit '%s' as starting point".formatted(RENDERER.asText(nextBuildHead)));
     }
 
     /**
@@ -92,20 +94,14 @@ class GitCheckoutListenerITest extends GitITest {
         createAndCommitFile("first-after-start", "first commit in reference");
         var first = buildSuccessfully(reference).getAction(GitCommitsRecord.class);
         var firstHead = getHead();
-        assertThat(first).isNotEmpty()
-                .hasLatestCommit(firstHead)
-                .hasOnlyCommits(firstHead);
+        assertThat(first).isNotEmpty().hasLatestCommit(firstHead).hasOnlyCommits(firstHead);
 
         createAndCommitFile("second-after-start", "second commit in reference");
         var second = buildSuccessfully(reference).getAction(GitCommitsRecord.class);
         var secondHead = getHead();
-        assertThat(second).isNotEmpty()
-                .hasLatestCommit(secondHead)
-                .hasOnlyCommits(secondHead);
+        assertThat(second).isNotEmpty().hasLatestCommit(secondHead).hasOnlyCommits(secondHead);
 
-        assertThat(second.getReferencePoint(first, 10, false))
-                .isPresent()
-                .hasValue(first.getOwner());
+        assertThat(second.getReferencePoint(first, 10, false)).isPresent().hasValue(first.getOwner());
     }
 
     /**
@@ -160,7 +156,8 @@ class GitCheckoutListenerITest extends GitITest {
 
     private void verifyAction(final GitCommitsRecord record, final String repository) {
         assertThat(record.getInfoMessages())
-                .contains("Recording commits of 'git " + repository + "'",
+                .contains(
+                        "Recording commits of 'git " + repository + "'",
                         "Found no previous build with recorded Git commits",
                         "-> Recorded 200 new commits")
                 .anySatisfy(value -> assertThat(value)
@@ -214,9 +211,7 @@ class GitCheckoutListenerITest extends GitITest {
         var job = createFreeStyleProject("max-commits-on-missing-commit");
 
         var firstRecord = buildSuccessfully(job).getAction(GitCommitsRecord.class);
-        assertThat(firstRecord).isNotNull()
-                .hasNoErrorMessages()
-                .isNotEmpty();
+        assertThat(firstRecord).isNotNull().hasNoErrorMessages().isNotEmpty();
         assertThat(firstRecord.isMaxCommitsReached()).isFalse();
 
         amendLatestCommit("Amended initial commit");
@@ -224,8 +219,7 @@ class GitCheckoutListenerITest extends GitITest {
         assertThat(amendedHead).isNotEqualTo(firstRecord.getLatestCommit());
 
         var secondRecord = buildSuccessfully(job).getAction(GitCommitsRecord.class);
-        assertThat(secondRecord).isNotNull()
-                .hasNoErrorMessages();
+        assertThat(secondRecord).isNotNull().hasNoErrorMessages();
 
         assertThat(secondRecord.isMaxCommitsReached())
                 .as("maxCommitsReached must be true when anchor commit was replaced by force-push/amend")
@@ -259,9 +253,7 @@ class GitCheckoutListenerITest extends GitITest {
         createAndCommitFile("B.java", "class B {}");
         var commitB = getHead();
         var secondRecord = buildSuccessfully(job).getAction(GitCommitsRecord.class);
-        assertThat(secondRecord).isNotNull()
-                .hasNoErrorMessages()
-                .hasLatestCommit(commitB);
+        assertThat(secondRecord).isNotNull().hasNoErrorMessages().hasLatestCommit(commitB);
         assertThat(secondRecord.isMaxCommitsReached()).isFalse();
         assertThat(secondRecord.getSize()).isEqualTo(2);
         assertThat(secondRecord.getCommits()).containsExactly(commitB, commitA);
@@ -286,8 +278,12 @@ class GitCheckoutListenerITest extends GitITest {
     private FreeStyleProject createFreeStyleProjectWithShallowClone(final String name) throws IOException {
         var project = createProject(FreeStyleProject.class, name);
         var cloneOption = new CloneOption(true, null, null);
-        var scm = new GitSCM(GitSCM.createRepoList(getGitRepositoryPath(), null),
-                Collections.emptyList(), null, null, Collections.singletonList(cloneOption));
+        var scm = new GitSCM(
+                GitSCM.createRepoList(getGitRepositoryPath(), null),
+                List.of(new BranchSpec("main")),
+                null,
+                null,
+                Collections.singletonList(cloneOption));
         project.setScm(scm);
         return project;
     }
