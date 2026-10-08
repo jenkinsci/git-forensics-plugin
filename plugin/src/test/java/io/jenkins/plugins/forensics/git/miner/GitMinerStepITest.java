@@ -1,17 +1,11 @@
 package io.jenkins.plugins.forensics.git.miner;
 
-import org.junit.jupiter.api.Test;
-
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import static io.jenkins.plugins.forensics.assertions.Assertions.*;
 
 import hudson.model.FreeStyleProject;
 import hudson.model.Run;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
-
 import io.jenkins.plugins.datatables.DetailedCell;
 import io.jenkins.plugins.datatables.TableModel;
 import io.jenkins.plugins.forensics.git.util.GitITest;
@@ -20,8 +14,11 @@ import io.jenkins.plugins.forensics.miner.ForensicsTableModel.ForensicsRow;
 import io.jenkins.plugins.forensics.miner.ForensicsViewModel;
 import io.jenkins.plugins.forensics.miner.RepositoryMinerStep;
 import io.jenkins.plugins.forensics.miner.RepositoryStatistics;
-
-import static io.jenkins.plugins.forensics.assertions.Assertions.*;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import org.junit.jupiter.api.Test;
 
 /**
  * Integration tests for the {@link RepositoryMinerStep} using a Git repository.
@@ -72,16 +69,11 @@ class GitMinerStepITest extends GitITest {
         var wrappedInitialFileName = "<a href=\"fileName." + INITIAL_FILE.hashCode()
                 + "\" data-bs-toggle=\"tooltip\" data-bs-placement=\"left\" title=\"file\">" + INITIAL_FILE + "</a>";
         var row = getRow(forensics, 0);
-        assertThat(row)
-                .hasAuthorsSize(1)
-                .hasCommitsSize(1)
-                .hasLinesOfCode(0)
-                .hasChurn(0);
-        assertThat(row.getFileName()).isInstanceOfSatisfying(DetailedCell.class,
-                cell -> {
-                    assertThat(cell.getDisplay()).isEqualTo(wrappedInitialFileName);
-                    assertThat(cell.getSort()).isEqualTo(INITIAL_FILE);
-                });
+        assertThat(row).hasAuthorsSize(1).hasCommitsSize(1).hasLinesOfCode(0).hasChurn(0);
+        assertThat(row.getFileName()).isInstanceOfSatisfying(DetailedCell.class, cell -> {
+            assertThat(cell.getDisplay()).isEqualTo(wrappedInitialFileName);
+            assertThat(cell.getSort()).isEqualTo(INITIAL_FILE);
+        });
     }
 
     /** Verifies that the mining process is incremental and scans only new commits. */
@@ -97,31 +89,29 @@ class GitMinerStepITest extends GitITest {
         assertThat(statistics).hasFiles(INITIAL_FILE, ADDITIONAL_FILE);
         assertThat(statistics).hasLatestCommitId(getHead());
 
-        assertThat(getConsoleLog(firstBuild)).contains(
-                "2 commits with differences analyzed",
-                "2 MODIFY commit diff items");
+        assertThat(getConsoleLog(firstBuild))
+                .contains("2 commits with differences analyzed", "2 MODIFY commit diff items");
         verifyStatistics(statistics, ADDITIONAL_FILE, 1, 1);
 
         Run<?, ?> secondBuild = buildSuccessfully(job);
 
-        assertThat(getConsoleLog(secondBuild)).contains(
-                "No commits found since previous commit '%s'".formatted(secondCommit));
+        assertThat(getConsoleLog(secondBuild))
+                .contains("No commits found since previous commit '%s'".formatted(secondCommit));
         verifyStatistics(getStatistics(secondBuild), ADDITIONAL_FILE, 1, 1);
 
         writeFileAsAuthorFoo("Third");
 
         Run<?, ?> thirdBuild = buildSuccessfully(job);
 
-        assertThat(getConsoleLog(thirdBuild)).contains(
-                "1 commits with differences analyzed",
-                "1 MODIFY commit diff items");
+        assertThat(getConsoleLog(thirdBuild))
+                .contains("1 commits with differences analyzed", "1 MODIFY commit diff items");
         verifyStatistics(getStatistics(thirdBuild), ADDITIONAL_FILE, 1, 2);
 
         writeFileAsAuthorBar("Another content");
         Run<?, ?> build = buildSuccessfully(job);
 
-        assertThat(getConsoleLog(thirdBuild)).contains("1 commits with differences analyzed",
-                "1 MODIFY commit diff items");
+        assertThat(getConsoleLog(thirdBuild))
+                .contains("1 commits with differences analyzed", "1 MODIFY commit diff items");
         verifyStatistics(getStatistics(build), ADDITIONAL_FILE, 2, 3);
     }
 
@@ -161,11 +151,10 @@ class GitMinerStepITest extends GitITest {
                 .hasCommitsSize(commitsSize)
                 .hasLinesOfCode(1)
                 .hasChurn(7);
-        assertThat(row.getFileName()).isInstanceOfSatisfying(DetailedCell.class,
-                cell -> {
-                    assertThat(cell.getDisplay()).isEqualTo(wrappedFileName);
-                    assertThat(cell.getSort()).isEqualTo(fileName);
-                });
+        assertThat(row.getFileName()).isInstanceOfSatisfying(DetailedCell.class, cell -> {
+            assertThat(cell.getDisplay()).isEqualTo(wrappedFileName);
+            assertThat(cell.getSort()).isEqualTo(fileName);
+        });
     }
 
     /** Verifies that deleted files are not shown anymore. */
@@ -213,7 +202,8 @@ class GitMinerStepITest extends GitITest {
     @Test
     void shouldRunOnExistingProject() throws IOException {
         var job = createFreeStyleProject();
-        var scm = createGitScm("https://github.com/jenkinsci/git-forensics-plugin.git",
+        var scm = createGitScm(
+                "https://github.com/jenkinsci/git-forensics-plugin.git",
                 Collections.singletonList(new BranchSpec(GIT_FORENSICS_COMMIT)));
         job.setScm(scm);
         job.getPublishersList().add(new RepositoryMinerStep());
@@ -231,7 +221,8 @@ class GitMinerStepITest extends GitITest {
 
         assertThat(buildSuccessfully(job).getActions(ForensicsBuildAction.class))
                 .hasSize(1)
-                .element(0).satisfies(this::verifyGitForensics);
+                .element(0)
+                .satisfies(this::verifyGitForensics);
     }
 
     /**
@@ -270,8 +261,9 @@ class GitMinerStepITest extends GitITest {
         assertThat(actions).hasSize(1);
         verifyGitForensics(actions.get(0));
 
-        assertThat(getConsoleLog(build)).contains(
-                "Skipping recording, since SCM 'git https://github.com/jenkinsci/git-forensics-plugin.git' already has been processed");
+        assertThat(getConsoleLog(build))
+                .contains(
+                        "Skipping recording, since SCM 'git https://github.com/jenkinsci/git-forensics-plugin.git' already has been processed");
     }
 
     /**
@@ -323,16 +315,19 @@ class GitMinerStepITest extends GitITest {
                 + "            relativeTargetDir: '" + commitId + "']]])";
     }
 
-    private void verifyStatistics(final RepositoryStatistics statistics, final String fileName,
-            final int authorsSize, final int commitsSize) {
+    private void verifyStatistics(
+            final RepositoryStatistics statistics,
+            final String fileName,
+            final int authorsSize,
+            final int commitsSize) {
         var additionalFileStatistics = statistics.get(fileName);
         assertThat(additionalFileStatistics).hasFileName(fileName);
         assertThat(additionalFileStatistics).hasNumberOfAuthors(authorsSize);
         assertThat(additionalFileStatistics).hasNumberOfCommits(commitsSize);
     }
 
-    private void verifyLocAndChurn(final Run<?, ?> build, final String fileName, final int churn,
-            final int linesOfCode) {
+    private void verifyLocAndChurn(
+            final Run<?, ?> build, final String fileName, final int churn, final int linesOfCode) {
         var statistics = getStatistics(build);
         var fileStatistics = statistics.get(fileName);
 
@@ -351,8 +346,8 @@ class GitMinerStepITest extends GitITest {
     }
 
     private ForensicsBuildAction getAction(final Run<?, ?> build) {
-        return Objects.requireNonNull(build.getAction(ForensicsBuildAction.class),
-                "Build does not contain a ForensicsBuildAction: " + build);
+        return Objects.requireNonNull(
+                build.getAction(ForensicsBuildAction.class), "Build does not contain a ForensicsBuildAction: " + build);
     }
 
     private ForensicsRow getRow(final TableModel forensics, final int rowIndex) {
@@ -364,8 +359,8 @@ class GitMinerStepITest extends GitITest {
     }
 
     private int sort(final Object left, final Object right) {
-        return ((String)((ForensicsRow) left).getFileName().getSort())
-                .compareTo((String)((ForensicsRow) right).getFileName().getSort());
+        return ((String) ((ForensicsRow) left).getFileName().getSort())
+                .compareTo((String) ((ForensicsRow) right).getFileName().getSort());
     }
 
     private FreeStyleProject createJobWithMiner() {
@@ -374,8 +369,7 @@ class GitMinerStepITest extends GitITest {
             job.setScm(new GitSCM(getRepositoryRoot()));
             job.getPublishersList().add(new RepositoryMinerStep());
             return job;
-        }
-        catch (IOException exception) {
+        } catch (IOException exception) {
             throw new AssertionError(exception);
         }
     }

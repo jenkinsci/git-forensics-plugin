@@ -1,16 +1,14 @@
 package io.jenkins.plugins.forensics.git.blame;
 
-import org.apache.commons.lang3.StringUtils;
-import org.junit.jupiter.api.Test;
-import org.junitpioneer.jupiter.Issue;
+import static io.jenkins.plugins.forensics.assertions.Assertions.*;
 
 import edu.hm.hafner.util.FilteredLog;
-
 import io.jenkins.plugins.forensics.blame.FileBlame;
 import io.jenkins.plugins.forensics.blame.FileLocations;
 import io.jenkins.plugins.forensics.git.util.GitITest;
-
-import static io.jenkins.plugins.forensics.assertions.Assertions.*;
+import org.apache.commons.lang3.StringUtils;
+import org.junit.jupiter.api.Test;
+import org.junitpioneer.jupiter.Issue;
 
 /**
  * Tests the class {@link GitBlamer}.

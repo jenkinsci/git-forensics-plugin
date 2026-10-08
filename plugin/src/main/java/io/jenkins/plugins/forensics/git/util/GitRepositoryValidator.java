@@ -2,10 +2,6 @@ package io.jenkins.plugins.forensics.git.util;
 
 import edu.hm.hafner.util.FilteredLog;
 import edu.hm.hafner.util.VisibleForTesting;
-
-import java.io.IOException;
-
-import org.jenkinsci.plugins.gitclient.GitClient;
 import hudson.FilePath;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -13,6 +9,8 @@ import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.impl.CloneOption;
 import hudson.scm.SCM;
+import java.io.IOException;
+import org.jenkinsci.plugins.gitclient.GitClient;
 
 /**
  * Inspects a given working tree and determines if this path is a valid Git repository that can be used to run one of
@@ -23,11 +21,13 @@ import hudson.scm.SCM;
 public class GitRepositoryValidator {
     /** Info message when a shallow clone is detected and blame/mining is skipped. */
     @VisibleForTesting
-    public static final String INFO_SHALLOW_CLONE = "Skipping issues blame since Git has been configured with shallow clone";
+    public static final String INFO_SHALLOW_CLONE =
+            "Skipping issues blame since Git has been configured with shallow clone";
 
     /** Info message when a shallow clone is detected but commit recording is still performed. */
     @VisibleForTesting
-    public static final String INFO_SHALLOW_CLONE_COMMIT_RECORDING = "Git has been configured with shallow clone - commit recording will be limited to the available commits";
+    public static final String INFO_SHALLOW_CLONE_COMMIT_RECORDING =
+            "Git has been configured with shallow clone - commit recording will be limited to the available commits";
 
     private static final String HEAD = "HEAD";
 
@@ -51,8 +51,12 @@ public class GitRepositoryValidator {
      * @param logger
      *         a logger to report error messages
      */
-    public GitRepositoryValidator(final SCM scm, final Run<?, ?> build,
-            final FilePath workTree, final TaskListener listener, final FilteredLog logger) {
+    public GitRepositoryValidator(
+            final SCM scm,
+            final Run<?, ?> build,
+            final FilePath workTree,
+            final TaskListener listener,
+            final FilteredLog logger) {
         this.scm = scm;
         this.build = build;
         this.workTree = workTree;
@@ -96,8 +100,7 @@ public class GitRepositoryValidator {
      * @return {@code true} if the repository is a shallow clone, {@code false} otherwise
      */
     public boolean isShallowClone() {
-        return scm instanceof GitSCM 
-                && isShallow((GitSCM) scm);
+        return scm instanceof GitSCM && isShallow((GitSCM) scm);
     }
 
     private boolean isValidGitRoot(final GitSCM git, final boolean rejectShallowClone) {
@@ -114,8 +117,7 @@ public class GitRepositoryValidator {
             if (gitClient.revParse(getHead()) != null) {
                 return true;
             }
-        }
-        catch (InterruptedException | GitException e) {
+        } catch (InterruptedException | GitException e) {
             // ignore and skip the working tree
         }
 
@@ -138,8 +140,7 @@ public class GitRepositoryValidator {
         try {
             var environment = build.getEnvironment(listener);
             return ((GitSCM) scm).createClient(listener, environment, build, workTree);
-        }
-        catch (IOException | InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
             throw new GitException(e);
         }
     }
@@ -153,8 +154,7 @@ public class GitRepositoryValidator {
         try {
             var environment = build.getEnvironment(listener);
             return environment.getOrDefault("GIT_COMMIT", HEAD);
-        }
-        catch (IOException | InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
             // ignore
         }
         return HEAD;

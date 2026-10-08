@@ -1,5 +1,23 @@
 package io.jenkins.plugins.forensics.git.delta;
 
+import edu.hm.hafner.util.FilteredLog;
+import hudson.remoting.VirtualChannel;
+import io.jenkins.plugins.forensics.delta.Change;
+import io.jenkins.plugins.forensics.delta.ChangeEditType;
+import io.jenkins.plugins.forensics.delta.Delta;
+import io.jenkins.plugins.forensics.delta.FileChanges;
+import io.jenkins.plugins.forensics.delta.FileEditType;
+import io.jenkins.plugins.forensics.git.util.AbstractRepositoryCallback;
+import io.jenkins.plugins.forensics.git.util.RemoteResultWrapper;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.Serial;
+import java.nio.charset.StandardCharsets;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
 import org.eclipse.jgit.diff.DiffFormatter;
@@ -10,28 +28,6 @@ import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevWalk;
-
-import edu.hm.hafner.util.FilteredLog;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.Serial;
-import java.nio.charset.StandardCharsets;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import hudson.remoting.VirtualChannel;
-
-import io.jenkins.plugins.forensics.delta.Change;
-import io.jenkins.plugins.forensics.delta.ChangeEditType;
-import io.jenkins.plugins.forensics.delta.Delta;
-import io.jenkins.plugins.forensics.delta.FileChanges;
-import io.jenkins.plugins.forensics.delta.FileEditType;
-import io.jenkins.plugins.forensics.git.util.AbstractRepositoryCallback;
-import io.jenkins.plugins.forensics.git.util.RemoteResultWrapper;
 
 /**
  * Repository callback that calculates the code difference - so called 'delta' - between two commits.
@@ -118,12 +114,12 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
 
                 return wrapper;
             }
-        }
-        catch (MissingObjectException exception) {
+        } catch (MissingObjectException exception) {
             var delta = new GitDelta(currentCommitId, referenceCommitId, Map.of(), exception.getMessage());
             RemoteResultWrapper<Delta> wrapper = new RemoteResultWrapper<>(delta, title);
 
-            wrapper.logException(exception, "Could not find the specified commit - is the SCM parameter correctly set?");
+            wrapper.logException(
+                    exception, "Could not find the specified commit - is the SCM parameter correctly set?");
 
             return wrapper;
         }
@@ -143,8 +139,7 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
     private String getFileId(final DiffEntry diffEntry, final FileEditType fileEditType) {
         if (FileEditType.DELETE == fileEditType) {
             return diffEntry.getOldId().name();
-        }
-        else {
+        } else {
             return diffEntry.getNewId().name();
         }
     }
@@ -166,8 +161,11 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
      * @throws IOException
      *         if accessing Git resources failed
      */
-    private FileChanges createFileChanges(final FileEditType fileEditType, final DiffEntry diffEntry,
-            final DiffFormatter diffFormatter, final Repository repository)
+    private FileChanges createFileChanges(
+            final FileEditType fileEditType,
+            final DiffEntry diffEntry,
+            final DiffFormatter diffFormatter,
+            final Repository repository)
             throws IOException {
         String filePath;
         String oldFilePath;
@@ -176,12 +174,10 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
             fileContent = getFileContent(diffEntry.getOldId().toObjectId(), repository);
             oldFilePath = diffEntry.getOldPath();
             filePath = "";
-        }
-        else {
+        } else {
             if (fileEditType == FileEditType.ADD) {
                 oldFilePath = "";
-            }
-            else {
+            } else {
                 oldFilePath = diffEntry.getOldPath();
             }
             fileContent = getFileContent(diffEntry.getNewId().toObjectId(), repository);
@@ -190,8 +186,8 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
 
         diffFormatter.format(diffEntry);
 
-        var fileChanges = new FileChanges(filePath, oldFilePath, fileContent, fileEditType,
-                new EnumMap<>(ChangeEditType.class));
+        var fileChanges =
+                new FileChanges(filePath, oldFilePath, fileContent, fileEditType, new EnumMap<>(ChangeEditType.class));
 
         for (Edit edit : diffFormatter.toFileHeader(diffEntry).toEditList()) {
             createChange(edit).ifPresent(fileChanges::addChange);
@@ -216,13 +212,11 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
         try (var objectDatabase = repository.getObjectDatabase()) {
             var objectLoader = objectDatabase.open(fileId);
             if (objectLoader.isLarge()) {
-                return new String(objectLoader.getCachedBytes(1000),
-                        StandardCharsets.UTF_8);
+                return new String(objectLoader.getCachedBytes(1000), StandardCharsets.UTF_8);
             }
 
             return new String(objectLoader.getCachedBytes(), StandardCharsets.UTF_8);
-        }
-        catch (LargeObjectException exception) {
+        } catch (LargeObjectException exception) {
             return "... skipped large file content ...";
         }
     }
@@ -275,19 +269,14 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
         // add 1 to the 'begin' of the interval which is relevant for determining the made change since the begin is
         // included and the index is zero based ('end' does not need this because the value is excluded anyway)
         if (changeEditType == ChangeEditType.DELETE) {
-            return Optional.of(new Change(changeEditType,
-                    edit.getBeginA() + 1, edit.getEndA(),
-                    edit.getBeginB(), edit.getEndB()));
-        }
-        else if (changeEditType == ChangeEditType.INSERT) {
-            return Optional.of(new Change(changeEditType,
-                    edit.getBeginA(), edit.getEndA(),
-                    edit.getBeginB() + 1, edit.getEndB()));
-        }
-        else if (changeEditType == ChangeEditType.REPLACE) {
-            return Optional.of(new Change(changeEditType,
-                    edit.getBeginA() + 1, edit.getEndA(),
-                    edit.getBeginB() + 1, edit.getEndB()));
+            return Optional.of(
+                    new Change(changeEditType, edit.getBeginA() + 1, edit.getEndA(), edit.getBeginB(), edit.getEndB()));
+        } else if (changeEditType == ChangeEditType.INSERT) {
+            return Optional.of(
+                    new Change(changeEditType, edit.getBeginA(), edit.getEndA(), edit.getBeginB() + 1, edit.getEndB()));
+        } else if (changeEditType == ChangeEditType.REPLACE) {
+            return Optional.of(new Change(
+                    changeEditType, edit.getBeginA() + 1, edit.getEndA(), edit.getBeginB() + 1, edit.getEndB()));
         }
         return Optional.empty();
     }

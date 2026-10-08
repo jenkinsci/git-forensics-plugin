@@ -1,7 +1,6 @@
 package io.jenkins.plugins.forensics.git.util;
 
 import edu.hm.hafner.util.FilteredLog;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;

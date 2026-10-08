@@ -1,9 +1,8 @@
 package io.jenkins.plugins.forensics.git.util;
 
+import io.jenkins.plugins.forensics.util.CommitDecorator;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.lib.ObjectId;
-
-import io.jenkins.plugins.forensics.util.CommitDecorator;
 
 /**
  * Renders a short version of the specified commit ID.

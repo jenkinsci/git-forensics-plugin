@@ -1,28 +1,9 @@
 package io.jenkins.plugins.forensics.git.util;
 
-import org.apache.commons.io.FileUtils;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.lib.RepositoryBuilder;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.io.TempDir;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-
-import org.jenkinsci.plugins.gitclient.GitClient;
-import org.jenkinsci.plugins.gitclient.RepositoryCallback;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -32,11 +13,26 @@ import hudson.model.TaskListener;
 import hudson.plugins.git.BranchSpec;
 import hudson.plugins.git.GitSCM;
 import hudson.util.StreamTaskListener;
-
 import io.jenkins.plugins.util.IntegrationTestWithJenkinsPerTest;
-
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.lib.RepositoryBuilder;
+import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.gitclient.RepositoryCallback;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.io.TempDir;
 
 /**
  * Base class for Git integration tests. Provides a Git repository that will b e initialized for each test.
@@ -195,7 +191,11 @@ public abstract class GitITest extends IntegrationTestWithJenkinsPerTest {
      * @param message
      *         the commit message
      */
-    private void commitFile(final String file, final String content, final String authorName, final String authorEmail,
+    private void commitFile(
+            final String file,
+            final String content,
+            final String authorName,
+            final String authorEmail,
             final String message) {
         writeFile(file, content);
         git("add", file);
@@ -225,10 +225,12 @@ public abstract class GitITest extends IntegrationTestWithJenkinsPerTest {
             Job<?, ?> job = mock(Job.class);
             when(run.getParent()).thenAnswer(i -> job);
 
-            return scm.createClient(TaskListener.NULL, new EnvVars(), run,
+            return scm.createClient(
+                    TaskListener.NULL,
+                    new EnvVars(),
+                    run,
                     new FilePath(getGitRepository().getBaseDirectory()));
-        }
-        catch (IOException | InterruptedException exception) {
+        } catch (IOException | InterruptedException exception) {
             throw new AssertionError(exception);
         }
     }
@@ -244,8 +246,7 @@ public abstract class GitITest extends IntegrationTestWithJenkinsPerTest {
      * @return the SCM
      */
     protected GitSCM createGitScm(final String url, final List<BranchSpec> branches) {
-        return new GitSCM(GitSCM.createRepoList(url, null),
-                branches, null, null, Collections.emptyList());
+        return new GitSCM(GitSCM.createRepoList(url, null), branches, null, null, Collections.emptyList());
     }
 
     /**
@@ -260,14 +261,12 @@ public abstract class GitITest extends IntegrationTestWithJenkinsPerTest {
             gitClient.withRepository((RepositoryCallback<Void>) (repository, virtualChannel) -> {
                 try (var git = new Git(repository)) {
                     testCase.run(repository, git);
-                }
-                catch (GitAPIException exception) {
+                } catch (GitAPIException exception) {
                     // ignore
                 }
                 return null; // not needed
             });
-        }
-        catch (IOException | InterruptedException exception) {
+        } catch (IOException | InterruptedException exception) {
             throw new AssertionError(exception);
         }
     }
@@ -315,15 +314,17 @@ public abstract class GitITest extends IntegrationTestWithJenkinsPerTest {
             try {
                 TaskListener listener = StreamTaskListener.fromStdout();
 
-                int commandExitCode = new Launcher.LocalLauncher(listener).launch()
+                int commandExitCode = new Launcher.LocalLauncher(listener)
+                        .launch()
                         .cmds(cmds)
                         .pwd(baseDirectory)
                         .stdout(listener)
                         .join();
 
-                assertThat(commandExitCode).as(Arrays.toString(cmds) + " failed with error code").isZero();
-            }
-            catch (IOException | InterruptedException exception) {
+                assertThat(commandExitCode)
+                        .as(Arrays.toString(cmds) + " failed with error code")
+                        .isZero();
+            } catch (IOException | InterruptedException exception) {
                 throw new AssertionError(exception);
             }
         }
@@ -331,8 +332,7 @@ public abstract class GitITest extends IntegrationTestWithJenkinsPerTest {
         void write(final String relativePath, final String content) {
             try {
                 FileUtils.write(new File(this.baseDirectory, relativePath), content, StandardCharsets.UTF_8);
-            }
-            catch (IOException exception) {
+            } catch (IOException exception) {
                 throw new AssertionError(exception);
             }
         }
@@ -355,20 +355,17 @@ public abstract class GitITest extends IntegrationTestWithJenkinsPerTest {
                 git("config", "user.name", "Git SampleRepoRule");
                 git("config", "user.email", "gits@mplereporule");
                 git("commit", "--message=init");
-            }
-            catch (Exception exception) {
+            } catch (Exception exception) {
                 throw new AssertionError(exception);
             }
         }
 
         @SuppressFBWarnings("BC")
         String head() {
-            try (var repository = new RepositoryBuilder().setWorkTree(baseDirectory).build()) {
-                return repository
-                        .resolve("HEAD")
-                        .name();
-            }
-            catch (IOException exception) {
+            try (var repository =
+                    new RepositoryBuilder().setWorkTree(baseDirectory).build()) {
+                return repository.resolve("HEAD").name();
+            } catch (IOException exception) {
                 throw new AssertionError(exception);
             }
         }

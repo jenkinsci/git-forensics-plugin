@@ -1,15 +1,9 @@
 package io.jenkins.plugins.forensics.git.util;
 
-import org.assertj.core.util.Lists;
-import org.eclipse.jgit.lib.ObjectId;
-import org.junit.jupiter.api.Test;
+import static io.jenkins.plugins.forensics.assertions.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import edu.hm.hafner.util.FilteredLog;
-
-import java.io.File;
-import java.io.IOException;
-
-import org.jenkinsci.plugins.gitclient.GitClient;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.model.Run;
@@ -19,9 +13,12 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.impl.CloneOption;
 import hudson.scm.NullSCM;
 import hudson.util.DescribableList;
-
-import static io.jenkins.plugins.forensics.assertions.Assertions.*;
-import static org.mockito.Mockito.*;
+import java.io.File;
+import java.io.IOException;
+import org.assertj.core.util.Lists;
+import org.eclipse.jgit.lib.ObjectId;
+import org.jenkinsci.plugins.gitclient.GitClient;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests the class {@link GitRepositoryValidator}.
@@ -123,21 +120,24 @@ class GitRepositoryValidatorTest {
 
     @Test
     void isShallowCloneShouldReturnFalseForNonGitScm() {
-        var validator = new GitRepositoryValidator(new NullSCM(), null, createWorkTree(), NULL_LISTENER, createLogger());
+        var validator =
+                new GitRepositoryValidator(new NullSCM(), null, createWorkTree(), NULL_LISTENER, createLogger());
 
         assertThat(validator.isShallowClone()).isFalse();
     }
 
     @Test
     void isShallowCloneShouldReturnFalseForNonShallowGit() {
-        var validator = new GitRepositoryValidator(createNonShallowGitScm(), null, createWorkTree(), NULL_LISTENER, createLogger());
+        var validator = new GitRepositoryValidator(
+                createNonShallowGitScm(), null, createWorkTree(), NULL_LISTENER, createLogger());
 
         assertThat(validator.isShallowClone()).isFalse();
     }
 
     @Test
     void isShallowCloneShouldReturnTrueForShallowGit() {
-        var validator = new GitRepositoryValidator(createShallowGitScm(), null, createWorkTree(), NULL_LISTENER, createLogger());
+        var validator = new GitRepositoryValidator(
+                createShallowGitScm(), null, createWorkTree(), NULL_LISTENER, createLogger());
 
         assertThat(validator.isShallowClone()).isTrue();
     }

@@ -1,23 +1,19 @@
 package io.jenkins.plugins.forensics.git.reference;
 
-import org.apache.commons.lang3.Strings;
-import org.eclipse.jgit.lib.ObjectId;
-
 import edu.hm.hafner.util.FilteredLog;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
+import hudson.model.Run;
+import hudson.scm.SCM;
+import io.jenkins.plugins.forensics.git.util.GitCommitTextDecorator;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-
-import hudson.model.Run;
-import hudson.scm.SCM;
 import jenkins.model.RunAction2;
-
-import io.jenkins.plugins.forensics.git.util.GitCommitTextDecorator;
+import org.apache.commons.lang3.Strings;
+import org.eclipse.jgit.lib.ObjectId;
 
 /**
  * Stores all the commits for a given build and provides a link to the latest commit. For each {@link SCM} repository a
@@ -54,14 +50,18 @@ public class GitCommitsRecord implements RunAction2, Serializable {
      */
     // TODO: maybe it makes sense to move these values to a business object that is not loaded every time
     private final String scmKey;
+
     private final String latestCommit;
     private final RecordingType recordingType;
     private final String latestCommitLink;
     private final String targetParentCommit;
+
     @SuppressWarnings("serial")
     private final List<String> commits;
+
     @SuppressWarnings("serial")
     private final List<String> errorMessages;
+
     @SuppressWarnings("serial")
     private final List<String> infoMessages;
     /**
@@ -90,8 +90,12 @@ public class GitCommitsRecord implements RunAction2, Serializable {
      * @param latestCommitLink
      *         hyperlink to the latest commit
      */
-    GitCommitsRecord(final Run<?, ?> owner, final String scmKey, final FilteredLog logger,
-            final BuildCommits commits, final String latestCommitLink) {
+    GitCommitsRecord(
+            final Run<?, ?> owner,
+            final String scmKey,
+            final FilteredLog logger,
+            final BuildCommits commits,
+            final String latestCommitLink) {
         this.owner = owner;
         this.scmKey = scmKey;
         this.infoMessages = new ArrayList<>(logger.getInfoMessages());
@@ -260,8 +264,8 @@ public class GitCommitsRecord implements RunAction2, Serializable {
      *
      * @return the found reference build or empty if none has been found
      */
-    public Optional<Run<?, ?>> getReferencePoint(final GitCommitsRecord referenceCommits,
-            final int maxCommits, final boolean skipUnknownCommits) {
+    public Optional<Run<?, ?>> getReferencePoint(
+            final GitCommitsRecord referenceCommits, final int maxCommits, final boolean skipUnknownCommits) {
         return getReferencePoint(referenceCommits, maxCommits, skipUnknownCommits, new FilteredLog("UNUSED"));
     }
 
@@ -281,35 +285,42 @@ public class GitCommitsRecord implements RunAction2, Serializable {
      *
      * @return the found reference build or empty if none has been found
      */
-    Optional<Run<?, ?>> getReferencePoint(final GitCommitsRecord referenceCommits, final int maxCommits,
-            final boolean skipUnknownCommits, final FilteredLog logger) {
+    Optional<Run<?, ?>> getReferencePoint(
+            final GitCommitsRecord referenceCommits,
+            final int maxCommits,
+            final boolean skipUnknownCommits,
+            final FilteredLog logger) {
         var textDecorator = new GitCommitTextDecorator();
         List<String> branchCommits = collectBranchCommits(maxCommits);
-        logger.logInfo("-> detected %d commits in current branch (last one: '%s')",
+        logger.logInfo(
+                "-> detected %d commits in current branch (last one: '%s')",
                 branchCommits.size(), getHeadCommitOf(branchCommits, textDecorator));
         List<String> targetCommits = new ArrayList<>();
         Run<?, ?> build = referenceCommits.owner;
-        for (; targetCommits.size() < maxCommits && build != null;
-                build = build.getPreviousBuild()) {
+        for (; targetCommits.size() < maxCommits && build != null; build = build.getPreviousBuild()) {
             if (owner.getExternalizableId().equals(build.getExternalizableId())) {
                 continue; // skip the identical build when searching for a reference
             }
             List<String> additionalCommits = getCommitsForRepository(build);
-            logger.logInfo("-> adding %d commits from build '%s' of reference job (last one: '%s')",
-                    additionalCommits.size(), build.getDisplayName(),
+            logger.logInfo(
+                    "-> adding %d commits from build '%s' of reference job (last one: '%s')",
+                    additionalCommits.size(),
+                    build.getDisplayName(),
                     getHeadCommitOf(additionalCommits, textDecorator));
             if (!skipUnknownCommits || branchCommits.containsAll(additionalCommits)) {
                 targetCommits.addAll(additionalCommits);
-                Optional<String> referencePoint = branchCommits.stream().filter(targetCommits::contains).findFirst();
+                Optional<String> referencePoint =
+                        branchCommits.stream().filter(targetCommits::contains).findFirst();
                 if (referencePoint.isPresent()) {
-                    logger.logInfo("-> found a matching commit in current branch and target branch: '%s'",
+                    logger.logInfo(
+                            "-> found a matching commit in current branch and target branch: '%s'",
                             textDecorator.asText(referencePoint.get()));
                     return Optional.of(build);
                 }
-                logger.logInfo("-> no matching commit found yet, continuing with commits of previous build of '%s'",
+                logger.logInfo(
+                        "-> no matching commit found yet, continuing with commits of previous build of '%s'",
                         build.getDisplayName());
-            }
-            else {
+            } else {
                 logger.logInfo("-> not all commits of target branch are part of the collected reference builds yet");
             }
         }
@@ -317,7 +328,8 @@ public class GitCommitsRecord implements RunAction2, Serializable {
             logger.logInfo("-> stopping commit search since we reached the first build of the reference job");
         }
         if (targetCommits.size() >= maxCommits) {
-            logger.logInfo("-> stopping commit search since the #commits of the target builds is %d and the limit `maxCommits` has been set to %d",
+            logger.logInfo(
+                    "-> stopping commit search since the #commits of the target builds is %d and the limit `maxCommits` has been set to %d",
                     targetCommits.size(), maxCommits);
         }
         return Optional.empty();

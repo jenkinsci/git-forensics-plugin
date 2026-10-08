@@ -1,16 +1,10 @@
 package io.jenkins.plugins.forensics.git.delta;
 
-import org.assertj.core.util.Lists;
-import org.eclipse.jgit.lib.ObjectId;
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 import edu.hm.hafner.util.FilteredLog;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Optional;
-
-import org.jenkinsci.plugins.gitclient.GitClient;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.model.Run;
@@ -20,13 +14,15 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.impl.CloneOption;
 import hudson.scm.NullSCM;
 import hudson.util.DescribableList;
-
 import io.jenkins.plugins.forensics.delta.DeltaCalculator;
 import io.jenkins.plugins.forensics.git.util.GitRepositoryValidator;
-
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.Optional;
+import org.assertj.core.util.Lists;
+import org.eclipse.jgit.lib.ObjectId;
+import org.jenkinsci.plugins.gitclient.GitClient;
+import org.junit.jupiter.api.Test;
 
 /**
  * Integration test for the class {@link GitDeltaCalculatorFactory}.
@@ -42,7 +38,8 @@ class GitDeltaCalculatorFactoryTest {
 
         var factory = new GitDeltaCalculatorFactory();
 
-        assertThat(factory.createDeltaCalculator(new NullSCM(), null, null, NULL_LISTENER, logger)).isEmpty();
+        assertThat(factory.createDeltaCalculator(new NullSCM(), null, null, NULL_LISTENER, logger))
+                .isEmpty();
         assertThat(logger.getErrorMessages()).isEmpty();
         assertThat(logger.getInfoMessages()).contains("SCM 'hudson.scm.NullSCM' is not of type GitSCM");
     }
@@ -66,8 +63,8 @@ class GitDeltaCalculatorFactoryTest {
         var logger = createLogger();
 
         var factory = new GitDeltaCalculatorFactory();
-        Optional<DeltaCalculator> deltaCalculator = factory.createDeltaCalculator(gitSCM, run, workspace, NULL_LISTENER,
-                logger);
+        Optional<DeltaCalculator> deltaCalculator =
+                factory.createDeltaCalculator(gitSCM, run, workspace, NULL_LISTENER, logger);
 
         assertThat(deltaCalculator).isNotEmpty().containsInstanceOf(GitDeltaCalculator.class);
         assertThat(logger.getErrorMessages()).isEmpty();
@@ -88,7 +85,8 @@ class GitDeltaCalculatorFactoryTest {
 
         var factory = new GitDeltaCalculatorFactory();
 
-        assertThat(factory.createDeltaCalculator(git, mock(Run.class), null, NULL_LISTENER, logger)).isEmpty();
+        assertThat(factory.createDeltaCalculator(git, mock(Run.class), null, NULL_LISTENER, logger))
+                .isEmpty();
         assertThat(logger.getInfoMessages()).contains(GitRepositoryValidator.INFO_SHALLOW_CLONE);
         assertThat(logger.getErrorMessages()).isEmpty();
     }
@@ -102,10 +100,11 @@ class GitDeltaCalculatorFactoryTest {
 
         var logger = createLogger();
 
-        assertThat(factory.createDeltaCalculator(createGitScm(), run, null, NULL_LISTENER, logger)).isEmpty();
+        assertThat(factory.createDeltaCalculator(createGitScm(), run, null, NULL_LISTENER, logger))
+                .isEmpty();
         assertThat(logger.getErrorMessages()).isEmpty();
-        assertThat(logger.getInfoMessages()).contains(
-                "Exception while creating a GitClient instance for work tree 'null'");
+        assertThat(logger.getInfoMessages())
+                .contains("Exception while creating a GitClient instance for work tree 'null'");
     }
 
     private FilePath createWorkTreeStub() {

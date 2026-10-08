@@ -1,13 +1,11 @@
 package io.jenkins.plugins.forensics.git.reference;
 
-import org.junit.jupiter.api.Test;
-
-import java.io.IOException;
+import static org.assertj.core.api.Assertions.*;
 
 import io.jenkins.plugins.forensics.git.util.GitITest;
 import io.jenkins.plugins.forensics.git.util.RemoteResultWrapper;
-
-import static org.assertj.core.api.Assertions.*;
+import java.io.IOException;
+import org.junit.jupiter.api.Test;
 
 /**
  * Integration tests for {@link GitCommitsCollector}.
@@ -22,8 +20,7 @@ class GitCommitsCollectorITest extends GitITest {
      * mechanism works correctly.
      */
     @Test
-    void shouldSetMaxCommitsReachedFlagWhenAnchorCommitIsNotFoundInHistory()
-            throws IOException, InterruptedException {
+    void shouldSetMaxCommitsReachedFlagWhenAnchorCommitIsNotFoundInHistory() throws IOException, InterruptedException {
         createAndCommitFile("V1.java", "v1");
         var stalePreviousCommit = getHead();
 
@@ -48,8 +45,7 @@ class GitCommitsCollectorITest extends GitITest {
      * counts only the new commits added after it and does NOT set the {@code maxCommitsReached} flag.
      */
     @Test
-    void shouldNotSetMaxCommitsReachedFlagWhenAnchorCommitIsFoundNormally()
-            throws IOException, InterruptedException {
+    void shouldNotSetMaxCommitsReachedFlagWhenAnchorCommitIsFoundNormally() throws IOException, InterruptedException {
         createAndCommitFile("Base.java", "base");
         var anchorCommit = getHead();
 

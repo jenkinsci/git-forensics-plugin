@@ -1,14 +1,12 @@
 package io.jenkins.plugins.forensics.git.miner;
 
-import org.apache.commons.lang3.StringUtils;
-import org.junit.jupiter.api.Test;
+import static io.jenkins.plugins.forensics.assertions.Assertions.*;
 
 import edu.hm.hafner.util.FilteredLog;
-
 import io.jenkins.plugins.forensics.git.util.GitITest;
 import io.jenkins.plugins.forensics.miner.RepositoryStatistics;
-
-import static io.jenkins.plugins.forensics.assertions.Assertions.*;
+import org.apache.commons.lang3.StringUtils;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests the class {@link GitRepositoryMiner}.
@@ -62,11 +60,13 @@ class GitRepositoryMinerITest extends GitITest {
                 .hasLinesOfCode(2);
 
         assertThat(fileStatistics.getCommits()).hasSize(2);
-        assertThat(fileStatistics.getCommits().get(0)).hasId(firstCommit)
+        assertThat(fileStatistics.getCommits().get(0))
+                .hasId(firstCommit)
                 .hasAuthor(FOO_EMAIL)
                 .hasTotalAddedLines(1)
                 .hasTotalDeletedLines(0);
-        assertThat(fileStatistics.getCommits().get(1)).hasId(head)
+        assertThat(fileStatistics.getCommits().get(1))
+                .hasId(head)
                 .hasAuthor(FOO_EMAIL)
                 .hasTotalAddedLines(2)
                 .hasTotalDeletedLines(1);
@@ -92,7 +92,8 @@ class GitRepositoryMinerITest extends GitITest {
         assertDefaultFileStatistics(statisticsPerFile);
 
         var fileStatistics = statisticsPerFile.get(ADDITIONAL_FILE);
-        assertThat(fileStatistics).hasFileName(ADDITIONAL_FILE)
+        assertThat(fileStatistics)
+                .hasFileName(ADDITIONAL_FILE)
                 .hasNumberOfAuthors(2)
                 .hasNumberOfCommits(4)
                 .hasLinesOfCode(1)
@@ -106,7 +107,8 @@ class GitRepositoryMinerITest extends GitITest {
 
     private void assertDefaultFileStatistics(final RepositoryStatistics statistics) {
         var fileStatistics = statistics.get(OTHER_FILE);
-        assertThat(fileStatistics).hasFileName(OTHER_FILE)
+        assertThat(fileStatistics)
+                .hasFileName(OTHER_FILE)
                 .hasNumberOfAuthors(1)
                 .hasNumberOfCommits(1)
                 .hasLinesOfCode(0)

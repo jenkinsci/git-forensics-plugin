@@ -1,16 +1,9 @@
 package io.jenkins.plugins.forensics.git.blame;
 
-import org.assertj.core.util.Lists;
-import org.eclipse.jgit.lib.ObjectId;
-import org.junit.jupiter.api.Test;
+import static io.jenkins.plugins.forensics.assertions.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import edu.hm.hafner.util.FilteredLog;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Optional;
-
-import org.jenkinsci.plugins.gitclient.GitClient;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.model.Run;
@@ -20,12 +13,15 @@ import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.impl.CloneOption;
 import hudson.scm.NullSCM;
 import hudson.util.DescribableList;
-
 import io.jenkins.plugins.forensics.blame.Blamer;
 import io.jenkins.plugins.forensics.git.util.GitRepositoryValidator;
-
-import static io.jenkins.plugins.forensics.assertions.Assertions.*;
-import static org.mockito.Mockito.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.Optional;
+import org.assertj.core.util.Lists;
+import org.eclipse.jgit.lib.ObjectId;
+import org.jenkinsci.plugins.gitclient.GitClient;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests the class {@link GitBlamerFactory}.
@@ -40,7 +36,8 @@ class GitBlamerFactoryTest {
         var logger = createLogger();
 
         var factory = new GitBlamerFactory();
-        assertThat(factory.createBlamer(new NullSCM(), null, null, NULL_LISTENER, logger)).isEmpty();
+        assertThat(factory.createBlamer(new NullSCM(), null, null, NULL_LISTENER, logger))
+                .isEmpty();
 
         assertThat(logger.getErrorMessages()).isEmpty();
         assertThat(logger.getInfoMessages()).contains("SCM 'hudson.scm.NullSCM' is not of type GitSCM");
@@ -70,7 +67,8 @@ class GitBlamerFactoryTest {
 
         assertThat(blamer).isNotEmpty().containsInstanceOf(GitBlamer.class);
         assertThat(logger.getErrorMessages()).isEmpty();
-        assertThat(logger.getInfoMessages()).contains("-> Git blamer successfully created in working tree '/working-tree'");
+        assertThat(logger.getInfoMessages())
+                .contains("-> Git blamer successfully created in working tree '/working-tree'");
     }
 
     private FilePath createWorkTreeStub() {
@@ -91,7 +89,8 @@ class GitBlamerFactoryTest {
 
         var gitChecker = new GitBlamerFactory();
 
-        assertThat(gitChecker.createBlamer(git, mock(Run.class), null, NULL_LISTENER, logger)).isEmpty();
+        assertThat(gitChecker.createBlamer(git, mock(Run.class), null, NULL_LISTENER, logger))
+                .isEmpty();
         assertThat(logger.getInfoMessages()).contains(GitRepositoryValidator.INFO_SHALLOW_CLONE);
         assertThat(logger.getErrorMessages()).isEmpty();
     }
@@ -105,10 +104,11 @@ class GitBlamerFactoryTest {
 
         var logger = createLogger();
 
-        assertThat(gitChecker.createBlamer(createGitScm(), run, null, NULL_LISTENER, logger)).isEmpty();
+        assertThat(gitChecker.createBlamer(createGitScm(), run, null, NULL_LISTENER, logger))
+                .isEmpty();
         assertThat(logger.getErrorMessages()).isEmpty();
-        assertThat(logger.getInfoMessages()).contains(
-                "Exception while creating a GitClient instance for work tree 'null'");
+        assertThat(logger.getInfoMessages())
+                .contains("Exception while creating a GitClient instance for work tree 'null'");
     }
 
     private GitSCM createGitScm() {

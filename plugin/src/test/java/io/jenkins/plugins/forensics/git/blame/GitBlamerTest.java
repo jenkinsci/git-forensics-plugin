@@ -1,5 +1,23 @@
 package io.jenkins.plugins.forensics.git.blame;
 
+import static io.jenkins.plugins.forensics.assertions.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import edu.hm.hafner.util.FilteredLog;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import hudson.FilePath;
+import hudson.plugins.git.GitException;
+import hudson.remoting.VirtualChannel;
+import io.jenkins.plugins.forensics.blame.Blames;
+import io.jenkins.plugins.forensics.blame.FileBlame;
+import io.jenkins.plugins.forensics.blame.FileBlame.FileBlameBuilder;
+import io.jenkins.plugins.forensics.blame.FileLocations;
+import io.jenkins.plugins.forensics.git.blame.GitBlamer.BlameCallback;
+import io.jenkins.plugins.forensics.git.blame.GitBlamer.BlameRunner;
+import io.jenkins.plugins.forensics.git.blame.GitBlamer.LastCommitRunner;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
@@ -12,31 +30,9 @@ import org.eclipse.jgit.lib.ObjectInserter;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.jenkinsci.plugins.gitclient.GitClient;
 import org.junit.jupiter.api.Test;
 import org.junitpioneer.jupiter.Issue;
-
-import edu.hm.hafner.util.FilteredLog;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-
-import org.jenkinsci.plugins.gitclient.GitClient;
-import hudson.FilePath;
-import hudson.plugins.git.GitException;
-import hudson.remoting.VirtualChannel;
-
-import io.jenkins.plugins.forensics.blame.Blames;
-import io.jenkins.plugins.forensics.blame.FileBlame;
-import io.jenkins.plugins.forensics.blame.FileBlame.FileBlameBuilder;
-import io.jenkins.plugins.forensics.blame.FileLocations;
-import io.jenkins.plugins.forensics.git.blame.GitBlamer.BlameCallback;
-import io.jenkins.plugins.forensics.git.blame.GitBlamer.BlameRunner;
-import io.jenkins.plugins.forensics.git.blame.GitBlamer.LastCommitRunner;
-
-import static io.jenkins.plugins.forensics.assertions.Assertions.*;
-import static org.mockito.Mockito.*;
 
 /**
  * Tests the class {@link GitBlamer}.
@@ -140,8 +136,8 @@ class GitBlamerTest {
         callback.run(BUILDER, RELATIVE_PATH, runner, createLastCommitRunner(), log);
 
         assertThat(log.getErrorMessages()).isNotEmpty();
-        assertThat(log.getErrorMessages().get(0)).startsWith(
-                "- error running git blame on '" + RELATIVE_PATH + "' with revision");
+        assertThat(log.getErrorMessages().get(0))
+                .startsWith("- error running git blame on '" + RELATIVE_PATH + "' with revision");
         assertThat(log.getErrorMessages().get(1)).startsWith(exception.getName());
     }
 
@@ -312,17 +308,16 @@ class GitBlamerTest {
         }
     }
 
-    @SuppressFBWarnings(value = "VA_FORMAT_STRING_USES_NEWLINE", justification = "JGit apparently can't parse windows line-endings (\r\n)")
+    @SuppressFBWarnings(
+            value = "VA_FORMAT_STRING_USES_NEWLINE",
+            justification = "JGit apparently can't parse windows line-endings (\r\n)")
     private byte[] getRawCommit(final int commitTime) {
         return """
                         tree 216785864a817e2c5d9d5b54881a1f153da52096
                         author Foo Bar <foo@bar.com> %d +0000
                         committer Foo Bar <foo@bar.com> %d +0000
-                        
-                        Commit message""".formatted(
-                commitTime,
-                commitTime)
-                .getBytes(StandardCharsets.UTF_8);
+
+                        Commit message""".formatted(commitTime, commitTime).getBytes(StandardCharsets.UTF_8);
     }
 
     private BlameResult createResult(final int size) {

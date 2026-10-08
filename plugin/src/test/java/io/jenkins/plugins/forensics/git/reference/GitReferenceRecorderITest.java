@@ -1,42 +1,37 @@
 package io.jenkins.plugins.forensics.git.reference;
 
-import org.apache.commons.lang3.StringUtils;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.ValueSource;
-import org.junitpioneer.jupiter.Issue;
+import static io.jenkins.plugins.forensics.assertions.Assertions.*;
+import static org.jvnet.hudson.test.JenkinsRule.*;
 
 import com.cloudbees.hudson.plugins.folder.computed.FolderComputation;
-
 import edu.hm.hafner.util.PathUtil;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.Optional;
-
-import org.jenkinsci.plugins.workflow.job.WorkflowJob;
-import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import hudson.model.Descriptor.FormException;
 import hudson.model.Result;
 import hudson.model.Run;
-import jenkins.branch.BranchProperty;
-import jenkins.branch.BranchSource;
-import jenkins.branch.DefaultBranchPropertyStrategy;
-import jenkins.plugins.git.GitSCMSource;
-import jenkins.scm.api.SCMSource;
-
 import io.jenkins.plugins.forensics.git.util.GitCommitTextDecorator;
 import io.jenkins.plugins.forensics.git.util.GitITest;
 import io.jenkins.plugins.forensics.miner.CommitStatistics;
 import io.jenkins.plugins.forensics.miner.CommitStatisticsBuildAction;
 import io.jenkins.plugins.forensics.reference.ReferenceBuild;
-
-import static io.jenkins.plugins.forensics.assertions.Assertions.*;
-import static org.jvnet.hudson.test.JenkinsRule.*;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Optional;
+import jenkins.branch.BranchProperty;
+import jenkins.branch.BranchSource;
+import jenkins.branch.DefaultBranchPropertyStrategy;
+import jenkins.plugins.git.GitSCMSource;
+import jenkins.scm.api.SCMSource;
+import org.apache.commons.lang3.StringUtils;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.junitpioneer.jupiter.Issue;
 
 /**
  * Integration tests for finding the correct reference point for multibranch pipelines.
@@ -61,9 +56,11 @@ class GitReferenceRecorderITest extends GitITest {
     private static final String CHANGED_CONTENT = "changed content";
     private static final GitCommitTextDecorator DECORATOR = new GitCommitTextDecorator();
 
-    private static final String MULTI_BRANCH_PROJECT = "Found a `MultiBranchProject`, trying to resolve the target branch from the configuration";
+    private static final String MULTI_BRANCH_PROJECT =
+            "Found a `MultiBranchProject`, trying to resolve the target branch from the configuration";
     private static final String MAIN_IS_TARGET = "-> using target branch 'main' as configured in step";
-    private static final String NOT_FOUND_MESSAGE = "No reference build with required status found that contains matching commits";
+    private static final String NOT_FOUND_MESSAGE =
+            "No reference build with required status found that contains matching commits";
 
     /**
      * Runs a pipeline and verifies that the recorder does not break the build if Git is not configured.
@@ -104,7 +101,8 @@ class GitReferenceRecorderITest extends GitITest {
         createFeatureBranchAndAddCommits();
 
         var featureBranch = createPipeline(FEATURE);
-        featureBranch.setDefinition(asStage(createLocalGitCheckout(FEATURE),
+        featureBranch.setDefinition(asStage(
+                createLocalGitCheckout(FEATURE),
                 "discoverGitReferenceBuild(referenceJob: '" + MAIN + "')",
                 "gitDiffStat()"));
 
@@ -143,18 +141,18 @@ class GitReferenceRecorderITest extends GitITest {
         buildAgain(mainBranch);
 
         var featureBranch = createPipeline(FEATURE);
-        featureBranch.setDefinition(asStage(createLocalGitCheckout(FEATURE),
-                "discoverGitReferenceBuild(referenceJob: '" + MAIN + "')"));
+        featureBranch.setDefinition(
+                asStage(createLocalGitCheckout(FEATURE), "discoverGitReferenceBuild(referenceJob: '" + MAIN + "')"));
 
         Run<?, ?> featureBuild = buildSuccessfully(featureBranch);
         assertThat(featureBuild.getNumber()).isEqualTo(1);
 
-        assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
+        assertThat(featureBuild.getAction(ReferenceBuild.class))
+                .isNotNull()
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(mainBuild.getExternalizableId())
                 .hasReferenceBuild(Optional.of(mainBuild))
-                .hasMessages("Configured reference job: 'main'",
-                        "Found reference build '#1' for target branch");
+                .hasMessages("Configured reference job: 'main'", "Found reference build '#1' for target branch");
     }
 
     /**
@@ -177,12 +175,13 @@ class GitReferenceRecorderITest extends GitITest {
     @Issue("JENKINS-72015")
     @ParameterizedTest(name = "should skip failed builds: status: {0} - latestBuildIfNotFound: {1}")
     @CsvSource({
-            "SUCCESS, false", "UNSTABLE, false", ", false",
-            "SUCCESS, true ", "UNSTABLE, true ", ", true "})
-    void shouldSkipFailedBuildsIfStatusIsWorseThanRequired(final String requiredResult, final boolean latestBuildIfNotFound) {
+        "SUCCESS, false", "UNSTABLE, false", ", false",
+        "SUCCESS, true ", "UNSTABLE, true ", ", true "
+    })
+    void shouldSkipFailedBuildsIfStatusIsWorseThanRequired(
+            final String requiredResult, final boolean latestBuildIfNotFound) {
         var mainBranch = createPipeline(MAIN);
-        mainBranch.setDefinition(asStage(createLocalGitCheckout(MAIN)
-                + "error('FAILURE')\n"));
+        mainBranch.setDefinition(asStage(createLocalGitCheckout(MAIN) + "error('FAILURE')\n"));
 
         buildWithResult(mainBranch, Result.FAILURE);
 
@@ -193,8 +192,10 @@ class GitReferenceRecorderITest extends GitITest {
         var latestBuild = buildAgain(mainBranch);
 
         var featureBranch = createPipeline(FEATURE);
-        var requiredParameter = StringUtils.isBlank(requiredResult) ? StringUtils.EMPTY : ", requiredResult: '" + requiredResult + "'";
-        featureBranch.setDefinition(asStage(createLocalGitCheckout(FEATURE),
+        var requiredParameter =
+                StringUtils.isBlank(requiredResult) ? StringUtils.EMPTY : ", requiredResult: '" + requiredResult + "'";
+        featureBranch.setDefinition(asStage(
+                createLocalGitCheckout(FEATURE),
                 "discoverGitReferenceBuild("
                         + "referenceJob: '" + MAIN + "'"
                         + requiredParameter
@@ -208,7 +209,8 @@ class GitReferenceRecorderITest extends GitITest {
         var referenceBuildAssert = assertThat(featureBuild.getAction(ReferenceBuild.class))
                 .isNotNull()
                 .hasOwner(featureBuild)
-                .hasMessages("Configured reference job: 'main'",
+                .hasMessages(
+                        "Configured reference job: 'main'",
                         "-> found build '#1' in reference job with matching commits",
                         "-> ignoring reference build '#1' or one of its predecessors since none have a result of "
                                 + expectedResult + " or better",
@@ -219,10 +221,8 @@ class GitReferenceRecorderITest extends GitITest {
                     .hasReferenceBuild(Optional.of(latestBuild))
                     .hasReferenceBuildId(latestBuild.getExternalizableId())
                     .hasMessages("Falling back to latest completed build of reference job: '#2'");
-        }
-        else {
-            referenceBuildAssert
-                    .hasReferenceBuild(Optional.empty());
+        } else {
+            referenceBuildAssert.hasReferenceBuild(Optional.empty());
         }
     }
 
@@ -252,19 +252,18 @@ class GitReferenceRecorderITest extends GitITest {
         Run<?, ?> successful = buildSuccessfully(mainBranch);
 
         addAdditionalFileTo(MAIN);
-        mainBranch.setDefinition(asStage(createLocalGitCheckout(MAIN)
-                + "error('FAILURE')\n"));
+        mainBranch.setDefinition(asStage(createLocalGitCheckout(MAIN) + "error('FAILURE')\n"));
 
         buildWithResult(mainBranch, Result.FAILURE);
 
         createFeatureBranchAndAddCommits();
 
         var featureBranch = createPipeline(FEATURE);
-        var requiredParameter = StringUtils.isBlank(requiredResult) ? StringUtils.EMPTY : ", requiredResult: '" + requiredResult + "'";
-        featureBranch.setDefinition(asStage(createLocalGitCheckout(FEATURE),
-                "discoverGitReferenceBuild("
-                        + "referenceJob: '" + MAIN + "'"
-                        + requiredParameter + ")"));
+        var requiredParameter =
+                StringUtils.isBlank(requiredResult) ? StringUtils.EMPTY : ", requiredResult: '" + requiredResult + "'";
+        featureBranch.setDefinition(asStage(
+                createLocalGitCheckout(FEATURE),
+                "discoverGitReferenceBuild(" + "referenceJob: '" + MAIN + "'" + requiredParameter + ")"));
 
         Run<?, ?> featureBuild = buildSuccessfully(featureBranch);
         assertThat(featureBuild.getNumber()).isEqualTo(1);
@@ -272,12 +271,13 @@ class GitReferenceRecorderITest extends GitITest {
         assertThat(featureBuild.getAction(ReferenceBuild.class))
                 .isNotNull()
                 .hasOwner(featureBuild)
-                .hasMessages("Configured reference job: 'main'",
+                .hasMessages(
+                        "Configured reference job: 'main'",
                         "-> found build '#2' in reference job with matching commits",
                         "Found reference build '#2' for target branch",
                         "-> Previous build '#1' has a result SUCCESS")
-                    .hasReferenceBuild(Optional.of(successful))
-                    .hasReferenceBuildId(successful.getExternalizableId());
+                .hasReferenceBuild(Optional.of(successful))
+                .hasReferenceBuildId(successful.getExternalizableId());
     }
 
     /**
@@ -295,16 +295,19 @@ class GitReferenceRecorderITest extends GitITest {
         createFeatureBranchAndAddCommits();
 
         var featureBranch = createPipeline(FEATURE);
-        featureBranch.setDefinition(asStage(createLocalGitCheckout(FEATURE),
+        featureBranch.setDefinition(asStage(
+                createLocalGitCheckout(FEATURE),
                 "discoverGitReferenceBuild(referenceJob: '" + MAIN + "')",
                 "gitDiffStat()"));
 
         Run<?, ?> featureBuild = buildSuccessfully(featureBranch);
         assertThat(featureBuild.getNumber()).isEqualTo(1);
-        assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
+        assertThat(featureBuild.getAction(ReferenceBuild.class))
+                .isNotNull()
                 .hasOwner(featureBuild)
                 .hasReferenceBuild(Optional.empty())
-                .hasMessages("Configured reference job: 'main'",
+                .hasMessages(
+                        "Configured reference job: 'main'",
                         "-> selected build '#1' of reference job does not yet contain a `GitCommitsRecord`",
                         "-> no reference build found");
     }
@@ -330,9 +333,7 @@ class GitReferenceRecorderITest extends GitITest {
     @Issue("JENKINS-64578")
     void shouldFindCorrectBuildInPipelinesWithMultipleReposInReference() {
         var mainBranch = createPipeline(MAIN);
-        mainBranch.setDefinition(asStage(
-                createForensicsCheckoutStep(),
-                createLocalGitCheckout(MAIN)));
+        mainBranch.setDefinition(asStage(createForensicsCheckoutStep(), createLocalGitCheckout(MAIN)));
 
         Run<?, ?> mainBuild = buildSuccessfully(mainBranch);
 
@@ -350,9 +351,7 @@ class GitReferenceRecorderITest extends GitITest {
     @Issue("JENKINS-75429")
     void shouldMatchCaseInsensitive() {
         var mainBranch = createPipeline(MAIN);
-        mainBranch.setDefinition(asStage(
-                createForensicsCheckoutStep(),
-                createLocalGitCheckout(MAIN)));
+        mainBranch.setDefinition(asStage(createForensicsCheckoutStep(), createLocalGitCheckout(MAIN)));
 
         Run<?, ?> mainBuild = buildSuccessfully(mainBranch);
 
@@ -383,8 +382,7 @@ class GitReferenceRecorderITest extends GitITest {
     @Issue("JENKINS-64578")
     void shouldFindCorrectBuildInPipelinesWithMultipleReposInFeature() {
         var mainBranch = createPipeline(MAIN);
-        mainBranch.setDefinition(asStage(
-                createLocalGitCheckout(MAIN)));
+        mainBranch.setDefinition(asStage(createLocalGitCheckout(MAIN)));
 
         Run<?, ?> mainBuild = buildSuccessfully(mainBranch);
 
@@ -423,14 +421,19 @@ class GitReferenceRecorderITest extends GitITest {
         checkout(MAIN);
         var mainCommit = getHead();
 
-        assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
+        assertThat(featureBuild.getAction(ReferenceBuild.class))
+                .isNotNull()
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(mainBuild.getExternalizableId())
                 .hasReferenceBuild(Optional.of(mainBuild))
-                .hasMessages("Configured reference job: 'main'",
-                "-> detected 2 commits in current branch (last one: '%s')".formatted(DECORATOR.asText(featureCommit)),
-                "-> adding 1 commits from build '#1' of reference job (last one: '%s')".formatted(DECORATOR.asText(mainCommit)),
-                "-> found a matching commit in current branch and target branch: '%s'".formatted(DECORATOR.asText(mainCommit)),
+                .hasMessages(
+                        "Configured reference job: 'main'",
+                        "-> detected 2 commits in current branch (last one: '%s')"
+                                .formatted(DECORATOR.asText(featureCommit)),
+                        "-> adding 1 commits from build '#1' of reference job (last one: '%s')"
+                                .formatted(DECORATOR.asText(mainCommit)),
+                        "-> found a matching commit in current branch and target branch: '%s'"
+                                .formatted(DECORATOR.asText(mainCommit)),
                         "Found reference build '#1' for target branch");
     }
 
@@ -462,15 +465,20 @@ class GitReferenceRecorderITest extends GitITest {
         var featureBuild = verifyFeatureBuild(project, 1);
         verifyRecordSize(featureBuild, 3);
 
-        assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
+        assertThat(featureBuild.getAction(ReferenceBuild.class))
+                .isNotNull()
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(mainBuild.getExternalizableId())
                 .hasReferenceBuild(Optional.of(mainBuild))
-                .hasMessages(MULTI_BRANCH_PROJECT,
+                .hasMessages(
+                        MULTI_BRANCH_PROJECT,
                         MAIN_IS_TARGET,
-                "-> detected 3 commits in current branch (last one: '%s')".formatted(DECORATOR.asText(featureCommit)),
-                "-> adding 2 commits from build '#1' of reference job (last one: '%s')".formatted(DECORATOR.asText(mainCommit)),
-                "-> found a matching commit in current branch and target branch: '%s'".formatted(DECORATOR.asText(mainCommit)),
+                        "-> detected 3 commits in current branch (last one: '%s')"
+                                .formatted(DECORATOR.asText(featureCommit)),
+                        "-> adding 2 commits from build '#1' of reference job (last one: '%s')"
+                                .formatted(DECORATOR.asText(mainCommit)),
+                        "-> found a matching commit in current branch and target branch: '%s'"
+                                .formatted(DECORATOR.asText(mainCommit)),
                         "-> found build '#1' in reference job with matching commits");
     }
 
@@ -483,7 +491,8 @@ class GitReferenceRecorderITest extends GitITest {
      *   F:  [F2]#1}
      * </pre>
      */
-    @Test @Issue("JENKINS-64544")
+    @Test
+    @Issue("JENKINS-64544")
     void shouldFindCorrectBuildForMultibranchPipelineWithComplexBranchNames() {
         var target = "releases/warnings-2021";
 
@@ -501,7 +510,8 @@ class GitReferenceRecorderITest extends GitITest {
         var featureBuild = verifyBuild(project, 1, feature, StringUtils.upperCase(feature));
         verifyRecordSize(featureBuild, 3);
 
-        assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
+        assertThat(featureBuild.getAction(ReferenceBuild.class))
+                .isNotNull()
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(mainBuild.getExternalizableId())
                 .hasReferenceBuild(Optional.of(mainBuild));
@@ -538,17 +548,23 @@ class GitReferenceRecorderITest extends GitITest {
         var featureBuild = verifyFeatureBuild(project, 1);
         verifyRecordSize(featureBuild, 3);
 
-        assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
+        assertThat(featureBuild.getAction(ReferenceBuild.class))
+                .isNotNull()
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(mainBuild.getExternalizableId())
                 .hasReferenceBuild(Optional.of(mainBuild))
-                .hasMessages(MULTI_BRANCH_PROJECT,
+                .hasMessages(
+                        MULTI_BRANCH_PROJECT,
                         MAIN_IS_TARGET,
-                "-> detected 3 commits in current branch (last one: '%s')".formatted(DECORATOR.asText(featureCommit)),
-                "-> adding 1 commits from build '#2' of reference job (last one: '%s')".formatted(DECORATOR.asText(mainCommit)),
+                        "-> detected 3 commits in current branch (last one: '%s')"
+                                .formatted(DECORATOR.asText(featureCommit)),
+                        "-> adding 1 commits from build '#2' of reference job (last one: '%s')"
+                                .formatted(DECORATOR.asText(mainCommit)),
                         "-> no matching commit found yet, continuing with commits of previous build of '#2'",
-                "-> adding 2 commits from build '#1' of reference job (last one: '%s')".formatted(DECORATOR.asText(initialMain)),
-                "-> found a matching commit in current branch and target branch: '%s'".formatted(DECORATOR.asText(initialMain)),
+                        "-> adding 2 commits from build '#1' of reference job (last one: '%s')"
+                                .formatted(DECORATOR.asText(initialMain)),
+                        "-> found a matching commit in current branch and target branch: '%s'"
+                                .formatted(DECORATOR.asText(initialMain)),
                         "-> found build '#1' in reference job with matching commits");
 
         assertThat(getCommitStatisticsOf(featureBuild))
@@ -596,7 +612,9 @@ class GitReferenceRecorderITest extends GitITest {
                 .hasAddedLines(3)
                 .hasDeletedLines(2);
 
-        assertThat(firstFeature.getAction(ReferenceBuild.class)).as(getLog(firstFeature)).isNotNull()
+        assertThat(firstFeature.getAction(ReferenceBuild.class))
+                .as(getLog(firstFeature))
+                .isNotNull()
                 .hasOwner(firstFeature); // we do not care about the reference of the first feature build
 
         var featureCommit = changeContentOfAdditionalFile(FEATURE, FEATURE + " content");
@@ -605,14 +623,18 @@ class GitReferenceRecorderITest extends GitITest {
         var featureBuild = verifyFeatureBuild(project, 2);
         verifyRecordSize(featureBuild, 1);
 
-        assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
+        assertThat(featureBuild.getAction(ReferenceBuild.class))
+                .isNotNull()
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(nextMaster.getExternalizableId())
                 .hasReferenceBuild(Optional.of(nextMaster))
-                .hasMessages(MULTI_BRANCH_PROJECT,
+                .hasMessages(
+                        MULTI_BRANCH_PROJECT,
                         MAIN_IS_TARGET,
-                "-> detected 5 commits in current branch (last one: '%s')".formatted(DECORATOR.asText(featureCommit)),
-                "-> adding 2 commits from build '#2' of reference job (last one: '%s')".formatted(DECORATOR.asText(mainCommit)),
+                        "-> detected 5 commits in current branch (last one: '%s')"
+                                .formatted(DECORATOR.asText(featureCommit)),
+                        "-> adding 2 commits from build '#2' of reference job (last one: '%s')"
+                                .formatted(DECORATOR.asText(mainCommit)),
                         "-> found build '#2' in reference job with matching commits");
 
         assertThat(getCommitStatisticsOf(featureBuild))
@@ -658,16 +680,21 @@ class GitReferenceRecorderITest extends GitITest {
         var featureBuild = verifyFeatureBuild(project, 1);
         verifyRecordSize(featureBuild, 4);
 
-        assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
+        assertThat(featureBuild.getAction(ReferenceBuild.class))
+                .isNotNull()
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(mainBuild.getExternalizableId())
                 .hasReferenceBuild(Optional.of(mainBuild))
-                .hasMessages(MULTI_BRANCH_PROJECT,
+                .hasMessages(
+                        MULTI_BRANCH_PROJECT,
                         MAIN_IS_TARGET,
-                "-> detected 4 commits in current branch (last one: '%s')".formatted(DECORATOR.asText(featureCommit)),
-                "-> adding 2 commits from build '#2' of reference job (last one: '%s')".formatted(DECORATOR.asText(mainCommit)),
+                        "-> detected 4 commits in current branch (last one: '%s')"
+                                .formatted(DECORATOR.asText(featureCommit)),
+                        "-> adding 2 commits from build '#2' of reference job (last one: '%s')"
+                                .formatted(DECORATOR.asText(mainCommit)),
                         "-> not all commits of target branch are part of the collected reference builds yet",
-                "-> adding 2 commits from build '#1' of reference job (last one: '%s')".formatted(DECORATOR.asText(firstMainCommit)),
+                        "-> adding 2 commits from build '#1' of reference job (last one: '%s')"
+                                .formatted(DECORATOR.asText(firstMainCommit)),
                         "-> found build '#1' in reference job with matching commits");
     }
 
@@ -704,13 +731,17 @@ class GitReferenceRecorderITest extends GitITest {
         var featureBuild = verifyFeatureBuild(project, 1);
         verifyRecordSize(featureBuild, 4);
 
-        assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
+        assertThat(featureBuild.getAction(ReferenceBuild.class))
+                .isNotNull()
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(ReferenceBuild.NO_REFERENCE_BUILD)
                 .hasReferenceBuild(Optional.empty())
-                .hasMessages(MULTI_BRANCH_PROJECT,
-                "-> detected 4 commits in current branch (last one: '%s')".formatted(DECORATOR.asText(featureHead)),
-                "-> adding 1 commits from build '#2' of reference job (last one: '%s')".formatted(DECORATOR.asText(mainHead)),
+                .hasMessages(
+                        MULTI_BRANCH_PROJECT,
+                        "-> detected 4 commits in current branch (last one: '%s')"
+                                .formatted(DECORATOR.asText(featureHead)),
+                        "-> adding 1 commits from build '#2' of reference job (last one: '%s')"
+                                .formatted(DECORATOR.asText(mainHead)),
                         "-> no matching commit found yet, continuing with commits of previous build of '#2'",
                         "-> stopping commit search since the #commits of the target builds is 1 and the limit `maxCommits` has been set to 1",
                         "-> no reference build found");
@@ -749,7 +780,8 @@ class GitReferenceRecorderITest extends GitITest {
         var featureBuild = verifyFeatureBuild(project, 1);
         verifyRecordSize(featureBuild, 5);
 
-        assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
+        assertThat(featureBuild.getAction(ReferenceBuild.class))
+                .isNotNull()
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(nextMaster.getExternalizableId())
                 .hasReferenceBuild(Optional.of(nextMaster));
@@ -787,7 +819,8 @@ class GitReferenceRecorderITest extends GitITest {
         buildProject(project);
         var featureBuild = verifyFeatureBuild(project, 1);
         verifyRecordSize(featureBuild, 3);
-        assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
+        assertThat(featureBuild.getAction(ReferenceBuild.class))
+                .isNotNull()
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(mainBuild.getExternalizableId())
                 .hasReferenceBuild(Optional.of(mainBuild));
@@ -799,7 +832,8 @@ class GitReferenceRecorderITest extends GitITest {
         var anotherBranch = findBranchProject(project, "feature2").getLastBuild();
         verifyRecordSize(anotherBranch, 4);
 
-        assertThat(anotherBranch.getAction(ReferenceBuild.class)).isNotNull()
+        assertThat(anotherBranch.getAction(ReferenceBuild.class))
+                .isNotNull()
                 .hasOwner(anotherBranch)
                 .hasReferenceBuildId(mainBuild.getExternalizableId())
                 .hasReferenceBuild(Optional.of(mainBuild));
@@ -841,7 +875,8 @@ class GitReferenceRecorderITest extends GitITest {
         var featureBuild = verifyFeatureBuild(project, 1);
         verifyRecordSize(featureBuild, 3);
 
-        assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
+        assertThat(featureBuild.getAction(ReferenceBuild.class))
+                .isNotNull()
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(ReferenceBuild.NO_REFERENCE_BUILD)
                 .hasReferenceBuild(Optional.empty());
@@ -888,7 +923,8 @@ class GitReferenceRecorderITest extends GitITest {
         var featureBuild = verifyFeatureBuild(project, 2);
         verifyRecordSize(nextMaster, 1);
 
-        assertThat(featureBuild.getAction(ReferenceBuild.class)).isNotNull()
+        assertThat(featureBuild.getAction(ReferenceBuild.class))
+                .isNotNull()
                 .hasOwner(featureBuild)
                 .hasReferenceBuildId(nextMaster.getExternalizableId())
                 .hasReferenceBuild(Optional.of(nextMaster));
@@ -896,18 +932,19 @@ class GitReferenceRecorderITest extends GitITest {
 
     private WorkflowMultiBranchProject initializeGitAndMultiBranchProject() {
         try {
-            writeFile(JENKINS_FILE, "echo \"branch=${env.BRANCH_NAME}\"; "
-                    + "node {checkout scm; echo readFile('file'); "
-                    + "echo \"GitForensics\"; "
-                    + "discoverGitReferenceBuild();"
-                    + "gitDiffStat()}");
+            writeFile(
+                    JENKINS_FILE,
+                    "echo \"branch=${env.BRANCH_NAME}\"; "
+                            + "node {checkout scm; echo readFile('file'); "
+                            + "echo \"GitForensics\"; "
+                            + "discoverGitReferenceBuild();"
+                            + "gitDiffStat()}");
             writeFile(SOURCE_FILE, MAIN + " content");
             addFile(JENKINS_FILE);
             commit("initial content");
 
             return createMultiBranchProject();
-        }
-        catch (Exception exception) {
+        } catch (Exception exception) {
             throw new AssertionError(exception);
         }
     }
@@ -921,17 +958,19 @@ class GitReferenceRecorderITest extends GitITest {
     private String createBranchAndAddCommits(final String branch, final String... parameters) {
         try {
             checkoutNewBranch(branch);
-            writeFile(JENKINS_FILE,
-                    String.format("echo \"branch=${env.BRANCH_NAME}\";"
-                            + "node {checkout scm; echo readFile('file').toUpperCase(); "
-                            + "echo \"GitForensics\"; "
-                            + "discoverGitReferenceBuild(%s);"
-                            + "gitDiffStat()}", String.join(",", parameters)));
+            writeFile(
+                    JENKINS_FILE,
+                    String.format(
+                            "echo \"branch=${env.BRANCH_NAME}\";"
+                                    + "node {checkout scm; echo readFile('file').toUpperCase(); "
+                                    + "echo \"GitForensics\"; "
+                                    + "discoverGitReferenceBuild(%s);"
+                                    + "gitDiffStat()}",
+                            String.join(",", parameters)));
             writeFile(SOURCE_FILE, branch + " content");
             commit(branch + " changes");
             return getHead();
-        }
-        catch (Exception exception) {
+        } catch (Exception exception) {
             throw new AssertionError(exception);
         }
     }
@@ -951,8 +990,7 @@ class GitReferenceRecorderITest extends GitITest {
     private void delete(final String toDeleteId) {
         try {
             Objects.requireNonNull(Run.fromExternalizableId(toDeleteId)).delete();
-        }
-        catch (IOException exception) {
+        } catch (IOException exception) {
             throw new AssertionError(exception);
         }
     }
@@ -966,22 +1004,26 @@ class GitReferenceRecorderITest extends GitITest {
     }
 
     @SuppressWarnings("PMD.SystemPrintln")
-    private WorkflowRun verifyBuild(final WorkflowMultiBranchProject project, final int buildNumber,
-            final String branch, final String branchContent) {
+    private WorkflowRun verifyBuild(
+            final WorkflowMultiBranchProject project,
+            final int buildNumber,
+            final String branch,
+            final String branchContent) {
         try {
             var p = findBranchProject(project, branch);
 
-            System.out.println("====================================================================================================");
+            System.out.println(
+                    "====================================================================================================");
             git("log");
-            System.out.println("====================================================================================================");
+            System.out.println(
+                    "====================================================================================================");
             var build = p.getLastBuild();
             assertThat(build.getNumber()).isEqualTo(buildNumber);
             assertThatLogContains(build, branchContent);
             assertThatLogContains(build, "branch=" + branch);
 
             return build;
-        }
-        catch (Exception exception) {
+        } catch (Exception exception) {
             throw new AssertionError(exception);
         }
     }
@@ -993,8 +1035,7 @@ class GitReferenceRecorderITest extends GitITest {
     private WorkflowRun buildAgain(final WorkflowJob build) {
         try {
             return Objects.requireNonNull(build.scheduleBuild2(0)).get();
-        }
-        catch (Exception exception) {
+        } catch (Exception exception) {
             throw new AssertionError(exception);
         }
     }
@@ -1005,8 +1046,7 @@ class GitReferenceRecorderITest extends GitITest {
             showIndexing(project);
 
             getJenkins().waitUntilNoActivity();
-        }
-        catch (Exception exception) {
+        } catch (Exception exception) {
             throw new AssertionError(exception);
         }
     }
@@ -1015,16 +1055,15 @@ class GitReferenceRecorderITest extends GitITest {
     private WorkflowMultiBranchProject createMultiBranchProject() {
         try {
             var project = createProject(WorkflowMultiBranchProject.class);
-            project.getSourcesList().add(
-                    new BranchSource(new GitSCMSource(null, getGitRepositoryPath(), "", "*",
-                            "", false),
+            project.getSourcesList()
+                    .add(new BranchSource(
+                            new GitSCMSource(null, getGitRepositoryPath(), "", "*", "", false),
                             new DefaultBranchPropertyStrategy(new BranchProperty[0])));
             for (SCMSource source : project.getSCMSources()) {
                 assertThat(project).isEqualTo(source.getOwner());
             }
             return project;
-        }
-        catch (Exception exception) {
+        } catch (Exception exception) {
             throw new AssertionError(exception);
         }
     }

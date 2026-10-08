@@ -2,20 +2,17 @@ package io.jenkins.plugins.forensics.git.miner;
 
 import edu.hm.hafner.util.FilteredLog;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
-import java.io.IOException;
-import java.io.Serial;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import org.jenkinsci.plugins.gitclient.GitClient;
-
 import io.jenkins.plugins.forensics.git.util.RemoteResultWrapper;
 import io.jenkins.plugins.forensics.miner.CommitDiffItem;
 import io.jenkins.plugins.forensics.miner.CommitStatistics;
 import io.jenkins.plugins.forensics.miner.RepositoryMiner;
 import io.jenkins.plugins.forensics.miner.RepositoryStatistics;
+import java.io.IOException;
+import java.io.Serial;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import org.jenkinsci.plugins.gitclient.GitClient;
 
 /**
  * Mines a Git repository and creates statistics for all available files.
@@ -46,10 +43,9 @@ public class GitRepositoryMiner extends RepositoryMiner {
             throws InterruptedException {
         try {
             long nano = System.nanoTime();
-            logger.logInfo("Analyzing the commit log of the Git repository '%s'",
-                    gitClient.getWorkTree());
-            RemoteResultWrapper<ArrayList<CommitDiffItem>> wrapped = gitClient.withRepository(
-                    new RepositoryStatisticsCallback(previous.getLatestCommitId()));
+            logger.logInfo("Analyzing the commit log of the Git repository '%s'", gitClient.getWorkTree());
+            RemoteResultWrapper<ArrayList<CommitDiffItem>> wrapped =
+                    gitClient.withRepository(new RepositoryStatisticsCallback(previous.getLatestCommitId()));
             logger.merge(wrapped);
 
             List<CommitDiffItem> commits = wrapped.getResult();
@@ -59,8 +55,7 @@ public class GitRepositoryMiner extends RepositoryMiner {
             String latestCommitId;
             if (commits.isEmpty()) {
                 latestCommitId = previous.getLatestCommitId();
-            }
-            else {
+            } else {
                 latestCommitId = commits.get(0).getId();
             }
             var current = new RepositoryStatistics(latestCommitId);
@@ -68,10 +63,8 @@ public class GitRepositoryMiner extends RepositoryMiner {
             Collections.reverse(commits); // make sure that we start with old commits to preserve the history
             current.addAll(commits);
             return current;
-        }
-        catch (IOException exception) {
-            logger.logException(exception,
-                    "Exception occurred while mining the Git repository using GitClient");
+        } catch (IOException exception) {
+            logger.logException(exception, "Exception occurred while mining the Git repository using GitClient");
             return new RepositoryStatistics();
         }
     }

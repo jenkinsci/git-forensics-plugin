@@ -1,5 +1,11 @@
 package io.jenkins.plugins.forensics.git.miner;
 
+import edu.hm.hafner.util.FilteredLog;
+import edu.hm.hafner.util.TreeStringBuilder;
+import io.jenkins.plugins.forensics.miner.CommitDiffItem;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
@@ -11,15 +17,6 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.treewalk.AbstractTreeIterator;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
 
-import edu.hm.hafner.util.FilteredLog;
-import edu.hm.hafner.util.TreeStringBuilder;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import io.jenkins.plugins.forensics.miner.CommitDiffItem;
-
 /**
  * Collects delta information (added and deleted lines of code) for all files that are part of a given commit.
  *
@@ -28,9 +25,12 @@ import io.jenkins.plugins.forensics.miner.CommitDiffItem;
  */
 public class DiffsCollector {
     List<CommitDiffItem> getDiffsForCommit(
-            final Repository repository, final Git git,
-            final CommitDiffItem fromCommit, final AbstractTreeIterator toTree,
-            final TreeStringBuilder fileNameBuilder, final FilteredLog logger) {
+            final Repository repository,
+            final Git git,
+            final CommitDiffItem fromCommit,
+            final AbstractTreeIterator toTree,
+            final TreeStringBuilder fileNameBuilder,
+            final FilteredLog logger) {
         List<CommitDiffItem> commits = new ArrayList<>();
         try (var formatter = new DiffFormatter(DisabledOutputStream.INSTANCE)) {
             formatter.setRepository(repository);
@@ -53,8 +53,7 @@ public class DiffsCollector {
                 }
                 commits.add(commit);
             }
-        }
-        catch (IOException | GitAPIException exception) {
+        } catch (IOException | GitAPIException exception) {
             logger.logException(exception, "Can't compute diffs for commit " + fromCommit);
         }
         return commits;

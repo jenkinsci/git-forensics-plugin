@@ -1,22 +1,18 @@
 package io.jenkins.plugins.forensics.git.delta;
 
-import org.apache.commons.lang3.StringUtils;
-
 import edu.hm.hafner.util.FilteredLog;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
-import java.io.IOException;
-import java.io.Serial;
-import java.util.Optional;
-
-import org.jenkinsci.plugins.gitclient.GitClient;
 import hudson.model.Run;
-
 import io.jenkins.plugins.forensics.delta.Delta;
 import io.jenkins.plugins.forensics.delta.DeltaCalculator;
 import io.jenkins.plugins.forensics.git.reference.GitCommitsRecord;
 import io.jenkins.plugins.forensics.git.util.GitCommitTextDecorator;
 import io.jenkins.plugins.forensics.git.util.RemoteResultWrapper;
+import java.io.IOException;
+import java.io.Serial;
+import java.util.Optional;
+import org.apache.commons.lang3.StringUtils;
+import org.jenkinsci.plugins.gitclient.GitClient;
 
 /**
  * A {@link DeltaCalculator} for Git.
@@ -27,13 +23,16 @@ import io.jenkins.plugins.forensics.git.util.RemoteResultWrapper;
 public class GitDeltaCalculator extends DeltaCalculator {
     @Serial
     private static final long serialVersionUID = -7303579046266608368L;
+
     private static final GitCommitTextDecorator DECORATOR = new GitCommitTextDecorator();
 
     static final String DELTA_ERROR = "Computing delta information failed with an exception:";
-    static final String EMPTY_COMMIT_ERROR = "Calculating the Git code delta is not possible due to an unknown commit ID";
+    static final String EMPTY_COMMIT_ERROR =
+            "Calculating the Git code delta is not possible due to an unknown commit ID";
 
     @SuppressWarnings("serial")
     private final GitClient git;
+
     private final String scmKey;
 
     /**
@@ -53,8 +52,8 @@ public class GitDeltaCalculator extends DeltaCalculator {
 
     @Override
     @SuppressWarnings("deprecation")
-    public Optional<Delta> calculateDelta(final Run<?, ?> build, final Run<?, ?> referenceBuild,
-            final String scmKeyFilter, final FilteredLog log) {
+    public Optional<Delta> calculateDelta(
+            final Run<?, ?> build, final Run<?, ?> referenceBuild, final String scmKeyFilter, final FilteredLog log) {
         var scm = StringUtils.defaultIfEmpty(scmKeyFilter, scmKey);
         Optional<GitCommitsRecord> buildCommits = GitCommitsRecord.findRecordForScm(build, scm);
         Optional<GitCommitsRecord> referenceCommits = GitCommitsRecord.findRecordForScm(referenceBuild, scm);
@@ -62,18 +61,19 @@ public class GitDeltaCalculator extends DeltaCalculator {
             var currentCommit = getLatestCommit(build.getFullDisplayName(), buildCommits.get(), log);
             var referenceCommit = getLatestCommit(referenceBuild.getFullDisplayName(), referenceCommits.get(), log);
             if (!currentCommit.isEmpty() && !referenceCommit.isEmpty()) {
-                log.logInfo("-> Invoking Git delta calculator for determining the changes between "
+                log.logInfo(
+                        "-> Invoking Git delta calculator for determining the changes between "
                                 + "commits '%s' and '%s' in repository '%s'",
-                        DECORATOR.asText(currentCommit), DECORATOR.asText(referenceCommit),
+                        DECORATOR.asText(currentCommit),
+                        DECORATOR.asText(referenceCommit),
                         git.getWorkTree().getRemote());
                 try {
-                    RemoteResultWrapper<Delta> wrapped = git.withRepository(
-                            new DeltaRepositoryCallback(currentCommit, referenceCommit));
+                    RemoteResultWrapper<Delta> wrapped =
+                            git.withRepository(new DeltaRepositoryCallback(currentCommit, referenceCommit));
                     wrapped.getInfoMessages().forEach(log::logInfo);
                     wrapped.getErrorMessages().forEach(log::logError);
                     return Optional.of(wrapped.getResult());
-                }
-                catch (IOException | InterruptedException exception) {
+                } catch (IOException | InterruptedException exception) {
                     log.logException(exception, DELTA_ERROR);
                     return Optional.empty();
                 }
@@ -97,7 +97,8 @@ public class GitDeltaCalculator extends DeltaCalculator {
      */
     private String getLatestCommit(final String buildName, final GitCommitsRecord record, final FilteredLog log) {
         var latestCommitId = record.getLatestCommit();
-        log.logInfo("-> Using commit '%s' as latest commit for build '%s'", DECORATOR.asText(latestCommitId), buildName);
+        log.logInfo(
+                "-> Using commit '%s' as latest commit for build '%s'", DECORATOR.asText(latestCommitId), buildName);
         return latestCommitId;
     }
 }

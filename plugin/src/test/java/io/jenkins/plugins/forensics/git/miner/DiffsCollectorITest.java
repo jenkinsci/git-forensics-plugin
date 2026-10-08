@@ -1,21 +1,18 @@
 package io.jenkins.plugins.forensics.git.miner;
 
+import static io.jenkins.plugins.forensics.assertions.Assertions.*;
+
+import edu.hm.hafner.util.FilteredLog;
+import edu.hm.hafner.util.TreeStringBuilder;
+import io.jenkins.plugins.forensics.git.util.GitITest;
+import io.jenkins.plugins.forensics.miner.CommitDiffItem;
+import java.io.IOException;
+import java.util.List;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.treewalk.AbstractTreeIterator;
 import org.eclipse.jgit.treewalk.EmptyTreeIterator;
 import org.junit.jupiter.api.Test;
-
-import edu.hm.hafner.util.FilteredLog;
-import edu.hm.hafner.util.TreeStringBuilder;
-
-import java.io.IOException;
-import java.util.List;
-
-import io.jenkins.plugins.forensics.git.util.GitITest;
-import io.jenkins.plugins.forensics.miner.CommitDiffItem;
-
-import static io.jenkins.plugins.forensics.assertions.Assertions.*;
 
 /**
  * Tests the class {@link DiffsCollector}.
@@ -179,10 +176,13 @@ class DiffsCollectorITest extends GitITest {
     /** Verifies that moving and changing a file correctly identifies the changed lines in the moved file. */
     @Test
     void shouldHandleMovedAndChangedFiles() {
-        writeFileAsAuthorBar("1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n");
+        writeFileAsAuthorBar(
+                "1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n");
         var initialCommit = getHead();
         git("mv", ADDITIONAL_FILE, MOVED_FILE);
-        writeFile(MOVED_FILE, "1 =====\n2a =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n2 =====\n3 =====\n4 =====\n5 =====\n");
+        writeFile(
+                MOVED_FILE,
+                "1 =====\n2a =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n2 =====\n3 =====\n4 =====\n5 =====\n");
         commit("Moved and changed file");
 
         verifyMovedAndChangedFile(initialCommit);
@@ -191,9 +191,12 @@ class DiffsCollectorITest extends GitITest {
     /** Verifies that changing and moving a file correctly identifies the changed lines in the moved file. */
     @Test
     void shouldHandleChangedAndMovedFiles() {
-        writeFileAsAuthorBar("1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n");
+        writeFileAsAuthorBar(
+                "1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n");
         var initialCommit = getHead();
-        writeFile(ADDITIONAL_FILE, "1 =====\n2a =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n2 =====\n3 =====\n4 =====\n5 =====\n");
+        writeFile(
+                ADDITIONAL_FILE,
+                "1 =====\n2a =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n1 =====\n2 =====\n3 =====\n4 =====\n5 =====\n2 =====\n3 =====\n4 =====\n5 =====\n");
         git("mv", ADDITIONAL_FILE, MOVED_FILE);
         commit("Moved and changed file");
 
@@ -214,18 +217,23 @@ class DiffsCollectorITest extends GitITest {
         });
     }
 
-    private List<CommitDiffItem> createDiff(final Repository repository,
-            final Git git, final String newCommit, final String oldCommit) throws IOException {
-        AbstractTreeIterator toTree = CommitAnalyzer.createTreeIteratorFor(oldCommit, repository, new FilteredLog("empty"));
+    private List<CommitDiffItem> createDiff(
+            final Repository repository, final Git git, final String newCommit, final String oldCommit)
+            throws IOException {
+        AbstractTreeIterator toTree =
+                CommitAnalyzer.createTreeIteratorFor(oldCommit, repository, new FilteredLog("empty"));
         return createDiff(repository, git, newCommit, toTree);
     }
 
-    private List<CommitDiffItem> createDiff(final Repository repository, final Git git, final String newCommit,
-            final AbstractTreeIterator toTree) {
+    private List<CommitDiffItem> createDiff(
+            final Repository repository, final Git git, final String newCommit, final AbstractTreeIterator toTree) {
         var collector = new DiffsCollector();
-        return collector.getDiffsForCommit(repository, git,
+        return collector.getDiffsForCommit(
+                repository,
+                git,
                 new CommitDiffItem(newCommit, AUTHOR, 0),
-                toTree, new TreeStringBuilder(), new FilteredLog("Errors")
-        );
+                toTree,
+                new TreeStringBuilder(),
+                new FilteredLog("Errors"));
     }
 }
