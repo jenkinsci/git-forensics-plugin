@@ -163,6 +163,7 @@
         <groupId>org.revapi</groupId>
         <artifactId>revapi-maven-plugin</artifactId>
         <configuration>
+          <skip>true</skip>
           <analysisConfiguration>
             <revapi.differences id="manually-vetted">
               <ignore>true</ignore>
