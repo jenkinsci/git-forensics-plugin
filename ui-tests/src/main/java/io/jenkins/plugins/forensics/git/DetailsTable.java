@@ -1,14 +1,13 @@
 package io.jenkins.plugins.forensics.git;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.Keys;
-import org.openqa.selenium.WebElement;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
+import org.openqa.selenium.By;
+import org.openqa.selenium.Keys;
+import org.openqa.selenium.WebElement;
 
 /**
  * Page object for the details-table of the forensics view.
@@ -31,13 +30,11 @@ public final class DetailsTable {
     /**
      * constructor for DetailsTable.
      *
-     * @param scmForensics
-     *         reference to the parent scmForensics Page.
+     * @param scmForensics reference to the parent scmForensics Page.
      */
     public DetailsTable(final ScmForensics scmForensics) {
         page = scmForensics.find(By.id("forensics_wrapper"));
-        headers = page.findElements(By.xpath(".//thead/tr/th"))
-                .stream()
+        headers = page.findElements(By.xpath(".//thead/tr/th")).stream()
                 .map(WebElement::getText)
                 .collect(Collectors.toList());
         updateTableRows();
@@ -95,8 +92,7 @@ public final class DetailsTable {
     /**
      * click on pagination button. If param is greater than amount of Pages, click on last Page.
      *
-     * @param paginationNumber
-     *         page number we want to click on.
+     * @param paginationNumber page number we want to click on.
      */
     public void clickOnPagination(final int paginationNumber) {
         List<WebElement> pages = this.page.findElements(By.xpath(".//ul/li"));
@@ -108,8 +104,7 @@ public final class DetailsTable {
     /**
      * search for a table entry.
      *
-     * @param searchString
-     *         entry we want to search for.
+     * @param searchString entry we want to search for.
      */
     public void searchTable(final String searchString) {
         WebElement searchBar = page.findElement(By.tagName("input"));
@@ -117,9 +112,7 @@ public final class DetailsTable {
         updateTableRows();
     }
 
-    /**
-     * clears the search field.
-     */
+    /** clears the search field. */
     public void clearSearch() {
         WebElement searchBar = page.findElement(By.tagName("input"));
         searchBar.clear();
@@ -127,9 +120,7 @@ public final class DetailsTable {
         updateTableRows();
     }
 
-    /**
-     * selects ten entries to be shown in the table.
-     */
+    /** selects ten entries to be shown in the table. */
     public void showTenEntries() {
         WebElement customSelect = page.findElement(By.tagName("select"));
         customSelect.click();
@@ -137,9 +128,7 @@ public final class DetailsTable {
         updateTableRows();
     }
 
-    /**
-     * selects fifty entries to be shown in the table.
-     */
+    /** selects fifty entries to be shown in the table. */
     public void showFiftyEntries() {
         WebElement customSelect = page.findElement(By.tagName("select"));
         customSelect.click();
@@ -150,8 +139,7 @@ public final class DetailsTable {
     /**
      * sorts the table for a certain column.
      *
-     * @param headerName
-     *         name of the column we want to sort.
+     * @param headerName name of the column we want to sort.
      */
     public void sortColumn(final String headerName) {
         int option = getHeaders().indexOf(headerName);

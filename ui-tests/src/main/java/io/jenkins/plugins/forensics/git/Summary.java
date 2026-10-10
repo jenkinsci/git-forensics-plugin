@@ -1,15 +1,13 @@
 package io.jenkins.plugins.forensics.git;
 
-import org.apache.commons.lang3.StringUtils;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebElement;
-
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
+import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.test.acceptance.po.Build;
 import org.jenkinsci.test.acceptance.po.PageObject;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
 
 /**
  * {@link PageObject} representing the analysis summary on the build page of a job.
@@ -29,10 +27,8 @@ public class Summary extends PageObject {
     /**
      * Creates a new page object representing the analysis summary on the build page of a job.
      *
-     * @param parent
-     *         a finished build configured with a static analysis tool
-     * @param id
-     *         the type of the result page (e.g. simian, checkstyle, cpd, etc.)
+     * @param parent a finished build configured with a static analysis tool
+     * @param id the type of the result page (e.g. simian, checkstyle, cpd, etc.)
      */
     @SuppressWarnings({"PMD.ConstructorCallsOverridableMethod", "this-escape"})
     public Summary(final Build parent, final String id) {
@@ -67,9 +63,7 @@ public class Summary extends PageObject {
     /**
      * Opens a link given by the specified text.
      *
-     * @param text
-     *         the text of the link
-     *
+     * @param text the text of the link
      * @return the URL of the page that has been opened by the link
      */
     public String openLinkByText(final String text) {

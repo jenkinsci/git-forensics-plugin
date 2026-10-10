@@ -1,18 +1,14 @@
 package io.jenkins.plugins.forensics.git;
 
+import static io.jenkins.plugins.forensics.git.DetailsTable.*;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.Arrays;
 import java.util.List;
-
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
-import static io.jenkins.plugins.forensics.git.DetailsTable.*;
-
-/**
- * Describes one row in the DetailsTable on the ScmForensics Page.
- */
+/** Describes one row in the DetailsTable on the ScmForensics Page. */
 public class DetailsTableRow {
     private static final String FILE_SEPARATOR = "/";
 
@@ -22,11 +18,8 @@ public class DetailsTableRow {
     /**
      * Constructor.
      *
-     * @param rowElement
-     *         row element as WebElement.
-     *
-     * @param detailsTable
-     *         reference to the detailsTable page object which is showing the rows.
+     * @param rowElement row element as WebElement.
+     * @param detailsTable reference to the detailsTable page object which is showing the rows.
      */
     @SuppressFBWarnings("EI")
     public DetailsTableRow(final WebElement rowElement, final DetailsTable detailsTable) {
