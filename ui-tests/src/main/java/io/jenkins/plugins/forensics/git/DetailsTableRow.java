@@ -1,6 +1,10 @@
 package io.jenkins.plugins.forensics.git;
 
-import static io.jenkins.plugins.forensics.git.DetailsTable.*;
+import static io.jenkins.plugins.forensics.git.DetailsTable.ADDED;
+import static io.jenkins.plugins.forensics.git.DetailsTable.AUTHORS;
+import static io.jenkins.plugins.forensics.git.DetailsTable.COMMITS;
+import static io.jenkins.plugins.forensics.git.DetailsTable.FILE_NAME;
+import static io.jenkins.plugins.forensics.git.DetailsTable.LAST_COMMIT;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.Arrays;
