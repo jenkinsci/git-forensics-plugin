@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.attributes.Attribute;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
 import org.eclipse.jgit.diff.DiffFormatter;
@@ -18,7 +19,9 @@ import org.eclipse.jgit.treewalk.AbstractTreeIterator;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
 
 /**
- * Collects delta information (added and deleted lines of code) for all files that are part of a given commit.
+ * Collects delta information (added and deleted lines of code) for all files that are part of a given commit. Files
+ * that disable diffs in {@code .gitattributes} ({@code -diff} or the {@code binary} macro) are reported without line
+ * counts, like {@code git diff --numstat} does.
  *
  * @author Giulia Del Bravo
  * @author Ullrich Hafner
@@ -47,9 +50,11 @@ public class DiffsCollector {
                 if (isDeleteOrRename(entry)) {
                     commit.setOldPath(fileNameBuilder.intern(entry.getOldPath()));
                 }
-                for (Edit edit : formatter.toFileHeader(entry).toEditList()) {
-                    commit.addLines(edit.getLengthB());
-                    commit.deleteLines(edit.getLengthA());
+                if (isDiffEnabled(entry)) {
+                    for (Edit edit : formatter.toFileHeader(entry).toEditList()) {
+                        commit.addLines(edit.getLengthB());
+                        commit.deleteLines(edit.getLengthA());
+                    }
                 }
                 commits.add(commit);
             }
@@ -57,6 +62,12 @@ public class DiffsCollector {
             logger.logException(exception, "Can't compute diffs for commit " + fromCommit);
         }
         return commits;
+    }
+
+    private boolean isDiffEnabled(final DiffEntry entry) {
+        Attribute diffAttribute = entry.getDiffAttribute();
+
+        return diffAttribute == null || diffAttribute.getState() != Attribute.State.UNSET;
     }
 
     private boolean isDeleteOrRename(final DiffEntry entry) {
