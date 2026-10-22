@@ -203,6 +203,44 @@ class DiffsCollectorITest extends GitITest {
         verifyMovedAndChangedFile(initialCommit);
     }
 
+    /** Verifies that files that disable diffs in {@code .gitattributes} are reported without line counts. */
+    @Test
+    void shouldSkipLineCountsForFilesWithDiffDisabled() {
+        writeFile(".gitattributes", "*.json -diff\n*.dat binary\n");
+        addFile(".gitattributes");
+        commit("Add attributes");
+        var attributesCommit = getHead();
+        commitDataAndSourceFiles();
+        var head = getHead();
+
+        runTest((repository, git) -> {
+            List<CommitDiffItem> allDeltas = createDiff(repository, git, head, attributesCommit);
+            assertThat(allDeltas).hasSize(3);
+            assertThat(allDeltas)
+                    .filteredOn(item -> "data.json".equals(item.getNewPath()))
+                    .singleElement()
+                    .satisfies(item -> assertThat(item).hasTotalAddedLines(0).hasTotalDeletedLines(0));
+            assertThat(allDeltas)
+                    .filteredOn(item -> "data.dat".equals(item.getNewPath()))
+                    .singleElement()
+                    .satisfies(item -> assertThat(item).hasTotalAddedLines(0).hasTotalDeletedLines(0));
+            assertThat(allDeltas)
+                    .filteredOn(item -> "Source.java".equals(item.getNewPath()))
+                    .singleElement()
+                    .satisfies(item -> assertThat(item).hasTotalAddedLines(2).hasTotalDeletedLines(0));
+        });
+    }
+
+    private void commitDataAndSourceFiles() {
+        writeFile("data.json", "{\n\"a\": 1,\n\"b\": 2\n}\n");
+        writeFile("data.dat", "1\n2\n3\n");
+        writeFile("Source.java", "First Line\nSecond Line\n");
+        addFile("data.json");
+        addFile("data.dat");
+        addFile("Source.java");
+        commit("Add data and source");
+    }
+
     private void verifyMovedAndChangedFile(final String initialCommit) {
         runTest((repository, git) -> {
             var head = getHead();
