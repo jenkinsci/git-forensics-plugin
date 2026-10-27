@@ -98,6 +98,19 @@ the project's lifetime.
 
 ![Total lines of code and churn trend chart](doc/images/forensics-churn.png)
 
+Files that disable diffs in `.gitattributes`, either with `-diff` or through the `binary` macro, are still reported as
+changed files, but they contribute no added or deleted lines. This matches what `git diff --numstat` reports for such
+files. Two details are worth knowing when you enable this for an existing repository:
+
+- **The values are not comparable with those of earlier builds.** Statistics that were persisted before this behavior
+  was introduced still contain the line counts of those files, so **Lines of code** and **Churn** can drop noticeably
+  in the first build that mines the history again.
+- **The result depends on when the attributes were introduced.** The attributes are resolved from the older of the two
+  commits that are compared, so a file stops contributing line counts only from the commit *after* the one that added
+  the matching `.gitattributes` entry. Commits before that keep their original counts, which means the charts can show
+  line counts for a file that no longer contributes any today. This is the one place where the result differs from
+  `git diff --numstat`, which resolves the attributes from the working tree and so applies them to the whole history.
+
 ### Deleted and added lines
 
 The deleted and added lines trend chart visualizes the delta between added or deleted lines in each build.
