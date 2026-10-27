@@ -337,6 +337,7 @@ class DiffsCollectorITest extends GitITest {
      * </p>
      */
     @Test
+    @SuppressWarnings("PMD.VariableDeclarationUsageDistance")
     void shouldResolveAttributesFromTheOlderCommit() {
         var initialCommit = getHead();
 
