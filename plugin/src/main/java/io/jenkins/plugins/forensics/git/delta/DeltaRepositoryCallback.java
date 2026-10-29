@@ -25,6 +25,7 @@ import org.eclipse.jgit.diff.Edit;
 import org.eclipse.jgit.diff.RawTextComparator;
 import org.eclipse.jgit.errors.LargeObjectException;
 import org.eclipse.jgit.errors.MissingObjectException;
+import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevWalk;
@@ -96,11 +97,17 @@ public class DeltaRepositoryCallback extends AbstractRepositoryCallback<RemoteRe
                 log.logInfo("-> %d files contain changes", diffEntries.size());
 
                 for (DiffEntry diffEntry : diffEntries) {
-                    var fileEditType = getFileEditType(diffEntry.getChangeType());
-                    var fileChanges = createFileChanges(fileEditType, diffEntry, diffFormatter, repository);
+                    if (FileMode.GITLINK.equals(diffEntry.getOldMode())
+                            || FileMode.GITLINK.equals(diffEntry.getNewMode())) {
+                        // Submodule IDs refer to commits in another repository, not file content in this one.
+                        diffFormatter.format(diffEntry);
+                    } else {
+                        var fileEditType = getFileEditType(diffEntry.getChangeType());
+                        var fileChanges = createFileChanges(fileEditType, diffEntry, diffFormatter, repository);
 
-                    var fileId = getFileId(diffEntry, fileEditType);
-                    fileChangesMap.put(fileId, fileChanges);
+                        var fileId = getFileId(diffEntry, fileEditType);
+                        fileChangesMap.put(fileId, fileChanges);
+                    }
                 }
 
                 log.logInfo("-> Creating the Git diff file");
