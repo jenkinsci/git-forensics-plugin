@@ -1,13 +1,15 @@
 package io.jenkins.plugins.forensics.git.util;
 
-import static j2html.TagCreator.*;
+import org.apache.commons.lang3.StringUtils;
 
-import hudson.plugins.git.browser.GitRepositoryBrowser;
-import hudson.scm.RepositoryBrowser;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Optional;
-import org.apache.commons.lang3.StringUtils;
+
+import hudson.plugins.git.browser.GitRepositoryBrowser;
+import hudson.scm.RepositoryBrowser;
+
+import static j2html.TagCreator.a;
 
 /**
  * A {@link RepositoryBrowser} for Git commits. Since a {@link RepositoryBrowser} has no API to generate links to simple
