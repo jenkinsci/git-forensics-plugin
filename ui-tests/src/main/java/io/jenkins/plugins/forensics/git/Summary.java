@@ -1,5 +1,6 @@
 package io.jenkins.plugins.forensics.git;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -31,6 +32,7 @@ public class Summary extends PageObject {
      * @param id the type of the result page (e.g. simian, checkstyle, cpd, etc.)
      */
     @SuppressWarnings({"PMD.ConstructorCallsOverridableMethod", "this-escape"})
+    @SuppressFBWarnings("MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR")
     public Summary(final Build parent, final String id) {
         super(parent, parent.url(id));
 
