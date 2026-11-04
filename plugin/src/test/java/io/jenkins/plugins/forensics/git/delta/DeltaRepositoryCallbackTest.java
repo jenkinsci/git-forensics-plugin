@@ -55,12 +55,11 @@ class DeltaRepositoryCallbackTest {
             repository.create();
             var reference = createCommit(
                     repository, null, type == FileEditType.ADD ? null : SUBMODULE, OLD_SUBMODULE_COMMIT, "before\n");
-            var newSubmodulePath =
-                    switch (type) {
-                        case DELETE -> null;
-                        case RENAME -> RENAMED_SUBMODULE;
-                        default -> SUBMODULE;
-                    };
+            var newSubmodulePath = switch (type) {
+                case DELETE -> null;
+                case RENAME -> RENAMED_SUBMODULE;
+                default -> SUBMODULE;
+            };
             var current = createCommit(
                     repository,
                     reference,

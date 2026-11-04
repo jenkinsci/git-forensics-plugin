@@ -1,6 +1,6 @@
 package io.jenkins.plugins.forensics.git.util;
 
-import static j2html.TagCreator.*;
+import static j2html.TagCreator.a;
 
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.scm.RepositoryBrowser;
