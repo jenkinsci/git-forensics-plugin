@@ -144,13 +144,19 @@ public class GitRepositoryValidator {
             throw new GitException(e);
         }
     }
-
+    
     /**
-     * Returns the GIT_COMMIT environment variable, or 'HEAD' if not set.
+     * Returns the SCM build revision hash, falls back to GIT_COMMIT env var, or 'HEAD' if not set.
      *
      * @return a {@link GitClient}
      */
     public String getHead() {
+        if (scm instanceof GitSCM gitSCM) {
+            BuildData buildData = gitSCM.getBuildData(build);
+            if (buildData != null && buildData.getLastBuiltRevision() != null) {
+                return buildData.getLastBuiltRevision().getSha1String();
+            }
+        }
         try {
             var environment = build.getEnvironment(listener);
             return environment.getOrDefault("GIT_COMMIT", HEAD);
@@ -159,6 +165,7 @@ public class GitRepositoryValidator {
         }
         return HEAD;
     }
+
 
     /**
      * Returns the key for the associated SCM.
