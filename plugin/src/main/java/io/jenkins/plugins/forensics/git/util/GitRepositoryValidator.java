@@ -8,6 +8,7 @@ import hudson.model.TaskListener;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.impl.CloneOption;
+import hudson.plugins.git.util.BuildData;
 import hudson.scm.SCM;
 import java.io.IOException;
 import org.jenkinsci.plugins.gitclient.GitClient;
