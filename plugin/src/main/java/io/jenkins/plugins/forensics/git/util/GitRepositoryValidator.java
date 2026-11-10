@@ -145,7 +145,7 @@ public class GitRepositoryValidator {
             throw new GitException(e);
         }
     }
-    
+
     /**
      * Returns the SCM build revision hash, falls back to GIT_COMMIT env var, or 'HEAD' if not set.
      *
@@ -166,7 +166,6 @@ public class GitRepositoryValidator {
         }
         return HEAD;
     }
-
 
     /**
      * Returns the key for the associated SCM.
