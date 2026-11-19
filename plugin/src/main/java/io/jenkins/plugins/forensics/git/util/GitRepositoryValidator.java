@@ -8,6 +8,7 @@ import hudson.model.TaskListener;
 import hudson.plugins.git.GitException;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.extensions.impl.CloneOption;
+import hudson.plugins.git.util.BuildData;
 import hudson.scm.SCM;
 import java.io.IOException;
 import org.jenkinsci.plugins.gitclient.GitClient;
@@ -146,11 +147,17 @@ public class GitRepositoryValidator {
     }
 
     /**
-     * Returns the GIT_COMMIT environment variable, or 'HEAD' if not set.
+     * Returns the SCM build revision hash, falls back to GIT_COMMIT env var, or 'HEAD' if not set.
      *
      * @return a {@link GitClient}
      */
     public String getHead() {
+        if (scm instanceof GitSCM gitSCM) {
+            BuildData buildData = gitSCM.getBuildData(build);
+            if (buildData != null && buildData.getLastBuiltRevision() != null) {
+                return buildData.getLastBuiltRevision().getSha1String();
+            }
+        }
         try {
             var environment = build.getEnvironment(listener);
             return environment.getOrDefault("GIT_COMMIT", HEAD);
